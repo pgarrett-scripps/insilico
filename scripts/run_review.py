@@ -63,6 +63,13 @@ REPO_URL = (
     f"{os.environ.get('GITHUB_REPOSITORY', 'pgarrett-scripps/insilico')}"
 )
 
+# The published address, which is what a citation has to point at — a repo
+# path is not a citable location. Kept in step with `site_url` in mkdocs.yml;
+# override with SITE_URL when building a copy that lives somewhere else.
+SITE_URL = os.environ.get(
+    "SITE_URL", "https://pgarrett-scripps.github.io/insilico"
+).rstrip("/")
+
 # Files the pipeline emits, in the order a reader should meet them.
 BUNDLE_ORDER = [
     ("summary.md", "Summary"),
@@ -287,8 +294,123 @@ def write_bundle(
         render_landing(
             preprint, provenance, title, copied,
             reviewer_files, audit_files, submission_id, submitter,
+            site_path(dest),
         )
     )
+
+
+def site_path(path: Path) -> str:
+    """Where a bundle directory will live on the published site.
+
+    Resolved first so a relative path works: `docs/reviews/2026/x/v1` is not
+    relative_to the absolute REVIEWS, and the fallback below would quietly
+    drop the year — producing a citation URL that looks right and 404s.
+    """
+    try:
+        return "reviews/" + path.resolve().relative_to(REVIEWS.resolve()).as_posix()
+    except ValueError:
+        # Rendered off-tree (tests, ad-hoc runs), where there is no year to
+        # recover. Keep the trailing components so the shape is still right.
+        return "reviews/" + "/".join(path.parts[-2:])
+
+
+# LaTeX chokes on these unescaped, and generated titles are not sanitised
+# anywhere else — a paper with an ampersand or a percent in its title would
+# otherwise emit BibTeX that fails to compile.
+_LATEX_ESCAPES = {
+    "\\": r"\textbackslash{}",
+    "&": r"\&", "%": r"\%", "$": r"\$", "#": r"\#",
+    "_": r"\_", "{": r"\{", "}": r"\}",
+    "~": r"\textasciitilde{}", "^": r"\textasciicircum{}",
+}
+
+
+def bibtex_escape(text: str) -> str:
+    return "".join(_LATEX_ESCAPES.get(c, c) for c in str(text))
+
+
+def bibtex_key(slug: str, suffix: str = "") -> str:
+    """A citation key that is stable, unique, and legal BibTeX."""
+    key = "insilico-" + re.sub(r"[^A-Za-z0-9-]+", "-", slug).strip("-").lower()
+    return f"{key}-{suffix}" if suffix else key
+
+
+def citation_block(
+    *,
+    title: str,
+    url: str,
+    year: str,
+    key: str,
+    reviewed_doi: str = "",
+    reviewed_version: str = "",
+    note_extra: str = "",
+    evergreen: bool = False,
+) -> list[str]:
+    """A 'Cite this review' section: plain text plus BibTeX.
+
+    Two addresses, mirroring how Zenodo separates a concept DOI from a version
+    DOI, so that adding real DOIs later slots into a format already in use:
+
+    - the paper page is *evergreen* — it always shows the latest review
+    - each ``vN`` page is *immutable* — it is one review of one revision
+
+    Which to cite depends on the claim being made, so each page says plainly
+    which kind it is rather than leaving the reader to guess.
+
+    Authorship is the honest part. The panel is a program, so the author is
+    the journal, and the note says machine-generated. Citing an LLM panel as
+    though it were a named referee would misrepresent what this is.
+    """
+    scope = (
+        "always resolves to the most recent review of this paper"
+        if evergreen
+        else "is a permanent link to this specific review, and will not change"
+    )
+    # One sentence naming what was reviewed, then any extras. Built as a whole
+    # rather than joined from fragments — "peer review. of doi:..." is what
+    # joining gets you.
+    head = "Machine-generated peer review"
+    if reviewed_doi:
+        head += f" of doi:{reviewed_doi}"
+        if reviewed_version:
+            head += f" v{reviewed_version}"
+    sentences = [head] + ([note_extra] if note_extra else [])
+    note = ". ".join(sentences) + "."
+
+    plain = f'In Silico ({year}). Review of "{title}". In Silico. {url}'
+
+    lines = [
+        "## Cite this review",
+        "",
+        f"This URL {scope}.",
+        "",
+        "```",
+        plain,
+        "```",
+        "",
+        '<details class="quote"><summary>BibTeX</summary>',
+        "",
+        "```bibtex",
+        f"@misc{{{key},",
+        f"  title        = {{Review of {{{bibtex_escape(title)}}}}},",
+        # Braced so BibTeX styles don't lowercase or reorder it as a personal
+        # name — "In Silico" is a corporate author, not a person called Silico.
+        "  author       = {{In Silico}},",
+        f"  year         = {{{year}}},",
+        "  howpublished = {In Silico, an AI-refereed overlay journal},",
+        f"  url          = {{{url}}},",
+        f"  note         = {{{bibtex_escape(note)}}}",
+        "}",
+        "```",
+        "",
+        "</details>",
+        "",
+        "Please cite the preprint itself as well — this reviews that work, it",
+        "does not replace it. The review is machine-generated and advisory; if",
+        "you are citing it as evidence about the paper, say so explicitly.",
+        "",
+    ]
+    return lines
 
 
 def card_description(provenance: dict, review_count: int = 1) -> str:
@@ -441,6 +563,22 @@ def write_paper_page(paper_dir: Path) -> None:
             body.append(f"    - `{name}` — `{sha or 'not recorded'}`")
         body.append("")
 
+    latest_name = records[0][0]
+    body += citation_block(
+        title=title,
+        url=f"{SITE_URL}/{site_path(paper_dir)}/",
+        year=str(latest.get("generated_at", ""))[:4] or str(dt.date.today().year),
+        key=bibtex_key(paper_dir.name),
+        reviewed_doi=pre.get("doi", ""),
+        reviewed_version=str(pre.get("version") or ""),
+        note_extra=(
+            f"{len(records)} reviews on record; this URL shows {latest_name}"
+            if len(records) > 1
+            else ""
+        ),
+        evergreen=True,
+    )
+
     (paper_dir / "index.md").write_text("\n".join(body), encoding="utf-8")
 
 
@@ -453,6 +591,7 @@ def render_landing(
     audit_files: list[Path],
     submission_id: str,
     submitter: str,
+    bundle_path: str = "",
 ) -> str:
     decision = provenance["decision"]
     fm = [
@@ -643,6 +782,20 @@ def render_landing(
             "    editor. Nothing here has been verified by a human referee.",
             "",
         ]
+
+    pipe = provenance["pipeline"]
+    body += citation_block(
+        title=title,
+        url=f"{SITE_URL}/{bundle_path}/",
+        year=provenance["generated_at"][:4],
+        key=bibtex_key(Path(bundle_path).parent.name, Path(bundle_path).name),
+        reviewed_doi=preprint.doi,
+        reviewed_version=preprint.version,
+        note_extra=(
+            f"Produced by PeerReviewAgents {pipe.get('version', 'unknown')}"
+            + (f" @ {pipe['sha'][:8]}" if pipe.get("sha") else "")
+        ),
+    )
     return "\n".join(body)
 
 

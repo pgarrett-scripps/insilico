@@ -107,6 +107,18 @@ def check(title: str) -> None:
 
         assert slugify(title), f"title produced an empty slug: {title!r}"
 
+        # A citation is only useful if it compiles and points somewhere real.
+        assert "## Cite this review" in landing, "no citation block"
+        assert "@misc{insilico-" in landing, "no BibTeX entry"
+        assert "author       = {{In Silico}}," in landing, "corporate author not braced"
+        bib = landing.split("```bibtex", 1)[1].split("```", 1)[0]
+        assert bib.count("{") == bib.count("}"), f"unbalanced braces in BibTeX:\n{bib}"
+        for raw in ("&", "%", "$", "#", "_"):
+            # Every LaTeX special in the entry must be backslash-escaped.
+            for i, ch in enumerate(bib):
+                if ch == raw:
+                    assert i and bib[i - 1] == "\\", f"unescaped {raw!r} in BibTeX"
+
 
 def check_desk_reject() -> None:
     """A desk reject produces almost none of the usual bundle. Render anyway.

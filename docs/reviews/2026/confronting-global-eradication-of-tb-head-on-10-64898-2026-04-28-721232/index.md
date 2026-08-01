@@ -34,3 +34,30 @@ they remain the record of what the panel said about that revision.
 | Review | Manuscript version | Recommendation | Reviewed |
 |---|---|---|---|
 | [v1](v1/index.md) | v1 | Major revision | 2026-08-01 |
+
+## Cite this review
+
+This URL always resolves to the most recent review of this paper.
+
+```
+In Silico (2026). Review of "Confronting global eradication of TB head on: Uncovering the root of drug resistance and bacterial survival strategies through a comprehensive computational study of first-line TB drug resistant mutations". In Silico. https://pgarrett-scripps.github.io/insilico/reviews/2026/confronting-global-eradication-of-tb-head-on-10-64898-2026-04-28-721232/
+```
+
+<details class="quote"><summary>BibTeX</summary>
+
+```bibtex
+@misc{insilico-confronting-global-eradication-of-tb-head-on-10-64898-2026-04-28-721232,
+  title        = {Review of {Confronting global eradication of TB head on: Uncovering the root of drug resistance and bacterial survival strategies through a comprehensive computational study of first-line TB drug resistant mutations}},
+  author       = {{In Silico}},
+  year         = {2026},
+  howpublished = {In Silico, an AI-refereed overlay journal},
+  url          = {https://pgarrett-scripps.github.io/insilico/reviews/2026/confronting-global-eradication-of-tb-head-on-10-64898-2026-04-28-721232/},
+  note         = {Machine-generated peer review of doi:10.64898/2026.04.28.721232 v1.}
+}
+```
+
+</details>
+
+Please cite the preprint itself as well — this reviews that work, it
+does not replace it. The review is machine-generated and advisory; if
+you are citing it as evidence about the paper, say so explicitly.
