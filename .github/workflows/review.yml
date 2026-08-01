@@ -174,6 +174,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}
+          DESK_REJECTED: ${{ steps.run.outputs.desk_rejected }}
           SLUG: ${{ steps.run.outputs.slug }}
           TITLE: ${{ steps.run.outputs.title }}
           BUNDLE: ${{ steps.run.outputs.path }}
@@ -188,28 +189,62 @@ jobs:
           git commit -m "review: ${TITLE} (${DECISION})"
           git push origin "$branch"
 
+          if [ "${DESK_REJECTED}" = "true" ]; then
+            headline="Desk rejected"
+            verb="Desk screen output"
+          else
+            headline="Panel recommendation"
+            verb="Referee panel output"
+          fi
+
           {
-            echo "Referee panel output for **${TITLE}**."
+            echo "${verb} for **${TITLE}**."
             echo
             echo "| | |"
             echo "|---|---|"
-            echo "| Panel recommendation | \`${DECISION}\` |"
+            echo "| ${headline} | \`${DECISION}\` |"
             echo "| Bundle | \`${BUNDLE}\` |"
             echo "| Cost | \$${COST} |"
             [ -n "${SUBMISSION_ID}" ] && echo "| Submission | #${SUBMISSION_ID} |"
             echo
-            echo "The recommendation above is **advisory**. Merging this PR publishes"
-            echo "the review and lists the preprint; closing it declines the submission."
+            if [ "${DESK_REJECTED}" = "true" ]; then
+              echo "> [!CAUTION]"
+              echo "> **Opened as a draft — read the bundle before merging.**"
+              echo ">"
+              echo "> This submission was stopped at the desk; no referee panel ran."
+              echo "> If the cause was the submission-integrity scan, merging this"
+              echo "> publishes a finding that a named author concealed instructions"
+              echo "> to a reviewer inside their manuscript. That is a public"
+              echo "> allegation about real people, not a review, and a false"
+              echo "> positive would be damaging and hard to walk back."
+              echo ">"
+              echo "> Confirm the finding in \`integrity.md\` yourself first. If it is"
+              echo "> wrong, close this PR. If you are unsure, close it and contact"
+              echo "> the authors privately rather than publishing."
+            else
+              echo "The recommendation above is **advisory**. Merging this PR publishes"
+              echo "the review and lists the preprint; closing it declines the submission."
+            fi
             echo
             [ -n "${SUBMISSION_ID}" ] && echo "Refs #${SUBMISSION_ID}"
           } > /tmp/pr-body.md
 
-          url="$(gh pr create \
-            --title "Review: ${TITLE} (${DECISION})" \
+          # A desk reject opens as a draft: the publication gate is already a
+          # human merge, but a draft makes "do not merge this without reading
+          # it" the default state rather than a line of prose in the body.
+          extra=""
+          title="Review: ${TITLE} (${DECISION})"
+          if [ "${DESK_REJECTED}" = "true" ]; then
+            extra="--draft"
+            title="Desk reject: ${TITLE}"
+          fi
+
+          url="$(gh pr create $extra \
+            --title "$title" \
             --body-file /tmp/pr-body.md \
             --label review \
             --label "verdict:${DECISION}" 2>/dev/null || \
-            gh pr create --title "Review: ${TITLE} (${DECISION})" --body-file /tmp/pr-body.md)"
+            gh pr create $extra --title "$title" --body-file /tmp/pr-body.md)"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Report back on the submission
@@ -217,9 +252,27 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}
+          DESK_REJECTED: ${{ steps.run.outputs.desk_rejected }}
           PR_URL: ${{ steps.pr.outputs.url }}
           BUNDLE: ${{ steps.run.outputs.path }}
         run: |
+          # On a desk reject this comment stays deliberately spare. The issue
+          # is public and the submitter is named on it, so quoting the desk's
+          # reasoning here would publish an unreviewed finding — possibly an
+          # integrity allegation — before any human has confirmed it. Say that
+          # it was held and who decides next; nothing more.
+          if [ "${DESK_REJECTED}" = "true" ]; then
+            {
+              echo "This submission was **stopped at the desk** and has not been sent"
+              echo "to the referee panel."
+              echo
+              echo "An editor will review the desk's finding before any decision is"
+              echo "published. Nothing has been published yet, and the finding is not"
+              echo "final until a person has checked it."
+            } | gh issue comment "${{ github.event.issue.number }}" --body-file -
+            exit 0
+          fi
+
           {
             echo "The referee panel has finished."
             echo

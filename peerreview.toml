@@ -11,6 +11,17 @@
 #
 # That routes iteration through a ~$0.20/run model on a personal key rather
 # than spending the lab's Anthropic budget on prompt tuning.
+#
+# LAYOUT IS LOad-BEARING: every bare `key = value` below must stay above the
+# first [table] header. In TOML a table header captures every key that follows
+# it, so a top-level setting written after [agent_models] silently becomes
+# `agent_models.<key>` — it parses, it validates, and it does nothing. That is
+# exactly how the desk gate was mistakenly disabled once already. Add new
+# scalar settings to the top half of this file, never the bottom.
+
+# ---------------------------------------------------------------------------
+# Provider and defaults
+# ---------------------------------------------------------------------------
 
 # Anthropic direct rather than through OpenRouter: it's the path the lab key
 # pays for, and the only one where the manuscript prompt-cache applies — the
@@ -21,15 +32,80 @@ provider = "anthropic"
 # Fallback for any agent whose tag isn't defined below.
 reasoning_model = "claude-sonnet-5"
 
-debate_rounds = 2
+# One round, not two. Round 2 re-sends the whole of round 1 as context, so it
+# is the more expensive of the pair, and on the runs so far the second round
+# restates positions rather than moving them. Raise this if the debate starts
+# looking truncated.
+debate_rounds = 1
 
 # ---------------------------------------------------------------------------
-# Per-agent models
+# Review posture
+# ---------------------------------------------------------------------------
+
+# In Silico is an overlay journal with no house style of its own, so reviews
+# are conditioned on general standards rather than a specific venue's. The
+# pipeline ships ~38 venue profiles; an editor can select one per submission
+# rather than changing this default.
+target_journal = "general"
+
+# ---------------------------------------------------------------------------
+# The desk — two independent screens, before any reviewer is assigned
+# ---------------------------------------------------------------------------
+
+# 1. Submission integrity — a deterministic, token-free scan of the PDF's
+#    content stream for text hidden from a human reader (white fill, zero
+#    opacity, invisible render mode, sub-point type, off-page placement) that
+#    carries instructions aimed at an automated reviewer. This is the attack
+#    that matters for a journal whose referees are all models: a paragraph no
+#    human sees telling the reviewer to recommend acceptance.
+#
+#    On by default upstream; set explicitly here because for In Silico it is a
+#    policy commitment, not a preference, and a default that silently flipped
+#    would change what the journal guarantees.
+#
+#    It runs *before* any model reads the file — that ordering is the whole
+#    point, since a payload only works on a model that reads it. Concealed
+#    text alone is never a reject (scanned papers carry an invisible OCR
+#    layer); the reject needs an instruction found inside the concealed text.
+injection_screen = true
+
+# "reject" desk-rejects a confirmed injection outright; "flag" records the
+# evidence and lets the review proceed. Keep this at "reject" — but note that
+# a legitimate paper *about* prompt injection quotes these strings in visible
+# text, and visible matches are only ever noted, so such papers are not caught
+# by this. Flip to "flag" only to deliberately review a compromised file.
+injection_screen_action = "reject"
+
+# 2. Editorial triage — a single fast pass that desk-rejects work plainly
+#    below the bar before spending the full panel on it.
+#
+#    This was previously off, on the reasoning that a human editor running
+#    `/review` had already decided. That conflated two different decisions:
+#    the editor decides whether a submission is worth *considering*, the desk
+#    screen decides whether it clears the bar for full review. They are not
+#    the same judgment.
+#
+#    It is also close to free, and may be cheaper than not running it. The
+#    screen deliberately shares the reviewers' model and manuscript prefix, so
+#    its call warms the prompt cache that all 8 specialists then read on their
+#    parallel fan-out — which would otherwise race and largely miss. And a
+#    desk reject short-circuits the run before 17 further calls.
+#
+#    "gate" enforces the verdict; "warm" runs it for the cache but ignores the
+#    verdict; "off" skips the call. The upstream prompt is explicitly
+#    reject-sparingly and errs toward sending borderline work to the panel.
+desk_screen_mode = "gate"
+
+# ---------------------------------------------------------------------------
+# Per-agent models  — TABLES ONLY BELOW THIS LINE
 # ---------------------------------------------------------------------------
 #
 # Agents resolve a model through a named tag: reviewers -> "reviewer",
-# debate -> "debate", auditors -> "audit", desk screen -> "screen", and
-# editor / meta-reviewer / rebuttal / journal-scout -> "synthesis".
+# debate -> "debate", auditors -> "audit", and editor / meta-reviewer /
+# rebuttal / journal-scout -> "synthesis". The desk screen deliberately uses
+# the *reviewer* tag rather than a tag of its own, so that the prompt cache it
+# warms is the one the panel then reads — caches are per-model. There is no
+# "screen" tag; a [models.screen] block here would be silently inert.
 #
 # This is the main cost lever. The 8 specialists and the 2 auditors are the
 # widest fan-out and the most checklist-like, so they run on Haiku. The debate
@@ -54,15 +130,20 @@ model = "claude-opus-5"
 # Raising it means editing those call sites in PeerReviewAgents, not this file.
 
 # ---------------------------------------------------------------------------
-# Review posture
+# Per-agent overrides
 # ---------------------------------------------------------------------------
+#
+# The `synthesis` tag covers four agents, but only two of them decide anything:
+# the area chair (meta_reviewer) weighs ten reports into one assessment, and
+# the editor issues the verdict. Those keep Opus. The other two do not need it:
+#
+#   author_rebuttal      argues the authors' side for the editor to weigh. It
+#                        informs the verdict but does not set it.
+#   journal_recommender  suggests venues to submit to. A courtesy, not a
+#                        judgment, and nothing downstream reads it.
+#
+# This halves the Opus calls per review without touching the two that matter.
 
-# In Silico is an overlay journal with no house style of its own, so reviews
-# are conditioned on general standards rather than a specific venue's. Set
-# `target_journal` per submission instead if a paper names its intended venue.
-target_journal = "general"
-
-# Desk screening is off: submissions are already gated by a human editor
-# running `/review`, so a triage agent would spend tokens re-deciding
-# something a person already decided.
-desk_screen = false
+[agent_models]
+author_rebuttal = { model = "claude-sonnet-5" }
+journal_recommender = { model = "claude-haiku-4-5" }

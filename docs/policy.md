@@ -35,6 +35,57 @@ do we.
 
 We will decline submissions outside scope without running the panel.
 
+## The desk
+
+Two checks run before any referee is assigned. Either can stop a submission
+without a review being produced; both are recorded in the published bundle.
+
+### Submission integrity
+
+Every submitted file is scanned for text hidden from a human reader — white
+fill, zero opacity, invisible render mode, sub-point type, off-page placement —
+that carries instructions aimed at an automated reviewer. The obvious example is
+a paragraph no human sees that tells the referee to recommend acceptance.
+
+This matters more here than at a conventional journal. Our referees are all
+models, so a payload written for a model is written for *every* referee we
+have.
+
+Three properties of this check are deliberate:
+
+- **It runs before any model reads the file.** A prompt injection only works on
+  a model that reads it, so the scan has to come first. It costs no tokens and
+  makes no model call.
+- **Concealed text alone is never a rejection.** Scanned PDFs carry an invisible
+  OCR layer, and plenty of legitimate files have hidden text for good reasons.
+  The rejection requires a reviewer-directed *instruction* found inside the
+  concealed text.
+- **Visible text is never a rejection.** A paper *about* prompt injection quotes
+  these strings openly, and should be reviewable here. Visible matches are noted
+  for the editor and nothing more.
+
+**A finding is not published automatically.** An integrity rejection is an
+allegation about named people, not an opinion about their work, and a false
+positive would be damaging and hard to retract. These open as draft pull
+requests and are published only if a human editor reads the evidence and agrees.
+If we are unsure, we contact the authors privately and publish nothing.
+
+If you believe a finding is wrong, see [Contesting a review](#contesting-a-review)
+— it applies to desk rejections too, and we would rather hear about a false
+positive than not.
+
+### Editorial triage
+
+A single fast pass then decides whether the submission clears the bar for full
+review: in scope, intelligible, complete, and not fatally flawed on its face.
+The instruction to this screen is to reject sparingly and to send anything
+borderline to the panel.
+
+A desk rejection is recorded as `desk_rejected` in the bundle's frontmatter and
+`provenance.json`, and is badged separately in the index. It is not the same act
+as a panel rejection, and we will not present it as one: nothing read the
+manuscript in depth, and no specialist reports exist.
+
 ## Known limitations
 
 These are properties of the method, not bugs we expect to fix:
@@ -45,9 +96,11 @@ These are properties of the method, not bugs we expect to fix:
   presentation, not correctness.
 - **It cannot see figures.** Ingest is text-only via `pypdf`. Claims resting on
   a figure will be under-assessed.
-- **Long papers are truncated.** There's a per-agent character budget;
-  section-aware truncation keeps abstract/methods/results/discussion and drops
-  appendices first.
+- **Long papers cost more, and cost is what limits us.** No truncation is
+  applied today — every agent reads the whole manuscript. The pipeline supports
+  a section-aware per-agent character budget, and we may enable one if long
+  submissions become a budget problem; if we do, it will be recorded in each
+  affected review's `provenance.json` rather than announced only here.
 - **Literature claims are search-grounded but not exhaustive.** The Novelty and
   Literature reviewers query real APIs, but absence of a hit is not evidence of
   novelty.
@@ -56,11 +109,15 @@ These are properties of the method, not bugs we expect to fix:
 
 ## Reproducibility
 
-Every review ships a `provenance.json` recording the provider, model id,
-pipeline version and commit SHA, debate rounds, per-reviewer scores, total cost,
-and the resolved preprint metadata. Given the same inputs you can re-run the
-panel yourself. Outputs won't be byte-identical — the models aren't
-deterministic — but the configuration is fully disclosed.
+Every review ships a `provenance.json` recording the provider, the model used at
+each stage and any per-agent override, pipeline version and commit SHA, debate
+rounds, which desk screens were active, per-reviewer scores, total cost and the
+per-agent cost breakdown, and the resolved preprint metadata. Given the same
+inputs you can re-run the panel yourself. Outputs won't be byte-identical — the
+models aren't deterministic — but the configuration is fully disclosed.
+
+Not every stage runs on the same model, and the record is per-stage for that
+reason: reading a single model name off a review would misdescribe it.
 
 Reviews are never silently edited. Corrections are appended with a dated note.
 

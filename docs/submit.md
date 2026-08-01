@@ -27,13 +27,29 @@ the editor will run it before triggering a review.
    One preprint per issue.
 2. **An editor triggers the panel** by commenting `/review`. This is manual —
    it gates cost and stops the queue filling with spam. Expect a wait.
-3. **The bot opens a pull request** with the full review bundle and posts the
+3. **Your file passes the desk.** Two quick checks run first: a scan for text
+   hidden from human readers that carries instructions to an automated reviewer,
+   and a triage pass for scope and completeness. Most submissions clear both
+   without noticing they happened. See [the desk](policy.md#the-desk).
+4. **The bot opens a pull request** with the full review bundle and posts the
    summary back on your issue.
-4. **You get a say.** Comment on the PR if the panel misread something. The
+5. **You get a say.** Comment on the PR if the panel misread something. The
    editor reads rebuttals before deciding, and a substantive one can trigger a
    re-review.
-5. **The editor merges or closes.** Merged means listed here with the review
+6. **The editor merges or closes.** Merged means listed here with the review
    attached. Closed means declined, and nothing is published.
+
+### If your submission is stopped at the desk
+
+You'll get a short note on your issue saying it was held, and no review will
+have been produced. Nothing is published at that point, and the finding isn't
+final until a human has checked it.
+
+Integrity findings in particular are never auto-published — they open as draft
+pull requests and go nowhere unless an editor reads the evidence and agrees. If
+you think the scan is wrong, say so on your issue. Hidden text has innocent
+causes (a scanned PDF's OCR layer is the common one) and we would rather hear
+about a false positive than quietly sit on it.
 
 ## What gets published
 

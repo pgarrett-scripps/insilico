@@ -11,7 +11,9 @@ URL is reviewable before spending anything.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -19,6 +21,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
+from queue import Empty, Queue
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -64,6 +67,12 @@ REPO_URL = (
 BUNDLE_ORDER = [
     ("summary.md", "Summary"),
     ("decision_letter.md", "Decision letter"),
+    # Both are written only when the desk found something. integrity.md is the
+    # submission-integrity scan (concealed text / prompt injection); on a
+    # desk reject it is the whole story, so it is listed above the panel
+    # material rather than buried at the end.
+    ("integrity.md", "Submission integrity scan"),
+    ("desk_screen.md", "Desk screen"),
     ("meta_review.md", "Area chair synthesis"),
     ("author_rebuttal.md", "Simulated author rebuttal"),
     ("debate_transcript.md", "Advocate / skeptic debate"),
@@ -71,12 +80,13 @@ BUNDLE_ORDER = [
 ]
 
 # Model tags map to groups of agents; spell them out for readers who haven't
-# read the pipeline's config docs.
+# read the pipeline's config docs. There is deliberately no "screen" entry:
+# the desk screen resolves through the `reviewer` tag so it warms the cache
+# the panel reads, so that tag never appears in a resolved config.
 _TAG_LABEL = {
-    "reviewer": "specialist reviewers (×8)",
+    "reviewer": "specialist reviewers (×8) + desk screen",
     "audit": "editorial audits (×2)",
     "debate": "advocate / skeptic",
-    "screen": "desk screen",
     "synthesis": "area chair, rebuttal, editor, journal scout",
 }
 
@@ -131,6 +141,42 @@ def panel_scores(state: dict) -> list[dict]:
     return out
 
 
+@contextlib.contextmanager
+def _cost_recorder(run_id: str):
+    """Aggregate per-agent spend off the pipeline's observability bus.
+
+    The pipeline emits a ``usage`` event per model call carrying the node name
+    and a cost, but only ever persists the run total. Registering a queue for
+    this run collects the breakdown without touching the pipeline.
+
+    Drained after the graph finishes rather than concurrently: ``Queue`` is
+    unbounded, the run is synchronous, and a drain thread would be one more
+    thing to get wrong for data that is only read at the end. Never fails the
+    review — an accounting problem must not lose a completed panel.
+    """
+    from peerreviewagents.observability import clear_observer, register_observer
+
+    costs: dict[str, float] = {}
+    queue: Queue = Queue()
+    register_observer(queue, run_id)
+    try:
+        yield costs
+    finally:
+        clear_observer(run_id)
+        try:
+            while True:
+                try:
+                    event = queue.get_nowait()
+                except Empty:
+                    break
+                if event.kind != "usage" or not event.cost_usd:
+                    continue
+                node = event.node or "unattributed"
+                costs[node] = round(costs.get(node, 0.0) + event.cost_usd, 6)
+        except Exception as exc:  # noqa: BLE001
+            print(f"warning: cost breakdown unavailable ({exc})", file=sys.stderr)
+
+
 def write_bundle(
     preprint: Preprint,
     state: dict,
@@ -138,15 +184,28 @@ def write_bundle(
     dest: Path,
     submission_id: str,
     submitter: str,
+    cost_by_node: dict[str, float] | None = None,
 ) -> None:
     dest.mkdir(parents=True, exist_ok=True)
+    cost_by_node = cost_by_node or {}
 
+    # On a desk reject the pipeline sets decision_letter, desk_screen and
+    # integrity to the *same* body, so all three land here byte-identical.
+    # Copy them all (a reader following a direct link should find the file)
+    # but list each distinct document once, or the landing page shows the
+    # same text under three headings.
     copied: list[tuple[str, str]] = []
+    seen: dict[str, str] = {}
     for name, label in BUNDLE_ORDER:
         src = run_dir / name
-        if src.exists():
-            shutil.copy2(src, dest / name)
-            copied.append((name, label))
+        if not src.exists():
+            continue
+        shutil.copy2(src, dest / name)
+        digest = hashlib.sha256(src.read_bytes()).hexdigest()
+        if digest in seen:
+            continue
+        seen[digest] = name
+        copied.append((name, label))
 
     reviewer_files = sorted(run_dir.glob("review_*.md"))
     audit_files = sorted(run_dir.glob("audit_*.md"))
@@ -171,9 +230,17 @@ def write_bundle(
         "agent_models": json.loads(os.environ.get("REVIEW_AGENT_MODELS") or "{}"),
         "debate_rounds": int(os.environ.get("REVIEW_DEBATE_ROUNDS", "2")),
         "decision": decision,
+        # A desk reject and a panel reject are both `decision: reject` but are
+        # not the same editorial act — one is a verdict after ten reports and a
+        # debate, the other stops before any of that. Readers and the index
+        # both need to tell them apart, and `decision` alone cannot.
+        "desk_rejected": bool(state.get("desk_rejected")),
+        "screens": json.loads(os.environ.get("REVIEW_SCREENS") or "{}"),
         "panel": scores,
         "mean_score": round(sum(numeric) / len(numeric), 2) if numeric else None,
         "total_cost_usd": state.get("total_cost"),
+        # Per-agent spend, so cost decisions are measured rather than guessed.
+        "cost_by_node": dict(sorted(cost_by_node.items())) if cost_by_node else {},
         "errors": state.get("errors", []),
         "preprint": preprint.to_dict(),
     }
@@ -210,6 +277,10 @@ def render_landing(
     ]
     if submission_id:
         fm.append(f"submission_issue: {yaml_scalar(submission_id)}")
+    if provenance.get("desk_rejected"):
+        # Surfaced in frontmatter so the index can mark these distinctly
+        # rather than filing them next to reasoned panel rejections.
+        fm.append("desk_rejected: true")
     fm.append("---")
 
     rows = [
@@ -230,13 +301,39 @@ def render_landing(
     if submitter:
         rows.append(f"| Submitted by | [@{submitter}](https://github.com/{submitter}) |")
 
+    desk_rejected = provenance.get("desk_rejected")
+    # "Panel recommendation" would be a false claim on a desk reject: no panel
+    # convened. Say what actually happened, and why the page is short.
+    headline = (
+        f"**Desk rejected — {VERDICT_LABEL.get(decision, decision)}**"
+        if desk_rejected
+        else f"**Panel recommendation: {VERDICT_LABEL.get(decision, decision)}**"
+    )
+
     body = [
         "\n".join(fm),
         "",
         f"# {title}",
         "",
-        f"**Panel recommendation: {VERDICT_LABEL.get(decision, decision)}**",
+        headline,
         "",
+    ]
+    if desk_rejected:
+        body += [
+            "!!! danger \"Rejected at the desk — no referee panel was convened\"",
+            "    This submission was stopped before review. There are no specialist",
+            "    reports, no debate and no area-chair synthesis below, because none",
+            "    were produced. See the documents listed under *The review* for the",
+            "    reason.",
+            "",
+            "    A desk rejection on submission integrity means the file was found to",
+            "    conceal instructions aimed at an automated reviewer. That scan is",
+            "    deterministic and runs before any model reads the manuscript, so no",
+            "    reviewer was exposed to the concealed text.",
+            "",
+        ]
+
+    body += [
         "| | |",
         "|---|---|",
         "\n".join(rows),
@@ -319,13 +416,28 @@ def render_landing(
             )
         body.append("")
 
-    body += [
-        "!!! warning \"Advisory only\"",
-        "    This review was generated by an LLM panel. The recommendation above is",
-        "    advisory; the editorial decision on this submission was made by a human",
-        "    editor. Nothing here has been verified by a human referee.",
-        "",
-    ]
+    if desk_rejected:
+        # The generic advisory below describes an LLM panel. On a desk reject
+        # there wasn't one, and an integrity reject isn't a judgment at all —
+        # it's a deterministic finding about the file. Saying "advisory"
+        # about it would understate it; saying "panel" would be untrue.
+        body += [
+            "!!! warning \"How this decision was reached\"",
+            "    This submission was stopped at the desk, not judged by a referee",
+            "    panel. A submission-integrity rejection is a deterministic finding",
+            "    about the submitted file rather than an opinion about the work, and",
+            "    says nothing about the quality of the research itself. Authors who",
+            "    believe the finding is mistaken should open an issue.",
+            "",
+        ]
+    else:
+        body += [
+            "!!! warning \"Advisory only\"",
+            "    This review was generated by an LLM panel. The recommendation above is",
+            "    advisory; the editorial decision on this submission was made by a human",
+            "    editor. Nothing here has been verified by a human referee.",
+            "",
+        ]
     return "\n".join(body)
 
 
@@ -365,6 +477,7 @@ def main() -> int:
         print(json.dumps(preprint.to_dict(), indent=2))
         return 0
 
+    from peerreviewagents.agents.editor.desk_screen import screen_mode
     from peerreviewagents.default_config import get_config
     from peerreviewagents.graph.review_graph import PeerReviewGraph
     from peerreviewagents.reports import write_reports
@@ -390,8 +503,29 @@ def main() -> int:
     os.environ["REVIEW_AGENT_MODELS"] = json.dumps(
         config.get("agent_models") or {}, sort_keys=True
     )
+    # What the desk was configured to do. Recorded per review because these
+    # are policy commitments, and a reader should be able to confirm the gate
+    # was actually on for *this* submission rather than trust the current
+    # contents of peerreview.toml.
+    os.environ["REVIEW_SCREENS"] = json.dumps(
+        {
+            "injection_screen": bool(config.get("injection_screen", True)),
+            "injection_screen_action": config.get("injection_screen_action") or "reject",
+            # Ask the pipeline rather than reading the key: `desk_screen_mode`
+            # and the legacy boolean `desk_screen` both feed this, and
+            # screen_mode() is what actually decides.
+            "desk_screen_mode": screen_mode(config),
+        },
+        sort_keys=True,
+    )
 
-    state = PeerReviewGraph(config).review(str(pdf))
+    # The pipeline reports one total, which is enough to know a run was
+    # expensive and useless for knowing *why*. Per-agent usage already flows
+    # through the observability bus; drain it so cost decisions can be made
+    # from a breakdown instead of an inference.
+    graph = PeerReviewGraph(config)
+    with _cost_recorder(graph.run_id) as cost_by_node:
+        state = graph.review(str(pdf))
 
     decision = state.get("decision")
     if decision not in VERDICT_LABEL:
@@ -405,14 +539,21 @@ def main() -> int:
     slug = slugify(title) or slugify(preprint.identifier) or "submission"
     dest = REVIEWS / year / slug
 
-    write_bundle(preprint, state, run_dir, dest, args.submission_id, args.submitter)
+    write_bundle(
+        preprint, state, run_dir, dest,
+        args.submission_id, args.submitter, cost_by_node,
+    )
     rel = dest.relative_to(REPO)
+    desk_rejected = bool(state.get("desk_rejected"))
     print(f"bundle    {rel}", file=sys.stderr)
-    print(f"decision  {decision}", file=sys.stderr)
+    print(f"decision  {decision}{' (desk reject)' if desk_rejected else ''}", file=sys.stderr)
+    for node, spend in sorted(cost_by_node.items(), key=lambda kv: -kv[1]):
+        print(f"  cost    {node:<28} ${spend:.4f}", file=sys.stderr)
 
     if out := os.environ.get("GITHUB_OUTPUT"):
         with open(out, "a") as fh:
             fh.write(f"decision={decision}\n")
+            fh.write(f"desk_rejected={'true' if desk_rejected else 'false'}\n")
             fh.write(f"slug={slug}\n")
             fh.write(f"year={year}\n")
             fh.write(f"path={rel}\n")

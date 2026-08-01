@@ -98,10 +98,72 @@ def check(title: str) -> None:
         assert slugify(title), f"title produced an empty slug: {title!r}"
 
 
+def check_desk_reject() -> None:
+    """A desk reject produces almost none of the usual bundle. Render anyway.
+
+    This is the shape that breaks a bundler written against the happy path:
+    no reports, no mean score, and decision_letter / desk_screen / integrity
+    all set to the same body by the pipeline.
+    """
+    body = "# Submission integrity\n\n**Outcome:** concealed instructions found.\n"
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        for name in ("decision_letter.md", "desk_screen.md", "integrity.md"):
+            (run_dir / name).write_text(body)
+        (run_dir / "summary.md").write_text("# Summary\n\nDesk rejected.\n")
+
+        os.environ["REVIEW_MODELS"] = "{}"
+        os.environ["REVIEW_AGENT_MODELS"] = "{}"
+        os.environ["REVIEW_SCREENS"] = json.dumps(
+            {"injection_screen": True, "injection_screen_action": "reject",
+             "desk_screen_mode": "gate"}
+        )
+        preprint = Preprint(
+            url="https://arxiv.org/abs/0000.00001",
+            source="arxiv",
+            pdf_url="https://arxiv.org/pdf/0000.00001",
+            identifier="0000.00001",
+            title="A manuscript with a concealed payload",
+        )
+        state = {
+            "decision": "reject",
+            "desk_rejected": True,
+            "manuscript_title": preprint.title,
+            "total_cost": 0.0,
+            "errors": [],
+            "reports": [],  # no panel ran
+        }
+        dest = Path(tmp) / "bundle"
+        write_bundle(preprint, state, run_dir, dest, "7", "octocat", {"desk_screen": 0.0})
+
+        meta = read_frontmatter(dest / "index.md")
+        assert meta is not None, "desk-reject frontmatter did not parse"
+        assert meta["decision"] == "reject"
+        assert meta.get("desk_rejected") is True, "desk_rejected missing from frontmatter"
+
+        prov = json.loads((dest / "provenance.json").read_text())
+        assert prov["desk_rejected"] is True, "desk_rejected not recorded in provenance"
+        assert prov["mean_score"] is None, "a desk reject has no panel to score"
+        assert prov["screens"]["desk_screen_mode"] == "gate", "screen config not recorded"
+
+        landing = (dest / "index.md").read_text()
+        assert "Desk rejected" in landing, "landing page does not say it was a desk reject"
+        assert "Panel recommendation" not in landing, "claims a panel that never convened"
+        # The three identical documents must be listed once, not three times.
+        assert landing.count("(integrity.md)") + landing.count(
+            "(decision_letter.md)"
+        ) + landing.count("(desk_screen.md)") == 1, "duplicate bodies listed separately"
+        assert (dest / "integrity.md").exists(), "integrity.md not copied into the bundle"
+
+
 def main() -> int:
     for title in NASTY_TITLES:
         check(title)
         print(f"ok  {title}")
+
+    check_desk_reject()
+    print("ok  desk reject (no panel, deduped bodies)")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

@@ -80,9 +80,17 @@ def render(entries: list[dict]) -> str:
         for entry in by_year[year]:
             title = str(entry.get("title", "Untitled")).replace("|", "\\|")
             decision = str(entry.get("decision", ""))
+            # A desk reject is also `decision: reject`, but listing it as a
+            # plain Reject implies a panel weighed the work and declined it.
+            # Nothing read the manuscript, so say which kind it was.
+            badge = (
+                "⛔ Desk reject"
+                if entry.get("desk_rejected")
+                else BADGE.get(decision, decision)
+            )
             lines.append(
                 f"| [{title}]({entry['path']}/index.md) "
-                f"| {BADGE.get(decision, decision)} "
+                f"| {badge} "
                 f"| {entry.get('source', '—')} "
                 f"| {entry.get('reviewed', '—')} |"
             )
