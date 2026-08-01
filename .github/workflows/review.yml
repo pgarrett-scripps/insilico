@@ -60,6 +60,24 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      # PeerReviewAgents is private while the paper is unpublished, so the
+      # runner needs a read token to clone it. Rewriting the URL in git config
+      # keeps the token off the command line, where it would otherwise appear
+      # in the step's own log. Once that repo is public, delete the
+      # PRA_READ_TOKEN secret and this step turns itself into a no-op.
+      - name: Authenticate to the pipeline repo
+        env:
+          PIPELINE_TOKEN: ${{ secrets.PRA_READ_TOKEN }}
+        run: |
+          if [ -n "$PIPELINE_TOKEN" ]; then
+            git config --global \
+              url."https://x-access-token:${PIPELINE_TOKEN}@github.com/".insteadOf \
+              "https://github.com/"
+            echo "Using PRA_READ_TOKEN to reach the private pipeline repo."
+          else
+            echo "No PRA_READ_TOKEN set — assuming the pipeline repo is public."
+          fi
+
       - name: Pin the referee panel
         id: pipeline
         run: |
