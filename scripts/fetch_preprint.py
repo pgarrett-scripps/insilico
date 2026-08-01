@@ -185,13 +185,29 @@ def resolve(url: str) -> Preprint:
         server = (m.group("server") or "biorxiv").lower()
         return _resolve_rxiv(url, m.group("doi"), server, m.group("version") or "")
 
+    # Direct PDF links are deliberately not accepted. An overlay journal's
+    # whole claim is that it reviews something with a permanent home, and a
+    # bare PDF URL has no stable identity: no DOI, no version, no landing
+    # page, nothing to tell a reader whether the file they download is the
+    # one the panel read. It also rots — a review pointing at a dead link is
+    # a review of nothing — carries no metadata, so title and authors have to
+    # be guessed out of the PDF text, and turns `/review <url>` into an
+    # arbitrary fetch from CI.
     if url.lower().endswith(".pdf"):
-        return Preprint(url=url, source="direct", pdf_url=url)
+        raise ValueError(
+            f"{url} is a direct PDF link, which we don't accept.\n"
+            "Reviews have to name a specific, permanent revision of a "
+            "manuscript, and a bare PDF URL doesn't provide one. Post the "
+            "preprint to arXiv, bioRxiv or medRxiv and submit that link — "
+            "you'll get a DOI and a version number, and the review will say "
+            "exactly which revision it read."
+        )
 
     raise ValueError(
         f"unrecognized preprint URL: {url!r}\n"
-        "Supported: arxiv.org/abs/..., biorxiv.org/content/10.1101/..., "
-        "medrxiv.org/content/10.1101/..., or a direct link to a .pdf"
+        "Supported: arxiv.org/abs/..., biorxiv.org/content/<doi>, "
+        "medrxiv.org/content/<doi>. bioRxiv and medRxiv DOIs carry either the "
+        "10.1101 or the newer 10.64898 prefix; both work."
     )
 
 

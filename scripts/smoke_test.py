@@ -19,8 +19,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from build_index import read_frontmatter  # noqa: E402
-from fetch_preprint import Preprint  # noqa: E402
-from run_review import BUNDLE_ORDER, slugify, write_bundle  # noqa: E402
+from fetch_preprint import Preprint, resolve  # noqa: E402
+from run_review import (  # noqa: E402
+    BUNDLE_ORDER,
+    next_version,
+    paper_slug,
+    slugify,
+    write_bundle,
+    write_paper_page,
+)
 
 # Titles that have historically broken naive frontmatter generation.
 NASTY_TITLES = [
@@ -161,6 +168,86 @@ def check_desk_reject() -> None:
         assert (dest / "integrity.md").exists(), "integrity.md not copied into the bundle"
 
 
+def check_versioning() -> None:
+    """A re-review must never overwrite the review it supersedes.
+
+    The flat layout silently replaced the earlier bundle *and* left its
+    specialist reports behind, so a reader saw v1 reports filed under v2's
+    verdict. Both halves are asserted here.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        paper = Path(tmp) / "2026" / "a-paper"
+
+        def review(mver: str, decision: str, reviewers: tuple[str, ...]) -> int:
+            run_dir = Path(tempfile.mkdtemp())
+            for name, _ in BUNDLE_ORDER:
+                (run_dir / name).write_text(f"# {name}\n")
+            for r in reviewers:
+                (run_dir / f"review_{r}.md").write_text(f"# {r} m{mver}\n")
+            os.environ["REVIEW_MODELS"] = "{}"
+            os.environ["REVIEW_AGENT_MODELS"] = "{}"
+            preprint = Preprint(
+                url="https://arxiv.org/abs/1706.03762", source="arxiv",
+                pdf_url="p", identifier="1706.03762", title="A paper",
+                version=mver, pdf_sha256=mver * 64,
+            )
+            v = next_version(paper)
+            write_bundle(
+                preprint,
+                {"decision": decision, "manuscript_title": "A paper",
+                 "total_cost": 1.0, "errors": [], "reports": []},
+                run_dir, paper / f"v{v}", "1", "octocat",
+            )
+            write_paper_page(paper)
+            return v
+
+        assert review("1", "reject", ("methodology", "novelty", "ethics")) == 1
+        assert review("2", "accept", ("methodology",)) == 2, "re-review did not bump"
+
+        v1 = json.loads((paper / "v1" / "provenance.json").read_text())
+        v2 = json.loads((paper / "v2" / "provenance.json").read_text())
+        assert v1["decision"] == "reject", "v1 verdict was overwritten by the re-review"
+        assert v2["decision"] == "accept", "v2 verdict not recorded"
+        assert v1["preprint"]["version"] == "1"
+        assert v2["preprint"]["version"] == "2"
+
+        bled = sorted(p.name for p in (paper / "v2").glob("review_*.md"))
+        assert bled == ["review_methodology.md"], f"v1 reports bled into v2: {bled}"
+
+        history = (paper / "index.md").read_text()
+        assert "[v1](v1/index.md)" in history, "history missing v1"
+        assert "[v2](v2/index.md)" in history, "history missing v2"
+        meta = read_frontmatter(paper / "index.md")
+        assert meta["review_count"] == 2, "paper page miscounts reviews"
+        assert meta["decision"] == "accept", "paper page should show the latest verdict"
+
+
+def check_slug_uniqueness() -> None:
+    """Titles truncate at 60 chars, so they cannot be the whole directory name."""
+    long_a = "Deep learning approaches for the prediction of protein structure from sequence"
+    long_b = "Deep learning approaches for the prediction of protein folding kinetics"
+    a = Preprint(url="", source="arxiv", pdf_url="", identifier="2401.00001")
+    b = Preprint(url="", source="arxiv", pdf_url="", identifier="2401.00002")
+    assert slugify(long_a) == slugify(long_b), "fixture no longer exercises truncation"
+    assert paper_slug(a, long_a) != paper_slug(b, long_b), "distinct papers still collide"
+
+
+def check_rejected_sources() -> None:
+    """Only the three preprint servers are reviewable."""
+    for ok in (
+        "https://arxiv.org/abs/1706.03762",
+        "https://www.biorxiv.org/content/10.64898/2026.04.28.721232v1",
+        "https://www.medrxiv.org/content/10.1101/2020.03.24.20042937v1",
+    ):
+        assert resolve(ok).identifier, f"should resolve: {ok}"
+    for bad in ("https://example.com/paper.pdf", "https://example.com/page"):
+        try:
+            resolve(bad)
+        except ValueError:
+            continue
+        raise AssertionError(f"should have been rejected: {bad}")
+
+
 def main() -> int:
     for title in NASTY_TITLES:
         check(title)
@@ -168,6 +255,12 @@ def main() -> int:
 
     check_desk_reject()
     print("ok  desk reject (no panel, deduped bodies)")
+    check_versioning()
+    print("ok  re-review adds v2 without touching v1")
+    check_slug_uniqueness()
+    print("ok  distinct papers get distinct directories")
+    check_rejected_sources()
+    print("ok  only arXiv / bioRxiv / medRxiv accepted")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

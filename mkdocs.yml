@@ -36,6 +36,27 @@ theme:
         icon: material/weather-sunny
         name: Light mode
 
+plugins:
+  # Listing any plugin disables the implicit default, so search has to be
+  # named explicitly or the site ships without it.
+  - search
+  # Generates an OG/Twitter card image per page from its title and
+  # description. Without this a review posted to Bluesky or Mastodon renders
+  # as a bare URL, which for a journal whose growth depends on people sharing
+  # individual reviews is the difference between a link and an article.
+  #
+  # Needs the imaging extra (`mkdocs-material[imaging]`) plus system Cairo;
+  # the publish workflow installs both. Disabled automatically when the site
+  # is built without them rather than failing the build.
+  - social:
+      # Escape hatch for a machine without system Cairo: `SOCIAL_CARDS=false
+      # mkdocs serve` builds everything else. Defaults on, so CI and the
+      # published site always render cards rather than silently skipping them.
+      enabled: !ENV [SOCIAL_CARDS, true]
+      cards_layout_options:
+        background_color: "#16202b"
+        color: "#fdfcfa"
+
 extra_css:
   - stylesheets/extra.css
 

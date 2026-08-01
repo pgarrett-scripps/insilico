@@ -39,8 +39,19 @@ def read_frontmatter(path: Path) -> dict | None:
 
 
 def collect() -> list[dict]:
+    """One entry per *paper*, not per review.
+
+    A paper reviewed twice is still one item in the index; its card links to
+    the paper page, which carries the full review history. Listing every
+    version separately would show the same manuscript repeatedly and bury
+    what a reader is scanning for.
+    """
     entries = []
     for landing in sorted(REVIEWS.glob("*/*/index.md")):
+        # Skip the per-review bundles nested under each paper — the paper page
+        # one level up is the canonical entry.
+        if landing.parent.name.startswith("v") and landing.parent.name[1:].isdigit():
+            continue
         meta = read_frontmatter(landing)
         if not meta:
             print(f"skipping {landing.relative_to(REPO)}: no usable frontmatter")
@@ -117,6 +128,11 @@ def render_card(entry: dict) -> str:
         f'<span>{esc(str(entry.get("source", "—")))}</span>',
         f'<span>{esc(str(entry.get("reviewed", "—")))}</span>',
     ]
+    # Only worth saying when it's more than one — a re-review after the
+    # authors revised is exactly the thing a reader should notice.
+    count = entry.get("review_count")
+    if isinstance(count, int) and count > 1:
+        foot.append(f"<span>{count} reviews</span>")
     score = entry.get("mean_score")
     if isinstance(score, (int, float)):
         foot.append(f'<span class="ins-card__score">{score} / 5</span>')

@@ -30,7 +30,25 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      # CairoSVG binds to the system Cairo library, which the runner image
+      # does not carry. Without these the social plugin fails at import and
+      # takes the whole build down with it.
+      - name: Install Cairo for social card rendering
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
+
       - run: pip install --quiet -r requirements.txt
+
+      # Card images are deterministic, and rendering them is by far the
+      # slowest part of the build. Keyed on the config and content that feed
+      # them so a prose edit elsewhere doesn't force a full re-render.
+      - uses: actions/cache@v4
+        with:
+          path: .cache
+          key: social-${{ hashFiles('mkdocs.yml', 'docs/**/*.md') }}
+          restore-keys: social-
 
       # Rebuild rather than trusting the committed index — a merge that touched
       # two review bundles at once would otherwise leave it stale.

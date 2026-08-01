@@ -9,5 +9,9 @@
 # mkdocs is capped: 2.0 removes the plugin and theming systems that
 # mkdocs-material depends on, with no migration path.
 mkdocs>=1.6,<2
-mkdocs-material>=9.5
+# [imaging] pulls Pillow and CairoSVG for the social plugin, which renders the
+# Open Graph card per page. It also needs system Cairo — see the apt step in
+# .github/workflows/publish.yml. Without these mkdocs still builds, but every
+# shared review link renders as a bare URL instead of a card.
+mkdocs-material[imaging]>=9.5
 pyyaml>=6.0

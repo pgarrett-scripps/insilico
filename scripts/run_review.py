@@ -105,6 +105,43 @@ def slugify(text: str, limit: int = 60) -> str:
     return s[:limit].rsplit("-", 1)[0] or s[:limit]
 
 
+def paper_slug(preprint: Preprint, title: str) -> str:
+    """A directory name that is readable *and* unique to one preprint.
+
+    Titles alone are neither. slugify truncates at 60 characters, so two
+    genuinely different papers can collide:
+
+        "Deep learning approaches for the prediction of protein structure..."
+        "Deep learning approaches for the prediction of protein folding..."
+
+    both reduce to `deep-learning-approaches-for-the-prediction-of-protein`,
+    and the second review would land on top of the first. Appending the
+    preprint's own identifier makes the name unique by construction — and
+    since submissions are restricted to arXiv/bioRxiv/medRxiv, there is
+    always one.
+    """
+    title_part = slugify(title, limit=50)
+    id_part = slugify(preprint.identifier or preprint.doi or preprint.url, limit=40)
+    slug = "-".join(p for p in (title_part, id_part) if p)
+    return slug or "submission"
+
+
+def next_version(paper_dir: Path) -> int:
+    """The version number this review should be written as.
+
+    Never returns an existing one: re-reviewing a revised manuscript adds
+    `v2` beside `v1` rather than replacing it. Overwriting would both lose
+    the earlier review and leave its orphaned specialist reports sitting in
+    the new bundle, so a reader would see v1 reports presented as part of v2.
+    """
+    existing = [
+        int(p.name[1:])
+        for p in paper_dir.glob("v*")
+        if p.is_dir() and p.name[1:].isdigit()
+    ]
+    return max(existing, default=0) + 1
+
+
 def yaml_scalar(value: str) -> str:
     """Quote a scalar so a colon or quote in a title can't break the frontmatter."""
     return '"' + str(value).replace("\\", "\\\\").replace('"', '\\"') + '"'
@@ -254,6 +291,159 @@ def write_bundle(
     )
 
 
+def card_description(provenance: dict, review_count: int = 1) -> str:
+    """One line for the social card and og:description.
+
+    Written to be read out of context — on a timeline, next to a link, with
+    no surrounding page. So it leads with the verdict and always says the
+    review is machine-generated: a shared card is exactly where that could
+    otherwise be mistaken for a journal acceptance.
+    """
+    if provenance.get("desk_rejected"):
+        head = "Desk rejected before review"
+    else:
+        head = VERDICT_LABEL.get(
+            provenance.get("decision", ""), provenance.get("decision", "reviewed")
+        )
+        score = provenance.get("mean_score")
+        if score is not None:
+            head += f" · mean panel score {score}/5"
+    tail = "AI referee panel — advisory, not a certification."
+    if review_count > 1:
+        tail = f"{review_count} reviews on record. {tail}"
+    return f"{head}. {tail}"
+
+
+def write_paper_page(paper_dir: Path) -> None:
+    """Rewrite the paper's landing page from whatever review versions exist.
+
+    Regenerated from the directory rather than appended to, so it stays
+    correct if a version is added or removed by hand. This page is what the
+    index links to and what a citation should point at: it is the stable
+    address for "In Silico's review record for this paper", while each
+    ``vN/`` is the immutable address for one review.
+    """
+    versions = sorted(
+        (p for p in paper_dir.glob("v*") if p.is_dir() and p.name[1:].isdigit()),
+        key=lambda p: int(p.name[1:]),
+        reverse=True,
+    )
+    if not versions:
+        return
+
+    records = []
+    for vdir in versions:
+        try:
+            prov = json.loads((vdir / "provenance.json").read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        records.append((vdir.name, prov))
+    if not records:
+        return
+
+    _, latest = records[0]
+    pre = latest.get("preprint", {})
+    title = pre.get("title") or "Untitled submission"
+    decision = latest.get("decision", "unknown")
+    desk = latest.get("desk_rejected")
+
+    fm = [
+        "---",
+        f"title: {yaml_scalar(title)}",
+        f"decision: {yaml_scalar(decision)}",
+        f"source: {yaml_scalar(pre.get('source', ''))}",
+        f"preprint_url: {yaml_scalar(pre.get('url', ''))}",
+        f"doi: {yaml_scalar(pre.get('doi', ''))}",
+        f"reviewed: {yaml_scalar(str(latest.get('generated_at', ''))[:10])}",
+        f"authors: {yaml_list(pre.get('authors') or [])}",
+        f"review_count: {len(records)}",
+        # Drives the social-card subtitle and the og:description. Without it
+        # every shared review link carries the site's generic tagline, which
+        # tells a reader nothing about the paper they were sent.
+        f"description: {yaml_scalar(card_description(latest, len(records)))}",
+    ]
+    if latest.get("mean_score") is not None:
+        fm.append(f"mean_score: {latest['mean_score']}")
+    if desk:
+        fm.append("desk_rejected: true")
+    fm.append("---")
+
+    chip = (
+        '<span class="ins-verdict ins-verdict--desk">Desk reject</span>'
+        if desk
+        else f'<span class="ins-verdict ins-verdict--{decision}">'
+        f"{VERDICT_LABEL.get(decision, decision)}</span>"
+    )
+
+    body = [
+        "\n".join(fm),
+        "",
+        f"# {title}",
+        "",
+        '<div class="ins-decision">',
+        f"  {chip}",
+        f'  <span class="ins-decision__label">Most recent: {VERDICT_LABEL.get(decision, decision)}</span>',
+        f'  <span class="ins-decision__note">{len(records)} review'
+        f"{'' if len(records) == 1 else 's'} on record</span>",
+        "</div>",
+        "",
+    ]
+
+    url = pre.get("url", "")
+    rows = [f"| Preprint | [{url}]({url}) |"] if url else []
+    if pre.get("doi"):
+        rows.append(f"| DOI | `{pre['doi']}` |")
+    if pre.get("authors"):
+        rows.append(f"| Authors | {', '.join(pre['authors'])} |")
+    if rows:
+        body += ["| | |", "|---|---|", "\n".join(rows), ""]
+
+    body += [
+        "## Review history",
+        "",
+        "Each review below describes the revision of the manuscript named in its",
+        "row. Earlier reviews are never edited or removed when a new one is added —",
+        "they remain the record of what the panel said about that revision.",
+        "",
+        "| Review | Manuscript version | Recommendation | Reviewed |",
+        "|---|---|---|---|",
+    ]
+    for name, prov in records:
+        p = prov.get("preprint", {})
+        verdict = (
+            "Desk reject"
+            if prov.get("desk_rejected")
+            else VERDICT_LABEL.get(prov.get("decision", ""), prov.get("decision", "—"))
+        )
+        mver = f"v{p.get('version')}" if p.get("version") else "—"
+        # `{name}/index.md`, not `{name}/`: MkDocs resolves .md targets and
+        # warns on a bare directory in a markdown link.
+        body.append(
+            f"| [{name}]({name}/index.md) | {mver} | {verdict} "
+            f"| {str(prov.get('generated_at', ''))[:10]} |"
+        )
+    body.append("")
+
+    # The fingerprint is what makes "which revision was this?" answerable
+    # rather than a matter of trust. Only shown when one was recorded.
+    shas = [
+        (name, prov.get("preprint", {}).get("pdf_sha256", ""))
+        for name, prov in records
+    ]
+    if any(sha for _, sha in shas):
+        body += [
+            "??? note \"PDF fingerprints\"",
+            "",
+            "    SHA-256 of the exact file each panel was given.",
+            "",
+        ]
+        for name, sha in shas:
+            body.append(f"    - `{name}` — `{sha or 'not recorded'}`")
+        body.append("")
+
+    (paper_dir / "index.md").write_text("\n".join(body), encoding="utf-8")
+
+
 def render_landing(
     preprint: Preprint,
     provenance: dict,
@@ -281,6 +471,7 @@ def render_landing(
     # provenance.json. Absent on a desk reject, where no panel scored anything.
     if provenance.get("mean_score") is not None:
         fm.append(f"mean_score: {provenance['mean_score']}")
+    fm.append(f"description: {yaml_scalar(card_description(provenance))}")
     if provenance.get("desk_rejected"):
         # Surfaced in frontmatter so the index can mark these distinctly
         # rather than filing them next to reasoned panel rejections.
@@ -550,13 +741,19 @@ def main() -> int:
     run_dir = Path(write_reports(state))
     title = preprint.title or state.get("manuscript_title") or preprint.identifier
     year = (preprint.published or dt.date.today().isoformat())[:4]
-    slug = slugify(title) or slugify(preprint.identifier) or "submission"
-    dest = REVIEWS / year / slug
+    slug = paper_slug(preprint, title)
+    paper_dir = REVIEWS / year / slug
+    # Always a fresh vN. A re-review of a revised manuscript sits beside the
+    # earlier one instead of overwriting it, which the policy promises and
+    # the previous flat layout quietly broke.
+    version = next_version(paper_dir)
+    dest = paper_dir / f"v{version}"
 
     write_bundle(
         preprint, state, run_dir, dest,
         args.submission_id, args.submitter, cost_by_node,
     )
+    write_paper_page(paper_dir)
     rel = dest.relative_to(REPO)
     desk_rejected = bool(state.get("desk_rejected"))
     print(f"bundle    {rel}", file=sys.stderr)
@@ -571,6 +768,9 @@ def main() -> int:
             fh.write(f"slug={slug}\n")
             fh.write(f"year={year}\n")
             fh.write(f"path={rel}\n")
+            # The re-review case needs to be visible in the PR: "v2" means an
+            # earlier review of this paper already exists and is not replaced.
+            fh.write(f"version={version}\n")
             fh.write(f"title={title}\n")
             fh.write(f"cost={state.get('total_cost') or 0}\n")
 

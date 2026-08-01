@@ -23,6 +23,15 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      # Same Cairo install as publish.yml. CI and the deploy build have to be
+      # identical here: if cards can only fail at publish time, the first sign
+      # of a problem is the site not deploying.
+      - name: Install Cairo for social card rendering
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq \
+            libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
+
       - run: pip install --quiet -r requirements.txt
 
       - name: Bundle rendering is well-formed

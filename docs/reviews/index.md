@@ -10,10 +10,10 @@ bundle produced for it. Recommendations are advisory — see the
 
 <div class="ins-cards">
 
-<a class="ins-card" href="2026/confronting-global-eradication-of-tb-head-on-uncovering-the/">
+<a class="ins-card" href="2026/confronting-global-eradication-of-tb-head-on-10-64898-2026-04-28-721232/">
   <span class="ins-verdict ins-verdict--major">Major revision</span>
   <p class="ins-card__title">Confronting global eradication of TB head on: Uncovering the root of drug resistance and bacterial survival strategies through a comprehensive computational study of first-line TB drug resistant mutations</p>
   <p class="ins-card__authors">Pawar, P., Samarasinghe, S.</p>
-  <span class="ins-card__foot"><span>biorxiv</span><span>2026-08-01</span></span>
+  <span class="ins-card__foot"><span>biorxiv</span><span>2026-08-01</span><span class="ins-card__score">2.5 / 5</span></span>
 </a>
 </div>

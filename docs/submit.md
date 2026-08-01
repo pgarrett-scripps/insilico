@@ -2,20 +2,41 @@
 
 ## What you need
 
-A preprint that is already public and machine-readable:
+A preprint on one of three servers:
 
 - **arXiv** — `https://arxiv.org/abs/2401.12345`
-- **bioRxiv / medRxiv** — `https://www.biorxiv.org/content/10.1101/2024.01.01.573000v1`
-- **Any public PDF** — a direct link ending in `.pdf`
+- **bioRxiv** — `https://www.biorxiv.org/content/10.64898/2026.04.28.721232v1`
+- **medRxiv** — `https://www.medrxiv.org/content/10.1101/2020.03.24.20042937v1`
 
-That's the whole submission. We fetch the PDF ourselves and pull metadata from
-the source API where one exists.
+That's the whole submission. We fetch the PDF ourselves and pull the title,
+authors, abstract and version from the server's API.
+
+bioRxiv and medRxiv DOIs carry either the `10.1101` prefix or the newer
+`10.64898` one. Both work.
+
+### Why not a direct PDF link?
+
+We used to accept any URL ending in `.pdf` and stopped, because a review has to
+name a specific, permanent revision of a manuscript and a bare PDF URL doesn't
+provide one.
+
+A preprint server gives us a DOI *and* a version number, so a review can state
+exactly which revision it read — and we record a SHA-256 of the file to prove
+it. A loose PDF gives us none of that: no stable identity, no way for a reader
+to tell whether the file they download is the one the panel saw, and nothing
+stopping the link from going dead and leaving a review pointing at nothing.
+
+If your work isn't on a preprint server yet, posting it is free and takes
+minutes, and you get a citable DOI out of it regardless of what we say about
+the paper.
 
 ## What we can't read
 
 - Scanned or image-only PDFs — the panel has no OCR. Convert to text first.
 - Paywalled or login-gated links.
-- Anything that isn't a PDF at the URL you give us.
+- Postings so new the server hasn't finished indexing them. bioRxiv and medRxiv
+  don't serve a PDF for a day or so after a preprint first appears; if you get
+  an error saying so, wait and resubmit.
 
 `--dry-run` on the runner script checks all of this without spending tokens, and
 the editor will run it before triggering a review.

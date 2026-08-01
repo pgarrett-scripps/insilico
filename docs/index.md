@@ -61,9 +61,16 @@ wrote which report. Engine:
 
 Authors replace preprints in place, so a review can quietly end up sitting next
 to a manuscript it never read. Every review records the version and a SHA-256 of
-the exact PDF the panel was given, and we re-check the corpus monthly. When a
-reviewed preprint is revised, we say so rather than letting the old review stand
-unqualified.
+the exact PDF the panel was given, and we re-check the corpus monthly.
+
+When a revised preprint is re-reviewed, the new review is published **beside**
+the old one, not on top of it. Each paper has a page listing every review it has
+received; earlier reviews are never edited or removed, because they are the
+record of what the panel said about that revision.
+
+This is also why submissions have to come from arXiv, bioRxiv or medRxiv: those
+give a DOI and a version number to anchor a review to. A loose PDF link names no
+particular revision and can go dead.
 
 ## What this is not
 
