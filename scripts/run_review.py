@@ -398,7 +398,11 @@ def citation_block(
         "  author       = {{In Silico}},",
         f"  year         = {{{year}}},",
         "  howpublished = {In Silico, an AI-refereed overlay journal},",
-        f"  url          = {{{url}}},",
+        # Escaped like any other field. Our slugs are [a-z0-9-] so this is a
+        # no-op in practice, but an unescaped underscore in a url field is a
+        # LaTeX error outside \url{}, and a citation that won't compile is
+        # worse than no citation at all.
+        f"  url          = {{{bibtex_escape(url)}}},",
         f"  note         = {{{bibtex_escape(note)}}}",
         "}",
         "```",
