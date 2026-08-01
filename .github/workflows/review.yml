@@ -74,6 +74,26 @@ jobs:
               url."https://x-access-token:${PIPELINE_TOKEN}@github.com/".insteadOf \
               "https://github.com/"
             echo "Using PRA_READ_TOKEN to reach the private pipeline repo."
+
+            # Probe the API before git gets involved. git reports "Repository
+            # not found" for anything it can't read, which conflates a bad
+            # token with a token that simply lacks access; the API separates
+            # them. Prints only a status code, never the token.
+            code="$(curl -s -o /dev/null -w '%{http_code}' \
+              -H "Authorization: Bearer $PIPELINE_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/pgarrett-scripps/PeerReviewAgents)"
+            case "$code" in
+              200) echo "Token check: OK (can read the pipeline repo)." ;;
+              401) echo "::error::Token check: 401 — PRA_READ_TOKEN is not a valid" \
+                        "credential. Usually a paste problem: a truncated value, or a" \
+                        "trailing newline from piping it in. Re-set it with" \
+                        "'gh secret set PRA_READ_TOKEN' and paste at the prompt." ;;
+              404) echo "::error::Token check: 404 — the token is valid but cannot see" \
+                        "pgarrett-scripps/PeerReviewAgents. Check Repository access lists" \
+                        "that repo and Repository permissions grant Contents: Read." ;;
+              *)   echo "::warning::Token check returned HTTP $code." ;;
+            esac
           else
             echo "No PRA_READ_TOKEN set — assuming the pipeline repo is public."
           fi
