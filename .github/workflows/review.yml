@@ -131,10 +131,15 @@ jobs:
           fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "Pinning PeerReviewAgents @ $sha"
-          if [ -n "${PIPELINE_AUTH:-}" ]; then
-            git config --global "http.https://github.com/.extraheader" "$PIPELINE_AUTH"
-          fi
-          pip install --quiet "peerreviewagents @ git+${PIPELINE_REPO}@${sha}"
+          # Scope the credential to this one command via GIT_CONFIG_* rather
+          # than setting it globally: a global extraheader would stack with the
+          # local one actions/checkout persisted and break the later `git push`
+          # with the same "Duplicate header" the ls-remote above had to dodge.
+          # pip clones into a temp dir with no local config, so one header.
+          GIT_CONFIG_COUNT=1 \
+          GIT_CONFIG_KEY_0="http.https://github.com/.extraheader" \
+          GIT_CONFIG_VALUE_0="${PIPELINE_AUTH:-}" \
+            pip install --quiet "peerreviewagents @ git+${PIPELINE_REPO}@${sha}"
           pip install --quiet pyyaml
 
       - name: Run the panel
