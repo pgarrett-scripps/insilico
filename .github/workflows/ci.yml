@@ -1,0 +1,43 @@
+name: CI
+
+# Review PRs are machine-generated, so the site build has to be checked *before*
+# merge — a title that breaks the generated frontmatter would otherwise take
+# down the published site.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install --quiet -r requirements.txt
+
+      - name: Bundle rendering is well-formed
+        run: python scripts/smoke_test.py
+
+      - name: Index regenerates cleanly
+        run: python scripts/build_index.py
+
+      - name: Committed index is up to date
+        run: |
+          if ! git diff --quiet -- docs/reviews/index.md docs/reviews/index.json; then
+            echo "::error::docs/reviews/index.md is stale — run 'python scripts/build_index.py' and commit."
+            git --no-pager diff -- docs/reviews/index.md docs/reviews/index.json
+            exit 1
+          fi
+
+      - name: Site builds
+        run: mkdocs build --strict

@@ -1,0 +1,54 @@
+name: Submit a preprint
+description: Ask the referee panel to review a public preprint.
+title: "[Submission] "
+labels: ["submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One preprint per issue. We fetch the PDF ourselves — you only need the link.
+
+        Reviews are triggered manually by an editor, so expect a wait. Read the
+        [policy](https://github.com/pgarrett-scripps/insilico/blob/main/docs/policy.md)
+        first: recommendations are advisory, and reviews are published whatever
+        the verdict.
+
+  - type: input
+    id: url
+    attributes:
+      label: Preprint URL
+      description: arXiv, bioRxiv, medRxiv, or a direct link to a public PDF.
+      placeholder: https://arxiv.org/abs/2401.12345
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: What is the paper about?
+      description: |
+        Two or three sentences. Enough for an editor to judge whether it's in
+        scope — computational work whose claims can be checked by reading the
+        paper and its code.
+    validations:
+      required: true
+
+  - type: textarea
+    id: focus
+    attributes:
+      label: Anything you want the panel to focus on?
+      description: Optional. A specific claim, a method you're unsure about, a section you rewrote.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Before you submit
+      options:
+        - label: The preprint is publicly accessible and the PDF is text (not scanned).
+          required: true
+        - label: I'm an author, or I have a reason to be submitting someone else's work that I'll explain above.
+          required: true
+        - label: I understand the review is machine-generated, advisory, and published regardless of the verdict.
+          required: true

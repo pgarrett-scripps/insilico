@@ -1,0 +1,68 @@
+# PeerReviewAgents configuration for published In Silico reviews.
+#
+# The pipeline reads this automatically when run from the repo root, so the
+# GitHub Action passes no model flags — anything on the command line would
+# override this file and silently flatten the per-agent split below.
+#
+# For local development, override per-run instead of editing this file:
+#
+#   python scripts/run_review.py --url ... \
+#     --provider openrouter --model minimax/minimax-m3 --debate-rounds 1
+#
+# That routes iteration through a ~$0.20/run model on a personal key rather
+# than spending the lab's Anthropic budget on prompt tuning.
+
+# Anthropic direct rather than through OpenRouter: it's the path the lab key
+# pays for, and the only one where the manuscript prompt-cache applies — the
+# pipeline threads the manuscript as a cached prefix through every stage that
+# supports it.
+provider = "anthropic"
+
+# Fallback for any agent whose tag isn't defined below.
+reasoning_model = "claude-sonnet-5"
+
+debate_rounds = 2
+
+# ---------------------------------------------------------------------------
+# Per-agent models
+# ---------------------------------------------------------------------------
+#
+# Agents resolve a model through a named tag: reviewers -> "reviewer",
+# debate -> "debate", auditors -> "audit", desk screen -> "screen", and
+# editor / meta-reviewer / rebuttal / journal-scout -> "synthesis".
+#
+# This is the main cost lever. The 8 specialists and the 2 auditors are the
+# widest fan-out and the most checklist-like, so they run on Haiku. The debate
+# is adversarial reasoning rather than assessment, so it gets Sonnet. The area
+# chair and editor decide the verdict, so they get Opus.
+
+[models.reviewer]
+model = "claude-haiku-4-5"
+
+[models.audit]
+model = "claude-haiku-4-5"
+
+[models.debate]
+model = "claude-sonnet-5"
+
+[models.synthesis]
+model = "claude-opus-5"
+
+# NOTE: `effort` is deliberately absent here. The synthesis agents pass
+# reasoning_effort="medium" at their call sites, and an explicit argument wins
+# over the tag — so an `effort` key in this file would be silently inert.
+# Raising it means editing those call sites in PeerReviewAgents, not this file.
+
+# ---------------------------------------------------------------------------
+# Review posture
+# ---------------------------------------------------------------------------
+
+# In Silico is an overlay journal with no house style of its own, so reviews
+# are conditioned on general standards rather than a specific venue's. Set
+# `target_journal` per submission instead if a paper names its intended venue.
+target_journal = "general"
+
+# Desk screening is off: submissions are already gated by a human editor
+# running `/review`, so a triage agent would spend tokens re-deciding
+# something a person already decided.
+desk_screen = false

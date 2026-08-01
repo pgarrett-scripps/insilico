@@ -1,0 +1,172 @@
+name: Run referee panel
+
+# Triggered by an editor commenting `/review` on a submission issue, or manually
+# with a URL. Deliberately *not* automatic: each run costs real money, and a
+# `pull_request` trigger from a fork could not see the API key anyway.
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Preprint URL (arXiv / bioRxiv / medRxiv / direct PDF)
+        required: true
+      submission_id:
+        description: Submission issue number (optional)
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: review-${{ github.event.issue.number || github.event.inputs.url }}
+  cancel-in-progress: false
+
+env:
+  # Model selection lives in ./peerreview.toml, including the per-role split.
+  # Setting REVIEW_MODEL here would override that file and collapse every
+  # stage back onto one model, so it is deliberately unset.
+  PIPELINE_REPO: https://github.com/pgarrett-scripps/PeerReviewAgents.git
+
+jobs:
+  review:
+    # Editors only. author_association is computed by GitHub from repo
+    # permissions, so this cannot be spoofed by the comment body.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.issue.pull_request == null &&
+       startsWith(github.event.comment.body, '/review') &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Acknowledge the command
+        if: github.event_name == 'issue_comment'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content=eyes
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Pin the referee panel
+        id: pipeline
+        run: |
+          sha="$(git ls-remote "$PIPELINE_REPO" HEAD | cut -f1)"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Pinning PeerReviewAgents @ $sha"
+          pip install --quiet "peerreviewagents @ git+${PIPELINE_REPO}@${sha}"
+          pip install --quiet pyyaml
+
+      - name: Run the panel
+        id: run
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PEERREVIEW_PIPELINE_SHA: ${{ steps.pipeline.outputs.sha }}
+          # Untrusted input reaches the script through the environment, never
+          # through shell interpolation.
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          INPUT_URL: ${{ github.event.inputs.url }}
+          SUBMISSION_ID: ${{ github.event.issue.number || github.event.inputs.submission_id }}
+          SUBMITTER: ${{ github.event.issue.user.login }}
+        run: |
+          if [ -n "$INPUT_URL" ]; then
+            python scripts/run_review.py \
+              --url "$INPUT_URL" \
+              --submission-id "${SUBMISSION_ID:-}" \
+              --submitter "${SUBMITTER:-}"
+          else
+            python scripts/run_review.py \
+              --issue-body "$ISSUE_BODY" \
+              --submission-id "$SUBMISSION_ID" \
+              --submitter "$SUBMITTER"
+          fi
+
+      - name: Rebuild the index
+        run: python scripts/build_index.py
+
+      - name: Open the review pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DECISION: ${{ steps.run.outputs.decision }}
+          SLUG: ${{ steps.run.outputs.slug }}
+          TITLE: ${{ steps.run.outputs.title }}
+          BUNDLE: ${{ steps.run.outputs.path }}
+          COST: ${{ steps.run.outputs.cost }}
+          SUBMISSION_ID: ${{ github.event.issue.number || github.event.inputs.submission_id }}
+        run: |
+          branch="review/${SLUG}-$(date +%s)"
+          git config user.name  "insilico-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add docs/reviews
+          git commit -m "review: ${TITLE} (${DECISION})"
+          git push origin "$branch"
+
+          {
+            echo "Referee panel output for **${TITLE}**."
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Panel recommendation | \`${DECISION}\` |"
+            echo "| Bundle | \`${BUNDLE}\` |"
+            echo "| Cost | \$${COST} |"
+            [ -n "${SUBMISSION_ID}" ] && echo "| Submission | #${SUBMISSION_ID} |"
+            echo
+            echo "The recommendation above is **advisory**. Merging this PR publishes"
+            echo "the review and lists the preprint; closing it declines the submission."
+            echo
+            [ -n "${SUBMISSION_ID}" ] && echo "Refs #${SUBMISSION_ID}"
+          } > /tmp/pr-body.md
+
+          url="$(gh pr create \
+            --title "Review: ${TITLE} (${DECISION})" \
+            --body-file /tmp/pr-body.md \
+            --label review \
+            --label "verdict:${DECISION}" 2>/dev/null || \
+            gh pr create --title "Review: ${TITLE} (${DECISION})" --body-file /tmp/pr-body.md)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Report back on the submission
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DECISION: ${{ steps.run.outputs.decision }}
+          PR_URL: ${{ steps.pr.outputs.url }}
+          BUNDLE: ${{ steps.run.outputs.path }}
+        run: |
+          {
+            echo "The referee panel has finished."
+            echo
+            echo "**Recommendation: \`${DECISION}\`** — advisory only; a human editor decides."
+            echo
+            echo "Full bundle: ${PR_URL}"
+            echo
+            echo "<details><summary>Summary report</summary>"
+            echo
+            head -c 8000 "${BUNDLE}/summary.md" || true
+            echo
+            echo "</details>"
+          } | gh issue comment "${{ github.event.issue.number }}" --body-file -
+
+      - name: Report failure
+        if: failure() && github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" --body \
+            "The referee panel failed. See the [run log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+
+          Common causes: the URL isn't a supported preprint source, the PDF is scanned or image-only, or the source is paywalled."

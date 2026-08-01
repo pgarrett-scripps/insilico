@@ -1,0 +1,13 @@
+# Site build + local review runs.
+#
+# The referee panel itself is pinned per-run by .github/workflows/review.yml
+# (it resolves the current HEAD SHA so every review records exactly which
+# version produced it). For local use, install it unpinned:
+#
+#     pip install "peerreviewagents @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
+
+# mkdocs is capped: 2.0 removes the plugin and theming systems that
+# mkdocs-material depends on, with no migration path.
+mkdocs>=1.6,<2
+mkdocs-material>=9.5
+pyyaml>=6.0

@@ -1,0 +1,50 @@
+site_name: In Silico
+site_description: An open, AI-refereed overlay journal for computational preprints.
+site_url: https://pgarrett-scripps.github.io/insilico/
+repo_url: https://github.com/pgarrett-scripps/insilico
+repo_name: insilico
+edit_uri: ""
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+
+nav:
+  - Home: index.md
+  - Submit: submit.md
+  - Policy: policy.md
+  - Reviews: reviews/index.md
+
+# Individual review bundles are reachable from reviews/index.md and from each
+# bundle's landing page; listing every specialist report in the nav would bury
+# everything else.
+not_in_nav: |
+  reviews/*/**
