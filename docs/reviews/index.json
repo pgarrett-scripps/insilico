@@ -37,5 +37,33 @@
     "mean_score": 2.5,
     "path": "2026/confronting-global-eradication-of-tb-head-on-10-64898-2026-04-28-721232",
     "year": "2026"
+  },
+  {
+    "title": "Capturing Cardiomyocyte Cell-to-Cell Heterogeneity via Shotgun Single Cell Top-Down Proteomics",
+    "decision": "major",
+    "source": "biorxiv",
+    "preprint_url": "https://www.biorxiv.org/content/10.64898/2026.03.26.714071",
+    "doi": "10.64898/2026.03.26.714071",
+    "reviewed": "2026-08-01",
+    "authors": [
+      "Gomes, F. P.",
+      "Chazarin, B.",
+      "Binek, A.",
+      "Garrido, A.",
+      "Durbin, K.",
+      "Garcia-Carbonell, R.",
+      "Pathak, K.",
+      "Brinkman, D.",
+      "Melo, R.",
+      "Karlstaedt, A.",
+      "Saez, E.",
+      "Van Eyk, J.",
+      "Yates, J. R."
+    ],
+    "review_count": 1,
+    "description": "Major revision \u00b7 mean panel score 3.5/5. AI referee panel \u2014 advisory, not a certification.",
+    "mean_score": 3.5,
+    "path": "2026/capturing-cardiomyocyte-cell-to-cell-10-64898-2026-03-26-714071",
+    "year": "2026"
   }
 ]
