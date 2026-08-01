@@ -1,6 +1,6 @@
 # In Silico
 
-**An open, AI-refereed overlay journal for computational preprints.**
+**An open, AI-refereed overlay journal. Any field; the whole review published.**
 
 In Silico does not host manuscripts. You submit a link to a preprint that already
 exists — arXiv, bioRxiv, medRxiv, or any public PDF — and we run it through a

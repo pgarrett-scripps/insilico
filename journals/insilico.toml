@@ -1,0 +1,140 @@
+# In Silico's own venue profile.
+#
+# Until now reviews ran against the pipeline's "general" profile — sound
+# field-general standards, but standing in for *some other journal* we were
+# guessing at. That was the wrong frame. In Silico is the venue, so it should
+# state its own criteria and be judged against them, and authors should be
+# able to read exactly what the panel was told to weigh.
+#
+# Loaded via `journals_dir = "journals"` + `target_journal = "insilico"` in
+# peerreview.toml. The pipeline injects scope, guidelines and limits into the
+# reviewer, meta-reviewer, editor and recommender prompts, so edits here
+# change what the panel actually does — this file is configuration, not
+# documentation. The human-readable version lives in docs/criteria.md and
+# the two must be kept in step.
+
+name = "In Silico"
+aliases = ["InSilico", "In Silico Overlay Journal"]
+publisher = "In Silico (independent)"
+field = "any discipline"
+
+# Deliberately unset. In Silico has no impact factor and no acceptance rate:
+# it does not confer selectivity, and inventing numbers here would feed a
+# prestige signal into the prompts that has no basis.
+impact_factor = 0.0
+impact_factor_year = 0
+acceptance_rate = ""
+
+audience = """
+Researchers in the manuscript's own field, plus readers from adjacent fields
+who need to judge whether the work is sound without being specialists in it.
+Reviews are public and are read by people deciding whether to trust a preprint
+they have just found.
+"""
+
+description = """
+In Silico is an open overlay journal. It does not host papers: it reviews
+preprints that already exist elsewhere and publishes the complete referee
+record — every specialist report, the debate, the synthesis and the decision —
+next to a link to the work. The review is the published artifact.
+
+Every referee is a language model. Recommendations are advisory and a human
+editor makes the final call. An In Silico listing is not certification.
+"""
+
+scope = """
+In scope: any original research manuscript, in any discipline, whose claims a
+careful reader can evaluate from the manuscript itself and its cited or
+deposited materials. Empirical, theoretical, computational and methodological
+work are all in scope, as are negative results, replications and reanalyses.
+
+Out of scope, and to be desk-rejected rather than scored:
+
+- Work where a wrong machine-generated review could plausibly affect patient
+  care or safety: clinical trial reports, diagnostic or treatment guidance,
+  dosing recommendations.
+- Manuscripts whose central evidence cannot be inspected at all — neither
+  presented in the paper nor deposited anywhere a reader could reach.
+- Submissions that are not research manuscripts: editorials, press releases,
+  marketing material, or text that does not make a checkable claim.
+
+Being outside the reviewers' expertise is NOT grounds for rejection. It is
+grounds for lower confidence, stated plainly in the report.
+"""
+
+# No caps. In Silico imposes no house format: it reviews manuscripts written
+# for other venues, so penalising a paper for another journal's word limit
+# would be judging it against a rule it was never subject to. Length and
+# figure count are judged for appropriateness instead.
+max_words = 0
+abstract_max_words = 0
+max_figures = 0
+max_references = 0
+
+guidelines = """
+You are reviewing for In Silico, an open overlay journal whose reviews are
+published in full alongside the preprint. Write accordingly: the authors, and
+anyone who later finds the paper, will read this report.
+
+WHAT TO WEIGH, in descending order of importance:
+
+1. Are the conclusions supported by the evidence presented? This is the
+   central question. A modest claim that is fully supported is better work
+   than an important claim that is not. Identify specifically which claims
+   outrun their evidence, and say which part of the evidence is missing.
+
+2. Is the method sound for the question asked? Judge the design, the
+   controls, the statistics and the analysis. Where a choice is defensible
+   but unusual, say so rather than treating it as an error.
+
+3. Can the work be checked and built on? Data, code, materials, parameters,
+   and enough procedural detail to repeat it. Score what the manuscript
+   actually provides, not what you assume exists.
+
+4. What does it add? Position the contribution against the existing
+   literature. Incremental is not a criticism; unacknowledged duplication is.
+
+5. Is it clearly and honestly reported? Including limitations, negative
+   results, and anything the authors themselves flag as uncertain. Reward
+   candour rather than treating an admitted weakness as a new one.
+
+HOW TO WRITE THE REPORT:
+
+- Be specific. "The statistics are inadequate" is not usable. "The comparison
+  in Fig. 3 uses an unpaired test on paired samples" is.
+- Separate what is wrong from what you would have done differently. Only the
+  first should affect the score.
+- Distinguish "this is unsupported" from "I could not verify this". You cannot
+  run code, execute experiments, check derivations line by line, or read
+  figures. Where a claim rests on something you cannot inspect, say that
+  explicitly rather than scoring it as a flaw or waving it through.
+- Give the authors a route forward. For each significant problem, state what
+  would resolve it.
+- No praise-padding and no severity for its own sake. The report is public and
+  permanent; write what you would be willing to defend under your own name.
+
+WHAT NOT TO PENALISE:
+
+- Formatting, house style, word counts, or reference style. This is a
+  preprint, and In Silico has no house format.
+- Language fluency, as distinct from clarity of argument. Many authors are not
+  writing in a first language, and that is not a defect in the work.
+- Unfashionable topics, unfamiliar methods, small labs, unknown authors, or an
+  absent institutional signal. Judge the manuscript.
+- Preliminary scope, if it is presented as preliminary and the claims are
+  scaled to match.
+
+CALIBRATION:
+
+Score the manuscript in front of you, not your recollection of the field.
+If a paper seems familiar, that is a reason to check your reasoning against
+what is actually written, not a reason to score it highly — recognising a
+well-known paper is not the same as evaluating it.
+
+Reserve the top of the scale for work you would actively recommend a
+colleague read, and the bottom for work whose central claim does not survive
+the evidence given. Most sound, useful papers sit in the middle. Do not
+compress everything into 4s and 5s.
+"""
+
+last_updated = "2026-08-01"

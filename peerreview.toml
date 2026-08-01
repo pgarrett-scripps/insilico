@@ -42,11 +42,19 @@ debate_rounds = 1
 # Review posture
 # ---------------------------------------------------------------------------
 
-# In Silico is an overlay journal with no house style of its own, so reviews
-# are conditioned on general standards rather than a specific venue's. The
-# pipeline ships ~38 venue profiles; an editor can select one per submission
-# rather than changing this default.
-target_journal = "general"
+# Review against In Silico's own criteria, not a stand-in for some other
+# journal. `general` was the pipeline's placeholder for "a venue we don't have
+# a profile for" — reasonable while there was nothing better, but In Silico
+# *is* the venue, so it states its own standards and is judged against them.
+#
+# The profile lives in ./journals/insilico.toml, which is version-controlled
+# next to the reviews it produced: anyone reading a review can check out the
+# commit it names and see exactly what the panel was told to weigh.
+#
+# An editor can still override per submission for a paper explicitly targeting
+# a named venue — the pipeline ships ~38 profiles — but the default is ours.
+journals_dir = "journals"
+target_journal = "insilico"
 
 # ---------------------------------------------------------------------------
 # The desk — two independent screens, before any reviewer is assigned

@@ -11,7 +11,7 @@ hide:
 <hr class="ins-masthead__rule">
 
 <p class="ins-masthead__tagline">
-An open, AI-refereed overlay journal for computational preprints.
+An open, AI-refereed overlay journal. Any field; the whole review published.
 </p>
 
 <div class="ins-masthead__actions" markdown="1">
@@ -56,6 +56,25 @@ results rather than recall.
 Not every stage runs on the same model, and each review records which model
 wrote which report. Engine:
 [PeerReviewAgents](https://github.com/pgarrett-scripps/PeerReviewAgents).
+
+[What the panel looks for](criteria.md){ .md-button }
+
+## Any field
+
+In Silico reviews manuscripts from any discipline. We began computational-only,
+on the reasoning that those are the claims a model can check — but the line that
+actually matters is whether the *evidence is inspectable*, and that cuts across
+fields rather than along them. An unsupported inference in a wet-lab paper is
+exactly as findable as one in a simulation.
+
+The panel's real limits — it cannot run your code, execute your experiments,
+check a derivation line by line, or see your figures — apply equally everywhere,
+so scoping by discipline only disguised where they bite. The reports name which
+claims they could not verify instead.
+
+The name describes how the reviewing is done, not what may be reviewed. The one
+hard exclusion is work where a wrong machine-generated review could affect
+patient care; see the [policy](policy.md#scope).
 
 ## Reviews name a revision, not a paper
 

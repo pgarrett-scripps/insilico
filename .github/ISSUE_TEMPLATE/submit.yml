@@ -31,8 +31,9 @@ body:
       label: What is the paper about?
       description: |
         Two or three sentences. Enough for an editor to judge whether it's in
-        scope — computational work whose claims can be checked by reading the
-        paper and its code.
+        scope — any field, as long as the claims can be evaluated from the
+        manuscript and the materials it cites or deposits. See the review
+        criteria: https://pgarrett-scripps.github.io/insilico/criteria/
     validations:
       required: true
 

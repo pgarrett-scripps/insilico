@@ -1,5 +1,5 @@
 site_name: In Silico
-site_description: An open, AI-refereed overlay journal for computational preprints.
+site_description: An open, AI-refereed overlay journal. Any field; the whole review published.
 site_url: https://pgarrett-scripps.github.io/insilico/
 repo_url: https://github.com/pgarrett-scripps/insilico
 repo_name: insilico
@@ -76,6 +76,7 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Submit: submit.md
+  - Criteria: criteria.md
   - Policy: policy.md
   - Reviews: reviews/index.md
 

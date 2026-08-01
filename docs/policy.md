@@ -23,17 +23,38 @@ worse than dropping them.
 
 ## Scope
 
-**In scope.** Computational and *in silico* work where the claims can be checked
-by reading the paper and its code: simulation, modeling, method papers,
-benchmarks, reanalyses, scientific software, and computational biology,
-chemistry, and physics.
+**In scope.** Any original research manuscript, in any discipline, whose claims
+a careful reader can evaluate from the manuscript itself and the materials it
+cites or deposits. Empirical, theoretical, computational and methodological work
+all qualify, as do negative results, replications and reanalyses.
 
-**Out of scope.** Clinical trials. Work whose central evidence is data no
-referee can inspect. Anything where a wrong machine-generated review could
-plausibly affect patient care — the panel has no business near that, and neither
-do we.
+We started computational-only, on the reasoning that those claims are the ones a
+model can check. That was the wrong line. What actually determines whether a
+review is worth reading is whether the *evidence is inspectable*, and that cuts
+across fields — an unsupported inference in a wet-lab paper is exactly as
+findable as one in a simulation. The panel's real limits (below) apply equally
+everywhere, so scoping by discipline gave a false sense of where they bite.
 
-We will decline submissions outside scope without running the panel.
+The name stays. It describes how the reviewing is done, not what may be
+reviewed.
+
+**Out of scope.**
+
+- **Anything where a wrong machine-generated review could affect patient care or
+  safety** — clinical trial reports, diagnostic or treatment guidance, dosing
+  recommendations. The panel has no business near that and neither do we. This
+  is the one hard line and it is not discipline-based: a computational paper
+  that outputs a dosing recommendation is out; a clinical-adjacent methods paper
+  that does not is in.
+- **Work whose central evidence cannot be inspected at all** — neither shown in
+  the paper nor deposited anywhere a reader could reach.
+- **Anything that is not a research manuscript** — editorials, press releases,
+  marketing material, or text making no checkable claim.
+
+Being outside the reviewers' expertise is *not* grounds for rejection. It is
+grounds for lower confidence, and the reports say so.
+
+We decline submissions outside scope at the desk, without running the panel.
 
 ## The desk
 
