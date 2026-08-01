@@ -81,7 +81,18 @@ jobs:
       - name: Pin the referee panel
         id: pipeline
         run: |
-          sha="$(git ls-remote "$PIPELINE_REPO" HEAD | cut -f1)"
+          # `set -e` doesn't fire on a failure inside a command substitution,
+          # so an unreachable repo used to yield an empty sha and surface as
+          # pip complaining about an "empty revision" — pointing at the URL
+          # rather than at the auth problem that actually caused it.
+          if ! sha="$(git ls-remote "$PIPELINE_REPO" HEAD | cut -f1)" || [ -z "$sha" ]; then
+            echo "::error::Could not read $PIPELINE_REPO."
+            echo "::error::While that repo is private this needs a PRA_READ_TOKEN secret" \
+                 "whose fine-grained token grants Contents: Read on it." \
+                 "GitHub reports 'Repository not found' for a private repo a token" \
+                 "cannot see, so a missing permission looks identical to a typo."
+            exit 1
+          fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "Pinning PeerReviewAgents @ $sha"
           pip install --quiet "peerreviewagents @ git+${PIPELINE_REPO}@${sha}"
