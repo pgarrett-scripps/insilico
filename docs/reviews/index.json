@@ -1,5 +1,23 @@
 [
   {
+    "title": "Quantitation of Spatial Proteoforms in Alzheimer's Disease",
+    "decision": "major",
+    "source": "biorxiv",
+    "preprint_url": "https://www.biorxiv.org/content/10.64898/2026.06.30.735694",
+    "doi": "10.64898/2026.06.30.735694",
+    "reviewed": "2026-08-01",
+    "authors": [
+      "McClatchy, D.",
+      "Turner, N. P.",
+      "Yates, J. R."
+    ],
+    "review_count": 1,
+    "description": "Major revision \u00b7 mean panel score 3.75/5. AI referee panel \u2014 advisory, not a certification.",
+    "mean_score": 3.75,
+    "path": "2026/quantitation-of-spatial-proteoforms-in-alzheimer-10-64898-2026-06-30-735694",
+    "year": "2026"
+  },
+  {
     "title": "Confronting global eradication of TB head on: Uncovering the root of drug resistance and bacterial survival strategies through a comprehensive computational study of first-line TB drug resistant mutations",
     "decision": "major",
     "source": "biorxiv",
