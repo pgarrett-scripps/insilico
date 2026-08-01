@@ -277,6 +277,10 @@ def render_landing(
     ]
     if submission_id:
         fm.append(f"submission_issue: {yaml_scalar(submission_id)}")
+    # Read by the index to put a score on each card without opening every
+    # provenance.json. Absent on a desk reject, where no panel scored anything.
+    if provenance.get("mean_score") is not None:
+        fm.append(f"mean_score: {provenance['mean_score']}")
     if provenance.get("desk_rejected"):
         # Surfaced in frontmatter so the index can mark these distinctly
         # rather than filing them next to reasoned panel rejections.
@@ -304,18 +308,28 @@ def render_landing(
     desk_rejected = provenance.get("desk_rejected")
     # "Panel recommendation" would be a false claim on a desk reject: no panel
     # convened. Say what actually happened, and why the page is short.
-    headline = (
-        f"**Desk rejected — {VERDICT_LABEL.get(decision, decision)}**"
-        if desk_rejected
-        else f"**Panel recommendation: {VERDICT_LABEL.get(decision, decision)}**"
-    )
+    if desk_rejected:
+        chip = '<span class="ins-verdict ins-verdict--desk">Desk reject</span>'
+        label = "Rejected at the desk"
+        note = "no referee panel convened"
+    else:
+        chip = (
+            f'<span class="ins-verdict ins-verdict--{decision}">'
+            f"{VERDICT_LABEL.get(decision, decision)}</span>"
+        )
+        label = f"Panel recommendation: {VERDICT_LABEL.get(decision, decision)}"
+        note = "advisory — a human editor decides"
 
     body = [
         "\n".join(fm),
         "",
         f"# {title}",
         "",
-        headline,
+        '<div class="ins-decision">',
+        f"  {chip}",
+        f'  <span class="ins-decision__label">{label}</span>',
+        f'  <span class="ins-decision__note">{note}</span>',
+        "</div>",
         "",
     ]
     if desk_rejected:

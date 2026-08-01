@@ -1,0 +1,86 @@
+name: Check for revised preprints
+
+# A published review describes one revision of a manuscript. Authors replace
+# preprints in place, so reviews go stale silently and nothing on the site
+# would show it. This walks the corpus monthly and files what moved.
+#
+# Deliberately opens an issue rather than re-running the panel: a re-review
+# costs real money and is an editorial decision, not something a cron job
+# should make. The issue is the prompt for a human to run `/review` again.
+on:
+  schedule:
+    # 07:00 UTC on the 1st. Monthly because preprint revisions are not urgent
+    # and every run is a round of requests to arXiv and bioRxiv on our behalf.
+    - cron: "0 7 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # No pipeline install: the checker is stdlib-only by design, so this
+      # job stays cheap and keeps working even while PeerReviewAgents is
+      # private and would need a token.
+      - name: Check published reviews against their preprints
+        id: check
+        run: |
+          python scripts/check_updates.py --json > /tmp/updates.json || true
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          rows = json.load(open("/tmp/updates.json"))
+          stale = [r for r in rows if r["status"] in ("revised", "bytes-differ")]
+          print(f"stale={len(stale)}")
+          print(f"checked={len(rows)}")
+          # Multi-line values need a heredoc delimiter in GITHUB_OUTPUT.
+          print("body<<EOF_BODY")
+          if stale:
+              print("The preprint behind these published reviews has changed.\n")
+              for r in stale:
+                  label = "**Revised**" if r["status"] == "revised" else "Bytes differ"
+                  print(f"- {label} — [`{r['review']}`]({r['url']})  ")
+                  print(f"  {r['detail']}")
+              print(
+                  "\nA revision means the published review describes an older version "
+                  "of the manuscript. Re-running the panel costs money and is an "
+                  "editorial call, so nothing has been re-reviewed automatically — "
+                  "comment `/review` on the original submission issue to redo one."
+              )
+              print(
+                  "\n*Bytes differ* is a weaker signal than it looks: bioRxiv and "
+                  "medRxiv stamp PDFs with a generation date, so a byte change is "
+                  "often a re-render rather than new science. Compare before acting."
+              )
+          print("EOF_BODY")
+          PY
+
+      - name: File or update the tracking issue
+        if: steps.check.outputs.stale != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BODY: ${{ steps.check.outputs.body }}
+          STALE: ${{ steps.check.outputs.stale }}
+        run: |
+          title="${STALE} published review(s) now describe an outdated preprint"
+          # Reuse the open issue if there is one, so a monthly cron doesn't
+          # accumulate a pile of near-identical reports.
+          existing="$(gh issue list --state open --label stale-review \
+                        --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$BODY"
+            gh issue edit "$existing" --title "$title"
+          else
+            gh issue create --title "$title" --body "$BODY" \
+              --label stale-review 2>/dev/null || \
+            gh issue create --title "$title" --body "$BODY"
+          fi

@@ -12,6 +12,7 @@ Stdlib only. No API keys.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import urllib.error
@@ -61,6 +62,13 @@ class Preprint:
     abstract: str = ""
     published: str = ""
     version: str = ""
+    # Fingerprint of the exact bytes reviewed, filled in by download(). A
+    # review is only meaningful against a specific revision of a manuscript,
+    # and "we reviewed arxiv.org/abs/1706.03762" does not name one — authors
+    # replace preprints in place. Recording both lets a later check say which
+    # published reviews are now stale. See scripts/check_updates.py.
+    pdf_sha256: str = ""
+    pdf_bytes: int = 0
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -217,8 +225,22 @@ def download(preprint: Preprint, dest_dir: Path) -> Path:
             f"(got {len(data)} bytes starting {data[:16]!r}). "
             "Scanned or paywalled sources are not supported."
         )
+    preprint.pdf_sha256 = hashlib.sha256(data).hexdigest()
+    preprint.pdf_bytes = len(data)
     dest.write_bytes(data)
     return dest
+
+
+def fingerprint(preprint: Preprint) -> tuple[str, int]:
+    """Hash the current PDF without keeping it. Used to re-check a published review.
+
+    Deliberately separate from :func:`download` so an update check costs one
+    request and no disk, and never touches the reviewed copy.
+    """
+    data = _get(preprint.pdf_url)
+    if not data.startswith(b"%PDF"):
+        raise ValueError(f"{preprint.pdf_url} no longer returns a PDF")
+    return hashlib.sha256(data).hexdigest(), len(data)
 
 
 def main() -> int:

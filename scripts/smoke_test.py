@@ -81,6 +81,9 @@ def check(title: str) -> None:
         assert meta["title"] == title, f"title mangled: {meta['title']!r} != {title!r}"
         assert meta["decision"] == "major", f"decision lost: {meta.get('decision')!r}"
         assert meta["authors"] == ["Ada Lovelace", "Alan Turing"], "authors mangled"
+        # The index puts a score on every card; it can only do that if the
+        # landing page publishes one in its frontmatter.
+        assert meta["mean_score"] == 3.0, f"mean_score missing: {meta.get('mean_score')!r}"
 
         for name, _ in BUNDLE_ORDER:
             assert (dest / name).exists(), f"missing bundle file {name}"
@@ -148,7 +151,8 @@ def check_desk_reject() -> None:
         assert prov["screens"]["desk_screen_mode"] == "gate", "screen config not recorded"
 
         landing = (dest / "index.md").read_text()
-        assert "Desk rejected" in landing, "landing page does not say it was a desk reject"
+        assert "ins-verdict--desk" in landing, "no desk-reject chip on the landing page"
+        assert "Rejected at the desk" in landing, "landing page doesn't say what happened"
         assert "Panel recommendation" not in landing, "claims a panel that never convened"
         # The three identical documents must be listed once, not three times.
         assert landing.count("(integrity.md)") + landing.count(

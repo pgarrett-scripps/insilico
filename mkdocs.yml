@@ -12,26 +12,41 @@ theme:
     - navigation.top
     - content.code.copy
     - toc.follow
+  font:
+    # Chrome and UI only. The serif that carries the journal's character is
+    # loaded in extra.css and applied to headings and article prose, so the
+    # navigation stays quiet and the reading column does the talking.
+    text: Inter
+    code: JetBrains Mono
+  # `custom` defers the whole palette to CSS variables in extra.css, where
+  # light and dark can share one set of semantic names.
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-night
         name: Dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: teal
-      accent: teal
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-sunny
         name: Light mode
+
+extra_css:
+  - stylesheets/extra.css
 
 markdown_extensions:
   - admonition
   - attr_list
   - tables
+  # The masthead and the review cards are hand-written HTML; md_in_html lets
+  # markdown keep working inside those blocks instead of forcing every landing
+  # page into raw HTML.
+  - md_in_html
   - toc:
       permalink: true
   - pymdownx.details

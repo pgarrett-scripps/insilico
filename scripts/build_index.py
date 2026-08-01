@@ -6,6 +6,7 @@ every build.
 
 from __future__ import annotations
 
+import html
 import json
 from pathlib import Path
 
@@ -14,11 +15,11 @@ import yaml
 REPO = Path(__file__).resolve().parent.parent
 REVIEWS = REPO / "docs" / "reviews"
 
-BADGE = {
-    "accept": "✅ Accept",
-    "minor": "🟢 Minor revision",
-    "major": "🟡 Major revision",
-    "reject": "🔴 Reject",
+VERDICT = {
+    "accept": "Accept",
+    "minor": "Minor revision",
+    "major": "Major revision",
+    "reject": "Reject",
 }
 
 
@@ -76,27 +77,70 @@ def render(entries: list[dict]) -> str:
         by_year.setdefault(entry["year"], []).append(entry)
 
     for year in sorted(by_year, reverse=True):
-        lines += [f"## {year}", "", "| Paper | Recommendation | Source | Reviewed |", "|---|---|---|---|"]
-        for entry in by_year[year]:
-            title = str(entry.get("title", "Untitled")).replace("|", "\\|")
-            decision = str(entry.get("decision", ""))
-            # A desk reject is also `decision: reject`, but listing it as a
-            # plain Reject implies a panel weighed the work and declined it.
-            # Nothing read the manuscript, so say which kind it was.
-            badge = (
-                "⛔ Desk reject"
-                if entry.get("desk_rejected")
-                else BADGE.get(decision, decision)
-            )
-            lines.append(
-                f"| [{title}]({entry['path']}/index.md) "
-                f"| {badge} "
-                f"| {entry.get('source', '—')} "
-                f"| {entry.get('reviewed', '—')} |"
-            )
-        lines.append("")
+        # No markdown="1" here. The cards are complete HTML, and asking the
+        # markdown processor to walk into them makes it insert paragraph tags
+        # that close the <a> early and shred every card.
+        lines += [f"## {year}", "", '<div class="ins-cards">', ""]
+        lines += [render_card(entry) for entry in by_year[year]]
+        lines += ["</div>", ""]
 
     return "\n".join(lines)
+
+
+def render_card(entry: dict) -> str:
+    """One review as a card.
+
+    Hand-written HTML rather than a markdown table: a table forces every
+    review onto one line and gives the verdict the same weight as the date,
+    which is backwards for the thing a reader is scanning for.
+    """
+    title = esc(str(entry.get("title", "Untitled")))
+    authors = entry.get("authors") or []
+    if isinstance(authors, str):  # a single-author frontmatter scalar
+        authors = [authors]
+    # Three names then et al. — full author lists on a card crowd out the title.
+    shown = ", ".join(esc(str(a)) for a in authors[:3])
+    if len(authors) > 3:
+        shown += ", et al."
+
+    # A directory URL, not `<path>/index.md`. MkDocs rewrites .md links written
+    # in markdown, but leaves raw HTML alone — a card linking to index.md would
+    # 404 on the built site while looking correct in the source.
+    parts = [
+        f'<a class="ins-card" href="{esc(entry["path"])}/">',
+        f"  {verdict_chip(entry)}",
+        f'  <p class="ins-card__title">{title}</p>',
+    ]
+    if shown:
+        parts.append(f'  <p class="ins-card__authors">{shown}</p>')
+    foot = [
+        f'<span>{esc(str(entry.get("source", "—")))}</span>',
+        f'<span>{esc(str(entry.get("reviewed", "—")))}</span>',
+    ]
+    score = entry.get("mean_score")
+    if isinstance(score, (int, float)):
+        foot.append(f'<span class="ins-card__score">{score} / 5</span>')
+    parts.append(f'  <span class="ins-card__foot">{"".join(foot)}</span>')
+    parts.append("</a>")
+    return "\n".join(parts)
+
+
+def verdict_chip(entry: dict) -> str:
+    """The decision as a coloured chip.
+
+    A desk reject carries `decision: reject` too, but nothing read the
+    manuscript — rendering both identically would claim a panel weighed the
+    work and declined it.
+    """
+    if entry.get("desk_rejected"):
+        return '<span class="ins-verdict ins-verdict--desk">Desk reject</span>'
+    decision = str(entry.get("decision", ""))
+    label = VERDICT.get(decision, decision or "Unknown")
+    return f'<span class="ins-verdict ins-verdict--{esc(decision)}">{esc(label)}</span>'
+
+
+def esc(text: str) -> str:
+    return html.escape(str(text), quote=True)
 
 
 def main() -> int:
