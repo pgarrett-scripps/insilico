@@ -76,9 +76,13 @@ jobs:
             # `x-access-token:<pat>` in the URL authenticates fine against the
             # REST API but is rejected by git, which then reports the repo as
             # not found and sends you looking at permissions instead.
+            # actions/checkout writes its own extraheader (with GITHUB_TOKEN)
+            # into the *local* repo config, and local config beats global — so
+            # a global credential set here is silently ignored for any git
+            # command run from the workspace. Export the header instead and
+            # apply it per-command with `git -c`, which outranks both.
             basic="$(printf 'x-access-token:%s' "$PIPELINE_TOKEN" | base64 -w0)"
-            git config --global \
-              "http.https://github.com/.extraheader" "AUTHORIZATION: basic $basic"
+            echo "PIPELINE_AUTH=AUTHORIZATION: basic $basic" >> "$GITHUB_ENV"
             echo "Using PRA_READ_TOKEN to reach the private pipeline repo."
 
             # Probe the API before git gets involved. git reports "Repository
@@ -111,7 +115,11 @@ jobs:
           # so an unreachable repo used to yield an empty sha and surface as
           # pip complaining about an "empty revision" — pointing at the URL
           # rather than at the auth problem that actually caused it.
-          if ! sha="$(git ls-remote "$PIPELINE_REPO" HEAD | cut -f1)" || [ -z "$sha" ]; then
+          # -c outranks the local extraheader actions/checkout persisted.
+          # pip is unaffected: it clones into a temp dir where our workspace's
+          # local config doesn't apply, so it picks up the global one below.
+          if ! sha="$(git -c "http.https://github.com/.extraheader=${PIPELINE_AUTH}" \
+                        ls-remote "$PIPELINE_REPO" HEAD | cut -f1)" || [ -z "$sha" ]; then
             echo "::error::Could not read $PIPELINE_REPO."
             echo "::error::While that repo is private this needs a PRA_READ_TOKEN secret" \
                  "whose fine-grained token grants Contents: Read on it." \
@@ -121,6 +129,9 @@ jobs:
           fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "Pinning PeerReviewAgents @ $sha"
+          if [ -n "${PIPELINE_AUTH:-}" ]; then
+            git config --global "http.https://github.com/.extraheader" "$PIPELINE_AUTH"
+          fi
           pip install --quiet "peerreviewagents @ git+${PIPELINE_REPO}@${sha}"
           pip install --quiet pyyaml
 
