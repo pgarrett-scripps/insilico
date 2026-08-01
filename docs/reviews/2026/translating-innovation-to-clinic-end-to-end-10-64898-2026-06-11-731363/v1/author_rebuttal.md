@@ -1,0 +1,40 @@
+## Concessions
+- **rigor** — Abstract states 'consistent product quality across multiple cGMP batches' but only one cGMP batch was manufactured.
+  - Proposed change: Revise abstract and Section 3.4 to read 'consistent product quality between the pilot-scale demonstration run and the single cGMP batch manufactured for HVTN144' and remove the plural 'batches' language throughout.
+- **rigor** — The abstract/conclusions frame the platform as a 'scalable, reproducible manufacturing paradigm' though evidence is limited to three non-identical runs (RCB, MCB, GMP) using three different reference standards.
+  - Proposed change: Reword abstract and Conclusions to 'consistent process performance across two cell banks and three sequential runs at two vessel scales' and add an explicit sentence in Section 3.2.3 stating that absolute BLI titer comparisons across runs are confounded by the use of non-cross-validated reference standards (lots 19Apr0088, S-20210314-0001-SD2-E-M, P65).
+- **novelty / rigor** — Removal of preparative SEC from the cGMP process is justified only by a single unreplicated parallel comparison and driven by supply-chain constraints rather than process science.
+  - Proposed change: Revise Section 3.3.2 to explicitly state the decision was a supply-chain-driven contingency supported by one side-by-side comparison, and add a limitations sentence noting the residual risk that impurity classes uniquely cleared by SEC were not exhaustively characterized.
+- **rigor** — Abstract claim of 'preserved... native-like antigenicity' overstates what BLI binding assays to BG18_GL0/PGT145 demonstrate.
+  - Proposed change: Change abstract wording to 'preserved recognition by germline-targeting and quaternary-structure-specific antibodies (BG18_GL0, PGT145) and native-like trimeric architecture by nsEM' rather than 'native-like antigenicity.'
+- **rigor / methodology** — nsEM claim of 'nearly 100% native-like trimers' lacks a stated percentage or classification criterion.
+  - Proposed change: Report the exact percentage of particles classified as trimeric in 2D class averages (with classification criteria: 3-lobed compact morphology consistent with reference SOSIP structures) in Section 3.6.2 and Figure 19 legend.
+- **literature** — Malformed DOI for Parks et al. (2025) and incomplete citation for Bale et al. (2025); omission of Gulla et al. (2021) as a competing non-affinity cGMP purification approach.
+  - Proposed change: Correct the DOI to 10.1126/scitranslmed.ady6831, complete the Bale et al. reference with volume/issue/DOI, and add a citation and one-paragraph comparison to Gulla et al. (2021) in the Discussion contrasting affinity-capture vs. non-affinity purification strategies.
+- **clarity** — Figures 7, 14, 16, and 18 are not self-contained; units, panel labels, error bar definitions, and glycan category keys are missing from legends.
+  - Proposed change: Revise all four figure legends to state axis units explicitly (e.g., mg/L for BLI titer), label panels (a)/(b)/(c) directly against their content, define error bars (SD/SEM, n), and add a color key for glycan categories directly in Figure 18.
+- **data_analysis / clarity** — WCPQ and WCY abbreviations are used in Table 3 without definition at first use.
+  - Proposed change: Define 'worst-case product quality (WCPQ)' and 'worst-case yield (WCY)' at first use in Section 2.5.1 and repeat the definitions in the Table 3 legend.
+- **reproducibility** — No data availability statement; software versions for Byos, ProLuCID, DTASelect2, Census2, CFX Manager, and CryoSPARC are not specified.
+  - Proposed change: Add a Data and Software Availability statement specifying that raw chromatography, BLI, and MS data are available upon reasonable request given proprietary/regulatory constraints, and list version numbers for all named software tools in the Methods.
+- **data_analysis / methodology** — Clone ranking selection criteria (213→56→24) are not explicitly stated as threshold-based or top-N based.
+  - Proposed change: Add one sentence to Section 3.1.2 specifying that the top 56 and subsequently top 24 clones were selected by rank-ordered productivity/ratio cutoffs (top-N selection), with the specific N and any secondary tie-breaking criteria stated explicitly.
+- **reproducibility** — Ambiguity over whether the three cited reference materials (IAVI/Scripps lot, KBI lot S-20210314-0001-SD2-E-M, KBI lot P65) are related preparations or independent standards.
+  - Proposed change: Add a short paragraph in Section 3.2.3 clarifying the lineage of these reference materials (e.g., which are derived from which production runs) and stating whether cross-calibration between lots was performed.
+
+## Disagreements
+- **data_analysis / rigor** — Comparability claims across the 50L RCB, 50L MCB, and 200L GMP runs are 'not statistically defensible' because each is an n=1 execution.
+  - Response: We agree these are single executions and have softened the language (see concessions), but we disagree that this makes the underlying scale-up data uninformative or that formal statistical testing is the appropriate bar for single-lot GMP tech transfer, which by regulatory convention and industry practice (analogous to Dey et al. 2018 for BG505 SOSIP.664) is assessed by comparability of process parameters, yield, and product quality attributes across a limited number of qualification runs rather than by replicate-based hypothesis testing.
+  - Manuscript reference: Section 3.2.3: 'these data indicate that overall cell growth kinetics were comparable between the two scales and cell banks' and Table 11 side-by-side product quality comparison
+- **methodology** — Ambr250 optimization order of execution was not randomized/balanced, raising concern about time-dependent confounds.
+  - Response: All 12 Ambr250 vessels were run in parallel within the same instrument campaign under identical media lots and start dates, not sequentially, so time-dependent drift (media degradation, instrument calibration change) is not a plausible confound for this dataset; the design compares simultaneous parallel bioreactor runs, which is the standard use case for the Ambr250 high-throughput platform.
+  - Manuscript reference: Section 2.4.2: '12 x Ambr®250 bioreactors for the process optimization study with clone C235... Ambr®250 vessels have been shown to provide scalable data for fed batch production processes (Rameez et al., 2014)'
+- **novelty** — The manuscript's methods are not novel; Leap-In transposition and the affinity-capture purification strategy are established techniques applied to a new antigen.
+  - Response: We do not claim methodological novelty; the manuscript is explicitly framed as a translational bioprocess case study, and the abstract and introduction state the contribution as establishing cGMP manufacturing 'for N332-GT5 gp140' specifically, not as inventing new unit operations. We view this framing as already accurate and do not think the paper overclaims broader methodological innovation.
+  - Manuscript reference: Abstract: 'This work establishes a scalable, reproducible manufacturing paradigm for structurally complex HIV-1 envelope immunogens, advancing the field toward rational vaccine design based on germline-targeting principles' — read in context with Introduction's explicit citation of Dey et al. (2018) as the basis for downstream process development
+- **ethics** — No acknowledgement of AI-tool use or non-author contributions in manuscript preparation.
+  - Response: No AI tools were used in data analysis, figure generation, or manuscript drafting beyond standard word processing and reference management software; all analyses were performed by named co-authors as detailed in the Contributions section. We do not believe an additional disclosure is warranted absent such use, but will add a one-line statement confirming this for transparency.
+  - Manuscript reference: Contributions section listing individual author roles in development, execution, analysis, and manuscript authorship
+
+## Load-bearing critiques
+None — author considers all critiques addressable in revision.

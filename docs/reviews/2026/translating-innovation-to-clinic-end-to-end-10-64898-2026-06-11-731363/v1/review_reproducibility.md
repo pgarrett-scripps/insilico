@@ -1,0 +1,36 @@
+# Reproducibility Reviewer
+
+## Summary
+This is a comprehensive bioprocess development and manufacturing manuscript for a clinical-stage HIV vaccine candidate. From a reproducibility standpoint, the work is generally well-documented with detailed methods, multiple process scales, and extensive characterization data. However, there are several SOFT gaps in data availability and procedural specification that would require author contact to fully replicate: underlying raw analytical data (LC-MS, BLI, SEC-HPLC) are not deposited or referenced with accessions; software versions for key instruments and analysis pipelines are inconsistently specified; and some critical process parameters (e.g., exact feed schedules, temperature ramp rates) are referenced to tables but lack complete detail. The manuscript would benefit from a consolidated supplementary methods section and explicit data deposition statements. These are not showstoppers for a well-resourced group with access to similar equipment, but they do introduce friction and author-dependency into replication.
+
+## Strengths
+- Detailed upstream process development with clear progression from Ambr®250 optimization through 50-L pilot and cGMP scales, including specific bioreactor parameters (Table 2), feed compositions, and harvest criteria.
+- Comprehensive downstream purification process flowchart (Figure 4) with step-by-step unit operations, buffer compositions, and hold-time stability data (Table 4, Figure 15) that enable procedural replication.
+- Viral clearance study uses defined model viruses (XMuLV, MMV) with quantified log reductions per step (Table 12), allowing independent verification of clearance strategy.
+- Multiple orthogonal analytical methods for product characterization: SE-HPLC, RP-HPLC, BLI, LC-MS glycoproteomics, DeGlyPHER, and nsEM, with method citations enabling external validation.
+- Cell line development workflow (Figure 1) documents clone selection criteria, genetic stability assessment (60 population doublings), and single-cell cloning verification using named instruments (VIPS, Cell Metric).
+- Robustness evaluations during feasibility runs (Table 3) explicitly test worst-case yield and product quality conditions, strengthening reproducibility of downstream process.
+
+## Weaknesses
+- No statement of data availability: raw analytical datasets (LC-MS glycan data, BLI kinetics, SEC-HPLC/RP-HPLC chromatograms, qPCR Ct values for DNA quantification) are not deposited in a public repository or supplementary materials with accessions; all are load-bearing for product characterization claims.
+- Software and instrument versions incompletely specified: LC-MS analysis used 'Byos (Protein Metrics)' and 'ProLuCID' search engine with 'DTASelect2' and 'Census2' for quantification, but no version numbers given; Octet/BLI assay used 'ForteBio' system but software version not stated; qPCR used 'Bio-Rad CFX384' with 'CFX Manager software' but version absent; CryoSPARC version for nsEM particle picking not specified.
+- Ambr®250 process optimization table (Table 1) lists 12 conditions but does not specify critical parameters like agitation rate (rpm), aeration strategy, or exact timing of temperature shifts (e.g., '34°C Day 4' — is this at 00:00 or end-of-day?); these details are needed to replicate growth kinetics.
+- Feed schedule for pilot and GMP runs references 'predefined feed schedules' (section 2.4.3) but does not provide the actual schedule (timing and volumes of CB7a and CB7b additions); only aggregate percentages are given in Table 2.
+- DeGlyPHER analysis (section 2.7.1) describes the method but does not specify software version for 'IP2 (Bruker)', 'ProLuCID', 'DTASelect2', or 'Census2'; the exact FDR filtering threshold (1% spectrum-level) is stated but not the peptide-level FDR or how 'match between runs' was configured.
+- nsEM data processing used 'CryoSPARC' for 2D classification but version not stated; 'Blob Picker' parameters (minimum circular diameter 180 Å) are given but the number of 2D classes, convergence criteria, and particle box size (160 pixels) are specified without justification or sensitivity analysis.
+- Relative potency assay (BLI) used as a reference standard but the exact protocol for generating the reference material from 'purified N332-GT5 gp140' is not described; this is critical for normalizing across runs.
+- No supplementary methods consolidation: procedural details are scattered across sections 2.1–2.7 with cross-references; a single consolidated protocol document (or protocols.io deposit) would reduce replication friction.
+- Intermediate hold-time stability study (section 2.5.3, Table 4, Figure 15) specifies acceptance criteria (≤0.7% change in HMW/LMW, ≤15% potency variation) but does not state how many replicates were tested per timepoint or whether data are mean ± SD.
+- GMP batch results (section 3.4, Table 11) show 'NT' (not tested) for BG18_GL0 BLI in the pilot-scale batch, making it unclear whether this assay was performed on the cGMP batch or only reported as '116% Compared to Reference Standard' without raw data or replicates.
+
+## Questions
+- Where are the raw analytical datasets (LC-MS glycan spectra, BLI sensorgrams, SEC-HPLC/RP-HPLC chromatograms, qPCR Ct values) deposited or available? If not yet deposited, what is the planned accession or repository?
+- What are the exact software versions for Byos, ProLuCID, DTASelect2, Census2, CFX Manager, and CryoSPARC used in this study? Are these versions documented in a supplementary methods or data availability statement?
+- Can you provide the complete feed schedule (timing and volumes of CB7a and CB7b additions) for the Ambr®250 and pilot/GMP scale runs, including the exact timing of temperature shifts (e.g., time-of-day for '34°C Day 4')?
+- For the Ambr®250 bioreactor runs, what were the agitation rate (rpm) and aeration/sparging strategy? These are critical for scaling and reproducibility.
+- How many replicates were performed for the intermediate hold-time stability study (Table 4, Figure 15)? Are the data in Figure 15 mean ± SD, and if so, what is the sample size per timepoint?
+- For the BG18_GL0 BLI assay on the cGMP batch (Table 11), was this measurement performed? If yes, what was the result and how many replicates? If no, why was it omitted?
+- The relative potency assay uses 'purified N332-GT5 gp140' as a reference standard (section 2.5.4.8, Table 9). Is this the same as the 'KBI Reference Material' mentioned in section 3.2.3, and if so, which lot was used for the cGMP batch normalization?
+- For the nsEM 2D classification (section 2.7.2), how many 2D classes were generated, and what were the convergence criteria? Was a sensitivity analysis performed on the Blob Picker diameter threshold (180 Å)?
+- Can you clarify the discrepancy in titers between the 50-L RCB run (562 mg/L BLI), 50-L MCB demonstration (355 mg/L), and 50-L GMP run (390.2 mg/L)? The text attributes this to 'different reference standards' (section 3.2.3), but this undermines the comparability of titer across runs — were all three runs normalized to the same reference material post-hoc?
+- Is there a consolidated step-by-step protocol document (e.g., protocols.io) or supplementary methods file that consolidates all procedures (upstream, downstream, analytics) in one place for ease of replication?
