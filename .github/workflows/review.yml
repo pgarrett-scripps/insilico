@@ -70,9 +70,15 @@ jobs:
           PIPELINE_TOKEN: ${{ secrets.PRA_READ_TOKEN }}
         run: |
           if [ -n "$PIPELINE_TOKEN" ]; then
+            # Send the credential as a Basic auth header rather than embedding
+            # it in the URL. This is what actions/checkout does, and it is the
+            # form fine-grained PATs actually authenticate with over git —
+            # `x-access-token:<pat>` in the URL authenticates fine against the
+            # REST API but is rejected by git, which then reports the repo as
+            # not found and sends you looking at permissions instead.
+            basic="$(printf 'x-access-token:%s' "$PIPELINE_TOKEN" | base64 -w0)"
             git config --global \
-              url."https://x-access-token:${PIPELINE_TOKEN}@github.com/".insteadOf \
-              "https://github.com/"
+              "http.https://github.com/.extraheader" "AUTHORIZATION: basic $basic"
             echo "Using PRA_READ_TOKEN to reach the private pipeline repo."
 
             # Probe the API before git gets involved. git reports "Repository
