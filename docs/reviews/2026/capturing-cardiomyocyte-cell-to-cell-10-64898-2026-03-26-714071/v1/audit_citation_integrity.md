@@ -1,0 +1,35 @@
+# Citation Integrity Auditor
+
+## Summary
+This audit examined 48 references for resolvability, claim–citation support, and fidelity. Categories in play: (1) Reference resolvability, (2) Claim–citation support, (3) Quotation/number fidelity. All 48 references are resolvable with sufficient identifiers (DOI/PMID/full citation). Most claims are either directly supported (3 claims confirmed via PubMed or literature search) or plausible based on standard field principles (7 claims). However, 10 claims are unverifiable from available abstracts or text alone, and one critical load-bearing factual claim—the mouse cardiomyocyte size range of 35–147 µm (Ref 20)—cannot be verified from the cited source and requires author clarification. This claim is used to justify cell selection strategy in the methods. Self-citations (3 references) are appropriate and methodologically relevant. No retracted or predatory sources identified.
+
+## Categories checked
+- Reference resolvability
+- Claim–citation support
+- Quotation/number fidelity
+
+**HARD gaps (blocking): 0** · SOFT gaps: 0 · unverifiable: 12
+
+## Unverifiable (raise as questions)
+- **[Claim–citation support] Top-down analysis of single HeLa cells identified ~50 proteoforms** — Ref 14 (Johnson et al. 2022, Anal Chem 94, 14358–14367): Citation is resolvable; specific quantitative claim (~50 proteoforms) is load-bearing for methodology precedent but cannot be confirmed from available text.
+- **[Claim–citation support] Single muscle fibers contain ~100 ng total protein with lengths ranging from ~1500 to 2500 µm** — Ref 10 (Melby et al. 2023, PNAS 120, e2222081120): Citation is resolvable; specific quantitative claims are load-bearing for methodology comparison but cannot be confirmed from available text.
+- **[Claim–citation support] Mouse cardiomyocytes range from 35–147 µm** — Ref 20 (Chazarin et al. 2025, Circ Res 137, 1377–1379): This is a 3-page brief report on 'SCarP: Proteome Heterogeneity Characterization of Primary Mouse Cardiomyocytes.' The exact source of the 35–147 µm size range cannot be confirmed from the citation alone. This is a load-bearing factual claim used to justify cell selection criteria ('we limited our cells to be approximately the same size to reduce any impact due to differences in starting proteoform quantities').
+- **[Claim–citation support] MYL3 is essential for muscle contraction, forming a complex with the myosin heavy chain to facilitate actin filament sliding** — Ref 32 (Yao et al. 2025, eLife 13): Citation is resolvable; claim is plausible but unverifiable from abstract alone.
+- **[Claim–citation support] COX6c has been associated with hypercholesterolemia and atherosclerosis** — Ref 36 (Wang et al. 2022, Cell Death Discovery 8, 336): Citation is resolvable; claim is unverifiable from abstract alone.
+- **[Claim–citation support] N-terminal acetylation is widespread among eukaryotic proteins but its functional significance within mitochondria remains poorly understood** — Ref 37 (Varland et al. 2023, Nat Commun 14, 6774): Citation is resolvable; claim is plausible but unverifiable from abstract alone.
+- **[Claim–citation support] Gene inactivation studies show that a functional bc1 complex cannot be assembled without the Qcr7 subunit and its N-terminal region is critical for proper assembly** — Ref 38 (Lee et al. 2001, Arch Biochem Biophys 393, 215–221): Citation is resolvable; claim is unverifiable from abstract alone.
+- **[Claim–citation support] Superoxide functions as an important signaling molecule at physiological concentrations** — Ref 39 (Bazil et al. 2013, Biophys J 105, 343–355): Citation is resolvable; claim is plausible but unverifiable from abstract alone.
+- **[Claim–citation support] Expanding the delta search to 200 Da accounts for potential incorporation of up to two phosphorylation events** — Ref 42 (Cleland et al. 2017, J Proteome Res 16, 2072–2079): Citation is resolvable; technical justification is unverifiable from abstract alone.
+- **[Claim–citation support] Myosin light chain proteoforms capture dynamic sarcomeric remodeling and contractile regulation, providing mechanistic insight into cardiac dysfunction** — Refs 43, 44: Both citations are resolvable; claims are plausible but unverifiable from abstracts alone.
+- **[Claim–citation support] Succinylation in the heart reflects metabolic and mitochondrial dysregulation, key drivers of heart failure** — Refs 40 (Ali et al. 2020, J Mol Cell Cardiol 138, 304–317) and 45 (Mu et al. 2025, Redox Biol 88, 103932): Both citations are resolvable; claims are plausible but unverifiable from abstracts alone.
+- **[Quotation/number fidelity] Mouse cardiomyocyte size range: 35–147 µm** — Ref 20 (Chazarin et al. 2025, Circ Res 137, 1377–1379): The cited reference is a 3-page brief report. The exact source of this size range cannot be confirmed from the citation alone. This is a load-bearing factual claim used in Methods to justify cell selection strategy.
+
+## Documented (for the record)
+- **[Reference resolvability] All 48 references include sufficient identifiers** — All references include authors, year, journal, volume/pages, and/or DOI. Examples: Ref 1 (Petelski et al., Nat Protoc 16, 5398–5425, 2021), Ref 3 (Su et al., Nature Biotechnology 2025), Ref 20 (Chazarin et al., Circ Res 137, 1377–1379, 2025).
+- **[Claim–citation support] SC proteoform imaging MS (scPiMS) enabled intact proteoform profiling of individual cells from rat hippocampus** — Ref 3 (Su et al. 2025, Nature Biotechnology): Confirmed via search as 'Proteoform profiling of endogenous single cells from rat hippocampus at scale' (2025, Nature Biotechnology).
+- **[Claim–citation support] MLC-2 is a key contractile protein essential for heart development and function** — Ref 28 (Sheikh et al. 2015, Gene 569, 14–20, PMID:26074085): Confirmed via PubMed; title is 'Functions of myosin light chain-2 (MYL2) in cardiac muscle and disease'.
+- **[Claim–citation support] Phosphorylation of MLC-2 is critical for regulating myosin-actin interactions and controls muscle contraction** — Ref 29 (Warren et al. 2012, Circulation 126, 2575–2588, PMID:23095280): Confirmed via PubMed; supports claim that 'myosin light chain phosphorylation is critical for adaptation to cardiac stress'.
+- **[Quotation/number fidelity] Single cardiomyocyte measurements: 61.04–67.92 µm in length** — Results section: 'ranged between 61.04 and 67.92 µm in length' for 13 individual cardiomyocytes. Values are consistent with the cited range of 35–147 µm (Ref 20).
+- **[Quotation/number fidelity] Standard protein mixture: 9–68 kDa range** — Methods section: 'Pierce Intact Protein Standard Mix (~9–68 kDa)' is stated as plausible for commercial standards.
+- **[Quotation/number fidelity] Identified proteins and proteoforms in bulk tissue: 41 proteins and 83 proteoforms** — Table S1 and Results section: Stated as 'Table S1' with specific counts; reproducible.
+- **[Quotation/number fidelity] Identified proteins and proteoforms in single cells: 57 proteins and 165 proteoforms** — Table S2 and Results section: Stated as 'Table S2' with specific counts; reproducible.
