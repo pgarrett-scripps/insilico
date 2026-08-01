@@ -32,8 +32,17 @@ ARXIV_RE = re.compile(
     re.I,
 )
 # Both the content path and a bare DOI form.
+#
+# Two DOI prefixes are in play: bioRxiv/medRxiv used 10.1101 historically and
+# switched to 10.64898 — every preprint posted recently carries the new one, so
+# matching only 10.1101 rejects current submissions outright. Kept as an
+# explicit alternation rather than a loose `10\.\d+` so a random DOI from some
+# other registrar isn't silently treated as a preprint.
+RXIV_PREFIXES = ("10.1101", "10.64898")
 RXIV_RE = re.compile(
-    r"(?:(?P<server>biorxiv|medrxiv)\.org/content/)?(?P<doi>10\.1101/[^\s/?#]+?)(?:v(?P<version>\d+))?(?:\.full)?(?:\.pdf)?$",
+    r"(?:(?P<server>biorxiv|medrxiv)\.org/content/)?"
+    r"(?P<doi>(?:" + "|".join(re.escape(p) for p in RXIV_PREFIXES) + r")/[^\s/?#]+?)"
+    r"(?:v(?P<version>\d+))?(?:\.full)?(?:\.pdf)?$",
     re.I,
 )
 
@@ -184,7 +193,24 @@ def download(preprint: Preprint, dest_dir: Path) -> Path:
     stem = re.sub(r"[^a-zA-Z0-9]+", "-", preprint.identifier or "preprint").strip("-")
     dest = dest_dir / f"{stem or 'preprint'}.pdf"
 
-    data = _get(preprint.pdf_url)
+    try:
+        data = _get(preprint.pdf_url)
+    except urllib.error.HTTPError as exc:
+        if exc.code in (403, 404) and preprint.source in ("biorxiv", "medrxiv"):
+            # bioRxiv serves a PDF only once a posting is fully indexed; before
+            # that it 302s to /node/.full-text.pdf with an empty node id, which
+            # then 403s. Days-old preprints hit this. Say so, rather than
+            # surfacing a bare HTTPError that reads like a permissions problem.
+            raise ValueError(
+                f"{preprint.pdf_url} returned HTTP {exc.code}. bioRxiv/medRxiv "
+                "don't serve a PDF until a posting is fully indexed, which can "
+                "take a few days after it first appears. Try again later, or "
+                "submit a direct link to the PDF."
+            ) from exc
+        raise ValueError(
+            f"{preprint.pdf_url} returned HTTP {exc.code} ({exc.reason})."
+        ) from exc
+
     if not data.startswith(b"%PDF"):
         raise ValueError(
             f"{preprint.pdf_url} did not return a PDF "
