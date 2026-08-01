@@ -1,5 +1,27 @@
 [
   {
+    "title": "Rapid Histone Post-Translational Modification Analysis Using Alternative Proteases and Tandem Mass Tags",
+    "decision": "minor",
+    "source": "biorxiv",
+    "preprint_url": "https://www.biorxiv.org/content/10.64898/2026.02.13.705817",
+    "doi": "10.64898/2026.02.13.705817",
+    "reviewed": "2026-08-01",
+    "authors": [
+      "Turner, N. P.",
+      "Baboo, S.",
+      "Garrett, P.",
+      "Diedrich, J. K.",
+      "Bajo, M.",
+      "Roberto, M.",
+      "Yates, J. R."
+    ],
+    "review_count": 1,
+    "description": "Minor revision \u00b7 mean panel score 4.12/5. AI referee panel \u2014 advisory, not a certification.",
+    "mean_score": 4.12,
+    "path": "2026/rapid-histone-post-translational-modification-10-64898-2026-02-13-705817",
+    "year": "2026"
+  },
+  {
     "title": "Confronting global eradication of TB head on: Uncovering the root of drug resistance and bacterial survival strategies through a comprehensive computational study of first-line TB drug resistant mutations",
     "decision": "major",
     "source": "biorxiv",
