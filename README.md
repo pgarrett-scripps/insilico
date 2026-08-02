@@ -120,6 +120,7 @@ src/                      # the site — Astro, no CMS, no content duplication
 
 scripts/
 ├── fetch_preprint.py     # URL → PDF + metadata (arXiv / bioRxiv / medRxiv)
+├── manuscript.py         # PDF → markdown for the panel (rustypdf)
 ├── run_review.py         # fetch → review → write bundle
 ├── check_updates.py      # find reviews whose preprint has since changed
 └── smoke_test.py         # the pipeline↔site data contract; no network, no key
@@ -181,6 +182,30 @@ python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 
 The bundle appears under `docs/reviews/`, and the site picks it up on the next
 build. There is no index to regenerate.
+
+The panel reads a markdown rendering of the PDF, not the PDF. pypdf — the
+pipeline's own ingest — fused 2% of all words together on a real submission
+(`comparableefficacyatlowerdoseusingonlycausallyavailableinformation`), lost
+about a sixth of the content, and flattened every heading, table and equation;
+[rustypdf](https://github.com/pgarrett-scripps/rustypdf2markdown) reads the
+same file with 3 fused tokens instead of 235 and keeps the structure. Install
+it alongside the pipeline:
+
+```bash
+uv pip install "rustypdf @ git+https://github.com/pgarrett-scripps/rustypdf2markdown#subdirectory=python"
+```
+
+It is optional: without it a review still runs on the older ingest path, and
+the published page records which one was used.
+
+`INSILICO_CAVEMAN` controls telegraphic compression and defaults to `off`. The
+saving would be under a cent a review — the manuscript is a cached prefix read
+only by the cheapest model tier, about 3% of a review's cost — and it is not
+free: under `light`, which drops only articles and copulas, the clarity
+reviewer reported "grammatical errors that obscure the main claims" three
+times on a paper where the uncompressed run reported none. It read what the
+compressor did as the authors' writing. `light` and `hard` remain available
+for paths that never publish a referee's prose.
 
 `--dry-run` resolves the URL and downloads the PDF without calling a model, so
 you can check a link is reviewable before spending anything. It does not check

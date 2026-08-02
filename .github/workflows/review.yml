@@ -35,6 +35,19 @@ env:
   # run records the SHA it resolved to either way, so a review always names
   # exact code regardless of which ref produced it.
   PIPELINE_REF: main
+  # PDF -> markdown converter. Kept as a knob because the repo is not public
+  # yet; point it at a release wheel once one exists, which will also drop the
+  # Rust toolchain requirement from this job.
+  RUSTYPDF_SPEC: >-
+    rustypdf @ git+https://github.com/pgarrett-scripps/rustypdf2markdown#subdirectory=python
+  # The text as written. Compression was measured and reverted: under `light`
+  # the clarity reviewer reported "grammatical errors that obscure the main
+  # claims" three times on a paper where the uncompressed run reported none —
+  # it read the dropped articles and copulas as the authors' writing. The
+  # manuscript is a cached prefix on the cheapest model tier, so compressing
+  # it saves under a cent a review, which does not buy a published criticism
+  # of real people for something we did to their text.
+  INSILICO_CAVEMAN: "off"
 
 jobs:
   review:
@@ -157,6 +170,18 @@ jobs:
           GIT_CONFIG_VALUE_0="${PIPELINE_AUTH:-}" \
             pip install --quiet "peerreviewagents[research] @ git+${PIPELINE_REPO}@${sha}"
           pip install --quiet pyyaml
+
+          # The manuscript converter. pypdf fuses ~2% of words together and
+          # drops structure entirely; rustypdf reads the same file cleanly and
+          # emits headings, tables and mathematics. Installed separately
+          # because it is a compiled extension with its own release cadence.
+          #
+          # Not fatal if it fails: run_review.py falls back to the pipeline's
+          # own PDF ingest and records that it did, so a review still happens
+          # and the published page says how the manuscript was read.
+          pip install --quiet "$RUSTYPDF_SPEC" || \
+            echo "::warning::rustypdf did not install; reviews will fall back to"\
+                 "pypdf ingest. The published page will record that."
 
           # Confirm the optional vendor actually landed, rather than
           # discovering months later that every review skipped arXiv.

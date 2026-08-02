@@ -37,6 +37,18 @@ const costs = Object.entries(provenance.cost_by_node || {})
 
 const total = typeof provenance.total_cost_usd === "number" ? provenance.total_cost_usd : null;
 const screens = provenance.screens || {};
+
+// What the referees were actually handed. The PDF is the citable artifact and
+// keeps its fingerprint above, but the panel reads a rendering of it — and
+// under compression a quoted sentence is missing its articles and copulas.
+// Someone checking a quotation against the paper needs to know that before
+// concluding the referee misquoted it.
+const ingest = provenance.ingest || { format: "pdf", tool: "pypdf (pipeline default)" };
+const ingestNote = ingest.format === "markdown"
+  ? (ingest.caveman
+      ? `Converted by ${ingest.tool}, then compressed — quotations are shortened and will not match the PDF word for word.`
+      : `Converted by ${ingest.tool}. Quotations match the manuscript text.`)
+  : "Text extracted from the PDF directly.";
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 ---
 
@@ -74,6 +86,15 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
         <p class="prov__value mono">${total.toFixed(2)}</p>
       </div>
     )}
+
+    <div class="prov__cell">
+      <p class="label">Manuscript read as</p>
+      <p class="prov__value mono">
+        {ingest.format === "markdown" ? "markdown" : "PDF text"}
+        {ingest.caveman ? ` · ${ingest.caveman}` : ""}
+      </p>
+      <p class="prov__hash">{ingestNote}</p>
+    </div>
 
     <div class="prov__cell">
       <p class="label">Desk screens</p>

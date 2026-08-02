@@ -190,6 +190,81 @@ def check_unscorable_dimension_is_not_a_good_score() -> None:
         assert prov2["scored_count"] == 0
 
 
+def check_manuscript_ingest_is_recorded() -> None:
+    """However the manuscript was read, the record has to say so.
+
+    The panel is handed a markdown rendering of the PDF, not the PDF, and at
+    `light` compression a quoted sentence is missing its articles and copulas.
+    A reader checking a referee's quotation against the paper will not find it
+    verbatim — so the record must name the tool and the compression level, or
+    the mismatch reads as the referee having misquoted.
+
+    Failure must never be silent either. A missing converter, a scanned PDF,
+    or a conversion that returns almost nothing all fall back to the old
+    ingest path, and each falls back with a stated reason.
+    """
+    import manuscript
+
+    real_import = manuscript._import_rustypdf
+    with tempfile.TemporaryDirectory() as tmp:
+        pdf = Path(tmp) / "paper.pdf"
+        pdf.write_bytes(b"%PDF-1.4 fixture")
+
+        # No converter: fall back to the PDF, and say why.
+        manuscript._import_rustypdf = lambda: (None, "rustypdf unavailable (test)")
+        try:
+            out, rec = manuscript.prepare(pdf)
+        finally:
+            manuscript._import_rustypdf = real_import
+        assert out == pdf, "a missing converter must not lose the manuscript"
+        assert rec["format"] == "pdf"
+        assert rec["reason"], "a fallback with no reason is a silent fallback"
+
+        # Conversion that returns almost nothing — a scanned PDF. Falling
+        # through would run a full panel over an empty manuscript.
+        class _Thin:
+            __version__ = "test"
+            @staticmethod
+            def to_markdown(path, caveman=None):
+                return "# Title\n"
+
+        manuscript._import_rustypdf = lambda: (_Thin, "")
+        try:
+            out, rec = manuscript.prepare(pdf)
+        finally:
+            manuscript._import_rustypdf = real_import
+        assert out == pdf, "a near-empty conversion must not be handed to the panel"
+        assert "characters" in rec["reason"], rec["reason"]
+
+        # A real conversion is recorded with its tool and level.
+        body = "# Paper\n\n" + ("content word " * 2000)
+
+        class _Good:
+            __version__ = "9.9.9"
+            @staticmethod
+            def to_markdown(path, caveman=None):
+                return body
+
+        manuscript._import_rustypdf = lambda: (_Good, "")
+        try:
+            out, rec = manuscript.prepare(pdf, caveman="light")
+        finally:
+            manuscript._import_rustypdf = real_import
+        assert out.suffix == ".md" and out.read_text() == body
+        assert rec["format"] == "markdown"
+        assert rec["caveman"] == "light", "the compression level must be on the record"
+        assert "9.9.9" in rec["tool"], "the converter version must be on the record"
+
+        # "off" is recorded as no compression rather than as the string "off",
+        # so a page can test the field rather than parse it.
+        manuscript._import_rustypdf = lambda: (_Good, "")
+        try:
+            _, rec = manuscript.prepare(pdf, caveman="off")
+        finally:
+            manuscript._import_rustypdf = real_import
+        assert rec["caveman"] is None, rec["caveman"]
+
+
 def check_desk_reject() -> None:
     """A desk reject produces almost none of the usual bundle. Render anyway.
 
@@ -841,6 +916,8 @@ def main() -> int:
 
     check_unscorable_dimension_is_not_a_good_score()
     print("ok  a dimension that does not apply leaves the mean")
+    check_manuscript_ingest_is_recorded()
+    print("ok  how the manuscript was read is always recorded")
     check_desk_reject()
     print("ok  desk reject records no panel and keeps every body")
     check_versioning()
