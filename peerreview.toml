@@ -83,6 +83,21 @@ injection_screen = true
 # by this. Flip to "flag" only to deliberately review a compromised file.
 injection_screen_action = "reject"
 
+# What reviewer-directed language in *visible* text does. "judge" hands it to
+# the desk screen, which decides whether the passage addresses the reviewer
+# (manipulation, reject) or describes attacks addressed to one (a paper about
+# prompt injection, proceed).
+#
+# Not "reject": In Silico reviews computational and security work, and a paper
+# studying this attack has to quote payloads to study them. Rejecting it for
+# containing its own subject would be a worse failure than the one we are
+# guarding against — and the discriminator is judgeable, so an agent should
+# judge it rather than a regex deciding by whether the text was hidden.
+#
+# The desk screen is on (below), so there is always something to judge with.
+# With triage off this falls through to a reject instead.
+visible_injection_action = "judge"
+
 # 2. Editorial triage — a single fast pass that desk-rejects work plainly
 #    below the bar before spending the full panel on it.
 #

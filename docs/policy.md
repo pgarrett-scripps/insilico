@@ -77,9 +77,18 @@ Three properties of this check are deliberate:
   OCR layer, and plenty of legitimate files have hidden text for good reasons.
   The rejection requires a reviewer-directed *instruction* found inside the
   concealed text.
-- **Visible text is never a rejection.** A paper *about* prompt injection quotes
-  these strings openly, and should be reviewable here. Visible matches are noted
-  for the editor and nothing more.
+- **Visible instructions are also grounds for rejection.** Text addressed to
+  whoever is assessing a manuscript does not belong in it, and being unhidden
+  does not make it acceptable. Where the scan finds such language in visible
+  text, the desk screen reads the passages and decides.
+
+    The line it draws is who the text speaks to, not whether it was hidden.
+    Language that *addresses* the reviewer — instructing, flattering or
+    bargaining with them — is an attempt to manipulate review. Language that
+    *describes* such attempts is a paper about prompt injection quoting its own
+    subject matter, and we will not reject scholarship for containing the thing
+    it studies. If you work on this and your manuscript quotes payloads, you are
+    in scope; say so in the submission and it will be read that way.
 
 **A finding is not published automatically.** An integrity rejection is an
 allegation about named people, not an opinion about their work, and a false
