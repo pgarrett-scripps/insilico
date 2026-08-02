@@ -83,8 +83,11 @@ asked for, because you did not choose this.
 
 ## The desk
 
-Two checks run before any referee is assigned. Either can stop a submission
-without a review being produced; both are recorded in the published bundle.
+Two checks run before any referee is assigned, and either can stop a submission
+without a review being produced. `provenance.json` records which screens were
+active for that submission. The triage screen publishes its verdict as
+`desk_screen.md` whether it passed the paper or not; the integrity scan writes
+`integrity.md` only when it found something.
 
 ### Submission integrity
 
@@ -136,7 +139,7 @@ review: in scope, intelligible, complete, and not fatally flawed on its face.
 The instruction to this screen is to reject sparingly and to send anything
 borderline to the panel.
 
-A desk rejection is recorded as `desk_rejected` in the bundle's frontmatter and
+A desk rejection is recorded as `desk_rejected` in the bundle's
 `provenance.json`, and is badged separately in the index. It is not the same act
 as a panel rejection, and we will not present it as one: nothing read the
 manuscript in depth, and no specialist reports exist.
@@ -149,8 +152,9 @@ These are properties of the method, not bugs we expect to fix:
   paper *claims* about availability, not verification.
 - **It cannot check your math.** Derivations are assessed for plausibility and
   presentation, not correctness.
-- **It cannot see figures.** Ingest is text-only via `pypdf`. Claims resting on
-  a figure will be under-assessed.
+- **It cannot see figures.** The manuscript reaches the panel as text: the PDF
+  is converted to markdown by `rustypaper` and the images are dropped. Claims
+  resting on a figure will be under-assessed.
 - **Long papers cost more, and cost is what limits us.** No truncation is
   applied today — every agent reads the whole manuscript. The pipeline supports
   a section-aware per-agent character budget, and we may enable one if long

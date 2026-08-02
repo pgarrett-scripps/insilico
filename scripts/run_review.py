@@ -3,7 +3,7 @@
     python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
     python scripts/run_review.py --issue-body "$ISSUE_BODY" --submission-id 12
 
-Output lands in ``docs/reviews/<year>/<slug>/`` and is what the bot commits.
+Output lands in ``docs/reviews/<year>/<slug>/v<N>/`` and is what the bot commits.
 ``--dry-run`` resolves and downloads without calling a model, so you can check a
 URL is reviewable before spending anything.
 """
@@ -78,8 +78,9 @@ REPO_URL = (
 # travel with a review; how they are labelled, ordered and presented is the
 # site's business, and lives in src/lib/corpus.js.
 #
-# integrity.md and desk_screen.md are written only when the desk found
-# something.
+# desk_screen.md carries the triage verdict and is written whenever that screen
+# ran, pass or reject. integrity.md is written only when the concealed-text scan
+# found something, so most bundles do not have one.
 #
 # The pipeline also supports an author response letter, and In Silico
 # deliberately never sends one. Given a letter asserting that revisions were

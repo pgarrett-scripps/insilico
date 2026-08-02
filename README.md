@@ -38,12 +38,17 @@ Merging the review pull request is what publishes it. There is no other step —
 and it means the review is public, not that the panel's recommendation has been
 endorsed.
 
-One follow-up command continues an existing record:
+Two commands exist, and only these two:
 
 | Command | Means | Effect |
 |---|---|---|
-| `/review <url>` | review this preprint | a fresh round 1 |
+| `/review` | review the preprint linked in this issue | a fresh round 1 |
 | `/revise` | the **manuscript** changed | next round; referees rule on the delta, an auditor checks the previous letter's required revisions |
+
+Both are comments on the submission issue, and the workflow ignores them unless
+the commenter is an owner, member or collaborator. Neither takes an argument —
+the URL is read out of the issue body. To review a URL that is not on an issue,
+run the workflow by hand from the Actions tab, which takes one.
 
 `/revise` needs the previous round to have left a `round.json` in its bundle,
 which is what a later round is pointed at. Reviews published before round records
@@ -60,8 +65,8 @@ published right of reply, editor withdrawal, or a re-review with no author input
 1. Open a [submission issue](../../issues/new?template=submit.yml) with your
    preprint URL.
 2. Wait for an editor to trigger the panel.
-3. Read the review on the PR. Respond in the thread if you disagree — the editor
-   reads rebuttals before deciding.
+3. Read the review on the PR. Respond in the thread if you disagree — a human
+   editor reads what you write before deciding. No agent does.
 
 Anyone may submit any public preprint, including one they did not write. The form
 asks whether you are an author and every published review states the answer, so a
@@ -102,14 +107,14 @@ docs/                     # the record — written by the pipeline, read by the 
     ├── round.json        # machine-readable record a later round rules on
     ├── summary.md
     ├── decision_letter.md
-    ├── desk_screen.md         # only when the desk found something
-    ├── integrity.md           #   ditto — the injection scan
+    ├── desk_screen.md         # the triage verdict, pass or reject
+    ├── integrity.md           # only when the concealed-text scan found something
     ├── meta_review.md
     ├── author_rebuttal.md
     ├── debate_transcript.md
     ├── journal_recommendations.md
     ├── review_*.md       # 8 specialist reports
-    └── audit_*.md        # 2 editorial audits
+    └── audit_*.md        # 2 editorial audits; 3 in a revision round
 
 src/                      # the site — Astro, no CMS, no content duplication
 ├── lib/corpus.js         # walks docs/reviews/ into the shape pages render from
@@ -122,7 +127,8 @@ scripts/
 ├── fetch_preprint.py     # URL → PDF + metadata (arXiv / bioRxiv / medRxiv)
 ├── run_review.py         # fetch → review → write bundle
 ├── check_updates.py      # find reviews whose preprint has since changed
-└── smoke_test.py         # the pipeline↔site data contract; no network, no key
+├── smoke_test.py         # the pipeline↔site data contract; no network, no key
+└── _pinned_review.py     # test helper: review a named arXiv version, not the latest
 
 .github/workflows/
 ├── review.yml            # /review, /revise → opens a review PR
@@ -179,28 +185,37 @@ export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 ```
 
-The bundle appears under `docs/reviews/`, and the site picks it up on the next
-build. There is no index to regenerate.
+PeerReviewAgents is a private repository, so that second install only works from
+an account with read access to it. It is not on PyPI.
 
-The panel reads a markdown rendering of the PDF, not the PDF — the pipeline
-converts it with [rustypaper](https://github.com/pgarrett-scripps/rustypaper),
-which is a required dependency and has no fallback. The reader it replaced
-fused 2% of all words together on a real submission
+The bundle appears under `docs/reviews/<year>/<slug>/v<N>/`, and the site picks
+it up on the next build. There is no index to regenerate.
+
+`run_review.py` hands the pipeline the **PDF**, never a conversion of it. The
+submission integrity screen dispatches on file type, and only its PDF path can
+find text hidden in a content stream — hand it a `.md` and the screen reports as
+having run while looking for nothing it can find. Conversion belongs behind the
+loader, where the screen has already seen the real bytes.
+
+Behind that loader the PDF becomes markdown, and that rendering is what the
+referees read. The converter is
+[rustypaper](https://github.com/pgarrett-scripps/rustypaper). It is required and
+has no fallback: one that will not install fails the run instead of degrading
+it. The reader it replaced fused 2% of all words together on a real submission
 (`comparableefficacyatlowerdoseusingonlycausallyavailableinformation`), lost
-about a sixth of the content, and flattened every heading, table and equation;
-rustypaper reads the same file with 3 fused tokens instead of 235. It arrives
-as a dependency of the pipeline, and is a per-platform wheel, so there is no
-Rust toolchain to install:
+about a sixth of the content, and flattened every heading, table and equation,
+where rustypaper reads the same file with 3 fused tokens instead of 235. The
+pipeline depends on it, so it normally arrives with peerreviewagents; it ships
+as a per-platform wheel, so there is no Rust toolchain to install:
 
 ```bash
 uv pip install rustypaper
 ```
 
-We pass the pipeline the **PDF**, never a conversion of it. The submission
-integrity screen dispatches on file type, and only its PDF path can find text
-hidden in a content stream — hand it a `.md` and the screen reports as having
-run while looking for nothing it can find. Conversion belongs behind the
-loader, where the screen has already seen the real bytes.
+The workflow pins it to `rustypaper==0.1.1` rather than letting it float. The
+panel reads whatever the converter produces, so one that changed how it reads a
+two-column page between two rounds of the same paper would show up as the
+authors having rewritten it.
 
 `PEERREVIEW_CAVEMAN` controls telegraphic compression and defaults to `off`.
 The saving would be under a cent a review — the manuscript is a cached prefix
@@ -217,7 +232,8 @@ that the PDF has extractable text; a scanned manuscript passes `--dry-run` and
 fails later during ingestion.
 
 For iterating on prompts, override the provider per run rather than editing
-`peerreview.toml`, which routes through a cheap model on a personal key:
+`peerreview.toml`. That routes through a cheap model on a personal key instead
+of spending the lab's Anthropic budget on prompt tuning:
 
 ```bash
 python scripts/run_review.py --url ... --provider openrouter --model <cheap-model>

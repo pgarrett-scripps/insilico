@@ -40,8 +40,14 @@ body:
   - type: textarea
     id: focus
     attributes:
-      label: Anything you want the panel to focus on?
-      description: Optional. A specific claim, a method you're unsure about, a section you rewrote.
+      label: Anything the editor should know before running it?
+      description: |
+        Optional, and read by a person rather than by the panel — nothing
+        written here reaches a referee, and the panel is given the manuscript
+        and nothing else. Use it for what an editor needs to decide whether to
+        run the panel at all: a paper that quotes prompt-injection payloads as
+        its subject matter, say, or a preprint posted so recently the server
+        may not serve a PDF yet.
     validations:
       required: false
 

@@ -56,9 +56,9 @@ it before triggering a review.
    without noticing they happened. See [the desk](policy.md#the-desk).
 4. **The bot opens a pull request** with the full review bundle and posts the
    summary back on your issue.
-5. **You get a say.** Comment on the PR if the panel misread something. The
-   editor reads rebuttals before deciding, and a substantive one can trigger a
-   re-review.
+5. **You get a say.** Comment on the PR if the panel misread something. A human
+   editor reads it before deciding, and a substantive objection can trigger a
+   re-review. No agent reads it.
 6. **The editor merges or closes.** Merged means listed here with the review
    attached. Closed means declined, and nothing is published.
 
