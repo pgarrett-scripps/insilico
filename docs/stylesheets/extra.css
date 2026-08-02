@@ -10,7 +10,12 @@
  * never to "broken".
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap");
+/* The Source Serif webfont is loaded from mkdocs.yml's `extra_css` rather than
+ * `@import`ed here. An @import cannot start downloading until this file has
+ * itself arrived and been parsed, which serialises two round trips before any
+ * text renders; listed as its own stylesheet it is discovered in the initial
+ * HTML and fetched in parallel. The stack below degrades to Iowan/Georgia, so
+ * a blocked or slow font costs character, not legibility. */
 
 /* --- Palette ------------------------------------------------------------ */
 
@@ -246,6 +251,15 @@
   box-shadow: 0 6px 18px rgb(0 0 0 / 8%);
 }
 
+/* A card is a link, and the whole index is navigable by keyboard. The custom
+ * border would otherwise leave the focused card indistinguishable from its
+ * neighbours, since the default outline sits under the card's own border. */
+.ins-card:focus-visible {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+  border-color: var(--md-accent-fg-color);
+}
+
 .ins-card__title {
   font-family: var(--ins-serif);
   font-size: 0.94rem;
@@ -307,6 +321,12 @@
 }
 
 .ins-filter:hover { border-color: var(--md-accent-fg-color); }
+
+.ins-filter:focus-visible,
+.ins-sort__select:focus-visible {
+  outline: 2px solid var(--md-accent-fg-color);
+  outline-offset: 2px;
+}
 
 /* The pressed chip takes the verdict's own colour, so the control and the
  * chips on the cards below it agree at a glance. */
@@ -375,10 +395,34 @@
   padding: 0.9rem 1.1rem;
   margin: 1.4rem 0 1.8rem;
   border: 1px solid var(--ins-rule);
-  border-left: 3px solid currentcolor;
+  border-left: 3px solid var(--ins-decision-accent, var(--ins-rule));
   border-radius: 6px;
   background: var(--ins-panel);
 }
+
+/* The band takes the verdict's own colour on its left edge, which is what
+ * makes an accept and a reject distinguishable before reading a word of
+ * either. It cannot come from `currentcolor`: the chip inside carries the
+ * verdict class, the band does not, so `currentcolor` here resolves to the
+ * inherited body text colour and every decision renders identically. The
+ * generator emits the modifier below for exactly this reason. */
+.ins-decision--accept { --ins-decision-accent: var(--ins-accept); }
+.ins-decision--minor  { --ins-decision-accent: var(--ins-minor); }
+.ins-decision--major  { --ins-decision-accent: var(--ins-major); }
+.ins-decision--reject { --ins-decision-accent: var(--ins-reject); }
+.ins-decision--desk   { --ins-decision-accent: var(--ins-desk); }
+
+/* Reviews published before that modifier existed carry the verdict only on
+ * the chip nested inside the band. Recovering it from there lets the existing
+ * corpus pick up the accent without regenerating pages that are supposed to
+ * hold still — an already-published review should not be rewritten for a
+ * styling change. Both rules derive from the same verdict, so they cannot
+ * disagree about a page that has each. */
+.ins-decision:has(.ins-verdict--accept) { --ins-decision-accent: var(--ins-accept); }
+.ins-decision:has(.ins-verdict--minor)  { --ins-decision-accent: var(--ins-minor); }
+.ins-decision:has(.ins-verdict--major)  { --ins-decision-accent: var(--ins-major); }
+.ins-decision:has(.ins-verdict--reject) { --ins-decision-accent: var(--ins-reject); }
+.ins-decision:has(.ins-verdict--desk)   { --ins-decision-accent: var(--ins-desk); }
 
 .ins-decision__label {
   font-family: var(--ins-serif);
@@ -429,4 +473,75 @@
 
 @media screen and (max-width: 76.1875em) {
   .ins-masthead { padding-top: 2rem; }
+}
+
+/* --- Motion ------------------------------------------------------------- */
+
+/* The card lift and the chip transitions are decoration. Honour a reader who
+ * has asked the system for less of it — vestibular triggers are a real
+ * accessibility concern, not a preference. */
+@media (prefers-reduced-motion: reduce) {
+  .ins-card,
+  .ins-filter {
+    transition: none;
+  }
+  .ins-card:hover {
+    transform: none;
+  }
+}
+
+/* --- Print -------------------------------------------------------------- */
+
+/* Referee reports get printed and annotated — it is one of the few things a
+ * reviewer actually does with a review. Material's default print output keeps
+ * the chrome and drops the link targets, so a printed review cannot be traced
+ * back to the paper it is about. */
+@media print {
+  .ins-filters,
+  .md-header,
+  .md-sidebar,
+  .md-footer,
+  .md-content__button {
+    display: none !important;
+  }
+
+  .ins-cards {
+    display: block;
+  }
+
+  .ins-card {
+    break-inside: avoid;
+    margin-bottom: 0.6rem;
+  }
+
+  /* The verdict is the one thing that must survive a greyscale printer, so it
+   * stops relying on colour alone. */
+  .ins-verdict {
+    border-width: 2px;
+  }
+
+  .ins-decision {
+    border-left-width: 4px;
+    break-inside: avoid;
+  }
+
+  /* A printed page has no hover and no address bar, so a bare link is a dead
+   * end. Print the target next to the text — but only for external links,
+   * since expanding every in-page anchor would bury the prose. */
+  .md-typeset a[href^="http"]::after {
+    content: " <" attr(href) ">";
+    font-size: 0.7em;
+    word-break: break-all;
+    color: #555;
+  }
+
+  /* Fingerprints and any other collapsed disclosure are part of the record;
+   * printing the summary alone would silently drop them. */
+  .md-typeset details {
+    display: block;
+  }
+
+  .md-typeset details > *:not(summary) {
+    display: revert;
+  }
 }

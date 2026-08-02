@@ -12,7 +12,7 @@
 # That routes iteration through a ~$0.20/run model on a personal key rather
 # than spending the lab's Anthropic budget on prompt tuning.
 #
-# LAYOUT IS LOad-BEARING: every bare `key = value` below must stay above the
+# LAYOUT IS LOAD-BEARING: every bare `key = value` below must stay above the
 # first [table] header. In TOML a table header captures every key that follows
 # it, so a top-level setting written after [agent_models] silently becomes
 # `agent_models.<key>` — it parses, it validates, and it does nothing. That is
@@ -110,7 +110,8 @@ visible_injection_action = "judge"
 #    screen deliberately shares the reviewers' model and manuscript prefix, so
 #    its call warms the prompt cache that all 8 specialists then read on their
 #    parallel fan-out — which would otherwise race and largely miss. And a
-#    desk reject short-circuits the run before 17 further calls.
+#    desk reject short-circuits the run before 16 further calls (8 reviewers,
+#    2 auditors, one debate round of 2, area chair, rebuttal, editor, scout).
 #
 #    "gate" enforces the verdict; "warm" runs it for the cache but ignores the
 #    verdict; "off" skips the call. The upstream prompt is explicitly

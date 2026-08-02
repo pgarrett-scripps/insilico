@@ -10,12 +10,14 @@ the review PR is merged, when it's least convenient.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
 import re
 import sys
 import tempfile
+import urllib.error
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -23,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from build_index import read_frontmatter  # noqa: E402
 from fetch_preprint import Preprint, resolve  # noqa: E402
 from run_review import (  # noqa: E402
+    AUTHOR_RESPONSE,
     BUNDLE_ORDER,
     next_version,
     paper_slug,
@@ -396,6 +399,26 @@ def check_correction() -> None:
         assert (paper / "v2" / "author_response.md").exists(), \
             "the authors' response was not snapshotted into the bundle"
         assert "Table 2" in (paper / "v2" / "author_response.md").read_text()
+        assert f"({AUTHOR_RESPONSE})" in landing, "the response is not linked"
+
+        # An appeal with no author comment is allowed by the workflow, and the
+        # page must not then describe a verification that never happened or
+        # link a file that was never written.
+        write_bundle(
+            preprint, state, run_dir, paper / "v3", "1", "me", None,
+            {"round": 1, "kind": "correction", "prior_decision": "major",
+             "only_reviewers": ["methodology"], "statement_path": "",
+             "baseline": {"restored": False, "reason": "", "n/a": True}},
+        )
+        bare = (paper / "v3" / "index.md").read_text()
+        assert not (paper / "v3" / AUTHOR_RESPONSE).exists(), \
+            "no response was supplied, so none should be published"
+        assert f"({AUTHOR_RESPONSE})" not in bare, \
+            "the page links a response file that was never written"
+        assert "No author response accompanied this appeal" in bare, \
+            "the page must say no response was checked"
+        assert "corroborated pointers" not in bare, \
+            "claims a verification that could not have happened"
 
         write_paper_page(paper)
         history = (paper / "index.md").read_text()
@@ -474,6 +497,34 @@ def check_metadata_is_sanitised_at_ingestion() -> None:
     assert _clean("Effects of TNF-α on  cells") == "Effects of TNF-α on cells"
 
 
+@contextlib.contextmanager
+def offline():
+    """Run a block with metadata lookups failing, as if there were no network.
+
+    What the URL checks below actually assert is how a string is classified
+    and canonicalised, which is pure parsing — but ``resolve`` also calls the
+    arXiv and bioRxiv APIs to enrich the result. Letting those run would put a
+    live dependency on someone else's uptime into a test suite whose whole
+    claim is that it is hermetic, and CI would fail for reasons having nothing
+    to do with the commit under test.
+
+    Both resolvers already treat a metadata failure as a nicety they can do
+    without, so failing the fetch exercises the real code path rather than
+    stubbing it out.
+    """
+    import fetch_preprint
+
+    def no_network(*a, **k):
+        raise urllib.error.URLError("offline (smoke test)")
+
+    original = fetch_preprint._get
+    fetch_preprint._get = no_network
+    try:
+        yield
+    finally:
+        fetch_preprint._get = original
+
+
 def check_url_is_canonical() -> None:
     """The stored URL is rebuilt from the match, never echoed from input.
 
@@ -482,7 +533,8 @@ def check_url_is_canonical() -> None:
     echoing the input back would publish it as a clickable link.
     """
     hostile = "javascript:alert(document.domain)#arxiv.org/abs/1706.03762"
-    p = resolve(hostile)
+    with offline():
+        p = resolve(hostile)
     assert p.url == "https://arxiv.org/abs/1706.03762", p.url
     assert "javascript:" not in p.url
     assert not p.pdf_url.startswith("javascript:")
@@ -532,6 +584,35 @@ def check_statement_url_is_external() -> None:
         raise AssertionError(f"{why} was not rejected: {bad}")
 
 
+def check_statement_redirects_are_rechecked() -> None:
+    """Vetting only the submitted URL is not a control.
+
+    Whoever chooses the URL also chooses where it redirects, and urllib
+    follows redirects on its own. A public https host answering 302 with the
+    cloud metadata endpoint would otherwise put the runner's credentials into
+    the file that gets published as the authors' response.
+    """
+    import run_review
+
+    handler = run_review._GuardedRedirectHandler()
+    for target, why in (
+        ("http://169.254.169.254/latest/meta-data/", "metadata endpoint"),
+        ("https://127.0.0.1/secrets", "loopback"),
+        ("http://example.org/x.md", "downgrade to plain http"),
+    ):
+        try:
+            handler.redirect_request(None, None, 302, "Found", {}, target)
+        except SystemExit:
+            continue
+        raise AssertionError(f"redirect to {why} was not rejected: {target}")
+
+    # And the opener actually installs it, or the guard above is unreachable.
+    opener = run_review._public_opener()
+    assert any(
+        isinstance(h, run_review._GuardedRedirectHandler) for h in opener.handlers
+    ), "the guarded handler is not installed on the opener"
+
+
 def check_solicitation_is_labelled() -> None:
     """Whether the authors asked for the review has to be on the page.
 
@@ -541,7 +622,6 @@ def check_solicitation_is_labelled() -> None:
     the second hide inside the first.
     """
     from fetch_preprint import extract_authorship
-    import run_review
 
     # Parsed from the submission form, which asks outright.
     assert extract_authorship(
@@ -588,6 +668,99 @@ def check_solicitation_is_labelled() -> None:
         assert "do not verify" in pages["yes"] or "states" in pages["yes"]
 
 
+def check_staleness_scan_finds_bundles() -> None:
+    """The corpus scanner has to find the layout the bundler actually writes.
+
+    It did not, for a while: the glob stopped one directory short of ``vN/``,
+    so once reviews became versioned it matched nothing and reported "no
+    published reviews to check" every month against a corpus that was growing.
+    A checker that finds zero reviews looks exactly like a corpus with nothing
+    wrong, which is why this is asserted rather than eyeballed.
+    """
+    import check_updates
+
+    with tempfile.TemporaryDirectory() as tmp:
+        reviews = Path(tmp) / "reviews"
+        for slug, versions in (("paper-a", 2), ("paper-b", 1)):
+            for v in range(1, versions + 1):
+                bundle = reviews / "2026" / slug / f"v{v}"
+                bundle.mkdir(parents=True)
+                (bundle / "provenance.json").write_text(json.dumps({
+                    "preprint": {
+                        "url": f"https://arxiv.org/abs/{slug}",
+                        "version": str(v),
+                        "pdf_sha256": str(v) * 64,
+                        "source": "arxiv",
+                    }
+                }))
+
+        original = check_updates.REVIEWS
+        check_updates.REVIEWS = reviews
+        try:
+            found = check_updates.published()
+        finally:
+            check_updates.REVIEWS = original
+
+    names = sorted(b.relative_to(reviews).as_posix() for b, _ in found)
+    assert names == ["2026/paper-a/v2", "2026/paper-b/v1"], names
+
+
+def check_restamping_is_not_staleness() -> None:
+    """bioRxiv re-stamps every PDF it serves, so its hash alone proves nothing.
+
+    Verified against the live server: two fetches of one bioRxiv URL seconds
+    apart return different hashes at identical length, while arXiv returns the
+    same bytes. Counting that as staleness would file a report every month
+    naming papers that had not changed, and a monthly alarm that is always
+    wrong is one an editor correctly learns to ignore.
+    """
+    import check_updates
+    from fetch_preprint import Preprint
+
+    reviewed = "a" * 64
+    base = {
+        "url": "https://www.biorxiv.org/content/10.1101/2020.01.01.000001v1",
+        "version": "1",
+        "pdf_sha256": reviewed,
+        "pdf_bytes": 1000,
+        "source": "biorxiv",
+    }
+
+    def run(source: str, now_sha: str, now_bytes: int) -> dict:
+        pre = dict(base, source=source)
+        original_resolve = check_updates.resolve
+        original_fp = check_updates.fingerprint
+        check_updates.resolve = lambda url: Preprint(
+            url=url, source=source, pdf_url="p", version="1"
+        )
+        check_updates.fingerprint = lambda pp: (now_sha, now_bytes)
+        try:
+            bundle = check_updates.REVIEWS / "2026" / "x" / "v1"
+            return check_updates.check_one(bundle, {"preprint": pre})
+        finally:
+            check_updates.resolve = original_resolve
+            check_updates.fingerprint = original_fp
+
+    # Same length, different bytes: the date stamp. Not stale.
+    r = run("biorxiv", "b" * 64, 1000)
+    assert r["status"] == "restamped", r
+    assert r["status"] not in check_updates.STALE_STATUSES, "a re-stamp is not staleness"
+
+    # Length moved: the content was actually edited. Stale.
+    r = run("biorxiv", "b" * 64, 1200)
+    assert r["status"] == "bytes-differ", r
+    assert r["status"] in check_updates.STALE_STATUSES
+
+    # arXiv serves a fixed file, so any hash change is a real replacement.
+    r = run("arxiv", "b" * 64, 1000)
+    assert r["status"] == "bytes-differ", \
+        "arXiv is byte-stable; a hash change there is not a re-stamp"
+
+    # Unchanged bytes stay unchanged whatever the server.
+    r = run("biorxiv", reviewed, 1000)
+    assert r["status"] == "unchanged", r
+
+
 def check_slug_uniqueness() -> None:
     """Titles truncate at 60 chars, so they cannot be the whole directory name."""
     long_a = "Deep learning approaches for the prediction of protein structure from sequence"
@@ -600,18 +773,114 @@ def check_slug_uniqueness() -> None:
 
 def check_rejected_sources() -> None:
     """Only the three preprint servers are reviewable."""
-    for ok in (
-        "https://arxiv.org/abs/1706.03762",
-        "https://www.biorxiv.org/content/10.64898/2026.04.28.721232v1",
-        "https://www.medrxiv.org/content/10.1101/2020.03.24.20042937v1",
-    ):
-        assert resolve(ok).identifier, f"should resolve: {ok}"
-    for bad in ("https://example.com/paper.pdf", "https://example.com/page"):
-        try:
-            resolve(bad)
-        except ValueError:
-            continue
-        raise AssertionError(f"should have been rejected: {bad}")
+    with offline():
+        for ok in (
+            "https://arxiv.org/abs/1706.03762",
+            "https://www.biorxiv.org/content/10.64898/2026.04.28.721232v1",
+            "https://www.medrxiv.org/content/10.1101/2020.03.24.20042937v1",
+        ):
+            assert resolve(ok).identifier, f"should resolve: {ok}"
+        for bad in ("https://example.com/paper.pdf", "https://example.com/page"):
+            try:
+                resolve(bad)
+            except ValueError:
+                continue
+            raise AssertionError(f"should have been rejected: {bad}")
+
+
+def check_link_forms_a_browser_produces() -> None:
+    """The identifier must survive whatever the address bar hands over.
+
+    Submitters paste what their browser shows, and bioRxiv's own page links
+    end in `.full-text` and `.supplementary-material`. Matching the DOI by
+    shape rather than by "everything up to the end of the string" is what
+    makes these equivalent; anchoring to the end made a trailing slash fatal
+    and quietly swallowed `.full-text` into the DOI itself — which then became
+    the API query, the PDF URL and the published directory name.
+    """
+    doi = "10.1101/2020.03.24.20042937"
+    forms = [
+        f"https://www.medrxiv.org/content/{doi}v1",
+        f"https://www.medrxiv.org/content/{doi}v1/",
+        f"https://www.medrxiv.org/content/{doi}v1.full",
+        f"https://www.medrxiv.org/content/{doi}v1.full.pdf",
+        f"https://www.medrxiv.org/content/{doi}v1.full-text",
+        f"https://www.medrxiv.org/content/{doi}v1.supplementary-material",
+    ]
+    with offline():
+        for form in forms:
+            p = resolve(form)
+            assert p.identifier == doi, f"{form} -> {p.identifier!r}"
+            assert p.source == "medrxiv", f"{form} -> {p.source}"
+            assert p.version == "1", f"{form} -> version {p.version!r}"
+            assert p.pdf_url == (
+                f"https://www.medrxiv.org/content/{doi}v1.full.pdf"
+            ), f"{form} -> {p.pdf_url}"
+
+        # The legacy bare-serial DOI form still resolves.
+        assert resolve("https://doi.org/10.1101/001834").identifier == "10.1101/001834"
+
+        # A DOI from another registrar is still not a preprint — and neither
+        # is a *journal* article sharing bioRxiv's prefix. 10.1101 belongs to
+        # Cold Spring Harbor Press, who use it for Genome Research and
+        # Learning & Memory as well as for bioRxiv, so the prefix alone does
+        # not identify a preprint. Matching the DOI's shape is what separates
+        # them; the previous open-ended pattern accepted `10.1101/gr.123456`
+        # and would have published a review of a peer-reviewed paper as though
+        # it were a preprint, pointing at a bioRxiv URL that does not exist.
+        for bad in (
+            "https://doi.org/10.1038/s41586-020-2649-2",
+            "https://doi.org/10.5555/12345678",
+            "https://doi.org/10.1101/gr.123456.111",
+            "https://doi.org/10.1101/lm.049890.119",
+        ):
+            try:
+                resolve(bad)
+            except ValueError:
+                continue
+            raise AssertionError(f"not a preprint DOI, should be rejected: {bad}")
+
+
+def check_bare_doi_picks_the_right_server() -> None:
+    """bioRxiv and medRxiv share both DOI prefixes, so a bare DOI names neither.
+
+    Defaulting to bioRxiv publishes a medRxiv preprint labelled `source:
+    biorxiv`, with every link and the PDF fetch pointed at a bioRxiv URL that
+    does not exist. The servers are asked instead of guessed.
+    """
+    import fetch_preprint
+
+    doi = "10.1101/2020.03.24.20042937"
+    asked = []
+
+    def fake_records(server: str, wanted: str) -> list[dict]:
+        asked.append(server)
+        # Only medRxiv holds it, which is the case the guess gets wrong.
+        return [{"title": "T", "version": "2", "date": "2020-03-30",
+                 "authors": "A; B", "abstract": "x"}] if server == "medrxiv" else []
+
+    original = fetch_preprint._rxiv_records
+    fetch_preprint._rxiv_records = fake_records
+    try:
+        p = fetch_preprint.resolve(f"https://doi.org/{doi}")
+    finally:
+        fetch_preprint._rxiv_records = original
+
+    assert asked == ["biorxiv", "medrxiv"], f"both servers should be tried: {asked}"
+    assert p.source == "medrxiv", f"resolved to the wrong server: {p.source}"
+    assert "medrxiv.org" in p.url, p.url
+    assert "medrxiv.org" in p.pdf_url, p.pdf_url
+
+    # A URL that *does* name its server is authoritative and must not be
+    # second-guessed with an extra request.
+    asked.clear()
+    fetch_preprint._rxiv_records = fake_records
+    try:
+        p = fetch_preprint.resolve(f"https://www.biorxiv.org/content/{doi}v1")
+    finally:
+        fetch_preprint._rxiv_records = original
+    assert asked == ["biorxiv"], f"a named server should not be probed twice: {asked}"
+    assert p.source == "biorxiv"
 
 
 def main() -> int:
@@ -625,6 +894,10 @@ def main() -> int:
     print("ok  re-review adds v2 without touching v1")
     check_slug_uniqueness()
     print("ok  distinct papers get distinct directories")
+    check_staleness_scan_finds_bundles()
+    print("ok  the staleness scan finds the layout we write")
+    check_restamping_is_not_staleness()
+    print("ok  a re-stamped bioRxiv PDF is not reported as stale")
     check_baseline_restoration()
     print("ok  a missing revision baseline is never silent")
     check_round_is_not_version()
@@ -643,8 +916,14 @@ def main() -> int:
     print("ok  downloads are size-capped")
     check_statement_url_is_external()
     print("ok  response URLs cannot reach the runner's network")
+    check_statement_redirects_are_rechecked()
+    print("ok  and neither can a redirect from one")
     check_rejected_sources()
     print("ok  only arXiv / bioRxiv / medRxiv accepted")
+    check_link_forms_a_browser_produces()
+    print("ok  every browser link form yields the same identifier")
+    check_bare_doi_picks_the_right_server()
+    print("ok  a bare DOI resolves to the server that actually holds it")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

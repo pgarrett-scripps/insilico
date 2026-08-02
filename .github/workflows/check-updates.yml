@@ -35,11 +35,17 @@ jobs:
       - name: Check published reviews against their preprints
         id: check
         run: |
-          python scripts/check_updates.py --json > /tmp/updates.json || true
+          # Exit 2 means the check itself could not run (every source
+          # unreachable). Let that fail the job rather than reporting a
+          # network outage as "nothing changed" — a silent all-clear from a
+          # broken checker is the failure this whole job exists to prevent.
+          python scripts/check_updates.py --json > /tmp/updates.json
           python - <<'PY' >> "$GITHUB_OUTPUT"
-          import json, os
+          import json, sys
+          sys.path.insert(0, "scripts")
+          from check_updates import STALE_STATUSES
           rows = json.load(open("/tmp/updates.json"))
-          stale = [r for r in rows if r["status"] in ("revised", "bytes-differ")]
+          stale = [r for r in rows if r["status"] in STALE_STATUSES]
           print(f"stale={len(stale)}")
           print(f"checked={len(rows)}")
           # Multi-line values need a heredoc delimiter in GITHUB_OUTPUT.
@@ -51,21 +57,26 @@ jobs:
                   print(f"- {label} — [`{r['review']}`]({r['url']})  ")
                   print(f"  {r['detail']}")
               print(
-                  "\nA revision means the published review describes an older version "
-                  "of the manuscript. Re-running the panel costs money and is an "
-                  "editorial call, so nothing has been re-reviewed automatically — "
-                  "comment `/review` on the original submission issue to redo one."
+                  "\nA **revision** means the published review describes an older "
+                  "version of the manuscript. Re-running the panel costs money and "
+                  "is an editorial call, so nothing has been re-reviewed "
+                  "automatically — comment `/revise` on the original submission "
+                  "issue to review the new draft against the previous round."
               )
               print(
-                  "\n*Bytes differ* is a weaker signal than it looks: bioRxiv and "
-                  "medRxiv stamp PDFs with a generation date, so a byte change is "
-                  "often a re-render rather than new science. Compare before acting."
+                  "\n**Bytes differ** means the file was replaced without the server "
+                  "recording a new version, which nothing else would catch. Routine "
+                  "re-stamping by bioRxiv and medRxiv is already filtered out of this "
+                  "list, so these are worth opening. Compare before acting."
               )
           print("EOF_BODY")
           PY
 
+      # `!= '0'` alone would also fire when the output is missing entirely,
+      # which is what a crashed check looks like — and would file an issue
+      # with an empty body and a blank count.
       - name: File or update the tracking issue
-        if: steps.check.outputs.stale != '0'
+        if: steps.check.outputs.stale != '' && steps.check.outputs.stale != '0'
         env:
           GH_TOKEN: ${{ github.token }}
           BODY: ${{ steps.check.outputs.body }}

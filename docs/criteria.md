@@ -114,13 +114,19 @@ Round 2 evaluates the *delta*:
 - **The editor decides on what changed**, and is told which round this is and
   how many remain.
 
+Rounds are capped at three; past that the submission is decided rather than
+cycled.
+
 Two things make this checkable rather than asserted.
 
 **The round record.** Every round writes `round.json` next to its markdown —
 required revisions with stable ids (`R1-03` names the third ask of round 1 for
 the life of the manuscript), per-referee weaknesses, scores. Round 2 reports
 against those ids rather than string-matching prose, and the record is published
-in the bundle so you can verify what was carried forward.
+in the bundle so you can verify what was carried forward. The record is also
+what makes a later round possible at all: both revisions and corrections report
+against the previous round's `round.json`, so a review published before round
+records existed cannot be revised or appealed — it needs a fresh review instead.
 
 **The draft comparison.** A revision round diffs the old and new manuscripts.
 Because the reviewed PDF is fingerprinted, that baseline is rebuilt by
@@ -144,8 +150,6 @@ The referees never see the letter's prose. It can direct attention; it cannot
 move a score by asserting something. The verification is published in the
 bundle, which is what makes that claim inspectable.
 
-Rounds are capped at three.
-
 ### Corrections
 
 A revision says the manuscript changed. A **correction** says the review is
@@ -161,12 +165,14 @@ if a correction bumped one, "round 3" would stop telling you how many times the
 paper was actually rewritten. The paper's history shows corrections in place,
 against the round they correct.
 
-Normally only the disputed referee re-runs. That is about accuracy before cost:
-if one referee misread a table, only that referee's assessment should move, and
+The editor may narrow a correction to the disputed referees; unless they are
+named, the whole panel re-runs. Narrowing is about accuracy before cost: if one
+referee misread a table, only that referee's assessment should move, and
 re-running all eight lets the other seven drift on resampling noise so the
-published change overstates what the correction actually did. The untouched
-referees' reports are carried forward, so the panel score still reflects all of
-them — and each carried report says on its face that it was not re-run.
+published change overstates what the correction actually did. Referees left out
+of a narrowed correction keep their previous reports, carried forward so the
+panel score still reflects all of them — and each carried report says on its
+face that it was not re-run.
 
 ## Who does what
 

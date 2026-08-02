@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       url:
-        description: Preprint URL (arXiv / bioRxiv / medRxiv / direct PDF)
+        description: Preprint URL (arXiv / bioRxiv / medRxiv)
         required: true
       submission_id:
         description: Submission issue number (optional)
@@ -145,11 +145,29 @@ jobs:
           # local one actions/checkout persisted and break the later `git push`
           # with the same "Duplicate header" the ls-remote above had to dodge.
           # pip clones into a temp dir with no local config, so one header.
+          # [research] pulls the arXiv client. Without it the Novelty and
+          # Literature reviewers' arXiv vendor degrades to a one-line "arxiv
+          # unavailable" note and the router silently falls through to the
+          # other sources — so the panel would still produce confident claims
+          # about prior work, just without having searched the index that
+          # matters most for the computational half of the corpus. It fails
+          # quietly by design, which is exactly why it has to be installed
+          # explicitly rather than assumed.
           GIT_CONFIG_COUNT=1 \
           GIT_CONFIG_KEY_0="http.https://github.com/.extraheader" \
           GIT_CONFIG_VALUE_0="${PIPELINE_AUTH:-}" \
-            pip install --quiet "peerreviewagents @ git+${PIPELINE_REPO}@${sha}"
+            pip install --quiet "peerreviewagents[research] @ git+${PIPELINE_REPO}@${sha}"
           pip install --quiet pyyaml
+
+          # Confirm the optional vendor actually landed, rather than
+          # discovering months later that every review skipped arXiv.
+          python -c "import arxiv" || {
+            echo "::error::peerreviewagents[research] did not install the arxiv"\
+                 "client. Literature and Novelty searches would silently skip"\
+                 "arXiv, so this run is stopping instead of publishing a review"\
+                 "that claims to have searched it."
+            exit 1
+          }
 
       - name: Run the panel
         id: run

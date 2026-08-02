@@ -37,8 +37,11 @@ the paper.
   don't serve a PDF for a day or so after a preprint first appears; if you get
   an error saying so, wait and resubmit.
 
-`--dry-run` on the runner script checks all of this without spending tokens, and
-the editor will run it before triggering a review.
+`--dry-run` on the runner script catches the last two without spending tokens —
+it resolves the URL and downloads the file, so a gated link or a missing PDF
+fails there. It only confirms the response really is a PDF, though: a scanned or
+image-only file passes the dry run and fails later at ingestion. The editor runs
+it before triggering a review.
 
 ## The process
 
@@ -64,6 +67,11 @@ the editor will run it before triggering a review.
 Post the revised version to the same preprint server, then say so on your
 original submission issue. An editor runs `/revise` and the panel opens a new
 round on the new version.
+
+One caveat: a new round reports against the previous round's machine-readable
+record (`round.json` in its bundle). Reviews published before round records
+existed cannot be revised — those get a fresh `/review` on the new version
+instead.
 
 A revision round is not a fresh review. Each referee gets back the specific
 points *it* raised, by id, and has to rule on each one: addressed, partly
@@ -92,21 +100,25 @@ failure rather than a process, and at that point the submission gets decided.
 That's a different thing from a revision, and it has its own route. Comment on
 your submission issue saying what the review got wrong. An editor runs
 `/appeal`, which re-reviews **without** touching the round number — the
-manuscript hasn't changed, so nothing about it is being re-judged.
+manuscript hasn't changed, so nothing about it is being re-judged. Like
+`/revise`, it needs the earlier round to have left a `round.json` in its
+bundle; reviews that predate round records need a fresh `/review` instead.
 
 What happens to your comment:
 
-1. It's fetched verbatim and **published in the bundle**, under your name. We
-   snapshot rather than link, because comments stay editable and a review that
-   cited a mutable comment wouldn't be a record of anything.
+1. It's fetched verbatim and **published in the bundle**. We snapshot rather
+   than link, because comments stay editable and a review that cited a mutable
+   comment wouldn't be a record of anything. (The published file itself carries
+   no byline; where the comment came from is recorded in provenance.)
 2. It's screened for hidden instructions, like any submitted text.
 3. A verifier checks each claim against your manuscript.
 4. Referees get **corroborated pointers only** — "the authors say effect sizes
    are in Table 2; go read Table 2 and judge it" — never your words as prose.
 
-Usually only the referee you're disputing re-runs. The rest keep their existing
-reports, so the panel score still reflects all eight, and the change you get is
-the change you argued for rather than eight referees resampling.
+The editor may narrow the appeal to the referee you're disputing; when that
+happens, the rest keep their existing reports, so the panel score still reflects
+all eight and the change you get is the change you argued for rather than eight
+referees resampling. Left unnarrowed, the whole panel re-runs.
 
 **What this can and can't do.** *"You said we didn't report effect sizes; they're
 in Table 2"* is checkable, and if it checks out the score can move. *"We think
@@ -157,9 +169,15 @@ git clone https://github.com/pgarrett-scripps/insilico
 cd insilico
 uv venv && source .venv/bin/activate
 uv pip install -r requirements.txt
+uv pip install "peerreviewagents @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
 
 export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 ```
+
+The second install is the pipeline itself — `requirements.txt` deliberately
+leaves it out. Note that the PeerReviewAgents repository is currently private,
+so this step may fail for you; until it's opened up, running the panel locally
+is limited to people with access.
 
 Nothing is submitted or published by running it locally.

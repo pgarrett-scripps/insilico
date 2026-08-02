@@ -1,13 +1,13 @@
 """Resolve a preprint URL to a local PDF plus whatever metadata the source offers.
 
-Supported sources, in order of how much metadata we get back:
+Supported sources:
 
     arXiv       — full metadata via the arXiv Atom API
     bioRxiv     — full metadata via api.biorxiv.org
     medRxiv     — full metadata via api.biorxiv.org
-    direct PDF  — no metadata; title is inferred downstream from the manuscript
 
-Stdlib only. No API keys.
+Direct PDF links are rejected — see :func:`resolve` for why. Stdlib only, no
+API keys.
 """
 
 from __future__ import annotations
@@ -40,10 +40,28 @@ ARXIV_RE = re.compile(
 # explicit alternation rather than a loose `10\.\d+` so a random DOI from some
 # other registrar isn't silently treated as a preprint.
 RXIV_PREFIXES = ("10.1101", "10.64898")
+
+# The suffix is matched by its actual shape rather than as "everything up to
+# the end of the string". Both servers mint one of exactly two forms:
+#
+#     2020.03.24.20042937    dated, used since 2019
+#     001834                 legacy, a bare serial
+#
+# Spelling that out is what lets the pattern stop at the DOI and ignore
+# whatever the browser appended. The previous version instead used a lazy
+# `[^\s/?#]+?` anchored to the end of the string, which had to reach the end
+# to match at all — so a trailing slash from a copy-pasted address bar was
+# rejected as an unrecognised URL, and a real bioRxiv link ending `.full-text`
+# was *accepted* with the junk swallowed into the DOI. That second failure is
+# the dangerous one: it silently produced the identifier
+# `10.1101/2020.03.24.20042937v1.full-text`, which then became the API query,
+# the PDF URL (`…v1.full-textv1.full.pdf`) and the published directory name.
+RXIV_SUFFIX = r"(?:\d{4}\.\d{2}\.\d{2}\.\d+|\d{6,})"
 RXIV_RE = re.compile(
     r"(?:(?P<server>biorxiv|medrxiv)\.org/content/)?"
-    r"(?P<doi>(?:" + "|".join(re.escape(p) for p in RXIV_PREFIXES) + r")/[^\s/?#]+?)"
-    r"(?:v(?P<version>\d+))?(?:\.full)?(?:\.pdf)?$",
+    r"(?P<doi>(?:" + "|".join(re.escape(p) for p in RXIV_PREFIXES) + r")/"
+    + RXIV_SUFFIX + r")"
+    r"(?:v(?P<version>\d+))?",
     re.I,
 )
 
@@ -53,7 +71,7 @@ class Preprint:
     """What we managed to learn about a submission before reviewing it."""
 
     url: str
-    source: str  # arxiv | biorxiv | medrxiv | direct
+    source: str  # arxiv | biorxiv | medrxiv
     pdf_url: str
     identifier: str = ""
     doi: str = ""
@@ -80,14 +98,24 @@ class Preprint:
 MAX_DOWNLOAD_BYTES = 60 * 1024 * 1024
 
 
-def _get(url: str, max_bytes: int = MAX_DOWNLOAD_BYTES) -> bytes:
+def _get(
+    url: str,
+    max_bytes: int = MAX_DOWNLOAD_BYTES,
+    opener: urllib.request.OpenerDirector | None = None,
+) -> bytes:
     """Fetch a URL, refusing anything implausibly large.
 
     Read in chunks with a running total rather than trusting Content-Length,
     which the server chooses and can simply lie about or omit.
+
+    ``opener`` lets a caller impose extra policy on the fetch. It exists for
+    one case: an author-supplied URL, where every redirect hop has to be
+    re-checked rather than trusted. Preprint fetches leave it unset, since
+    those URLs are rebuilt by :func:`resolve` for three known hosts.
     """
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:  # noqa: S310
+    open_url = opener.open if opener is not None else urllib.request.urlopen
+    with open_url(req, timeout=TIMEOUT) as resp:  # noqa: S310
         chunks: list[bytes] = []
         total = 0
         while True:
@@ -220,7 +248,25 @@ def _clean(s: str) -> str:
 # --- bioRxiv / medRxiv ------------------------------------------------------
 
 
-def _resolve_rxiv(url: str, doi: str, server: str, version: str) -> Preprint:
+def _rxiv_records(server: str, doi: str) -> list[dict]:
+    """Metadata records for a DOI on one server, newest last. [] if unknown."""
+    payload = json.loads(_get(f"https://api.biorxiv.org/details/{server}/{doi}"))
+    records = payload.get("collection") or []
+    return records if isinstance(records, list) else []
+
+
+def _resolve_rxiv(
+    url: str, doi: str, server: str, version: str, certain: bool = True
+) -> Preprint:
+    """Resolve a bioRxiv/medRxiv DOI, confirming which server actually has it.
+
+    ``certain`` is False when the submitted link was a bare DOI, which names
+    no server — the two share both DOI prefixes, so there is nothing in the
+    string to tell them apart. Guessing bioRxiv and moving on would publish a
+    medRxiv preprint labelled ``source: biorxiv`` and point every link and the
+    PDF fetch at a bioRxiv URL that does not exist. Asking each server which
+    one holds it is one request and removes the guess.
+    """
     suffix = f"v{version}" if version else ""
     pp = Preprint(
         url=url,
@@ -231,8 +277,16 @@ def _resolve_rxiv(url: str, doi: str, server: str, version: str) -> Preprint:
         version=version,
     )
     try:
-        payload = json.loads(_get(f"https://api.biorxiv.org/details/{server}/{doi}"))
-        records = payload.get("collection") or []
+        records = _rxiv_records(server, doi)
+        if not records and not certain:
+            # The prefix is shared, so an empty answer here means "not this
+            # one", not "not a preprint". Try the other before giving up.
+            other = "medrxiv" if server == "biorxiv" else "biorxiv"
+            records = _rxiv_records(other, doi)
+            if records:
+                server = other
+                pp.source = other
+                pp.url = f"https://www.{other}.org/content/{doi}{suffix}"
         if not records:
             return pp
         rec = records[-1]  # newest version
@@ -269,13 +323,16 @@ def resolve(url: str) -> Preprint:
 
     m = RXIV_RE.search(url)
     if m and m.group("doi"):
-        server = (m.group("server") or "biorxiv").lower()
+        # A bare DOI names no server, and the two share both prefixes — so
+        # this is a starting guess to be confirmed, not an answer.
+        named = m.group("server")
+        server = (named or "biorxiv").lower()
         doi = m.group("doi")
         version = m.group("version") or ""
         canonical = f"https://www.{server}.org/content/{doi}"
         if version:
             canonical += f"v{version}"
-        return _resolve_rxiv(canonical, doi, server, version)
+        return _resolve_rxiv(canonical, doi, server, version, certain=bool(named))
 
     # Direct PDF links are deliberately not accepted. An overlay journal's
     # whole claim is that it reviews something with a permanent home, and a
@@ -320,8 +377,8 @@ def download(preprint: Preprint, dest_dir: Path) -> Path:
             raise ValueError(
                 f"{preprint.pdf_url} returned HTTP {exc.code}. bioRxiv/medRxiv "
                 "don't serve a PDF until a posting is fully indexed, which can "
-                "take a few days after it first appears. Try again later, or "
-                "submit a direct link to the PDF."
+                "take a few days after it first appears. Try again in a few "
+                "days."
             ) from exc
         raise ValueError(
             f"{preprint.pdf_url} returned HTTP {exc.code} ({exc.reason})."

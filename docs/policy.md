@@ -64,7 +64,9 @@ though they were the same. **Every review states which it is.** The submission
 form asks outright whether you are an author, and the answer appears on the
 published page. Where the submitter says they are not, the review carries a
 notice that the authors did not request it, were not consulted, and have not
-replied.
+replied. Reviews published before we started recording the answer carry a third
+notice — "solicitation unrecorded" — because saying nothing would let them pass
+for requested ones.
 
 We do not verify the claim. Saying so is the point: an unverifiable claim
 presented as fact would be worse than one presented as a claim.
@@ -172,7 +174,9 @@ models aren't deterministic — but the configuration is fully disclosed.
 Not every stage runs on the same model, and the record is per-stage for that
 reason: reading a single model name off a review would misdescribe it.
 
-Reviews are never silently edited. Corrections are appended with a dated note.
+Reviews are never silently edited. A correction is published as a whole new
+bundle at the same round number, and the paper's review history marks that
+round as corrected; the earlier bundle stays exactly as it was.
 
 A revision round adds a review; it never replaces one. The earlier round stays
 published as the record of the draft it read, and each round records which
@@ -188,7 +192,9 @@ Comment on the review PR, or on your submission issue if it's already merged.
 
 - **The panel misread the paper** — say what it got wrong and where. A
   substantive correction can trigger a re-review; a re-review is published
-  alongside the original, not in place of it.
+  alongside the original, not in place of it. How that works — how your
+  comment is screened, verified and shown to the panel — is described in
+  [the appeal process](submit.md#if-the-review-got-something-wrong).
 - **You disagree with the judgment** — post your rebuttal. It gets linked from
   the review page. We won't remove a recommendation because you disagree with
   it.
@@ -207,9 +213,11 @@ page.
 
 ## Data
 
-We store: the preprint URL and its public metadata, the review bundle, and the
-GitHub issue thread. We do not store manuscript PDFs — they're fetched into a
-temporary directory at review time and deleted after.
+We store: the preprint URL and its public metadata, the review bundle, the
+GitHub issue thread, and — if you supply one — your author response letter,
+which is published permanently in the bundle as `author_response.md`. We do not
+store manuscript PDFs — they're fetched into a temporary directory at review
+time and deleted after.
 
 Manuscript text is sent to a third-party model provider (currently Anthropic).
 Don't submit anything you can't send to a commercial API. Since we only accept

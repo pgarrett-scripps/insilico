@@ -33,9 +33,10 @@ Peer review is slow, invisible, and mostly discarded. Referee reports are
 written once, read by three people, and thrown away.
 
 In Silico inverts that. **The review is the published artifact.** Every
-submission gets eight specialist reports, a recorded advocate/skeptic debate, an
-area-chair synthesis, a simulated author rebuttal, and an editor's verdict — and
-all of it is public, versioned, and reproducible down to the model id.
+submission that clears the desk gets eight specialist reports, a recorded
+advocate/skeptic debate, an area-chair synthesis, a simulated author rebuttal,
+and an editor's verdict — and all of it is public, versioned, and reproducible
+down to the model id.
 
 ## What the panel does
 

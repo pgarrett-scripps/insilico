@@ -364,8 +364,15 @@ def write_bundle(
     # can be edited after the fact, so a published review that merely links to
     # one would end up citing text that no longer says what we answered. The
     # copy is what makes the record hold still.
+    #
+    # Whether one arrived is recorded rather than left to be inferred later:
+    # an `/appeal` with no author comment is explicitly allowed, and without
+    # this flag the correction notice would claim a response was verified and
+    # link to a file that was never written — on exactly the rounds where
+    # neither happened.
     statement = revision.get("statement_path")
-    if statement and Path(statement).is_file():
+    revision["response_published"] = bool(statement and Path(statement).is_file())
+    if revision["response_published"]:
         shutil.copy2(statement, dest / AUTHOR_RESPONSE)
 
     decision = state.get("decision", "unknown")
@@ -378,13 +385,15 @@ def write_bundle(
         "pipeline": pipeline_version(),
         "provider": os.environ.get("REVIEW_PROVIDER", "anthropic"),
         "model": os.environ.get("REVIEW_MODEL", ""),
-        # Per-role overrides, if any. Without these a reader can't tell which
-        # model actually produced which report — "model" is only the fallback.
-        # Per-agent model config. Without this a reader sees only the
-        # fallback model and can't tell which agent wrote which report.
+        # Which model each stage actually ran on. Without these a reader sees
+        # only the fallback and cannot tell which agent wrote which report:
+        # `models` is keyed by tag (reviewer, audit, debate, synthesis),
+        # `agent_models` by the individual agents that override their tag.
         "models": json.loads(os.environ.get("REVIEW_MODELS") or "{}"),
         "agent_models": json.loads(os.environ.get("REVIEW_AGENT_MODELS") or "{}"),
-        "debate_rounds": int(os.environ.get("REVIEW_DEBATE_ROUNDS", "2")),
+        # Always set from the resolved config before this runs; the literal is
+        # only reached by a direct call in a test, and matches peerreview.toml.
+        "debate_rounds": int(os.environ.get("REVIEW_DEBATE_ROUNDS", "1")),
         "decision": decision,
         # A desk reject and a panel reject are both `decision: reject` but are
         # not the same editorial act — one is a verdict after ten reports and a
@@ -512,6 +521,9 @@ def _reject_internal_url(source: str) -> None:
     live on any number of hosts, and the property that actually matters is
     that it is not somewhere only the runner can see. Every resolved address
     is checked, since a name can return several.
+
+    Checking the URL is necessary but not sufficient — see
+    :class:`_GuardedRedirectHandler` for the other half.
     """
     import ipaddress
     import socket
@@ -545,6 +557,32 @@ def _reject_internal_url(source: str) -> None:
             )
 
 
+class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Re-check every redirect hop against the same rule as the first URL.
+
+    Vetting only the URL the submitter typed is not a control, because the
+    submitter also chooses what that URL redirects *to*. urllib follows
+    redirects automatically, so a perfectly public https host answering 302
+    with ``http://169.254.169.254/latest/meta-data/iam/security-credentials/``
+    lands the runner's cloud credentials in the fetched file — which this
+    pipeline then publishes verbatim into the review bundle as the authors'
+    response. The check that ran before the request is exactly the check that
+    has to run again at each hop.
+
+    Refusals are raised rather than returned so a blocked hop stops the run
+    with the reason, instead of degrading to a fetch of something else.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        _reject_internal_url(newurl)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _public_opener() -> urllib.request.OpenerDirector:
+    """An opener that enforces :func:`_reject_internal_url` on every hop."""
+    return urllib.request.build_opener(_GuardedRedirectHandler)
+
+
 def fetch_statement(source: str, workdir: Path) -> Path:
     """Materialise the authors' response letter as a local file.
 
@@ -562,7 +600,7 @@ def fetch_statement(source: str, workdir: Path) -> Path:
     _reject_internal_url(source)
     # A response letter is prose. The default cap is sized for PDFs of whole
     # manuscripts, which this is not.
-    data = _get(source, max_bytes=8 * 1024 * 1024)
+    data = _get(source, max_bytes=8 * 1024 * 1024, opener=_public_opener())
     # Extension decides the parser upstream, so keep the one the URL implies
     # and fall back to markdown, which the loader treats as plain text.
     suffix = Path(urllib.parse.urlparse(source).path).suffix.lower()
@@ -777,6 +815,7 @@ def write_paper_page(paper_dir: Path) -> None:
         fm.append("desk_rejected: true")
     fm.append("---")
 
+    verdict_key = "desk" if desk else decision
     chip = (
         '<span class="ins-verdict ins-verdict--desk">Desk reject</span>'
         if desk
@@ -789,7 +828,10 @@ def write_paper_page(paper_dir: Path) -> None:
         "",
         f"# {md_text(title)}",
         "",
-        '<div class="ins-decision">',
+        # The modifier carries the verdict colour to the band itself. Without
+        # it the band's accent rule falls back to the inherited text colour,
+        # so every decision — accept and reject alike — renders identically.
+        f'<div class="ins-decision ins-decision--{verdict_key}">',
         f"  {chip}",
         f'  <span class="ins-decision__label">Most recent: {VERDICT_LABEL.get(decision, decision)}</span>',
         f'  <span class="ins-decision__note">{len(records)} review'
@@ -1022,13 +1064,27 @@ def revision_note(provenance: dict) -> list[str]:
             "",
             f"    {scope}",
             "",
-            "    Their response was checked against the manuscript before the panel",
-            "    saw it. Referees received corroborated pointers to passages to",
-            "    re-read, never the response as prose, so it could direct attention",
-            f"    but not move a score by assertion. See [the response]({AUTHOR_RESPONSE})",
-            "    exactly as submitted.",
-            "",
         ]
+        if rev.get("response_published"):
+            lines += [
+                "    Their response was checked against the manuscript before the panel",
+                "    saw it. Referees received corroborated pointers to passages to",
+                "    re-read, never the response as prose, so it could direct attention",
+                f"    but not move a score by assertion. See [the response]({AUTHOR_RESPONSE})",
+                "    exactly as submitted.",
+                "",
+            ]
+        else:
+            # An appeal with no author comment is allowed, and it is a weaker
+            # thing: the referees simply re-ran. Describing the verification
+            # that did not happen — and linking a file that was never written
+            # — would overstate the round and break the page.
+            lines += [
+                "    No author response accompanied this appeal, so there was nothing",
+                "    to check against the manuscript. The referees named above simply",
+                "    re-read the paper; nothing here answers a specific objection.",
+                "",
+            ]
         if prior:
             lines.insert(
                 4,
@@ -1138,10 +1194,12 @@ def render_landing(
     # "Panel recommendation" would be a false claim on a desk reject: no panel
     # convened. Say what actually happened, and why the page is short.
     if desk_rejected:
+        verdict_key = "desk"
         chip = '<span class="ins-verdict ins-verdict--desk">Desk reject</span>'
         label = "Rejected at the desk"
         note = "no referee panel convened"
     else:
+        verdict_key = decision
         chip = (
             f'<span class="ins-verdict ins-verdict--{decision}">'
             f"{VERDICT_LABEL.get(decision, decision)}</span>"
@@ -1158,7 +1216,9 @@ def render_landing(
         "",
         f"# {md_text(title)}",
         "",
-        '<div class="ins-decision">',
+        # See write_paper_page: the modifier is what gives the band its
+        # verdict colour, which `currentcolor` alone cannot reach.
+        f'<div class="ins-decision ins-decision--{verdict_key}">',
         f"  {chip}",
         f'  <span class="ins-decision__label">{label}</span>',
         f'  <span class="ins-decision__note">{note}</span>',
@@ -1321,7 +1381,7 @@ def main() -> int:
     )
     ap.add_argument("--provider", default=os.environ.get("REVIEW_PROVIDER") or None)
     # Left unset by default so ./peerreview.toml owns model selection — an
-    # explicit value here would beat the TOML and silently defeat the [roles]
+    # explicit value here would beat the TOML and silently defeat the [models]
     # table's fallback model.
     ap.add_argument("--model", default=os.environ.get("REVIEW_MODEL") or None)
     ap.add_argument(
@@ -1397,6 +1457,27 @@ def main() -> int:
             "be one."
         )
 
+    workdir = Path(tempfile.mkdtemp(prefix="insilico-"))
+    try:
+        return _run(args, workdir)
+    except ValueError as exc:
+        # resolve() and extract_url() reject an unusable submission with a
+        # message written to be read by the person who submitted it — which
+        # host to use, why a bare PDF is not enough. A traceback buries that
+        # under a stack nobody needs, in an Actions log an editor is skimming.
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        # The published policy says manuscript PDFs live in a temporary
+        # directory and are deleted afterwards. Cleaning up only where the run
+        # succeeded made that untrue for every early exit — an unresolvable
+        # URL, a refused revision, a failed panel, a dry run — which between
+        # them are most of the ways a run ends.
+        shutil.rmtree(workdir, ignore_errors=True)
+
+
+def _run(args, workdir: Path) -> int:
+    """The review itself. Split out so the temp directory is always cleaned."""
     url = args.url or extract_url(args.issue_body)
     # The form asks directly; a `/review` on a plain issue has no field to
     # read, and the page then says so rather than assuming either way.
@@ -1407,7 +1488,6 @@ def main() -> int:
     if preprint.title:
         print(f"title     {preprint.title}", file=sys.stderr)
 
-    workdir = Path(tempfile.mkdtemp(prefix="insilico-"))
     pdf = download(preprint, workdir)
     print(f"pdf       {pdf} ({pdf.stat().st_size // 1024} KiB)", file=sys.stderr)
 
@@ -1421,7 +1501,7 @@ def main() -> int:
     from peerreviewagents.reports import write_reports
 
     # Only pass what was explicitly asked for. Anything omitted falls through
-    # to ./peerreview.toml, which is where the [roles] table lives.
+    # to ./peerreview.toml, which is where the [models.*] tables live.
     overrides = {"output_dir": str(workdir / "reports")}
     if args.provider:
         overrides["provider"] = args.provider
@@ -1618,7 +1698,6 @@ def main() -> int:
             fh.write(f"title={title}\n")
             fh.write(f"cost={state.get('total_cost') or 0}\n")
 
-    shutil.rmtree(workdir, ignore_errors=True)
     return 0
 
 
