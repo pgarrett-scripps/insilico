@@ -41,7 +41,7 @@ env:
   # two-column page between two rounds of the same paper would show up as the
   # authors having rewritten it. Kept as a knob so a fix can be pulled from a
   # branch without editing the install step.
-  RUSTYPAPER_SPEC: "rustypaper==0.1.0"
+  RUSTYPAPER_SPEC: "rustypaper==0.1.1"
   # The text as written. Compression was measured and reverted: under `light`
   # the clarity reviewer reported "grammatical errors that obscure the main
   # claims" three times on a paper where the uncompressed run reported none —
