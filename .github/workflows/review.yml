@@ -29,12 +29,12 @@ env:
   # Setting REVIEW_MODEL here would override that file and collapse every
   # stage back onto one model, so it is deliberately unset.
   PIPELINE_REPO: https://github.com/pgarrett-scripps/PeerReviewAgents.git
-  # Which ref to pin from. `main` once revision rounds land there; until then
-  # the round record, the compliance auditor and the response verifier only
-  # exist on this branch, and `/revise` cannot work without them. The run
-  # still records the resolved SHA, so a review always names exact code
-  # regardless of which ref it came from.
-  PIPELINE_REF: correction-mode
+  # Which ref to pin from. Normally `main`. Kept as a knob rather than
+  # hard-coded HEAD so the journal can be pointed at a branch to exercise
+  # pipeline work before it lands, without editing the resolution logic. The
+  # run records the SHA it resolved to either way, so a review always names
+  # exact code regardless of which ref produced it.
+  PIPELINE_REF: main
 
 jobs:
   review:
