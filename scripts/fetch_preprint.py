@@ -100,18 +100,35 @@ _ATOM = {"a": "http://www.w3.org/2005/Atom"}
 
 
 def _resolve_arxiv(url: str, arxiv_id: str) -> Preprint:
+    """Resolve to the *latest* version, whatever the submitted URL pinned.
+
+    A review has to name the version it read, and a submitter linking
+    `abs/1706.03762v1` from an old email should not silently get v1 reviewed
+    when v3 is what exists. Both preprint sources therefore behave the same
+    way: resolve to current, and record which version that was.
+
+    That also makes revisions work. Without a version on the record, nothing
+    can tell that a manuscript has moved on — the update check has nothing to
+    compare and a revision round would re-review the draft it already read.
+    """
     bare = arxiv_id.split("v")[0] if re.match(r"^\d{4}\.", arxiv_id) else arxiv_id
     pp = Preprint(
         url=url,
         source="arxiv",
-        pdf_url=f"https://arxiv.org/pdf/{arxiv_id}",
-        identifier=arxiv_id,
+        pdf_url=f"https://arxiv.org/pdf/{bare}",
+        identifier=bare,
     )
     try:
         api = f"http://export.arxiv.org/api/query?id_list={urllib.parse.quote(bare)}"
         entry = ET.fromstring(_get(api)).find("a:entry", _ATOM)
         if entry is None:
             return pp
+        # The entry id carries the current version: .../abs/1706.03762v5
+        entry_id = _text(entry, "a:id")
+        m = re.search(r"/abs/(?P<id>[^/\s]+?)v(?P<version>\d+)\s*$", entry_id)
+        if m:
+            pp.version = m.group("version")
+            pp.pdf_url = f"https://arxiv.org/pdf/{m.group('id')}v{pp.version}"
         pp.title = _clean(_text(entry, "a:title"))
         pp.abstract = _clean(_text(entry, "a:summary"))
         pp.published = _text(entry, "a:published")[:10]

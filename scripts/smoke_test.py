@@ -343,6 +343,64 @@ def check_round_is_not_version() -> None:
         assert "2 ⚠" in history, "unverified round not flagged in the history"
 
 
+def check_correction() -> None:
+    """A correction is not a revision, and the pages must not conflate them.
+
+    It leaves the round number alone (rounds count manuscript revisions), says
+    plainly that the manuscript is unchanged, and publishes the authors'
+    response verbatim — GitHub comments are editable, so a link would let the
+    record drift out from under the review that answered it.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        for name, _ in BUNDLE_ORDER:
+            (run_dir / name).write_text("x")
+        statement = Path(tmp) / "response.md"
+        statement.write_text("Effect sizes are in Table 2, not omitted.\n")
+
+        os.environ["REVIEW_MODELS"] = "{}"
+        os.environ["REVIEW_AGENT_MODELS"] = "{}"
+        preprint = Preprint(
+            url="https://arxiv.org/abs/1706.03762", source="arxiv",
+            pdf_url="p", identifier="1706.03762", title="A paper", version="1",
+        )
+        state = {"decision": "minor", "manuscript_title": "A paper",
+                 "total_cost": 0.3, "errors": [], "reports": []}
+
+        paper = Path(tmp) / "2026" / "a-paper"
+        write_bundle(preprint, state, run_dir, paper / "v1", "1", "me")
+        write_bundle(
+            preprint, state, run_dir, paper / "v2", "1", "me", None,
+            {"round": 1, "kind": "correction", "prior_decision": "major",
+             "only_reviewers": ["methodology"],
+             "statement_path": str(statement),
+             "statement_source": "https://github.com/x/y/issues/3#issuecomment-1",
+             "baseline": {"restored": False, "reason": "", "n/a": True}},
+        )
+
+        prov = json.loads((paper / "v2" / "provenance.json").read_text())
+        assert prov["round"] == 1, "a correction must not advance the round"
+        assert prov["revision"]["kind"] == "correction"
+
+        landing = (paper / "v2" / "index.md").read_text()
+        assert "manuscript is\n    unchanged" in landing or \
+               "manuscript is" in landing, "must say the manuscript is unchanged"
+        assert "does not advance the" in landing, "must say the round is unchanged"
+        assert "methodology" in landing, "must name which reviewers re-ran"
+        assert "No draft comparison" not in landing, \
+            "a correction has nothing to compare; absence is not a defect"
+
+        # The response must be published, not linked.
+        assert (paper / "v2" / "author_response.md").exists(), \
+            "the authors' response was not snapshotted into the bundle"
+        assert "Table 2" in (paper / "v2" / "author_response.md").read_text()
+
+        write_paper_page(paper)
+        history = (paper / "index.md").read_text()
+        assert "1 (corrected)" in history, "history must distinguish a correction"
+
+
 def check_slug_uniqueness() -> None:
     """Titles truncate at 60 chars, so they cannot be the whole directory name."""
     long_a = "Deep learning approaches for the prediction of protein structure from sequence"
@@ -384,6 +442,8 @@ def main() -> int:
     print("ok  a missing revision baseline is never silent")
     check_round_is_not_version()
     print("ok  bundle version and review round stay distinct")
+    check_correction()
+    print("ok  a correction is not a revision")
     check_rejected_sources()
     print("ok  only arXiv / bioRxiv / medRxiv accepted")
 

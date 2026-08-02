@@ -146,6 +146,28 @@ bundle, which is what makes that claim inspectable.
 
 Rounds are capped at three.
 
+### Corrections
+
+A revision says the manuscript changed. A **correction** says the review is
+wrong about a manuscript that didn't. They run differently, and conflating them
+would punish authors who are right.
+
+Against an unchanged draft the compliance auditor would correctly report every
+required revision as undone and drive the verdict *down* — so a correction runs
+without it, and without the draft diff, since there is nothing to compare.
+
+Corrections do not advance the round number. Rounds count manuscript revisions;
+if a correction bumped one, "round 3" would stop telling you how many times the
+paper was actually rewritten. The paper's history shows corrections in place,
+against the round they correct.
+
+Normally only the disputed referee re-runs. That is about accuracy before cost:
+if one referee misread a table, only that referee's assessment should move, and
+re-running all eight lets the other seven drift on resampling noise so the
+published change overstates what the correction actually did. The untouched
+referees' reports are carried forward, so the panel score still reflects all of
+them — and each carried report says on its face that it was not re-run.
+
 ## Who does what
 
 | Stage | Agents | What it produces |

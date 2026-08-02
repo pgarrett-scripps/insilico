@@ -44,7 +44,8 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request == null &&
        (startsWith(github.event.comment.body, '/review') ||
-        startsWith(github.event.comment.body, '/revise')) &&
+        startsWith(github.event.comment.body, '/revise') ||
+        startsWith(github.event.comment.body, '/appeal')) &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -178,6 +179,44 @@ jobs:
               letter="$(printf '%s' "$COMMENT_BODY" | head -1 \
                         | grep -oE 'https?://[^[:space:]]+' | head -1 || true)"
               if [ -n "$letter" ]; then args+=(--author-statement "$letter"); fi
+              ;;
+            /appeal*)
+              args+=(--appeal)
+              first="$(printf '%s' "$COMMENT_BODY" | head -1)"
+              # `/appeal <comment-url-or-id> [reviewer,reviewer]`
+              #
+              # The appeal points at the AUTHORS' comment rather than carrying
+              # their words in the editor's. Fetching it by id gets the body
+              # verbatim with the right attribution and timestamp, and the
+              # snapshot published in the bundle is then provably the text the
+              # panel answered — a link alone would rot, since comments stay
+              # editable after the fact.
+              cid="$(printf '%s' "$first" | grep -oE 'issuecomment-[0-9]+' \
+                     | grep -oE '[0-9]+' | head -1 || true)"
+              if [ -z "$cid" ]; then
+                cid="$(printf '%s' "$first" | grep -oE '(^|[[:space:]])[0-9]{6,}' \
+                       | tr -d '[:space:]' | head -1 || true)"
+              fi
+              if [ -n "$cid" ]; then
+                # --jq writes the body straight to a file; it never passes
+                # through the shell, so nothing in it can be expanded.
+                gh api "repos/${{ github.repository }}/issues/comments/${cid}" \
+                  --jq '.body' > /tmp/author-response.md
+                author="$(gh api "repos/${{ github.repository }}/issues/comments/${cid}" \
+                          --jq '.user.login')"
+                echo "Appeal cites comment ${cid} by @${author}"
+                args+=(--author-statement /tmp/author-response.md
+                       --statement-source "${{ github.event.issue.html_url }}#issuecomment-${cid}")
+              else
+                echo "::warning::/appeal named no author comment; the panel will" \
+                     "re-run without a response to check."
+              fi
+              # Trailing bare word list selects which referees re-run.
+              picks="$(printf '%s' "$first" \
+                       | grep -oE '[a-z_]+(,[a-z_]+)*$' | head -1 || true)"
+              if [ -n "$picks" ] && [ "$picks" != "appeal" ]; then
+                args+=(--only-reviewers "$picks")
+              fi
               ;;
           esac
 

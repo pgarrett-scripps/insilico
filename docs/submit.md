@@ -87,6 +87,36 @@ panel was shown.
 There is a **cap of three rounds**. An endless revise-and-resubmit loop is a
 failure rather than a process, and at that point the submission gets decided.
 
+## If the review got something wrong
+
+That's a different thing from a revision, and it has its own route. Comment on
+your submission issue saying what the review got wrong. An editor runs
+`/appeal`, which re-reviews **without** touching the round number — the
+manuscript hasn't changed, so nothing about it is being re-judged.
+
+What happens to your comment:
+
+1. It's fetched verbatim and **published in the bundle**, under your name. We
+   snapshot rather than link, because comments stay editable and a review that
+   cited a mutable comment wouldn't be a record of anything.
+2. It's screened for hidden instructions, like any submitted text.
+3. A verifier checks each claim against your manuscript.
+4. Referees get **corroborated pointers only** — "the authors say effect sizes
+   are in Table 2; go read Table 2 and judge it" — never your words as prose.
+
+Usually only the referee you're disputing re-runs. The rest keep their existing
+reports, so the panel score still reflects all eight, and the change you get is
+the change you argued for rather than eight referees resampling.
+
+**What this can and can't do.** *"You said we didn't report effect sizes; they're
+in Table 2"* is checkable, and if it checks out the score can move. *"We think
+this is more novel than you credited"* is a disagreement about judgment — the
+panel won't re-run for it, and your comment stands publicly as your dissent
+next to the review.
+
+The original review is never removed. A correction is published beside it, and
+the paper's page shows both.
+
 ### If your submission is stopped at the desk
 
 You'll get a short note on your issue saying it was held, and no review will

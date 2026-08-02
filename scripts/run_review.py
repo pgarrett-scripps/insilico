@@ -34,6 +34,11 @@ from fetch_preprint import _get, Preprint, download, extract_url, resolve  # noq
 # the bundle there is nothing to point `--revision-of` at.
 ROUND_RECORD = "round.json"
 
+# The authors' response, copied into the bundle verbatim. Published rather
+# than merely linked: a GitHub comment can be edited after the review answers
+# it, and a record that cites mutable text is not a record.
+AUTHOR_RESPONSE = "author_response.md"
+
 REPO = Path(__file__).resolve().parent.parent
 REVIEWS = REPO / "docs" / "reviews"
 
@@ -305,6 +310,14 @@ def write_bundle(
     # thing a later round is pointed at.
     if (run_dir / ROUND_RECORD).exists():
         shutil.copy2(run_dir / ROUND_RECORD, dest / ROUND_RECORD)
+
+    # Snapshot of the authors' response exactly as submitted. GitHub comments
+    # can be edited after the fact, so a published review that merely links to
+    # one would end up citing text that no longer says what we answered. The
+    # copy is what makes the record hold still.
+    statement = revision.get("statement_path")
+    if statement and Path(statement).is_file():
+        shutil.copy2(statement, dest / AUTHOR_RESPONSE)
 
     decision = state.get("decision", "unknown")
     title = preprint.title or state.get("manuscript_title") or "Untitled submission"
@@ -711,6 +724,14 @@ def write_paper_page(paper_dir: Path) -> None:
         )
         mver = f"v{p.get('version')}" if p.get("version") else "—"
         rnd = int(prov.get("round") or 1)
+        if (prov.get("revision") or {}).get("kind") == "correction":
+            # Same round, corrected. Numbering it as a new round would make the
+            # count of manuscript revisions unreadable.
+            body.append(
+                f"| [{name}]({name}/index.md) | {rnd} (corrected) | {mver} "
+                f"| {verdict} | {str(prov.get('generated_at', ''))[:10]} |"
+            )
+            continue
         # A round with no verified baseline is not the same evidence as one
         # that diffed the drafts, and the history is where that comparison
         # gets made — so it is flagged in the row, not only on the page.
@@ -841,10 +862,44 @@ def revision_note(provenance: dict) -> list[str]:
     identical unless we say otherwise, so we say otherwise.
     """
     rev = provenance.get("revision") or {}
+    prior = rev.get("prior_decision", "")
+
+    if rev.get("kind") == "correction":
+        who = rev.get("only_reviewers") or []
+        scope = (
+            f"Only {', '.join(who)} re-ran; every other referee's assessment is "
+            "carried forward unchanged, so the panel score still reflects all of "
+            "them."
+            if who
+            else "The whole panel re-ran."
+        )
+        lines = [
+            '!!! info "Correction to the review, not a new manuscript"',
+            "    The authors challenged the review itself. **The manuscript is",
+            "    unchanged** — this is not a revision round and does not advance the",
+            "    round number.",
+            "",
+            f"    {scope}",
+            "",
+            "    Their response was checked against the manuscript before the panel",
+            "    saw it. Referees received corroborated pointers to passages to",
+            "    re-read, never the response as prose, so it could direct attention",
+            f"    but not move a score by assertion. See [the response]({AUTHOR_RESPONSE})",
+            "    exactly as submitted.",
+            "",
+        ]
+        if prior:
+            lines.insert(
+                4,
+                f"    The review being corrected recommended "
+                f"**{VERDICT_LABEL.get(prior, prior)}**.",
+            )
+            lines.insert(5, "")
+        return lines
+
     if int(provenance.get("round") or 1) <= 1:
         return []
 
-    prior = rev.get("prior_decision", "")
     lines = [
         f'!!! info "Revision round {provenance["round"]}"',
         "    The authors revised the manuscript after a previous review, and this",
@@ -1135,6 +1190,27 @@ def main() -> int:
              "instead of naming the previous bundle with --revision-of.",
     )
     ap.add_argument(
+        "--appeal",
+        action="store_true",
+        help="the manuscript is unchanged and the REVIEW is being challenged. "
+             "Runs a correction against the most recent round: no compliance "
+             "audit, no draft diff, and normally only the disputed reviewers "
+             "re-run. Does not advance the round number.",
+    )
+    ap.add_argument(
+        "--only-reviewers",
+        metavar="NAMES",
+        help="comma-separated reviewers to re-run on an appeal, e.g. "
+             "'methodology,rigor'. The rest keep their previous reports, so "
+             "the panel is still scored over all of them. Default: all.",
+    )
+    ap.add_argument(
+        "--statement-source",
+        metavar="URL",
+        help="where the response came from (e.g. the GitHub comment URL), "
+             "recorded in provenance so the published snapshot is traceable.",
+    )
+    ap.add_argument(
         "--author-statement",
         metavar="URL_OR_PATH",
         help="the authors' response letter. Treated as untrusted, "
@@ -1146,11 +1222,22 @@ def main() -> int:
 
     if args.revise and args.revision_of:
         ap.error("--revise and --revision-of do the same job; pass one.")
-    if args.author_statement and not (args.revision_of or args.revise):
+    if args.appeal and args.revise:
         ap.error(
-            "--author-statement requires --revision-of or --revise: a "
-            "response letter answers a previous round's review, so there has "
-            "to be one."
+            "--appeal and --revise are different acts: an appeal says the "
+            "review is wrong about an unchanged manuscript, a revision says "
+            "the manuscript changed. Pass one."
+        )
+    if args.only_reviewers and not args.appeal:
+        ap.error(
+            "--only-reviewers only applies to --appeal. A revision has a new "
+            "draft, which every reviewer needs to see."
+        )
+    if args.author_statement and not (args.revision_of or args.revise or args.appeal):
+        ap.error(
+            "--author-statement requires --revision-of, --revise or --appeal: "
+            "a response answers a previous round's review, so there has to "
+            "be one."
         )
 
     url = args.url or extract_url(args.issue_body)
@@ -1183,7 +1270,7 @@ def main() -> int:
         overrides["max_debate_rounds"] = args.debate_rounds
 
     revision: dict = {"round": 1}
-    if args.revise:
+    if args.revise or args.appeal:
         found = find_prior_bundle(
             preprint, preprint.title or preprint.identifier
         )
@@ -1210,17 +1297,27 @@ def main() -> int:
             )
             return 1
         overrides["revision_of"] = str(prior_bundle)
+        if args.appeal:
+            overrides["revision_mode"] = "correction"
+            if args.only_reviewers:
+                overrides["only_reviewers"] = [
+                    n.strip() for n in args.only_reviewers.split(",") if n.strip()
+                ]
+        statement_file = None
         if args.author_statement:
-            overrides["author_statement_path"] = str(
-                fetch_statement(args.author_statement, workdir)
-            )
+            statement_file = fetch_statement(args.author_statement, workdir)
+            overrides["author_statement_path"] = str(statement_file)
 
     config = get_config(**overrides)
 
     if args.revision_of:
         prior = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
+        prior_round = int(prior.get("round", 1))
         revision = {
-            "round": int(prior.get("round", 1)) + 1,
+            # An appeal does NOT advance the round. Rounds count manuscript
+            # revisions; if a correction bumped it, "round 3" would stop
+            # telling a reader how many times the paper was rewritten.
+            "round": prior_round if args.appeal else prior_round + 1,
             "prior_bundle": prior_bundle.name,
             "prior_decision": str(prior.get("decision", "")),
             "prior_round": int(prior.get("round", 1)),
@@ -1229,9 +1326,18 @@ def main() -> int:
             # page attributing one round's asks to another.
             "prior_required_revisions": len(prior.get("required_revisions") or []),
             "author_statement": bool(args.author_statement),
-            # Restore before the graph runs: the diff is read during the
-            # review, not after it.
-            "baseline": restore_prior_draft(prior_bundle, workdir, config),
+            "kind": "correction" if args.appeal else "revision",
+            "statement_source": args.statement_source or "",
+            "statement_path": str(statement_file) if statement_file else "",
+            "only_reviewers": list(config.get("only_reviewers") or []),
+            # A correction compares nothing: the manuscript is unchanged by
+            # definition, so there is no baseline to restore and no diff to
+            # make. Claiming an unavailable baseline would read as a defect.
+            "baseline": (
+                {"restored": False, "reason": "", "verified": False, "n/a": True}
+                if args.appeal
+                else restore_prior_draft(prior_bundle, workdir, config)
+            ),
         }
         max_rounds = int(config.get("max_rounds") or 3)
         if revision["round"] > max_rounds:
@@ -1243,13 +1349,21 @@ def main() -> int:
             )
             return 1
         b = revision["baseline"]
-        print(
-            f"revision  round {revision['round']} of {prior_bundle.name}"
-            f" — baseline {'restored' if b['restored'] else 'UNAVAILABLE'}",
-            file=sys.stderr,
-        )
-        if not b["restored"]:
-            print(f"          {b['reason']}", file=sys.stderr)
+        if args.appeal:
+            who = ", ".join(revision["only_reviewers"]) or "the full panel"
+            print(
+                f"appeal    correction to round {revision['round']} "
+                f"({prior_bundle.name}); re-running {who}",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"revision  round {revision['round']} of {prior_bundle.name}"
+                f" — baseline {'restored' if b['restored'] else 'UNAVAILABLE'}",
+                file=sys.stderr,
+            )
+            if not b["restored"]:
+                print(f"          {b['reason']}", file=sys.stderr)
 
     # Record what actually ran, not what was requested — with roles configured
     # these differ per agent, so the resolved config is the honest answer.
