@@ -169,7 +169,7 @@ git clone https://github.com/pgarrett-scripps/insilico
 cd insilico
 uv venv && source .venv/bin/activate
 uv pip install -r requirements.txt
-uv pip install "peerreviewagents @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
+uv pip install "peerreviewagents[research] @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
 
 export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345

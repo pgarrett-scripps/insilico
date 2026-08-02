@@ -1,0 +1,330 @@
+---
+/**
+ * The eight specialists, with what each scored and how sure it was.
+ *
+ * This is the thing In Silico can publish that a conventional journal cannot.
+ * A normal paper gets three referees whose scores you never see; here there
+ * are eight, and the interesting signal is usually not the mean but the
+ * *spread* — a paper at 3.5 because every referee said 3.5 is a different
+ * paper from one at 3.5 because methodology said 2 and novelty said 5.
+ *
+ * So each row is coloured by its own score rather than by the panel's verdict.
+ * Colouring the whole block one colour would average away exactly the
+ * disagreement a reader should notice.
+ *
+ * Confidence is shown separately and never mixed into the score. A low score
+ * held with low confidence is a weaker claim than the same score held firmly,
+ * and folding them together would hide that.
+ */
+const { panel = [], meanScore = null, decision = "", deskRejected = false } = Astro.props;
+
+const SCALE = 5;
+
+/** Where a score sits on the same scale the verdicts use. */
+function bandFor(score) {
+  if (score === null || score === undefined) return "desk";
+  if (score >= 4.5) return "accept";
+  if (score >= 3.5) return "minor";
+  if (score >= 2.5) return "major";
+  return "reject";
+}
+
+const rows = panel
+  .filter((entry) => entry && typeof entry === "object")
+  .map((entry) => {
+    const score = typeof entry.score === "number" ? entry.score : null;
+    const confidence =
+      typeof entry.confidence === "number" ? entry.confidence : null;
+    return {
+      name: String(entry.reviewer || "unknown").replace(/_/g, " "),
+      score,
+      confidence,
+      band: bandFor(score),
+    };
+  })
+  .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
+
+const scores = rows.map((r) => r.score).filter((s) => s !== null);
+const low = scores.length ? Math.min(...scores) : null;
+const high = scores.length ? Math.max(...scores) : null;
+const spread = low !== null && high !== null ? +(high - low).toFixed(1) : null;
+const meanBand = bandFor(meanScore);
+---
+
+{
+  rows.length > 0 && (
+    <section class="readout panel" aria-labelledby="panel-readout-heading">
+      <div class="panel__head">
+        <h2 id="panel-readout-heading" class="readout__title">
+          Panel readout
+        </h2>
+        <p class="label">
+          {rows.length} specialist{rows.length === 1 ? "" : "s"} · scored 1–{SCALE}
+        </p>
+      </div>
+
+      <div class="readout__body">
+        <div class="readout__aggregate">
+          <div class={`readout__mean readout__mean--${meanBand}`}>
+            <span class="readout__meanValue mono">
+              {meanScore !== null ? meanScore.toFixed(1) : "—"}
+            </span>
+            <span class="readout__meanScale mono">/ {SCALE}</span>
+          </div>
+          <p class="label">Mean panel score</p>
+
+          {spread !== null && (
+            <p class="readout__spread">
+              {/* One string rather than adjacent expressions: JSX inserts a
+                  whitespace text node between them, which renders as
+                  "3.0– 4.0". */}
+              {spread === 0
+                ? "Every referee landed on the same score."
+                : `Range ${low.toFixed(1)}–${high.toFixed(1)}, a spread of ${spread.toFixed(1)}.` +
+                  (spread >= 2 ? " The referees disagreed substantially." : "")}
+            </p>
+          )}
+        </div>
+
+        <ol class="readout__rows">
+          {rows.map((row) => (
+            <li class={`readout__row readout__row--${row.band}`}>
+              <span class="readout__name">{row.name}</span>
+
+              <span
+                class="readout__meter"
+                role="img"
+                aria-label={
+                  row.score === null
+                    ? `${row.name}: not scored`
+                    : `${row.name}: ${row.score} out of ${SCALE}`
+                }
+              >
+                {Array.from({ length: SCALE }, (_, i) => {
+                  const step = i + 1;
+                  const filled = row.score !== null && row.score >= step;
+                  const half =
+                    row.score !== null && !filled && row.score > step - 1;
+                  return (
+                    <span
+                      class={`readout__seg${filled ? " is-filled" : ""}${half ? " is-half" : ""}`}
+                    />
+                  );
+                })}
+              </span>
+
+              <span class="readout__score mono">
+                {row.score !== null ? row.score.toFixed(1) : "—"}
+              </span>
+
+              <span class="readout__conf" title={`Confidence ${row.confidence ?? "—"} of ${SCALE}`}>
+                <span class="sr-only">
+                  Confidence {row.confidence ?? "unrecorded"} of {SCALE}
+                </span>
+                {Array.from({ length: SCALE }, (_, i) => (
+                  <span
+                    class={`readout__dot${row.confidence !== null && row.confidence >= i + 1 ? " is-on" : ""}`}
+                    aria-hidden="true"
+                  />
+                ))}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <p class="readout__foot">
+        <span class="label">Score</span> is the referee's assessment of the work.
+        <span class="label">Confidence</span> is how sure that referee was of its
+        own reading. They are recorded separately and never combined.
+      </p>
+    </section>
+  )
+}
+
+<style>
+  .readout {
+    overflow: hidden;
+  }
+
+  .readout__title {
+    font-size: var(--t-1);
+  }
+
+  .readout__body {
+    display: grid;
+    grid-template-columns: minmax(0, 13rem) minmax(0, 1fr);
+    gap: 0;
+  }
+
+  /* Centred rather than top-aligned: the rows beside it are always taller,
+     so anchoring the mean to the top leaves a column of dead space under it. */
+  .readout__aggregate {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 1.3rem 1.15rem;
+    border-right: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
+
+  .readout__mean {
+    --v: var(--v-desk);
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    color: var(--v);
+  }
+
+  .readout__mean--accept { --v: var(--v-accept); }
+  .readout__mean--minor { --v: var(--v-minor); }
+  .readout__mean--major { --v: var(--v-major); }
+  .readout__mean--reject { --v: var(--v-reject); }
+
+  .readout__meanValue {
+    font-family: var(--font-display);
+    font-size: 3.4rem;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+  }
+
+  .readout__meanScale {
+    font-size: var(--t--1);
+    color: var(--muted);
+  }
+
+  .readout__spread {
+    margin-top: 0.5rem;
+    font-size: var(--t--1);
+    line-height: 1.5;
+    color: var(--ink-dim);
+  }
+
+  .readout__rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .readout__row {
+    --v: var(--v-desk);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto 2.6rem auto;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.62rem 1.15rem;
+  }
+
+  .readout__row + .readout__row {
+    border-top: 1px solid var(--rule);
+  }
+
+  .readout__row--accept { --v: var(--v-accept); }
+  .readout__row--minor { --v: var(--v-minor); }
+  .readout__row--major { --v: var(--v-major); }
+  .readout__row--reject { --v: var(--v-reject); }
+
+  .readout__name {
+    font-family: var(--font-mono);
+    font-size: var(--t--1);
+    letter-spacing: 0.04em;
+    text-transform: capitalize;
+    color: var(--ink-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .readout__meter {
+    display: flex;
+    gap: 2px;
+  }
+
+  .readout__seg {
+    width: 1.5rem;
+    height: 0.5rem;
+    border-radius: 1px;
+    background: color-mix(in srgb, var(--muted) 18%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--muted) 12%, transparent);
+  }
+
+  .readout__seg.is-filled {
+    background: var(--v);
+    box-shadow: none;
+  }
+
+  /* A half-step (3.5) shows as a partly lit segment rather than rounding,
+     because the pipeline really does emit them. */
+  .readout__seg.is-half {
+    background: linear-gradient(
+      to right,
+      var(--v) 50%,
+      color-mix(in srgb, var(--muted) 18%, transparent) 50%
+    );
+  }
+
+  .readout__score {
+    font-size: var(--t--1);
+    font-weight: 500;
+    text-align: right;
+    color: var(--v);
+  }
+
+  .readout__conf {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+
+  .readout__dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--muted) 28%, transparent);
+  }
+
+  .readout__dot.is-on {
+    background: var(--muted);
+  }
+
+  .readout__foot {
+    border-top: 1px solid var(--rule);
+    padding: 0.8rem 1.15rem;
+    font-size: var(--t--1);
+    color: var(--muted);
+    line-height: 1.55;
+  }
+
+  .readout__foot .label {
+    color: var(--ink-dim);
+  }
+
+  @media (max-width: 46rem) {
+    .readout__body {
+      grid-template-columns: 1fr;
+    }
+    .readout__aggregate {
+      border-right: 0;
+      border-bottom: 1px solid var(--rule);
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.6rem 1rem;
+    }
+    .readout__spread {
+      margin-top: 0;
+      flex-basis: 100%;
+    }
+    .readout__row {
+      grid-template-columns: minmax(0, 1fr) auto 2.4rem;
+      gap: 0.6rem;
+    }
+    .readout__conf {
+      display: none;
+    }
+    .readout__seg {
+      width: 1.1rem;
+    }
+  }
+</style>

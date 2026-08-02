@@ -1,0 +1,88 @@
+---
+/**
+ * The hand-written editorial pages: submit, criteria, policy.
+ *
+ * These are prose, so they get the reading column and nothing else — no
+ * instrument chrome, no data panels. The lede is lifted out of the first
+ * paragraph so the page opens with a proper title block rather than dropping
+ * the reader straight into body text.
+ */
+import { getCollection, render } from "astro:content";
+import Base from "../layouts/Base.astro";
+
+export async function getStaticPaths() {
+  const pages = await getCollection("pages");
+  return pages.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+const TITLES = {
+  submit: "Submit a preprint",
+  criteria: "What the panel looks for",
+  policy: "Editorial policy",
+};
+
+const LEDES = {
+  submit: "How to get a preprint reviewed, what happens to it, and what you can do if the panel gets it wrong.",
+  criteria: "The standards every submission is held to, and what each of the ten reports is actually asked to judge.",
+  policy: "Scope, limitations, what we publish, what we store, and how to contest a review.",
+};
+
+const title = TITLES[entry.id] || entry.id;
+---
+
+<Base title={title} description={LEDES[entry.id] || ""}>
+  <div class="shell shell--column doc">
+    <header class="doc__head">
+      <p class="label doc__eyebrow">In Silico</p>
+      <h1 class="doc__title">{title}</h1>
+      {LEDES[entry.id] && <p class="doc__lede">{LEDES[entry.id]}</p>}
+    </header>
+
+    <div class="prose">
+      <Content />
+    </div>
+  </div>
+</Base>
+
+<style>
+  .doc {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+
+  .doc__head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .doc__eyebrow {
+    color: var(--accent);
+  }
+
+  .doc__title {
+    font-size: clamp(2.1rem, 5.5vw, 3.2rem);
+  }
+
+  .doc__lede {
+    max-width: 58ch;
+    font-size: var(--t-1);
+    line-height: 1.5;
+    color: var(--ink-dim);
+  }
+
+  /* The editorial pages open with an <h1> in their own markdown, which would
+     duplicate the title block above. */
+  .prose :global(h1:first-child) {
+    display: none;
+  }
+</style>

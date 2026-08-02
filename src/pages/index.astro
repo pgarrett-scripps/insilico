@@ -1,0 +1,465 @@
+---
+import Base from "../layouts/Base.astro";
+import { corpus, VERDICT, statistics } from "../lib/corpus.js";
+
+const stats = statistics();
+const papers = corpus().slice(0, 3);
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const verdictOf = (b) => (b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision);
+const verdictKey = (b) => (b.deskRejected ? "desk" : b.decision);
+
+const STAGES = [
+  { stage: "Desk", who: "Integrity scan · editorial triage", out: "Pass, or a desk rejection" },
+  { stage: "Review", who: "Methodology · Data analysis · Novelty · Clarity · Literature · Rigor · Reproducibility · Ethics", out: "8 scored reports" },
+  { stage: "Audit", who: "Citation integrity · Methods completeness", out: "2 factual checklists" },
+  { stage: "Debate", who: "Advocate vs. Skeptic", out: "Full transcript" },
+  { stage: "Synthesis", who: "Area chair", out: "Draft recommendation" },
+  { stage: "Rebuttal", who: "Simulated author", out: "Concessions and disagreements" },
+  { stage: "Decision", who: "Editor-in-chief", out: "Recommendation + letter" },
+];
+---
+
+<Base>
+  <div class="hero">
+    <div class="hero__grid" aria-hidden="true"></div>
+    <div class="shell hero__inner">
+      <p class="label hero__eyebrow">An open, AI-refereed overlay journal</p>
+      <h1 class="hero__title">In&nbsp;Silico</h1>
+      <p class="hero__lede">
+        We don't host papers. Point us at a preprint that already exists, and a
+        panel of seventeen agents reviews it — then we publish
+        <em>the entire review</em> next to a link to your work.
+      </p>
+
+      <div class="hero__actions">
+        <a class="btn btn--primary" href={`${base}/reviews/`}>Browse reviews</a>
+        <a class="btn" href={`${base}/submit/`}>Submit a preprint</a>
+      </div>
+
+      <dl class="readouts">
+        <div class="readouts__item">
+          <dt class="label">Papers</dt>
+          <dd class="mono">{stats.papers}</dd>
+        </div>
+        <div class="readouts__item">
+          <dt class="label">Reports published</dt>
+          <dd class="mono">{stats.reports}</dd>
+        </div>
+        <div class="readouts__item">
+          <dt class="label">Mean panel score</dt>
+          <dd class="mono">
+            {stats.meanScore !== null ? stats.meanScore.toFixed(2) : "—"}
+            <span class="readouts__scale">/5</span>
+          </dd>
+        </div>
+        <div class="readouts__item">
+          <dt class="label">Reports withheld</dt>
+          <dd class="mono">0</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="shell sections">
+    <section class="why">
+      <h2 class="h-section">The review is the artifact</h2>
+      <div class="why__cols">
+        <p>
+          Peer review is slow, invisible, and mostly discarded. Referee reports
+          are written once, read by three people, and thrown away.
+        </p>
+        <p>
+          In Silico inverts that. Every submission that clears the desk gets
+          eight specialist reports, a recorded advocate/skeptic debate, an
+          area-chair synthesis, a simulated author rebuttal, and an editor's
+          verdict — all of it public, versioned, and reproducible down to the
+          model that wrote each line.
+        </p>
+      </div>
+    </section>
+
+    <section class="pipeline">
+      <div class="pipeline__head">
+        <h2 class="h-section">What the panel does</h2>
+        <p class="label">17 agents · one round</p>
+      </div>
+      <ol class="pipeline__list">
+        {STAGES.map((s, i) => (
+          <li class="stage">
+            <span class="stage__n mono">{String(i + 1).padStart(2, "0")}</span>
+            <span class="stage__name">{s.stage}</span>
+            <span class="stage__who">{s.who}</span>
+            <span class="stage__out mono">{s.out}</span>
+          </li>
+        ))}
+      </ol>
+      <p class="pipeline__note">
+        The Novelty and Literature reviewers query arXiv, Semantic Scholar,
+        PubMed and bioRxiv live, so their claims about prior work are grounded
+        in real search results rather than recall.
+      </p>
+    </section>
+
+    {
+      papers.length > 0 && (
+        <section class="latest">
+          <div class="latest__head">
+            <h2 class="h-section">Most recent</h2>
+            <a class="latest__all" href={`${base}/reviews/`}>All reviews →</a>
+          </div>
+          <ul class="latest__list">
+            {papers.map((paper) => (
+              <li>
+                <a class="row" href={`${base}/reviews/${paper.year}/${paper.slug}/`}>
+                  <span class={`verdict verdict--${verdictKey(paper.latest)}`}>
+                    {verdictOf(paper.latest)}
+                  </span>
+                  <span class="row__title">{paper.title}</span>
+                  <span class="row__score mono">
+                    {paper.latest.meanScore !== null
+                      ? paper.latest.meanScore.toFixed(1)
+                      : "—"}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="caveat">
+      <h2 class="h-section">What this is not</h2>
+      <div class="caveat__box">
+        <p class="caveat__lead">
+          Every recommendation on this site was produced by a language model. It
+          is <strong>advisory</strong>. A human editor makes each call, and no
+          machine verdict is ever final.
+        </p>
+        <p>
+          An In Silico listing is not certification, not a substitute for
+          conventional peer review, and not evidence that a result is correct.
+          It is a machine-generated second opinion, published openly so you can
+          judge the reasoning for yourself.
+        </p>
+        <p class="caveat__kicker">
+          We publish the panel's mistakes along with its insights. That's the
+          experiment.
+        </p>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--rule);
+    padding-block: clamp(3rem, 9vw, 6.5rem) clamp(2.5rem, 6vw, 4rem);
+  }
+
+  /* A faint measurement grid, fading out from the top. The instrument the
+     journal is named for, stated once and quietly. */
+  .hero__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, var(--rule) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--rule) 1px, transparent 1px);
+    background-size: 68px 68px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 0%, transparent 78%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 0%, transparent 78%);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .hero__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    align-items: flex-start;
+  }
+
+  .hero__eyebrow {
+    color: var(--accent);
+  }
+
+  .hero__title {
+    font-size: clamp(3.4rem, 13vw, 8rem);
+    line-height: 0.92;
+    letter-spacing: -0.025em;
+    margin-block: 0.1rem 0.2rem;
+  }
+
+  .hero__lede {
+    max-width: 46ch;
+    font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+    line-height: 1.55;
+    color: var(--ink-dim);
+  }
+
+  .hero__lede em {
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.7rem;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--t--1);
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ink-dim);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-md);
+    padding: 0.62rem 1.15rem;
+    transition: color 150ms ease, border-color 150ms ease, background 150ms ease;
+  }
+
+  .btn:hover {
+    color: var(--ink);
+    border-color: var(--accent-dim);
+  }
+
+  .btn--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ground);
+  }
+
+  .btn--primary:hover {
+    background: color-mix(in srgb, var(--accent) 85%, var(--ink));
+    border-color: transparent;
+    color: var(--ground);
+  }
+
+  .readouts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2.4rem;
+    margin-top: 2.2rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    width: 100%;
+  }
+
+  .readouts__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .readouts__item dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--ink);
+  }
+
+  .readouts__scale {
+    font-family: var(--font-mono);
+    font-size: var(--t--1);
+    color: var(--muted);
+  }
+
+  .sections {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.6rem, 6vw, 4.2rem);
+    padding-top: clamp(2.4rem, 6vw, 4rem);
+  }
+
+  .h-section {
+    font-size: var(--t-3);
+    margin-bottom: 0.9rem;
+  }
+
+  .why__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 1.2rem 2.4rem;
+    color: var(--ink-dim);
+    max-width: 78ch;
+  }
+
+  .pipeline__head,
+  .latest__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.9rem;
+  }
+
+  .pipeline__head .h-section,
+  .latest__head .h-section {
+    margin-bottom: 0;
+  }
+
+  .pipeline__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 2.6rem 7rem minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.7rem 1.1rem;
+    background: var(--surface);
+  }
+
+  .stage + .stage {
+    border-top: 1px solid var(--rule);
+  }
+
+  .stage__n {
+    font-size: var(--t--2);
+    color: var(--accent);
+  }
+
+  .stage__name {
+    font-size: var(--t-0);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .stage__who {
+    font-size: var(--t--1);
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .stage__out {
+    font-size: var(--t--2);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .pipeline__note {
+    margin-top: 0.9rem;
+    max-width: 68ch;
+    font-size: var(--t--1);
+    color: var(--muted);
+  }
+
+  .latest__all {
+    font-family: var(--font-mono);
+    font-size: var(--t--1);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .latest__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    text-decoration: none;
+    transition: border-color 150ms ease, transform 150ms ease;
+  }
+
+  .row:hover {
+    border-color: var(--accent-dim);
+    transform: translateX(3px);
+  }
+
+  .row__title {
+    font-size: var(--t--1);
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .row__score {
+    font-size: var(--t--1);
+    color: var(--muted);
+  }
+
+  .caveat__box {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--v-major);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    padding: 1.3rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    max-width: 72ch;
+    color: var(--ink-dim);
+  }
+
+  .caveat__lead {
+    color: var(--ink);
+  }
+
+  .caveat__kicker {
+    font-family: var(--font-display);
+    font-size: var(--t-1);
+    color: var(--ink);
+  }
+
+  @media (max-width: 46rem) {
+    .stage {
+      grid-template-columns: 2.2rem minmax(0, 1fr);
+      row-gap: 0.2rem;
+    }
+    .stage__who {
+      grid-column: 2;
+    }
+    .stage__out {
+      grid-column: 2;
+      text-align: left;
+      white-space: normal;
+    }
+    .readouts {
+      gap: 1rem 1.8rem;
+    }
+    .row {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+    .row__score {
+      display: none;
+    }
+    .row__title {
+      white-space: normal;
+    }
+  }
+</style>

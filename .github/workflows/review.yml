@@ -250,9 +250,6 @@ jobs:
               --submitter "$SUBMITTER"
           fi
 
-      - name: Rebuild the index
-        run: python scripts/build_index.py
-
       - name: Open the review pull request
         id: pr
         env:

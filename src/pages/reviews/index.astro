@@ -1,0 +1,410 @@
+---
+import Base from "../../layouts/Base.astro";
+import { corpus, VERDICT, statistics } from "../../lib/corpus.js";
+
+const papers = corpus();
+const stats = statistics();
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const verdictOf = (b) => (b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision);
+const verdictKey = (b) => (b.deskRejected ? "desk" : b.decision);
+
+// Filters are offered only for verdicts that actually occur, so no selection
+// can ever return an empty list.
+const ORDER = ["reject", "major", "minor", "accept", "desk"];
+const present = ORDER.filter((k) => stats.byVerdict[k]).map((k) => ({
+  key: k,
+  label: k === "desk" ? "Desk reject" : VERDICT[k],
+  count: papers.filter((p) => verdictKey(p.latest) === k).length,
+})).filter((f) => f.count > 0);
+
+const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
+---
+
+<Base
+  title="Reviews"
+  description={`${stats.papers} papers reviewed, ${stats.reports} specialist reports published in full.`}
+>
+  <div class="shell stack">
+    <header class="ledger__head">
+      <p class="label ledger__eyebrow">The corpus</p>
+      <h1 class="ledger__title">Published reviews</h1>
+      <p class="ledger__lede">
+        {stats.papers} paper{stats.papers === 1 ? "" : "s"} reviewed ·
+        {" "}{stats.reports} specialist reports published in full. Each entry links
+        to a preprint hosted elsewhere and to the entire referee bundle produced
+        for it. Recommendations are advisory.
+      </p>
+    </header>
+
+    {
+      papers.length > 1 && (
+        <div class="controls no-print" data-controls>
+          <div class="controls__filters" role="group" aria-label="Filter by recommendation">
+            <button class="filter is-active" type="button" data-filter="all" aria-pressed="true">
+              All <span class="filter__count mono">{papers.length}</span>
+            </button>
+            {present.map((f) => (
+              <button
+                class={`filter filter--${f.key}`}
+                type="button"
+                data-filter={f.key}
+                aria-pressed="false"
+              >
+                {f.label} <span class="filter__count mono">{f.count}</span>
+              </button>
+            ))}
+          </div>
+          <label class="controls__sort">
+            <span class="label">Sort</span>
+            <select data-sort>
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="score-desc">Highest score</option>
+              <option value="score-asc">Lowest score</option>
+              <option value="title">Title A–Z</option>
+            </select>
+          </label>
+        </div>
+      )
+    }
+
+    {
+      papers.length === 0 ? (
+        <p class="empty">Nothing published yet. Reviews appear here once an editor merges a review pull request.</p>
+      ) : (
+        years.map((year) => (
+          <section class="year" data-year={year}>
+            <h2 class="year__label mono">{year}</h2>
+            <ul class="cards" data-grid>
+              {papers
+                .filter((p) => p.year === year)
+                .map((paper) => (
+                  <li
+                    class="card"
+                    data-verdict={verdictKey(paper.latest)}
+                    data-date={paper.latest.reviewedAt}
+                    data-title={paper.title.toLowerCase()}
+                    data-score={paper.latest.meanScore ?? ""}
+                  >
+                    <a class="card__link" href={`${base}/reviews/${paper.year}/${paper.slug}/`}>
+                      <span class="card__top">
+                        <span class={`verdict verdict--${verdictKey(paper.latest)}`}>
+                          {verdictOf(paper.latest)}
+                        </span>
+                        {paper.latest.meanScore !== null && (
+                          <span class="card__score mono">
+                            {paper.latest.meanScore.toFixed(1)}
+                            <span class="card__scoreScale">/5</span>
+                          </span>
+                        )}
+                      </span>
+
+                      <span class="card__title">{paper.title}</span>
+
+                      {paper.authors.length > 0 && (
+                        <span class="card__authors">
+                          {/* Built as one string: adjacent JSX expressions are
+                              separated by a whitespace text node, which shows
+                              up as "Binek, A. , et al." */}
+                          {paper.authors.slice(0, 3).join(", ") +
+                            (paper.authors.length > 3 ? ", et al." : "")}
+                        </span>
+                      )}
+
+                      <span class="card__foot">
+                        <span class="mono">{paper.latest.preprint.source}</span>
+                        <span class="mono">{paper.latest.reviewedAt}</span>
+                        {paper.reviewCount > 1 && (
+                          <span class="card__badge mono">{paper.reviewCount} reviews</span>
+                        )}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ))
+      )
+    }
+  </div>
+</Base>
+
+<script is:inline>
+  (function () {
+    var root = document.querySelector("[data-controls]");
+    if (!root) return;
+    var buttons = Array.prototype.slice.call(root.querySelectorAll("[data-filter]"));
+    var select = root.querySelector("[data-sort]");
+    var grids = Array.prototype.slice.call(document.querySelectorAll("[data-grid]"));
+    var active = "all";
+
+    function scoreOf(el) {
+      var raw = el.getAttribute("data-score");
+      return raw === "" || raw == null ? null : parseFloat(raw);
+    }
+
+    function apply() {
+      var mode = select ? select.value : "newest";
+      grids.forEach(function (grid) {
+        var cards = Array.prototype.slice.call(grid.children);
+        cards.forEach(function (c) {
+          var show = active === "all" || c.getAttribute("data-verdict") === active;
+          c.hidden = !show;
+        });
+        cards
+          .slice()
+          .sort(function (a, b) {
+            if (mode === "title") {
+              return (a.getAttribute("data-title") || "").localeCompare(
+                b.getAttribute("data-title") || "",
+              );
+            }
+            if (mode === "score-desc" || mode === "score-asc") {
+              var sa = scoreOf(a);
+              var sb = scoreOf(b);
+              // Unscored reviews (desk rejects) sort last either way rather
+              // than pretending to a score of zero.
+              if (sa === null && sb === null) return 0;
+              if (sa === null) return 1;
+              if (sb === null) return -1;
+              return mode === "score-desc" ? sb - sa : sa - sb;
+            }
+            var da = a.getAttribute("data-date") || "";
+            var db = b.getAttribute("data-date") || "";
+            return mode === "oldest" ? da.localeCompare(db) : db.localeCompare(da);
+          })
+          .forEach(function (c) {
+            grid.appendChild(c);
+          });
+      });
+
+      // A year with nothing left after filtering hides its heading too.
+      document.querySelectorAll("[data-year]").forEach(function (section) {
+        var any = Array.prototype.slice
+          .call(section.querySelectorAll(".card"))
+          .some(function (c) {
+            return !c.hidden;
+          });
+        section.hidden = !any;
+      });
+    }
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        active = btn.getAttribute("data-filter");
+        buttons.forEach(function (other) {
+          var on = other === btn;
+          other.setAttribute("aria-pressed", on ? "true" : "false");
+          other.classList.toggle("is-active", on);
+        });
+        apply();
+      });
+    });
+
+    if (select) select.addEventListener("change", apply);
+    apply();
+  })();
+</script>
+
+<style>
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.8rem;
+  }
+
+  .ledger__head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ledger__eyebrow {
+    color: var(--accent);
+  }
+
+  .ledger__title {
+    font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+  }
+
+  .ledger__lede {
+    max-width: 62ch;
+    color: var(--ink-dim);
+    font-size: var(--t-0);
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .controls__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .filter {
+    --v: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-mono);
+    font-size: var(--t--2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 0.36rem 0.8rem;
+    cursor: pointer;
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+
+  .filter--accept { --v: var(--v-accept); }
+  .filter--minor { --v: var(--v-minor); }
+  .filter--major { --v: var(--v-major); }
+  .filter--reject { --v: var(--v-reject); }
+  .filter--desk { --v: var(--v-desk); }
+
+  .filter:hover {
+    color: var(--ink-dim);
+    border-color: var(--rule-strong);
+  }
+
+  .filter.is-active {
+    color: var(--v);
+    border-color: color-mix(in srgb, var(--v) 50%, transparent);
+    background: color-mix(in srgb, var(--v) 8%, transparent);
+  }
+
+  .filter__count {
+    opacity: 0.65;
+  }
+
+  .controls__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
+  .controls__sort select {
+    font-family: var(--font-mono);
+    font-size: var(--t--1);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-sm);
+    padding: 0.3rem 0.5rem;
+    cursor: pointer;
+  }
+
+  .year {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .year__label {
+    font-family: var(--font-mono);
+    font-size: var(--t--1);
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  .card[hidden] {
+    display: none;
+  }
+
+  .card__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    height: 100%;
+    padding: 1rem 1.05rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  }
+
+  .card__link:hover {
+    border-color: var(--accent-dim);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+
+  .card__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .card__score {
+    font-size: var(--t-1);
+    color: var(--ink);
+  }
+
+  .card__scoreScale {
+    font-size: var(--t--2);
+    color: var(--muted);
+  }
+
+  .card__title {
+    font-size: var(--t-0);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+  }
+
+  .card__authors {
+    font-size: var(--t--1);
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .card__foot {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--rule);
+    font-size: var(--t--2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .card__badge {
+    margin-left: auto;
+    color: var(--accent);
+  }
+
+  .empty {
+    color: var(--muted);
+  }
+</style>

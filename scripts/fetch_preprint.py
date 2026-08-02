@@ -229,10 +229,9 @@ def _text(node: ET.Element, path: str) -> str:
 
 
 # Anything that looks like an HTML tag. Preprint metadata is written by the
-# authors, and it reaches places we do not control the escaping of — MkDocs
-# Material drops the frontmatter title straight into <title> and the header
-# bar without escaping it, so a manuscript posted as
-# `Cool paper <script>…</script>` is stored XSS on every reader's browser.
+# authors, and it reaches many places — <title>, meta tags, headings, cards.
+# A manuscript posted as `Cool paper <script>…</script>` would otherwise be
+# one forgotten escape away from stored XSS on every reader's browser.
 #
 # Stripped at ingestion rather than escaped at each render: there are many
 # render sites and only one ingestion point, and an escape that has to be

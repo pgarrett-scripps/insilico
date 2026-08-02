@@ -1,0 +1,193 @@
+---
+/**
+ * How to cite, in the two forms anyone actually pastes.
+ *
+ * Two addresses, mirroring how Zenodo separates a concept DOI from a version
+ * DOI: the paper page always resolves to the most recent review, while each
+ * vN page is a permanent link to one review of one revision. Which to cite
+ * depends on the claim being made, so the page says plainly which kind it is
+ * rather than leaving the reader to work it out.
+ *
+ * The author is the journal, and the note says machine-generated. Citing an
+ * LLM panel as though it were a named referee would misrepresent what this is.
+ */
+const {
+  title,
+  url,
+  year,
+  key,
+  reviewedDoi = "",
+  reviewedVersion = "",
+  noteExtra = "",
+  evergreen = false,
+} = Astro.props;
+
+const LATEX = {
+  "\\": "\\textbackslash{}",
+  "&": "\\&",
+  "%": "\\%",
+  $: "\\$",
+  "#": "\\#",
+  _: "\\_",
+  "{": "\\{",
+  "}": "\\}",
+  "~": "\\textasciitilde{}",
+  "^": "\\textasciicircum{}",
+};
+const esc = (s) => String(s).split("").map((c) => LATEX[c] ?? c).join("");
+
+let head = "Machine-generated peer review";
+if (reviewedDoi) {
+  head += ` of doi:${reviewedDoi}`;
+  if (reviewedVersion) head += ` v${reviewedVersion}`;
+}
+const note = [head, noteExtra].filter(Boolean).join(". ") + ".";
+const plain = `In Silico (${year}). Review of "${title}". In Silico. ${url}`;
+const bibtex = [
+  `@misc{${key},`,
+  `  title        = {Review of {${esc(title)}}},`,
+  `  author       = {{In Silico}},`,
+  `  year         = {${year}},`,
+  `  howpublished = {In Silico, an AI-refereed overlay journal},`,
+  `  url          = {${esc(url)}},`,
+  `  note         = {${esc(note)}}`,
+  `}`,
+].join("\n");
+---
+
+<section class="cite panel" aria-labelledby="cite-heading">
+  <div class="panel__head">
+    <h2 id="cite-heading" class="cite__title">Cite this review</h2>
+    <p class="label">
+      {evergreen ? "Evergreen — always the latest" : "Permanent — this review only"}
+    </p>
+  </div>
+
+  <div class="cite__body">
+    <p class="cite__scope">
+      {
+        evergreen
+          ? "This URL always resolves to the most recent review of this paper."
+          : "This URL is a permanent link to this specific review, and will not change."
+      }
+    </p>
+
+    <div class="cite__block">
+      <div class="cite__blockHead">
+        <span class="label">Plain text</span>
+        <button class="cite__copy" type="button" data-copy={plain}>Copy</button>
+      </div>
+      <pre class="cite__pre">{plain}</pre>
+    </div>
+
+    <div class="cite__block">
+      <div class="cite__blockHead">
+        <span class="label">BibTeX</span>
+        <button class="cite__copy" type="button" data-copy={bibtex}>Copy</button>
+      </div>
+      <pre class="cite__pre">{bibtex}</pre>
+    </div>
+
+    <p class="cite__caveat">
+      Please cite the preprint itself as well — this reviews that work, it does
+      not replace it. The review is machine-generated and advisory; if you are
+      citing it as evidence about the paper, say so explicitly.
+    </p>
+  </div>
+</section>
+
+<script is:inline>
+  (function () {
+    document.querySelectorAll("[data-copy]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var text = btn.getAttribute("data-copy") || "";
+        navigator.clipboard.writeText(text).then(
+          function () {
+            var was = btn.textContent;
+            btn.textContent = "Copied";
+            btn.classList.add("is-done");
+            setTimeout(function () {
+              btn.textContent = was;
+              btn.classList.remove("is-done");
+            }, 1400);
+          },
+          function () {
+            btn.textContent = "Press ⌘C";
+          },
+        );
+      });
+    });
+  })();
+</script>
+
+<style>
+  .cite__title {
+    font-size: var(--t-1);
+  }
+
+  .cite__body {
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .cite__scope {
+    font-size: var(--t--1);
+    color: var(--ink-dim);
+  }
+
+  .cite__block {
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--ground-deep);
+  }
+
+  .cite__blockHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    background: var(--surface-2);
+  }
+
+  .cite__copy {
+    font-family: var(--font-mono);
+    font-size: var(--t--2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--r-sm);
+    padding: 0.2rem 0.55rem;
+    cursor: pointer;
+    transition: color 140ms ease, border-color 140ms ease;
+  }
+
+  .cite__copy:hover,
+  .cite__copy.is-done {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  .cite__pre {
+    font-family: var(--font-mono);
+    font-size: var(--t--1);
+    line-height: 1.6;
+    padding: 0.75rem;
+    overflow-x: auto;
+    color: var(--ink-dim);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .cite__caveat {
+    font-size: var(--t--1);
+    color: var(--muted);
+    max-width: 64ch;
+  }
+</style>

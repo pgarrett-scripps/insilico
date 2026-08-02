@@ -1,17 +1,13 @@
-# Site build + local review runs.
+# The scripts that fetch preprints and run the referee panel.
 #
-# The referee panel itself is pinned per-run by .github/workflows/review.yml
-# (it resolves the current HEAD SHA so every review records exactly which
-# version produced it). For local use, install it unpinned:
+# The site is built by Astro (see package.json); nothing here is needed to
+# render it. The referee panel itself is pinned per-run by
+# .github/workflows/review.yml, which resolves the current HEAD SHA so every
+# review records exactly which version produced it. For local use:
 #
-#     pip install "peerreviewagents @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
+#     pip install "peerreviewagents[research] @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
+#
+# fetch_preprint.py and check_updates.py are stdlib-only by design, so the
+# staleness check keeps working without any of this installed.
 
-# mkdocs is capped: 2.0 removes the plugin and theming systems that
-# mkdocs-material depends on, with no migration path.
-mkdocs>=1.6,<2
-# [imaging] pulls Pillow and CairoSVG for the social plugin, which renders the
-# Open Graph card per page. It also needs system Cairo — see the apt step in
-# .github/workflows/publish.yml. Without these mkdocs still builds, but every
-# shared review link renders as a bare URL instead of a card.
-mkdocs-material[imaging]>=9.5
 pyyaml>=6.0

@@ -1,8 +1,8 @@
 name: CI
 
 # Review PRs are machine-generated, so the site build has to be checked *before*
-# merge — a title that breaks the generated frontmatter would otherwise take
-# down the published site.
+# merge — a bundle the site can't render would otherwise take down the deploy
+# only once it had already landed on main.
 on:
   pull_request:
   push:
@@ -13,7 +13,8 @@ permissions:
   contents: read
 
 jobs:
-  check:
+  pipeline:
+    name: Pipeline
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,30 +24,40 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      # Same Cairo install as publish.yml. CI and the deploy build have to be
-      # identical here: if cards can only fail at publish time, the first sign
-      # of a problem is the site not deploying.
-      - name: Install Cairo for social card rendering
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq \
-            libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
-
-      - run: pip install --quiet -r requirements.txt
-
       - name: Bundle rendering is well-formed
         run: python scripts/smoke_test.py
 
-      - name: Index regenerates cleanly
-        run: python scripts/build_index.py
+  site:
+    name: Site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Committed index is up to date
-        run: |
-          if ! git diff --quiet -- docs/reviews/index.md docs/reviews/index.json; then
-            echo "::error::docs/reviews/index.md is stale — run 'python scripts/build_index.py' and commit."
-            git --no-pager diff -- docs/reviews/index.md docs/reviews/index.json
-            exit 1
-          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
 
       - name: Site builds
-        run: mkdocs build --strict
+        run: npm run build
+
+      # Astro will happily build a site with zero review pages if the corpus
+      # reader stops matching the layout the pipeline writes — which is exactly
+      # the silent failure that has bitten this repo before. Assert the corpus
+      # actually made it into the output.
+      - name: Every published review rendered
+        run: |
+          # <year>/<slug>/v<N>/provenance.json and <year>/<slug>/v<N>/index.html
+          # are both four levels below their respective reviews/ root.
+          expected=$(find docs/reviews -mindepth 4 -maxdepth 4 -name provenance.json | wc -l)
+          actual=$(find dist/reviews -mindepth 4 -maxdepth 4 -path '*/v*/index.html' | wc -l)
+          echo "bundles on disk: $expected · review pages built: $actual"
+          if [ "$expected" -ne "$actual" ]; then
+            echo "::error::$expected review bundles exist but $actual pages were built."
+            exit 1
+          fi
+          if [ "$expected" -eq 0 ]; then
+            echo "::warning::No review bundles found — nothing to check."
+          fi

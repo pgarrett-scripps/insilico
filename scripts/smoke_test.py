@@ -1,9 +1,14 @@
-"""Render a synthetic review bundle and assert it comes out well-formed.
+"""Write a synthetic review bundle and assert it comes out well-formed.
 
-Hermetic: no network, no API key, no model call. Guards the failure mode that
-matters most here — a review bundle whose generated frontmatter is malformed
-(an unescaped quote in a title, a missing field) breaks the site build *after*
-the review PR is merged, when it's least convenient.
+Hermetic: no network, no API key, no model call.
+
+What this guards is the *data contract* between the pipeline and the site.
+run_review.py writes documents and provenance.json; the site reads them and
+renders every page. So the failure that matters is a bundle the site cannot
+read — a missing field, a score that never reaches provenance, reports that
+bleed between versions — not the shape of any particular page. Page rendering
+is checked by the site's own build, which CI runs on every PR and which fails
+if any published bundle goes unrendered.
 
     python scripts/smoke_test.py
 """
@@ -14,7 +19,6 @@ import contextlib
 import hashlib
 import json
 import os
-import re
 import sys
 import tempfile
 import urllib.error
@@ -22,19 +26,24 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from build_index import read_frontmatter  # noqa: E402
+REPO = Path(__file__).resolve().parent.parent
+
 from fetch_preprint import Preprint, resolve  # noqa: E402
 from run_review import (  # noqa: E402
     AUTHOR_RESPONSE,
-    BUNDLE_ORDER,
+    BUNDLE_FILES,
     next_version,
     paper_slug,
     slugify,
     write_bundle,
-    write_paper_page,
 )
 
-# Titles that have historically broken naive frontmatter generation.
+
+def provenance_of(bundle: Path) -> dict:
+    return json.loads((bundle / "provenance.json").read_text(encoding="utf-8"))
+
+
+# Titles that have historically broken naive metadata handling.
 NASTY_TITLES = [
     'A Study of "Attention": Colons, Quotes & Ampersands',
     "Backslashes \\ and [brackets] in a title",
@@ -55,7 +64,7 @@ def build_fixture(title: str, dest: Path) -> None:
         published="2024-01-01",
     )
     run_dir = Path(tempfile.mkdtemp())
-    for name, _ in BUNDLE_ORDER:
+    for name in BUNDLE_FILES:
         (run_dir / name).write_text(f"# {name}\n\nfixture body\n")
     for reviewer in ("methodology", "novelty", "clarity", "rigor"):
         (run_dir / f"review_{reviewer}.md").write_text(f"# {reviewer}\n\nfixture\n")
@@ -85,44 +94,33 @@ def check(title: str) -> None:
         dest = Path(tmp) / "bundle"
         build_fixture(title, dest)
 
-        landing = dest / "index.md"
-        assert landing.exists(), "no index.md written"
+        prov = provenance_of(dest)
 
-        meta = read_frontmatter(landing)
-        assert meta is not None, f"frontmatter did not parse for title {title!r}"
-        assert meta["title"] == title, f"title mangled: {meta['title']!r} != {title!r}"
-        assert meta["decision"] == "major", f"decision lost: {meta.get('decision')!r}"
-        assert meta["authors"] == ["Ada Lovelace", "Alan Turing"], "authors mangled"
-        # The index puts a score on every card; it can only do that if the
-        # landing page publishes one in its frontmatter.
-        assert meta["mean_score"] == 3.0, f"mean_score missing: {meta.get('mean_score')!r}"
+        # Metadata has to survive verbatim. Every one of these titles broke a
+        # previous encoding of this record at some point.
+        assert prov["preprint"]["title"] == title, (
+            f"title mangled: {prov['preprint']['title']!r} != {title!r}"
+        )
+        assert prov["decision"] == "major", f"decision lost: {prov.get('decision')!r}"
+        assert prov["preprint"]["authors"] == ["Ada Lovelace", "Alan Turing"], "authors mangled"
+        # The index puts a score on every card and the panel readout needs the
+        # per-referee detail; both come from here and nowhere else.
+        assert prov["mean_score"] == 3.0, f"mean_score missing: {prov.get('mean_score')!r}"
+        assert len(prov["panel"]) == 4, "per-referee scores not recorded"
+        assert {p["reviewer"] for p in prov["panel"]} == {
+            "methodology", "novelty", "clarity", "rigor",
+        }, "panel roster wrong"
 
-        for name, _ in BUNDLE_ORDER:
+        # Which model wrote which report is a disclosure, not a nicety.
+        assert prov["models"]["reviewer"]["model"] == "claude-haiku-4-5"
+        assert prov["models"]["synthesis"]["model"] == "claude-opus-5"
+
+        for name in BUNDLE_FILES:
             assert (dest / name).exists(), f"missing bundle file {name}"
-        assert (dest / "provenance.json").exists(), "missing provenance.json"
         assert len(list(dest.glob("review_*.md"))) == 4, "specialist reports not copied"
         assert len(list(dest.glob("audit_*.md"))) == 2, "audit reports not copied"
 
-        landing = (dest / "index.md").read_text()
-        assert "Editorial audits" in landing, "audits not linked from the landing page"
-        assert "audit_citation_integrity.md" in landing
-        # Model tags must be disclosed — the panel and the chair differ.
-        assert "specialist reviewers" in landing, "model tags not rendered"
-        assert "claude-haiku-4-5" in landing
-
         assert slugify(title), f"title produced an empty slug: {title!r}"
-
-        # A citation is only useful if it compiles and points somewhere real.
-        assert "## Cite this review" in landing, "no citation block"
-        assert "@misc{insilico-" in landing, "no BibTeX entry"
-        assert "author       = {{In Silico}}," in landing, "corporate author not braced"
-        bib = landing.split("```bibtex", 1)[1].split("```", 1)[0]
-        assert bib.count("{") == bib.count("}"), f"unbalanced braces in BibTeX:\n{bib}"
-        for raw in ("&", "%", "$", "#", "_"):
-            # Every LaTeX special in the entry must be backslash-escaped.
-            for i, ch in enumerate(bib):
-                if ch == raw:
-                    assert i and bib[i - 1] == "\\", f"unescaped {raw!r} in BibTeX"
 
 
 def check_desk_reject() -> None:
@@ -164,25 +162,20 @@ def check_desk_reject() -> None:
         dest = Path(tmp) / "bundle"
         write_bundle(preprint, state, run_dir, dest, "7", "octocat", {"desk_screen": 0.0})
 
-        meta = read_frontmatter(dest / "index.md")
-        assert meta is not None, "desk-reject frontmatter did not parse"
-        assert meta["decision"] == "reject"
-        assert meta.get("desk_rejected") is True, "desk_rejected missing from frontmatter"
-
-        prov = json.loads((dest / "provenance.json").read_text())
+        prov = provenance_of(dest)
+        # A desk reject and a panel reject are both `decision: reject` but are
+        # not the same editorial act. This flag is the only thing that tells
+        # them apart, and every page keys off it.
         assert prov["desk_rejected"] is True, "desk_rejected not recorded in provenance"
+        assert prov["decision"] == "reject"
         assert prov["mean_score"] is None, "a desk reject has no panel to score"
+        assert prov["panel"] == [], "a desk reject convened no panel"
         assert prov["screens"]["desk_screen_mode"] == "gate", "screen config not recorded"
 
-        landing = (dest / "index.md").read_text()
-        assert "ins-verdict--desk" in landing, "no desk-reject chip on the landing page"
-        assert "Rejected at the desk" in landing, "landing page doesn't say what happened"
-        assert "Panel recommendation" not in landing, "claims a panel that never convened"
-        # The three identical documents must be listed once, not three times.
-        assert landing.count("(integrity.md)") + landing.count(
-            "(decision_letter.md)"
-        ) + landing.count("(desk_screen.md)") == 1, "duplicate bodies listed separately"
-        assert (dest / "integrity.md").exists(), "integrity.md not copied into the bundle"
+        # All three identical bodies are copied so a direct link resolves; the
+        # site is what collapses them to one entry.
+        for name in ("integrity.md", "decision_letter.md", "desk_screen.md"):
+            assert (dest / name).exists(), f"{name} not copied into the bundle"
 
 
 def check_versioning() -> None:
@@ -197,7 +190,7 @@ def check_versioning() -> None:
 
         def review(mver: str, decision: str, reviewers: tuple[str, ...]) -> int:
             run_dir = Path(tempfile.mkdtemp())
-            for name, _ in BUNDLE_ORDER:
+            for name in BUNDLE_FILES:
                 (run_dir / name).write_text(f"# {name}\n")
             for r in reviewers:
                 (run_dir / f"review_{r}.md").write_text(f"# {r} m{mver}\n")
@@ -215,14 +208,13 @@ def check_versioning() -> None:
                  "total_cost": 1.0, "errors": [], "reports": []},
                 run_dir, paper / f"v{v}", "1", "octocat",
             )
-            write_paper_page(paper)
             return v
 
         assert review("1", "reject", ("methodology", "novelty", "ethics")) == 1
         assert review("2", "accept", ("methodology",)) == 2, "re-review did not bump"
 
-        v1 = json.loads((paper / "v1" / "provenance.json").read_text())
-        v2 = json.loads((paper / "v2" / "provenance.json").read_text())
+        v1 = provenance_of(paper / "v1")
+        v2 = provenance_of(paper / "v2")
         assert v1["decision"] == "reject", "v1 verdict was overwritten by the re-review"
         assert v2["decision"] == "accept", "v2 verdict not recorded"
         assert v1["preprint"]["version"] == "1"
@@ -231,12 +223,10 @@ def check_versioning() -> None:
         bled = sorted(p.name for p in (paper / "v2").glob("review_*.md"))
         assert bled == ["review_methodology.md"], f"v1 reports bled into v2: {bled}"
 
-        history = (paper / "index.md").read_text()
-        assert "[v1](v1/index.md)" in history, "history missing v1"
-        assert "[v2](v2/index.md)" in history, "history missing v2"
-        meta = read_frontmatter(paper / "index.md")
-        assert meta["review_count"] == 2, "paper page miscounts reviews"
-        assert meta["decision"] == "accept", "paper page should show the latest verdict"
+        # Both bundles sit side by side under the paper, which is what the site
+        # walks to build the review history.
+        versions = sorted(p.name for p in paper.glob("v*") if p.is_dir())
+        assert versions == ["v1", "v2"], f"unexpected bundle layout: {versions}"
 
 
 def check_baseline_restoration() -> None:
@@ -309,7 +299,7 @@ def check_round_is_not_version() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         run_dir = Path(tmp) / "run"
         run_dir.mkdir()
-        for name, _ in BUNDLE_ORDER:
+        for name in BUNDLE_FILES:
             (run_dir / name).write_text("x")
         os.environ["REVIEW_MODELS"] = "{}"
         os.environ["REVIEW_AGENT_MODELS"] = "{}"
@@ -333,18 +323,14 @@ def check_round_is_not_version() -> None:
             {"round": 2, "prior_decision": "major",
              "baseline": {"restored": False, "reason": "cache was empty"}},
         )
-        v3 = json.loads((paper / "v3" / "provenance.json").read_text())
+        v3 = provenance_of(paper / "v3")
         assert v3["round"] == 2, "explicit round not recorded"
-        landing = (paper / "v3" / "index.md").read_text()
-        assert "Revision round 2" in landing, "round not stated on the page"
-        assert "No draft comparison" in landing, \
-            "an unverified baseline must be disclosed on the page"
-        assert "cache was empty" in landing, "the reason should be given"
-
-        write_paper_page(paper)
-        history = (paper / "index.md").read_text()
-        assert "How it moved" in history, "no revision arc on the paper page"
-        assert "2 ⚠" in history, "unverified round not flagged in the history"
+        # A round with no verified baseline is weaker evidence than one that
+        # diffed the drafts, and the site says so on the page and in the
+        # history — but only because these two fields survive into the record.
+        assert v3["revision"]["baseline"]["restored"] is False
+        assert v3["revision"]["baseline"]["reason"] == "cache was empty", \
+            "the reason must reach the record, or the page cannot give it"
 
 
 def check_correction() -> None:
@@ -358,7 +344,7 @@ def check_correction() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         run_dir = Path(tmp) / "run"
         run_dir.mkdir()
-        for name, _ in BUNDLE_ORDER:
+        for name in BUNDLE_FILES:
             (run_dir / name).write_text("x")
         statement = Path(tmp) / "response.md"
         statement.write_text("Effect sizes are in Table 2, not omitted.\n")
@@ -383,109 +369,69 @@ def check_correction() -> None:
              "baseline": {"restored": False, "reason": "", "n/a": True}},
         )
 
-        prov = json.loads((paper / "v2" / "provenance.json").read_text())
+        prov = provenance_of(paper / "v2")
         assert prov["round"] == 1, "a correction must not advance the round"
-        assert prov["revision"]["kind"] == "correction"
+        assert prov["revision"]["kind"] == "correction", \
+            "the site keys the whole correction notice off this"
+        assert prov["revision"]["only_reviewers"] == ["methodology"], \
+            "which referees re-ran must be recorded, or the page cannot name them"
 
-        landing = (paper / "v2" / "index.md").read_text()
-        assert "manuscript is\n    unchanged" in landing or \
-               "manuscript is" in landing, "must say the manuscript is unchanged"
-        assert "does not advance the" in landing, "must say the round is unchanged"
-        assert "methodology" in landing, "must name which reviewers re-ran"
-        assert "No draft comparison" not in landing, \
-            "a correction has nothing to compare; absence is not a defect"
-
-        # The response must be published, not linked.
-        assert (paper / "v2" / "author_response.md").exists(), \
+        # The response is published, not linked: a GitHub comment stays
+        # editable, and a record that cites mutable text is not a record.
+        assert (paper / "v2" / AUTHOR_RESPONSE).exists(), \
             "the authors' response was not snapshotted into the bundle"
-        assert "Table 2" in (paper / "v2" / "author_response.md").read_text()
-        assert f"({AUTHOR_RESPONSE})" in landing, "the response is not linked"
+        assert "Table 2" in (paper / "v2" / AUTHOR_RESPONSE).read_text()
+        assert prov["revision"]["response_published"] is True
 
-        # An appeal with no author comment is allowed by the workflow, and the
-        # page must not then describe a verification that never happened or
-        # link a file that was never written.
+        # An appeal with no author comment is allowed by the workflow. The
+        # record has to say so, or the page would describe a verification that
+        # never happened and link a file that was never written.
         write_bundle(
             preprint, state, run_dir, paper / "v3", "1", "me", None,
             {"round": 1, "kind": "correction", "prior_decision": "major",
              "only_reviewers": ["methodology"], "statement_path": "",
              "baseline": {"restored": False, "reason": "", "n/a": True}},
         )
-        bare = (paper / "v3" / "index.md").read_text()
         assert not (paper / "v3" / AUTHOR_RESPONSE).exists(), \
             "no response was supplied, so none should be published"
-        assert f"({AUTHOR_RESPONSE})" not in bare, \
-            "the page links a response file that was never written"
-        assert "No author response accompanied this appeal" in bare, \
-            "the page must say no response was checked"
-        assert "corroborated pointers" not in bare, \
-            "claims a verification that could not have happened"
-
-        write_paper_page(paper)
-        history = (paper / "index.md").read_text()
-        assert "1 (corrected)" in history, "history must distinguish a correction"
+        assert provenance_of(paper / "v3")["revision"]["response_published"] is False, \
+            "an appeal with no response must be recorded as having none"
 
 
-def check_metadata_is_escaped() -> None:
-    """Author-written metadata must not become HTML on the published page.
+def check_site_never_injects_raw_html() -> None:
+    """Layer 2: nothing in the site may hand untrusted metadata to the parser.
 
-    Title, abstract and author names come from the preprint server, so the
-    authors wrote them — and markdown renders inline HTML. Before this was
-    escaped, a preprint posted with `<script>` in its abstract was stored XSS
-    on every reader's browser, needing no model to be fooled and no editor to
-    be careless.
+    Titles, abstracts and author names are written by the *authors*, and they
+    reach every page. Astro escapes the value of a `{...}` expression, so the
+    default is safe — but `set:html` opts out of exactly that, and one use of
+    it on a title would put stored XSS on every reader's browser. It is easier
+    to forbid the escape hatch outright than to audit each use of it, because
+    the components that render author-supplied text are most of them.
+
+    The one place raw markup is legitimately rendered is a bundle document,
+    and that goes through Astro's markdown pipeline via <Content />, which is
+    a different mechanism with its own sanitisation posture.
     """
-    with tempfile.TemporaryDirectory() as tmp:
-        run_dir = Path(tmp) / "run"
-        run_dir.mkdir()
-        for name, _ in BUNDLE_ORDER:
-            (run_dir / name).write_text("x")
-        os.environ["REVIEW_MODELS"] = "{}"
-        os.environ["REVIEW_AGENT_MODELS"] = "{}"
-
-        preprint = Preprint(
-            url="https://arxiv.org/abs/1706.03762", source="arxiv",
-            pdf_url="p", identifier="1706.03762",
-            title="Title with <script>alert(1)</script>",
-            authors=["A <img src=x onerror=alert(1)>", "B | Pipe"],
-            abstract="Abstract <script>fetch('https://evil.example')</script> end.",
-            doi="10.0/<b>x</b>",
-        )
-        dest = Path(tmp) / "v1"
-        write_bundle(
-            preprint,
-            {"decision": "minor", "manuscript_title": preprint.title,
-             "total_cost": 1.0, "errors": [], "reports": []},
-            run_dir, dest, "1", "octocat",
-        )
-        page = (dest / "index.md").read_text()
-
-        # Layer 2: the rendered body. Frontmatter and fenced code are excluded
-        # because neither becomes HTML — the body is what markdown renders.
-        body = page.split("---", 2)[2]
-        outside_fences = "".join(body.split("```")[::2])
-        for payload in ("<script>", "<img src=x", "<b>"):
-            assert payload not in outside_fences, \
-                f"unescaped {payload!r} would render as HTML"
-        assert "&lt;script&gt;" in outside_fences, "escaping should preserve the text"
-
-        # A pipe in an author name must not break the metadata table: it has
-        # to be backslash-escaped, leaving only the three structural pipes.
-        author_row = [ln for ln in page.splitlines() if ln.startswith("| Authors")][0]
-        structural = len(re.findall(r"(?<!\\)\|", author_row))
-        assert structural == 3, f"pipe broke the table ({structural}): {author_row}"
-        assert r"\|" in author_row, "the author's pipe was not escaped"
-
-        meta = read_frontmatter(dest / "index.md")
-        assert meta is not None, "frontmatter must still parse"
+    src = REPO / "src"
+    offenders = []
+    for path in sorted(src.rglob("*.astro")):
+        text = path.read_text(encoding="utf-8")
+        for lineno, line in enumerate(text.splitlines(), 1):
+            if "set:html" in line:
+                offenders.append(f"{path.relative_to(REPO)}:{lineno}")
+    assert not offenders, (
+        "set:html bypasses Astro's escaping, and author-supplied metadata "
+        "reaches these components: " + ", ".join(offenders)
+    )
 
 
 def check_metadata_is_sanitised_at_ingestion() -> None:
     """Layer 1, and the one that actually closes the hole.
 
-    MkDocs Material writes the frontmatter title into <title> and the header
-    bar without escaping it, so escaping only at our own render sites leaves
-    the title exploitable. Metadata is therefore stripped of tags where it
-    enters — one place, rather than every place it is later printed.
+    The title reaches many places — <title>, og:description, a card, a
+    heading — and an escape that has to be remembered at each of them is one
+    that will be forgotten at the eleventh. Metadata is therefore stripped of
+    tags where it enters, which is one place.
     """
     from fetch_preprint import _clean
 
@@ -636,7 +582,7 @@ def check_solicitation_is_labelled() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         run_dir = Path(tmp) / "run"
         run_dir.mkdir()
-        for name, _ in BUNDLE_ORDER:
+        for name in BUNDLE_FILES:
             (run_dir / name).write_text("x")
         os.environ["REVIEW_MODELS"] = "{}"
         os.environ["REVIEW_AGENT_MODELS"] = "{}"
@@ -647,25 +593,18 @@ def check_solicitation_is_labelled() -> None:
         state = {"decision": "major", "manuscript_title": "A paper",
                  "total_cost": 1.0, "errors": [], "reports": []}
 
-        pages = {}
+        # All three answers must be distinguishable in the record, including
+        # the empty one. The site renders a different notice for each, and
+        # collapsing "not an author" into "unrecorded" would let an
+        # unsolicited review pass for a requested one.
         for claim in ("yes", "no", ""):
             dest = Path(tmp) / f"v-{claim or 'unset'}"
             write_bundle(preprint, state, run_dir, dest, "1", "someone",
                          submitter_is_author=claim)
-            pages[claim] = (dest / "index.md").read_text()
-            prov = json.loads((dest / "provenance.json").read_text())
-            assert prov["submitter_is_author"] == claim, "claim not recorded"
-
-        assert "did not request this review" in pages["no"], \
-            "an unsolicited review must say so"
-        assert "states they are **not** an author" in pages["no"]
-        assert "did not request" not in pages["yes"], \
-            "an author-requested review must not carry the warning"
-        assert "Requested by an author" in pages["yes"]
-        assert "Solicitation unrecorded" in pages[""], \
-            "an unknown claim must be stated as unknown, not assumed"
-        # The claim is unverifiable and the page has to admit it.
-        assert "do not verify" in pages["yes"] or "states" in pages["yes"]
+            prov = provenance_of(dest)
+            assert prov["submitter_is_author"] == claim, \
+                f"claim {claim!r} not recorded, got {prov['submitter_is_author']!r}"
+            assert prov["submitter"] == "someone", "submitter not recorded"
 
 
 def check_staleness_scan_finds_bundles() -> None:
@@ -889,7 +828,7 @@ def main() -> int:
         print(f"ok  {title}")
 
     check_desk_reject()
-    print("ok  desk reject (no panel, deduped bodies)")
+    print("ok  desk reject records no panel and keeps every body")
     check_versioning()
     print("ok  re-review adds v2 without touching v1")
     check_slug_uniqueness()
@@ -905,11 +844,11 @@ def main() -> int:
     check_correction()
     print("ok  a correction is not a revision")
     check_solicitation_is_labelled()
-    print("ok  unsolicited reviews say so on the page")
+    print("ok  the solicitation claim is recorded, all three ways")
     check_metadata_is_sanitised_at_ingestion()
     print("ok  metadata is stripped of tags where it enters")
-    check_metadata_is_escaped()
-    print("ok  and escaped again where it renders")
+    check_site_never_injects_raw_html()
+    print("ok  the site never opts out of escaping")
     check_url_is_canonical()
     print("ok  stored URLs are rebuilt, not echoed")
     check_download_is_bounded()
@@ -927,7 +866,7 @@ def main() -> int:
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"
-    print(f"\n{len(NASTY_TITLES)} fixture(s) rendered cleanly")
+    print(f"\n{len(NASTY_TITLES)} fixture bundle(s) written cleanly")
     return 0
 
 

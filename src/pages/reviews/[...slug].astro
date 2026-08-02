@@ -1,0 +1,700 @@
+---
+/**
+ * Every page under /reviews/, at all three depths:
+ *
+ *   <year>/<slug>/                 the paper — its whole review history
+ *   <year>/<slug>/v<N>/            one review of one revision
+ *   <year>/<slug>/v<N>/<document>/ one document from that review
+ *
+ * They are one route because they are one tree, and splitting them would mean
+ * three copies of the logic that finds a bundle and its metadata.
+ */
+import { getCollection, render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import PanelReadout from "../../components/PanelReadout.astro";
+import Notices from "../../components/Notices.astro";
+import Provenance from "../../components/Provenance.astro";
+import Citation from "../../components/Citation.astro";
+import { corpus, VERDICT, titleFromFilename } from "../../lib/corpus.js";
+
+export async function getStaticPaths() {
+  const reports = await getCollection("reports");
+  const byId = new Map(reports.map((entry) => [entry.id, entry]));
+  const paths = [];
+
+  for (const paper of corpus()) {
+    paths.push({
+      params: { slug: `${paper.year}/${paper.slug}` },
+      props: { kind: "paper", paper },
+    });
+
+    for (const bundle of paper.bundles) {
+      paths.push({
+        params: { slug: `${paper.year}/${paper.slug}/${bundle.version}` },
+        props: { kind: "review", paper, bundle },
+      });
+
+      const documents = [
+        ...bundle.documents.primary,
+        ...bundle.documents.reviewers,
+        ...bundle.documents.audits,
+      ];
+      for (const doc of documents) {
+        const id = `${paper.year}/${paper.slug}/${bundle.version}/${doc.slug}`;
+        const entry = byId.get(id);
+        if (!entry) continue;
+        paths.push({
+          params: { slug: id },
+          props: { kind: "document", paper, bundle, doc, entry, documents },
+        });
+      }
+    }
+  }
+
+  return paths;
+}
+
+const { kind, paper, bundle, doc, entry, documents } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const paperHref = `${base}/reviews/${paper.year}/${paper.slug}/`;
+const siteRoot = "https://pgarrett-scripps.github.io/insilico";
+
+const verdictOf = (b) =>
+  b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision;
+const verdictClass = (b) => (b.deskRejected ? "desk" : b.decision);
+
+const bibKey = (extra) =>
+  `insilico-${paper.slug.replace(/[^A-Za-z0-9-]+/g, "-").toLowerCase()}${extra ? `-${extra}` : ""}`;
+
+// --- page metadata ---------------------------------------------------------
+let pageTitle = paper.title;
+let pageDescription = "";
+if (kind === "paper") {
+  pageDescription = `${verdictOf(paper.latest)}${
+    paper.latest.meanScore !== null ? ` · mean panel score ${paper.latest.meanScore}/5` : ""
+  }. ${paper.reviewCount > 1 ? `${paper.reviewCount} reviews on record. ` : ""}AI referee panel — advisory, not a certification.`;
+} else if (kind === "review") {
+  pageTitle = `${paper.title} — ${bundle.version}`;
+  pageDescription = `${verdictOf(bundle)}${
+    bundle.meanScore !== null ? ` · mean panel score ${bundle.meanScore}/5` : ""
+  }. AI referee panel — advisory, not a certification.`;
+} else {
+  pageTitle = `${doc.label} — ${paper.title}`;
+  pageDescription = `${doc.label} from the In Silico referee panel's review of "${paper.title}".`;
+}
+
+const { Content } = kind === "document" ? await render(entry) : { Content: null };
+
+// Ordered list for prev/next within a bundle.
+const flat = kind === "document" ? documents : [];
+const at = kind === "document" ? flat.findIndex((d) => d.slug === doc.slug) : -1;
+const prev = at > 0 ? flat[at - 1] : null;
+const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
+---
+
+<Base title={pageTitle} description={pageDescription} ogType="article">
+  {/* ------------------------------------------------------------------ */}
+  {
+    kind === "paper" && (
+      <article class="shell shell--column stack">
+        <header class="head">
+          <p class="label head__eyebrow">
+            Review record · {paper.reviewCount} on file
+          </p>
+          <h1 class="head__title">{paper.title}</h1>
+          {paper.authors.length > 0 && (
+            <p class="head__authors">{paper.authors.join(", ")}</p>
+          )}
+          <div class="head__chips">
+            <span class={`verdict verdict--${verdictClass(paper.latest)}`}>
+              {verdictOf(paper.latest)}
+            </span>
+            <span class="label">most recent · {paper.latest.reviewedAt}</span>
+          </div>
+          <dl class="meta">
+            {paper.latest.preprint.url && (
+              <div class="meta__row">
+                <dt class="label">Preprint</dt>
+                <dd><a href={paper.latest.preprint.url}>{paper.latest.preprint.url}</a></dd>
+              </div>
+            )}
+            {paper.latest.preprint.doi && (
+              <div class="meta__row">
+                <dt class="label">DOI</dt>
+                <dd class="mono">{paper.latest.preprint.doi}</dd>
+              </div>
+            )}
+            <div class="meta__row">
+              <dt class="label">Source</dt>
+              <dd class="mono">{paper.latest.preprint.source}</dd>
+            </div>
+          </dl>
+        </header>
+
+        <section class="history panel">
+          <div class="panel__head">
+            <h2 class="section__title">Review history</h2>
+            <p class="label">newest first</p>
+          </div>
+          <div class="table-scroll">
+            <table class="history__table">
+              <thead>
+                <tr>
+                  <th>Review</th>
+                  <th>Round</th>
+                  <th>Manuscript</th>
+                  <th>Recommendation</th>
+                  <th>Score</th>
+                  <th>Reviewed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paper.bundles.map((b) => {
+                  const corrected = (b.revision || {}).kind === "correction";
+                  const unverified =
+                    b.round > 1 && !((b.revision || {}).baseline || {}).restored;
+                  return (
+                    <tr>
+                      <td>
+                        <a href={`${paperHref}${b.version}/`} class="mono">
+                          {b.version}
+                        </a>
+                      </td>
+                      <td class="mono">
+                        {b.round}
+                        {corrected && <span class="dim"> (corrected)</span>}
+                        {unverified && (
+                          <span class="history__flag" title="ran without a verified draft comparison">
+                            {" "}⚠
+                          </span>
+                        )}
+                      </td>
+                      <td class="mono">
+                        {b.preprint.version ? `v${b.preprint.version}` : "—"}
+                      </td>
+                      <td>
+                        <span class={`verdict verdict--${verdictClass(b)}`}>
+                          {verdictOf(b)}
+                        </span>
+                      </td>
+                      <td class="mono">
+                        {b.meanScore !== null ? b.meanScore.toFixed(1) : "—"}
+                      </td>
+                      <td class="mono dim">{b.reviewedAt}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p class="history__note">
+            Each review describes the revision of the manuscript named in its row.
+            Earlier reviews are never edited or removed when a new one is added —
+            they remain the record of what the panel said about that revision.
+          </p>
+        </section>
+
+        <Citation
+          title={paper.title}
+          url={`${siteRoot}/reviews/${paper.year}/${paper.slug}/`}
+          year={paper.latest.reviewedAt.slice(0, 4)}
+          key={bibKey()}
+          reviewedDoi={paper.latest.preprint.doi || ""}
+          reviewedVersion={String(paper.latest.preprint.version || "")}
+          noteExtra={
+            paper.reviewCount > 1
+              ? `${paper.reviewCount} reviews on record; this URL shows ${paper.latest.version}`
+              : ""
+          }
+          evergreen={true}
+        />
+      </article>
+    )
+  }
+
+  {/* ------------------------------------------------------------------ */}
+  {
+    kind === "review" && (
+      <article class="shell shell--column stack">
+        <nav class="crumb label" aria-label="Breadcrumb">
+          <a href={`${base}/reviews/`}>Reviews</a>
+          <span aria-hidden="true">/</span>
+          <a href={paperHref}>This paper</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{bundle.version}</span>
+        </nav>
+
+        <header class="head">
+          <p class="label head__eyebrow">
+            Review {bundle.version} · round {bundle.round}
+            {bundle.preprint.version && ` · manuscript v${bundle.preprint.version}`}
+          </p>
+          <h1 class="head__title">{paper.title}</h1>
+          {paper.authors.length > 0 && (
+            <p class="head__authors">{paper.authors.join(", ")}</p>
+          )}
+          <div class="head__chips">
+            <span class={`verdict verdict--${verdictClass(bundle)}`}>
+              {verdictOf(bundle)}
+            </span>
+            <span class="label">
+              {bundle.deskRejected
+                ? "no referee panel convened"
+                : "advisory — a human editor decides"}
+            </span>
+          </div>
+          <dl class="meta">
+            {bundle.preprint.url && (
+              <div class="meta__row">
+                <dt class="label">Preprint</dt>
+                <dd><a href={bundle.preprint.url}>{bundle.preprint.url}</a></dd>
+              </div>
+            )}
+            {bundle.preprint.doi && (
+              <div class="meta__row">
+                <dt class="label">DOI</dt>
+                <dd class="mono">{bundle.preprint.doi}</dd>
+              </div>
+            )}
+            <div class="meta__row">
+              <dt class="label">Reviewed</dt>
+              <dd class="mono">{bundle.reviewedAt}</dd>
+            </div>
+          </dl>
+        </header>
+
+        <Notices provenance={bundle.provenance} docHref={`${paperHref}${bundle.version}/`} />
+
+        <PanelReadout
+          panel={bundle.panel}
+          meanScore={bundle.meanScore}
+          decision={bundle.decision}
+          deskRejected={bundle.deskRejected}
+        />
+
+        {bundle.preprint.abstract && (
+          <section class="abstract panel">
+            <div class="panel__head">
+              <h2 class="section__title">Abstract</h2>
+              <p class="label">as posted by the authors</p>
+            </div>
+            <div class="panel__body">
+              <p class="abstract__text">{bundle.preprint.abstract}</p>
+            </div>
+          </section>
+        )}
+
+        <section class="docs">
+          <h2 class="section__title docs__heading">The review</h2>
+          <ul class="docs__list">
+            {bundle.documents.primary.map((d) => (
+              <li>
+                <a class="doc" href={`${paperHref}${bundle.version}/${d.slug}/`}>
+                  <span class="doc__label">{d.label}</span>
+                  {d.blurb && <span class="doc__blurb">{d.blurb}</span>}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          {bundle.documents.reviewers.length > 0 && (
+            <>
+              <h3 class="section__sub">Specialist reports</h3>
+              <ul class="docs__grid">
+                {bundle.documents.reviewers.map((d) => {
+                  const scored = bundle.panel.find(
+                    (p) => String(p.reviewer).replace(/_/g, " ").toLowerCase() ===
+                      d.label.toLowerCase(),
+                  );
+                  return (
+                    <li>
+                      <a class="chip" href={`${paperHref}${bundle.version}/${d.slug}/`}>
+                        <span class="chip__label">{d.label}</span>
+                        {scored && typeof scored.score === "number" && (
+                          <span class="chip__score mono">{scored.score.toFixed(1)}</span>
+                        )}
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
+
+          {bundle.documents.audits.length > 0 && (
+            <>
+              <h3 class="section__sub">Editorial audits</h3>
+              <p class="docs__note">
+                Factual checklists rather than opinions — these bypass the debate
+                and go straight to the editor.
+              </p>
+              <ul class="docs__grid">
+                {bundle.documents.audits.map((d) => (
+                  <li>
+                    <a class="chip" href={`${paperHref}${bundle.version}/${d.slug}/`}>
+                      <span class="chip__label">{d.label}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </section>
+
+        <Provenance provenance={bundle.provenance} />
+
+        <Citation
+          title={paper.title}
+          url={`${siteRoot}/reviews/${paper.year}/${paper.slug}/${bundle.version}/`}
+          year={bundle.reviewedAt.slice(0, 4)}
+          key={bibKey(bundle.version)}
+          reviewedDoi={bundle.preprint.doi || ""}
+          reviewedVersion={String(bundle.preprint.version || "")}
+          noteExtra={`Produced by PeerReviewAgents ${(bundle.provenance.pipeline || {}).version || "unknown"}`}
+        />
+      </article>
+    )
+  }
+
+  {/* ------------------------------------------------------------------ */}
+  {
+    kind === "document" && (
+      <article class="shell shell--column stack">
+        <nav class="crumb label" aria-label="Breadcrumb">
+          <a href={`${base}/reviews/`}>Reviews</a>
+          <span aria-hidden="true">/</span>
+          <a href={paperHref}>This paper</a>
+          <span aria-hidden="true">/</span>
+          <a href={`${paperHref}${bundle.version}/`}>{bundle.version}</a>
+          <span aria-hidden="true">/</span>
+          <span aria-current="page">{doc.label}</span>
+        </nav>
+
+        <header class="head head--doc">
+          <p class="label head__eyebrow">{paper.title}</p>
+          <h1 class="head__title head__title--doc">{doc.label}</h1>
+          <div class="head__chips">
+            <span class={`verdict verdict--${verdictClass(bundle)}`}>
+              {verdictOf(bundle)}
+            </span>
+            <span class="label">
+              panel verdict · {bundle.reviewedAt}
+            </span>
+          </div>
+        </header>
+
+        <div class="prose doc__prose">
+          <Content />
+        </div>
+
+        <nav class="pager" aria-label="Within this review">
+          {prev ? (
+            <a class="pager__link" href={`${paperHref}${bundle.version}/${prev.slug}/`}>
+              <span class="label">Previous</span>
+              <span class="pager__title">{prev.label}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <a class="pager__link pager__link--next" href={`${paperHref}${bundle.version}/${next.slug}/`}>
+              <span class="label">Next</span>
+              <span class="pager__title">{next.label}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+
+        <p class="doc__back">
+          <a href={`${paperHref}${bundle.version}/`}>← All documents in this review</a>
+        </p>
+      </article>
+    )
+  }
+</Base>
+
+<style>
+  .stack {
+    gap: 1.6rem;
+  }
+
+  .crumb {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .crumb a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .crumb a:hover {
+    color: var(--accent);
+  }
+
+  .crumb [aria-current] {
+    color: var(--ink-dim);
+  }
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding-bottom: 0.4rem;
+  }
+
+  .head__eyebrow {
+    color: var(--accent);
+  }
+
+  .head__title {
+    font-size: clamp(1.9rem, 4.6vw, 3rem);
+    line-height: 1.05;
+  }
+
+  .head__title--doc {
+    font-size: clamp(1.7rem, 4vw, 2.5rem);
+  }
+
+  .head__authors {
+    font-size: var(--t--1);
+    color: var(--ink-dim);
+    max-width: 62ch;
+  }
+
+  .head__chips {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin-top: 0.2rem;
+  }
+
+  .meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.6rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .meta__row {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 0.8rem;
+    align-items: baseline;
+  }
+
+  .meta__row dd {
+    margin: 0;
+    font-size: var(--t--1);
+    color: var(--ink-dim);
+    word-break: break-word;
+  }
+
+  .section__title {
+    font-size: var(--t-1);
+  }
+
+  .section__sub {
+    font-family: var(--font-mono);
+    font-size: var(--t--2);
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 1.6rem;
+  }
+
+  .history__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--t--1);
+  }
+
+  .history__table :is(th, td) {
+    text-align: left;
+    padding: 0.55rem 1.15rem;
+    border-top: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+
+  .history__table th {
+    font-family: var(--font-mono);
+    font-size: var(--t--2);
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .history__flag {
+    color: var(--v-major);
+  }
+
+  .history__note {
+    padding: 0.85rem 1.15rem;
+    border-top: 1px solid var(--rule);
+    font-size: var(--t--1);
+    color: var(--muted);
+    max-width: 68ch;
+  }
+
+  .abstract__text {
+    font-size: var(--t--1);
+    line-height: 1.7;
+    color: var(--ink-dim);
+    max-width: var(--measure);
+  }
+
+  .docs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .docs__heading {
+    margin-bottom: 0.2rem;
+  }
+
+  .docs__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .doc {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.7rem 0.95rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    background: var(--surface);
+    text-decoration: none;
+    transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+  }
+
+  .doc:hover {
+    border-color: var(--accent-dim);
+    background: var(--surface-2);
+    transform: translateX(2px);
+  }
+
+  .doc__label {
+    font-family: var(--font-body);
+    font-size: var(--t-0);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .doc__blurb {
+    font-size: var(--t--1);
+    color: var(--muted);
+  }
+
+  .docs__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .docs__note {
+    font-size: var(--t--1);
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.38rem 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    background: var(--surface);
+    text-decoration: none;
+    transition: border-color 140ms ease, background 140ms ease;
+  }
+
+  .chip:hover {
+    border-color: var(--accent-dim);
+    background: var(--surface-2);
+  }
+
+  .chip__label {
+    font-size: var(--t--1);
+    color: var(--ink-dim);
+  }
+
+  .chip__score {
+    font-size: var(--t--2);
+    color: var(--muted);
+    padding-left: 0.55rem;
+    border-left: 1px solid var(--rule);
+  }
+
+  .doc__prose {
+    padding-top: 0.4rem;
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+    margin-top: 1.4rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .pager__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    text-decoration: none;
+    transition: border-color 140ms ease;
+  }
+
+  .pager__link:hover {
+    border-color: var(--accent-dim);
+  }
+
+  .pager__link--next {
+    text-align: right;
+  }
+
+  .pager__title {
+    font-size: var(--t--1);
+    color: var(--ink);
+  }
+
+  .doc__back {
+    font-size: var(--t--1);
+  }
+
+  @media (max-width: 40rem) {
+    .meta__row {
+      grid-template-columns: 1fr;
+      gap: 0.1rem;
+    }
+    .pager {
+      grid-template-columns: 1fr;
+    }
+    .pager__link--next {
+      text-align: left;
+    }
+  }
+</style>

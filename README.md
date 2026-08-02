@@ -81,50 +81,56 @@ revision, carries no metadata, and can go dead — so direct PDF URLs are reject
 
 ## Repository layout
 
+There is one seam in this repo, and it is worth understanding: **Python writes
+the record, Astro renders it.** The pipeline emits documents and one JSON file
+per review; the site reads `docs/reviews/` in place and builds every page from
+it. Nothing is copied, and changing how a review *looks* never means editing the
+program that produces reviews.
+
 ```
-docs/
-├── index.md              # journal front page
+docs/                     # the record — written by the pipeline, read by the site
 ├── policy.md             # editorial policy + limitations
 ├── criteria.md           # what the panel looks for
 ├── submit.md             # author guide
-└── reviews/
-    ├── index.md          # generated index of published reviews
-    ├── index.json        # the same corpus, machine-readable
-    └── <year>/<slug>/
-        ├── index.md      # the paper page: every review it has received
-        └── v<N>/         # one immutable review of one revision
-            ├── index.md          # verdict + metadata + links (YAML frontmatter)
-            ├── provenance.json   # models, config, pipeline SHA, per-agent cost
-            ├── round.json        # machine-readable record a later round rules on
-            ├── summary.md
-            ├── decision_letter.md
-            ├── desk_screen.md         # only when the desk found something
-            ├── integrity.md           #   ditto — the injection scan
-            ├── author_response.md     # revisions/appeals: the letter, verbatim
-            ├── meta_review.md
-            ├── author_rebuttal.md
-            ├── debate_transcript.md
-            ├── journal_recommendations.md
-            ├── review_*.md   # 8 specialist reports
-            └── audit_*.md    # 2 editorial audits
+└── reviews/<year>/<slug>/v<N>/     # one immutable review of one revision
+    ├── provenance.json   # verdict, panel scores, models, cost, PDF fingerprint
+    ├── round.json        # machine-readable record a later round rules on
+    ├── summary.md
+    ├── decision_letter.md
+    ├── desk_screen.md         # only when the desk found something
+    ├── integrity.md           #   ditto — the injection scan
+    ├── author_response.md     # revisions/appeals: the letter, verbatim
+    ├── meta_review.md
+    ├── author_rebuttal.md
+    ├── debate_transcript.md
+    ├── journal_recommendations.md
+    ├── review_*.md       # 8 specialist reports
+    └── audit_*.md        # 2 editorial audits
+
+src/                      # the site — Astro, no CMS, no content duplication
+├── lib/corpus.js         # walks docs/reviews/ into the shape pages render from
+├── layouts/Base.astro    # shell, theme toggle, header, footer
+├── components/           # PanelReadout, Notices, Provenance, Citation
+├── pages/                # home, the ledger, and one route for every review page
+└── styles/global.css     # the whole visual system, as tokens
 
 scripts/
 ├── fetch_preprint.py     # URL → PDF + metadata (arXiv / bioRxiv / medRxiv)
-├── run_review.py         # fetch → review → publish bundle
-├── build_index.py        # regenerate docs/reviews/index.{md,json}
+├── run_review.py         # fetch → review → write bundle
 ├── check_updates.py      # find reviews whose preprint has since changed
-└── smoke_test.py         # render fixtures; no network, no API key
+└── smoke_test.py         # the pipeline↔site data contract; no network, no key
 
 .github/workflows/
 ├── review.yml            # /review, /revise, /appeal → opens a review PR
-├── ci.yml                # PR check: fixtures render, index fresh, site builds
+├── ci.yml                # PR check: data contract holds, site builds, no bundle unrendered
 ├── publish.yml           # build + deploy the site on merge
 └── check-updates.yml     # monthly staleness sweep → files a tracking issue
 ```
 
-A re-review is published **beside** the review it supersedes, never on top of it:
-`v1` stays exactly as it was, and the paper page lists both. Earlier reviews are
-the record of what the panel said about that revision.
+Pages are generated from `provenance.json`, so a review bundle is the single
+source of truth and there is no index to keep in step. A re-review is published
+**beside** the review it supersedes, never on top of it: `v1` stays exactly as it
+was, and the paper page lists both.
 
 ## Configuration
 
@@ -140,21 +146,37 @@ The panel is held to In Silico's own review profile in
 the reviews it produced, so anyone reading a review can check out the commit it
 names and see what the panel was told to weigh.
 
+## Working on the site
+
+```bash
+npm install
+npm run dev      # http://localhost:4321/insilico/
+```
+
+The dev server reads `docs/reviews/` directly, so the whole published corpus is
+there to design against — no fixtures, no seeding. `npm run build` writes to
+`dist/`.
+
+Everything visual lives in `src/styles/global.css` as tokens: one set of names,
+redefined for light and dark. Change a token and it moves everywhere it is used.
+
 ## Running a review locally
 
-`requirements.txt` covers the site build and the scripts, but deliberately does
-**not** pin the referee panel — the workflow pins that per-run to an exact SHA so
-each review records which code produced it. Install it separately:
+`requirements.txt` covers the scripts, but deliberately does **not** pin the
+referee panel — the workflow pins that per-run to an exact SHA so each review
+records which code produced it. Install it separately:
 
 ```bash
 uv venv && source .venv/bin/activate
 uv pip install -r requirements.txt
-uv pip install "peerreviewagents @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
+uv pip install "peerreviewagents[research] @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
 
 export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
-python scripts/build_index.py
 ```
+
+The bundle appears under `docs/reviews/`, and the site picks it up on the next
+build. There is no index to regenerate.
 
 `--dry-run` resolves the URL and downloads the PDF without calling a model, so
 you can check a link is reviewable before spending anything. It does not check
@@ -168,8 +190,9 @@ For iterating on prompts, override the provider per run rather than editing
 python scripts/run_review.py --url ... --provider openrouter --model <cheap-model>
 ```
 
-`python scripts/smoke_test.py` renders the whole bundle from fixtures. It is
-hermetic — no network, no API key — and is what CI runs on every PR.
+`python scripts/smoke_test.py` checks the data contract between the pipeline and
+the site. It is hermetic — no network, no API key — and CI runs it alongside a
+site build that fails if any published bundle goes unrendered.
 
 ## Setup checklist
 
@@ -182,7 +205,8 @@ Before the first real submission:
       identically to a typo.
 - [ ] Settings → Pages → Source: **GitHub Actions**
 - [ ] Settings → Actions → Workflow permissions: **Read and write** + allow PR creation
-- [ ] Edit `mkdocs.yml` `site_url` / `repo_url` to point at the real repo
+- [ ] Edit `site` / `base` in [`astro.config.mjs`](astro.config.mjs) to match where
+      the site is actually served from
 - [ ] Review the model split in [`peerreview.toml`](peerreview.toml) (cost note below)
 
 ## Cost

@@ -1,0 +1,173 @@
+---
+/**
+ * The things a reader has to be told before they read the review.
+ *
+ * Each of these exists because two situations that look identical on the page
+ * are not the same evidence, and only saying so distinguishes them: a desk
+ * rejection versus a considered one, a revision round that compared the drafts
+ * versus one that couldn't, a review the authors asked for versus one attached
+ * to their paper by a stranger.
+ */
+const { provenance, docHref = "" } = Astro.props;
+
+const VERDICT = {
+  accept: "Accept",
+  minor: "Minor revision",
+  major: "Major revision",
+  reject: "Reject",
+};
+
+const revision = provenance.revision || {};
+const round = Number(provenance.round || 1);
+const baseline = revision.baseline || {};
+const claim = provenance.submitter_is_author || "";
+
+const notices = [];
+
+if (provenance.desk_rejected) {
+  notices.push({
+    tone: "danger",
+    title: "Rejected at the desk — no referee panel was convened",
+    body: [
+      "This submission was stopped before review. There are no specialist reports, no debate and no area-chair synthesis below, because none were produced.",
+      "A desk rejection on submission integrity means the file was found to conceal instructions aimed at an automated reviewer. That scan is deterministic and runs before any model reads the manuscript, so no reviewer was exposed to the concealed text.",
+    ],
+  });
+}
+
+if (revision.kind === "correction") {
+  const who = Array.isArray(revision.only_reviewers) ? revision.only_reviewers : [];
+  const scope = who.length
+    ? `Only ${who.join(", ")} re-ran; every other referee's assessment is carried forward unchanged, so the panel score still reflects all of them.`
+    : "The whole panel re-ran.";
+  const body = [
+    "The authors challenged the review itself. The manuscript is unchanged — this is not a revision round and does not advance the round number.",
+    scope,
+  ];
+  if (revision.prior_decision) {
+    body.push(
+      `The review being corrected recommended ${VERDICT[revision.prior_decision] || revision.prior_decision}.`,
+    );
+  }
+  body.push(
+    revision.response_published
+      ? "The authors' response was checked against the manuscript before the panel saw it. Referees received corroborated pointers to passages to re-read, never the response as prose, so it could direct attention but not move a score by assertion."
+      : "No author response accompanied this appeal, so there was nothing to check against the manuscript. The referees named above simply re-read the paper; nothing here answers a specific objection.",
+  );
+  notices.push({
+    tone: "info",
+    title: "Correction to the review, not a new manuscript",
+    body,
+    link: revision.response_published && docHref
+      ? { href: `${docHref}author_response/`, label: "Read the response as submitted" }
+      : null,
+  });
+} else if (round > 1) {
+  const body = [
+    "The authors revised the manuscript after a previous review, and this round rules on what changed: each referee revisits the points it raised, and an auditor checks the previous decision letter's required revisions against the new draft.",
+  ];
+  if (revision.prior_decision) {
+    body.push(
+      `The previous round recommended ${VERDICT[revision.prior_decision] || revision.prior_decision}.`,
+    );
+  }
+  notices.push({ tone: "info", title: `Revision round ${round}`, body });
+
+  if (!baseline.restored) {
+    notices.push({
+      tone: "warning",
+      title: "No draft comparison in this round",
+      body: [
+        "The previously reviewed PDF could not be recovered, so this round has no section-by-section comparison of the old and new drafts. The referees still hold their earlier points and rule on them, but nothing here rests on a verified diff of what actually changed.",
+        `Reason: ${baseline.reason || "unknown"}.`,
+      ],
+    });
+  }
+}
+
+if (claim === "no") {
+  notices.push({
+    tone: "warning",
+    title: "The authors did not request this review",
+    body: [
+      "It was submitted by someone who states they are not an author. The authors were not consulted, have not seen it, and have not replied to it. Weigh it accordingly.",
+      "Authors: if this misreads your paper, open an issue and we will correct or withdraw it.",
+    ],
+  });
+} else if (claim === "yes") {
+  notices.push({
+    tone: "note",
+    title: "Requested by an author",
+    body: ["Submitted by someone who states they are an author of this paper. We do not verify that claim."],
+  });
+} else {
+  notices.push({
+    tone: "note",
+    title: "Solicitation unrecorded",
+    body: [
+      "This review predates our recording of whether the submitter was an author, so we cannot say whether the authors asked for it.",
+    ],
+  });
+}
+---
+
+{
+  notices.length > 0 && (
+    <div class="notices">
+      {notices.map((n) => (
+        <aside class={`notice notice--${n.tone}`}>
+          <p class="notice__title">{n.title}</p>
+          {n.body.map((para) => (
+            <p class="notice__body">{para}</p>
+          ))}
+          {n.link && (
+            <p class="notice__body">
+              <a href={n.link.href}>{n.link.label}</a>
+            </p>
+          )}
+        </aside>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .notices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .notice {
+    --tone: var(--muted);
+    border: 1px solid color-mix(in srgb, var(--tone) 32%, var(--rule));
+    border-left: 3px solid var(--tone);
+    border-radius: var(--r-md);
+    background: color-mix(in srgb, var(--tone) 6%, var(--surface));
+    padding: 0.85rem 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .notice--danger { --tone: var(--v-reject); }
+  .notice--warning { --tone: var(--v-major); }
+  .notice--info { --tone: var(--accent); }
+  .notice--note { --tone: var(--muted); }
+
+  .notice__title {
+    font-family: var(--font-mono);
+    font-size: var(--t--2);
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--tone);
+  }
+
+  .notice__body {
+    font-size: var(--t--1);
+    line-height: 1.6;
+    color: var(--ink-dim);
+    max-width: 68ch;
+  }
+</style>
