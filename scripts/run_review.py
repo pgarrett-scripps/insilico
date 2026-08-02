@@ -161,22 +161,35 @@ def find_prior_bundle(preprint: Preprint, title: str) -> Path | None:
     Only bundles with a round record count. A review published before round
     records existed cannot be the basis of a revision round, and silently
     treating it as round 1 would produce a round 2 that had nothing to rule on.
+
+    Matched on the preprint's identifier, never on the directory name. The
+    slug embeds the title, and authors retitle between versions routinely — so
+    a slug lookup would miss its own round 1 for exactly the papers most
+    likely to be revised, report "no revisable round", and quietly restart at
+    round 1 with the referees' prior points lost.
     """
-    slug = paper_slug(preprint, title)
+    del title  # kept for call-site symmetry; the identifier is what matches
+    wanted = (preprint.identifier or preprint.doi or "").strip().lower()
+    if not wanted:
+        return None
+
     best: tuple[int, Path] | None = None
-    for paper_dir in sorted(REVIEWS.glob(f"*/{slug}")):
-        for bundle in paper_dir.glob("v*"):
-            if not (bundle / ROUND_RECORD).is_file():
-                continue
-            try:
-                record = json.loads(
-                    (bundle / ROUND_RECORD).read_text(encoding="utf-8")
-                )
-            except (OSError, json.JSONDecodeError):
-                continue
-            rnd = int(record.get("round", 1))
-            if best is None or rnd > best[0]:
-                best = (rnd, bundle)
+    for record_path in sorted(REVIEWS.glob(f"*/*/v*/{ROUND_RECORD}")):
+        bundle = record_path.parent
+        try:
+            prov = json.loads(
+                (bundle / "provenance.json").read_text(encoding="utf-8")
+            )
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        pre = prov.get("preprint") or {}
+        found = str(pre.get("identifier") or pre.get("doi") or "").strip().lower()
+        if found != wanted:
+            continue
+        rnd = int(record.get("round", 1))
+        if best is None or rnd > best[0]:
+            best = (rnd, bundle)
     return best[1] if best else None
 
 
@@ -194,6 +207,32 @@ def next_version(paper_dir: Path) -> int:
         if p.is_dir() and p.name[1:].isdigit()
     ]
     return max(existing, default=0) + 1
+
+
+def md_text(value: str) -> str:
+    """Neutralise author-supplied text before it enters a markdown page.
+
+    Titles, abstracts and author names arrive from the preprint server, which
+    means the *authors* wrote them — and markdown renders inline HTML, so a
+    manuscript posted with `<script>` in its abstract becomes stored XSS on
+    every reader's browser. That needs no model to be fooled and no editor to
+    be careless: it is simply published.
+
+    Escaping the three HTML-significant characters is enough, because the
+    output is markdown rather than HTML — `&lt;` renders as a literal `<`, so
+    a title that legitimately contains one still reads correctly.
+    """
+    return (
+        str(value)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def md_cell(value: str) -> str:
+    """As :func:`md_text`, for a table cell, where a pipe also breaks layout."""
+    return md_text(value).replace("|", "\\|")
 
 
 def yaml_scalar(value: str) -> str:
@@ -446,6 +485,51 @@ def restore_prior_draft(prior_bundle: Path, workdir: Path, config: dict) -> dict
     return status
 
 
+def _reject_internal_url(source: str) -> None:
+    """Refuse a URL that points inside the runner's own network.
+
+    Unlike the preprint path, which only ever builds URLs for three known
+    hosts, this fetches whatever an editor pasted. On a CI runner that reaches
+    the cloud metadata endpoint and anything else on the local network, so a
+    mistyped or malicious link turns the reviewer into a request forwarder.
+
+    Address-based rather than an allowlist: a response letter can legitimately
+    live on any number of hosts, and the property that actually matters is
+    that it is not somewhere only the runner can see. Every resolved address
+    is checked, since a name can return several.
+    """
+    import ipaddress
+    import socket
+
+    parsed = urllib.parse.urlparse(source)
+    if parsed.scheme != "https":
+        raise SystemExit(
+            f"author statement must be an https URL, got {parsed.scheme or 'none'}."
+        )
+    host = parsed.hostname or ""
+    if not host:
+        raise SystemExit(f"could not read a hostname from {source}")
+    try:
+        infos = socket.getaddrinfo(host, parsed.port or 443, proto=socket.IPPROTO_TCP)
+    except socket.gaierror as exc:
+        raise SystemExit(f"could not resolve {host}: {exc}") from exc
+    for info in infos:
+        addr = ipaddress.ip_address(info[4][0])
+        if (
+            addr.is_private
+            or addr.is_loopback
+            or addr.is_link_local
+            or addr.is_reserved
+            or addr.is_multicast
+            or addr.is_unspecified
+        ):
+            raise SystemExit(
+                f"{host} resolves to {addr}, which is inside the runner's own "
+                "network. Response letters have to be fetchable from the "
+                "public internet."
+            )
+
+
 def fetch_statement(source: str, workdir: Path) -> Path:
     """Materialise the authors' response letter as a local file.
 
@@ -460,7 +544,10 @@ def fetch_statement(source: str, workdir: Path) -> Path:
         if not path.is_file():
             raise SystemExit(f"author statement not found: {source}")
         return path
-    data = _get(source)
+    _reject_internal_url(source)
+    # A response letter is prose. The default cap is sized for PDFs of whole
+    # manuscripts, which this is not.
+    data = _get(source, max_bytes=8 * 1024 * 1024)
     # Extension decides the parser upstream, so keep the one the URL implies
     # and fall back to markdown, which the loader treats as plain text.
     suffix = Path(urllib.parse.urlparse(source).path).suffix.lower()
@@ -685,7 +772,7 @@ def write_paper_page(paper_dir: Path) -> None:
     body = [
         "\n".join(fm),
         "",
-        f"# {title}",
+        f"# {md_text(title)}",
         "",
         '<div class="ins-decision">',
         f"  {chip}",
@@ -697,11 +784,11 @@ def write_paper_page(paper_dir: Path) -> None:
     ]
 
     url = pre.get("url", "")
-    rows = [f"| Preprint | [{url}]({url}) |"] if url else []
+    rows = [f"| Preprint | [{md_cell(url)}]({url}) |"] if url else []
     if pre.get("doi"):
         rows.append(f"| DOI | `{pre['doi']}` |")
     if pre.get("authors"):
-        rows.append(f"| Authors | {', '.join(pre['authors'])} |")
+        rows.append(f"| Authors | {md_cell(', '.join(pre['authors']))} |")
     if rows:
         body += ["| | |", "|---|---|", "\n".join(rows), ""]
 
@@ -969,13 +1056,13 @@ def render_landing(
     fm.append("---")
 
     rows = [
-        f"| Preprint | [{preprint.url}]({preprint.url}) |",
+        f"| Preprint | [{md_cell(preprint.url)}]({preprint.url}) |",
         f"| Source | {preprint.source} |",
     ]
     if preprint.doi:
-        rows.append(f"| DOI | `{preprint.doi}` |")
+        rows.append(f"| DOI | `{md_cell(preprint.doi)}` |")
     if preprint.authors:
-        rows.append(f"| Authors | {', '.join(preprint.authors)} |")
+        rows.append(f"| Authors | {md_cell(', '.join(preprint.authors))} |")
     if preprint.published:
         rows.append(f"| Posted | {preprint.published} |")
     rows.append(f"| Reviewed | {provenance['generated_at'][:10]} |")
@@ -1008,7 +1095,7 @@ def render_landing(
     body = [
         "\n".join(fm),
         "",
-        f"# {title}",
+        f"# {md_text(title)}",
         "",
         '<div class="ins-decision">',
         f"  {chip}",
@@ -1041,7 +1128,7 @@ def render_landing(
     ]
 
     if preprint.abstract:
-        body += ["## Abstract", "", f"> {preprint.abstract}", ""]
+        body += ["## Abstract", "", f"> {md_text(preprint.abstract)}", ""]
 
     body += ["## The review", ""]
     for name, label in copied:
@@ -1409,6 +1496,13 @@ def main() -> int:
     year = (preprint.published or dt.date.today().isoformat())[:4]
     slug = paper_slug(preprint, title)
     paper_dir = REVIEWS / year / slug
+    if args.revision_of:
+        # Stay in the paper's existing directory. The slug embeds the title,
+        # so a revision that renamed the manuscript would otherwise open a
+        # second directory for the same paper and split its review history in
+        # two — with each half claiming to be the whole record.
+        paper_dir = Path(args.revision_of).resolve().parent
+        slug = paper_dir.name
     # Always a fresh vN. A re-review of a revised manuscript sits beside the
     # earlier one instead of overwriting it, which the policy promises and
     # the previous flat layout quietly broke.

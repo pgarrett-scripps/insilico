@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import sys
 import tempfile
 from pathlib import Path
@@ -401,6 +402,136 @@ def check_correction() -> None:
         assert "1 (corrected)" in history, "history must distinguish a correction"
 
 
+def check_metadata_is_escaped() -> None:
+    """Author-written metadata must not become HTML on the published page.
+
+    Title, abstract and author names come from the preprint server, so the
+    authors wrote them — and markdown renders inline HTML. Before this was
+    escaped, a preprint posted with `<script>` in its abstract was stored XSS
+    on every reader's browser, needing no model to be fooled and no editor to
+    be careless.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        for name, _ in BUNDLE_ORDER:
+            (run_dir / name).write_text("x")
+        os.environ["REVIEW_MODELS"] = "{}"
+        os.environ["REVIEW_AGENT_MODELS"] = "{}"
+
+        preprint = Preprint(
+            url="https://arxiv.org/abs/1706.03762", source="arxiv",
+            pdf_url="p", identifier="1706.03762",
+            title="Title with <script>alert(1)</script>",
+            authors=["A <img src=x onerror=alert(1)>", "B | Pipe"],
+            abstract="Abstract <script>fetch('https://evil.example')</script> end.",
+            doi="10.0/<b>x</b>",
+        )
+        dest = Path(tmp) / "v1"
+        write_bundle(
+            preprint,
+            {"decision": "minor", "manuscript_title": preprint.title,
+             "total_cost": 1.0, "errors": [], "reports": []},
+            run_dir, dest, "1", "octocat",
+        )
+        page = (dest / "index.md").read_text()
+
+        # Layer 2: the rendered body. Frontmatter and fenced code are excluded
+        # because neither becomes HTML — the body is what markdown renders.
+        body = page.split("---", 2)[2]
+        outside_fences = "".join(body.split("```")[::2])
+        for payload in ("<script>", "<img src=x", "<b>"):
+            assert payload not in outside_fences, \
+                f"unescaped {payload!r} would render as HTML"
+        assert "&lt;script&gt;" in outside_fences, "escaping should preserve the text"
+
+        # A pipe in an author name must not break the metadata table: it has
+        # to be backslash-escaped, leaving only the three structural pipes.
+        author_row = [ln for ln in page.splitlines() if ln.startswith("| Authors")][0]
+        structural = len(re.findall(r"(?<!\\)\|", author_row))
+        assert structural == 3, f"pipe broke the table ({structural}): {author_row}"
+        assert r"\|" in author_row, "the author's pipe was not escaped"
+
+        meta = read_frontmatter(dest / "index.md")
+        assert meta is not None, "frontmatter must still parse"
+
+
+def check_metadata_is_sanitised_at_ingestion() -> None:
+    """Layer 1, and the one that actually closes the hole.
+
+    MkDocs Material writes the frontmatter title into <title> and the header
+    bar without escaping it, so escaping only at our own render sites leaves
+    the title exploitable. Metadata is therefore stripped of tags where it
+    enters — one place, rather than every place it is later printed.
+    """
+    from fetch_preprint import _clean
+
+    assert _clean("Cool paper <script>alert(1)</script>") == "Cool paper alert(1)"
+    assert _clean("A <img src=x onerror=alert(1)>") == "A"
+    assert _clean("</title><script>x</script>") == "x"
+    # Legitimate text survives, including a lone comparison operator.
+    assert _clean("Growth  when  x < y") == "Growth when x < y"
+    assert _clean("Effects of TNF-α on  cells") == "Effects of TNF-α on cells"
+
+
+def check_url_is_canonical() -> None:
+    """The stored URL is rebuilt from the match, never echoed from input.
+
+    The source patterns are searched rather than anchored, so a string like
+    `javascript:alert(1)#arxiv.org/abs/1706.03762` matches on its tail — and
+    echoing the input back would publish it as a clickable link.
+    """
+    hostile = "javascript:alert(document.domain)#arxiv.org/abs/1706.03762"
+    p = resolve(hostile)
+    assert p.url == "https://arxiv.org/abs/1706.03762", p.url
+    assert "javascript:" not in p.url
+    assert not p.pdf_url.startswith("javascript:")
+
+
+def check_download_is_bounded() -> None:
+    """An unbounded read is a memory bomb; a runner has a couple of GB."""
+    import fetch_preprint
+
+    assert fetch_preprint.MAX_DOWNLOAD_BYTES <= 100 * 1024 * 1024
+
+    class _Resp:
+        """Endless stream, as a hostile server would send."""
+        def read(self, n=-1):
+            return b"\x00" * (n if n and n > 0 else 65536)
+        def __enter__(self):
+            return self
+        def __exit__(self, *a):
+            return False
+
+    real = fetch_preprint.urllib.request.urlopen
+    fetch_preprint.urllib.request.urlopen = lambda *a, **k: _Resp()
+    try:
+        fetch_preprint._get("https://example.org/huge.pdf", max_bytes=1024)
+    except ValueError as exc:
+        assert "larger than" in str(exc), exc
+    else:
+        raise AssertionError("an endless response was read without limit")
+    finally:
+        fetch_preprint.urllib.request.urlopen = real
+
+
+def check_statement_url_is_external() -> None:
+    """A response-letter URL must not reach the runner's own network."""
+    import run_review
+
+    for bad, why in (
+        ("http://example.org/x.md", "plain http"),
+        ("https://127.0.0.1/x.md", "loopback"),
+        ("https://169.254.169.254/latest/meta-data/", "cloud metadata"),
+        ("https://10.0.0.5/x.md", "private range"),
+    ):
+        try:
+            run_review._reject_internal_url(bad)
+        except SystemExit:
+            continue
+        raise AssertionError(f"{why} was not rejected: {bad}")
+
+
 def check_slug_uniqueness() -> None:
     """Titles truncate at 60 chars, so they cannot be the whole directory name."""
     long_a = "Deep learning approaches for the prediction of protein structure from sequence"
@@ -444,6 +575,16 @@ def main() -> int:
     print("ok  bundle version and review round stay distinct")
     check_correction()
     print("ok  a correction is not a revision")
+    check_metadata_is_sanitised_at_ingestion()
+    print("ok  metadata is stripped of tags where it enters")
+    check_metadata_is_escaped()
+    print("ok  and escaped again where it renders")
+    check_url_is_canonical()
+    print("ok  stored URLs are rebuilt, not echoed")
+    check_download_is_bounded()
+    print("ok  downloads are size-capped")
+    check_statement_url_is_external()
+    print("ok  response URLs cannot reach the runner's network")
     check_rejected_sources()
     print("ok  only arXiv / bioRxiv / medRxiv accepted")
 

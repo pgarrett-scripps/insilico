@@ -74,10 +74,35 @@ class Preprint:
         return asdict(self)
 
 
-def _get(url: str) -> bytes:
+# Nothing we legitimately fetch comes close to this. An unbounded read is a
+# memory bomb: a runner has a couple of GB, and `resp.read()` will happily
+# take whatever the far end sends, whether or not it is the PDF it claims.
+MAX_DOWNLOAD_BYTES = 60 * 1024 * 1024
+
+
+def _get(url: str, max_bytes: int = MAX_DOWNLOAD_BYTES) -> bytes:
+    """Fetch a URL, refusing anything implausibly large.
+
+    Read in chunks with a running total rather than trusting Content-Length,
+    which the server chooses and can simply lie about or omit.
+    """
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:  # noqa: S310
-        return resp.read()
+        chunks: list[bytes] = []
+        total = 0
+        while True:
+            chunk = resp.read(1024 * 256)
+            if not chunk:
+                break
+            total += len(chunk)
+            if total > max_bytes:
+                raise ValueError(
+                    f"{url} is larger than {max_bytes // (1024 * 1024)} MB and "
+                    "was not downloaded. Preprints are not this big; if this is "
+                    "a real manuscript, submit it as a normal preprint posting."
+                )
+            chunks.append(chunk)
+        return b"".join(chunks)
 
 
 def extract_url(text: str) -> str:
@@ -149,8 +174,21 @@ def _text(node: ET.Element, path: str) -> str:
     return (found.text or "") if found is not None else ""
 
 
+# Anything that looks like an HTML tag. Preprint metadata is written by the
+# authors, and it reaches places we do not control the escaping of — MkDocs
+# Material drops the frontmatter title straight into <title> and the header
+# bar without escaping it, so a manuscript posted as
+# `Cool paper <script>…</script>` is stored XSS on every reader's browser.
+#
+# Stripped at ingestion rather than escaped at each render: there are many
+# render sites and only one ingestion point, and an escape that has to be
+# remembered in ten places is one that will be forgotten in the eleventh.
+# Renderers still escape as well — this is the belt, not the braces.
+_TAGLIKE = re.compile(r"<[^>]*>")
+
+
 def _clean(s: str) -> str:
-    return re.sub(r"\s+", " ", s).strip()
+    return re.sub(r"\s+", " ", _TAGLIKE.sub("", s)).strip()
 
 
 # --- bioRxiv / medRxiv ------------------------------------------------------
@@ -177,7 +215,7 @@ def _resolve_rxiv(url: str, doi: str, server: str, version: str) -> Preprint:
         pp.published = rec.get("date", "")
         pp.version = rec.get("version", version)
         authors = rec.get("authors", "")
-        pp.authors = [a.strip() for a in authors.split(";") if a.strip()]
+        pp.authors = [_clean(a) for a in authors.split(";") if a.strip()]
         pp.pdf_url = (
             f"https://www.{server}.org/content/{doi}v{pp.version or 1}.full.pdf"
         )
@@ -193,14 +231,25 @@ def resolve(url: str) -> Preprint:
     """Classify a URL and gather metadata. Does not download the PDF."""
     url = url.strip()
 
+    # The stored URL is rebuilt from what matched, never echoed back from the
+    # input. These patterns are *searched* rather than anchored, so a string
+    # like `javascript:alert(1)#arxiv.org/abs/1706.03762` matches on the tail
+    # — and keeping the raw input would publish it as a clickable link on the
+    # review page. Canonicalising also means one preprint has one URL however
+    # it was linked.
     m = ARXIV_RE.search(url)
     if m:
-        return _resolve_arxiv(url, m.group("id"))
+        return _resolve_arxiv(f"https://arxiv.org/abs/{m.group('id')}", m.group("id"))
 
     m = RXIV_RE.search(url)
     if m and m.group("doi"):
         server = (m.group("server") or "biorxiv").lower()
-        return _resolve_rxiv(url, m.group("doi"), server, m.group("version") or "")
+        doi = m.group("doi")
+        version = m.group("version") or ""
+        canonical = f"https://www.{server}.org/content/{doi}"
+        if version:
+            canonical += f"v{version}"
+        return _resolve_rxiv(canonical, doi, server, version)
 
     # Direct PDF links are deliberately not accepted. An overlay journal's
     # whole claim is that it reviews something with a permanent home, and a
