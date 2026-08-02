@@ -10,6 +10,7 @@ the review PR is merged, when it's least convenient.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import sys
@@ -234,6 +235,114 @@ def check_versioning() -> None:
         assert meta["decision"] == "accept", "paper page should show the latest verdict"
 
 
+def check_baseline_restoration() -> None:
+    """A revision round must never present a missing diff as a real one.
+
+    Restoration runs on a CI runner whose ingest cache is empty, so the
+    failure path is the *common* path, not the edge case. Each way it can
+    fail has to come back as restored=False with a reason — a silent no-diff
+    round is indistinguishable on the page from one that actually compared
+    the drafts.
+    """
+    import run_review
+
+    with tempfile.TemporaryDirectory() as tmp:
+        work = Path(tmp) / "work"
+        work.mkdir()
+        prior = Path(tmp) / "v1"
+        prior.mkdir()
+
+        # No provenance at all.
+        st = run_review.restore_prior_draft(prior, work, {})
+        assert not st["restored"] and "provenance" in st["reason"], st
+
+        # Provenance with no PDF URL — reviews from before fingerprinting.
+        (prior / "provenance.json").write_text(json.dumps({"preprint": {}}))
+        st = run_review.restore_prior_draft(prior, work, {})
+        assert not st["restored"] and "no PDF URL" in st["reason"], st
+
+        # The file at the recorded URL no longer hashes to what we reviewed.
+        # This one matters most: diffing against it would produce a confident
+        # delta over the wrong baseline, which is worse than no delta at all.
+        payload = b"%PDF-1.4 not the reviewed bytes"
+        (prior / "provenance.json").write_text(json.dumps({
+            "round": 1,
+            "preprint": {
+                "pdf_url": "https://example.org/v1.pdf",
+                "pdf_sha256": "0" * 64,
+            },
+        }))
+        original_get = run_review._get
+        run_review._get = lambda url: payload
+        try:
+            st = run_review.restore_prior_draft(prior, work, {})
+        finally:
+            run_review._get = original_get
+        assert not st["restored"], "a hash mismatch must not be a usable baseline"
+        assert "no longer matches" in st["reason"], st["reason"]
+        assert hashlib.sha256(payload).hexdigest()[:12] in st["reason"], \
+            "the reason should name the hash actually fetched"
+
+        # A fetch failure degrades, it does not raise.
+        def boom(url):
+            raise OSError("network is unreachable")
+
+        run_review._get = boom
+        try:
+            st = run_review.restore_prior_draft(prior, work, {})
+        finally:
+            run_review._get = original_get
+        assert not st["restored"] and "re-fetch" in st["reason"], st
+
+
+def check_round_is_not_version() -> None:
+    """The bundle's vN and the review round are different numbers.
+
+    Re-running a review of the same manuscript under changed criteria makes a
+    new bundle at round 1. Only a review of a revised draft advances the
+    round. Reading one off the other would mislabel both.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        for name, _ in BUNDLE_ORDER:
+            (run_dir / name).write_text("x")
+        os.environ["REVIEW_MODELS"] = "{}"
+        os.environ["REVIEW_AGENT_MODELS"] = "{}"
+        preprint = Preprint(
+            url="https://arxiv.org/abs/1706.03762", source="arxiv",
+            pdf_url="p", identifier="1706.03762", title="A paper",
+        )
+        state = {"decision": "major", "manuscript_title": "A paper",
+                 "total_cost": 1.0, "errors": [], "reports": []}
+
+        paper = Path(tmp) / "2026" / "a-paper"
+        # Second bundle, still round 1 — a re-review, not a revision.
+        write_bundle(preprint, state, run_dir, paper / "v1", "1", "me")
+        write_bundle(preprint, state, run_dir, paper / "v2", "1", "me")
+        v2 = json.loads((paper / "v2" / "provenance.json").read_text())
+        assert v2["round"] == 1, f"v2 must not imply round 2: {v2['round']}"
+
+        # Now a genuine round 2.
+        write_bundle(
+            preprint, state, run_dir, paper / "v3", "1", "me", None,
+            {"round": 2, "prior_decision": "major",
+             "baseline": {"restored": False, "reason": "cache was empty"}},
+        )
+        v3 = json.loads((paper / "v3" / "provenance.json").read_text())
+        assert v3["round"] == 2, "explicit round not recorded"
+        landing = (paper / "v3" / "index.md").read_text()
+        assert "Revision round 2" in landing, "round not stated on the page"
+        assert "No draft comparison" in landing, \
+            "an unverified baseline must be disclosed on the page"
+        assert "cache was empty" in landing, "the reason should be given"
+
+        write_paper_page(paper)
+        history = (paper / "index.md").read_text()
+        assert "How it moved" in history, "no revision arc on the paper page"
+        assert "2 ⚠" in history, "unverified round not flagged in the history"
+
+
 def check_slug_uniqueness() -> None:
     """Titles truncate at 60 chars, so they cannot be the whole directory name."""
     long_a = "Deep learning approaches for the prediction of protein structure from sequence"
@@ -271,6 +380,10 @@ def main() -> int:
     print("ok  re-review adds v2 without touching v1")
     check_slug_uniqueness()
     print("ok  distinct papers get distinct directories")
+    check_baseline_restoration()
+    print("ok  a missing revision baseline is never silent")
+    check_round_is_not_version()
+    print("ok  bundle version and review round stay distinct")
     check_rejected_sources()
     print("ok  only arXiv / bioRxiv / medRxiv accepted")
 

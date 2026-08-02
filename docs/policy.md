@@ -138,6 +138,14 @@ reason: reading a single model name off a review would misdescribe it.
 
 Reviews are never silently edited. Corrections are appended with a dated note.
 
+A revision round adds a review; it never replaces one. The earlier round stays
+published as the record of the draft it read, and each round records which
+manuscript version it saw and a SHA-256 of that exact file. Where a round ran
+without a verified comparison against the previous draft, the page and the
+paper's review history both say so — see
+[revision rounds](criteria.md#revision-rounds). Rounds are capped at three; past
+that the submission is decided rather than cycled.
+
 ## Contesting a review
 
 Comment on the review PR, or on your submission issue if it's already merged.

@@ -29,6 +29,12 @@ env:
   # Setting REVIEW_MODEL here would override that file and collapse every
   # stage back onto one model, so it is deliberately unset.
   PIPELINE_REPO: https://github.com/pgarrett-scripps/PeerReviewAgents.git
+  # Which ref to pin from. `main` once revision rounds land there; until then
+  # the round record, the compliance auditor and the response verifier only
+  # exist on this branch, and `/revise` cannot work without them. The run
+  # still records the resolved SHA, so a review always names exact code
+  # regardless of which ref it came from.
+  PIPELINE_REF: revision-rounds
 
 jobs:
   review:
@@ -37,7 +43,8 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request == null &&
-       startsWith(github.event.comment.body, '/review') &&
+       (startsWith(github.event.comment.body, '/review') ||
+        startsWith(github.event.comment.body, '/revise')) &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -121,7 +128,8 @@ jobs:
           # reset for such a list, so clear it first, then add ours.
           if ! sha="$(git -c "http.https://github.com/.extraheader=" \
                           -c "http.https://github.com/.extraheader=${PIPELINE_AUTH}" \
-                        ls-remote "$PIPELINE_REPO" HEAD | cut -f1)" || [ -z "$sha" ]; then
+                        ls-remote "$PIPELINE_REPO" "$PIPELINE_REF" | cut -f1)" \
+             || [ -z "$sha" ]; then
             echo "::error::Could not read $PIPELINE_REPO."
             echo "::error::While that repo is private this needs a PRA_READ_TOKEN secret" \
                  "whose fine-grained token grants Contents: Read on it." \
@@ -150,17 +158,36 @@ jobs:
           # Untrusted input reaches the script through the environment, never
           # through shell interpolation.
           ISSUE_BODY: ${{ github.event.issue.body }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
           INPUT_URL: ${{ github.event.inputs.url }}
           SUBMISSION_ID: ${{ github.event.issue.number || github.event.inputs.submission_id }}
           SUBMITTER: ${{ github.event.issue.user.login }}
         run: |
+          # `/revise [response-letter-url]` continues this preprint's most
+          # recent round; `/review` always starts a fresh one. Kept as two
+          # commands rather than inferred, because re-reviewing the same draft
+          # under changed criteria and reviewing a revised draft are different
+          # acts that would otherwise be indistinguishable to the script.
+          args=()
+          case "$COMMENT_BODY" in
+            /revise*)
+              args+=(--revise)
+              # Everything after the command, if it is a URL, is the authors'
+              # response letter. Extracted with grep rather than expanded by
+              # the shell — the comment body is attacker-controlled text.
+              letter="$(printf '%s' "$COMMENT_BODY" | head -1 \
+                        | grep -oE 'https?://[^[:space:]]+' | head -1 || true)"
+              if [ -n "$letter" ]; then args+=(--author-statement "$letter"); fi
+              ;;
+          esac
+
           if [ -n "$INPUT_URL" ]; then
-            python scripts/run_review.py \
+            python scripts/run_review.py "${args[@]}" \
               --url "$INPUT_URL" \
               --submission-id "${SUBMISSION_ID:-}" \
               --submitter "${SUBMITTER:-}"
           else
-            python scripts/run_review.py \
+            python scripts/run_review.py "${args[@]}" \
               --issue-body "$ISSUE_BODY" \
               --submission-id "$SUBMISSION_ID" \
               --submitter "$SUBMITTER"
@@ -175,6 +202,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}
           DESK_REJECTED: ${{ steps.run.outputs.desk_rejected }}
+          ROUND: ${{ steps.run.outputs.round }}
+          BASELINE: ${{ steps.run.outputs.baseline }}
           SLUG: ${{ steps.run.outputs.slug }}
           TITLE: ${{ steps.run.outputs.title }}
           BUNDLE: ${{ steps.run.outputs.path }}
@@ -205,8 +234,18 @@ jobs:
             echo "| ${headline} | \`${DECISION}\` |"
             echo "| Bundle | \`${BUNDLE}\` |"
             echo "| Cost | \$${COST} |"
+            [ "${ROUND:-1}" != "1" ] && echo "| Round | ${ROUND} |"
             [ -n "${SUBMISSION_ID}" ] && echo "| Submission | #${SUBMISSION_ID} |"
             echo
+            if [ "${BASELINE}" = "unavailable" ]; then
+              echo "> [!WARNING]"
+              echo "> **This revision round ran without a draft comparison.**"
+              echo "> The previously reviewed PDF could not be recovered, so nothing"
+              echo "> here rests on a verified diff of what actually changed. The"
+              echo "> referees still held their earlier points, but read the delta"
+              echo "> claims with that in mind."
+              echo
+            fi
             if [ "${DESK_REJECTED}" = "true" ]; then
               echo "> [!CAUTION]"
               echo "> **Opened as a draft — read the bundle before merging.**"

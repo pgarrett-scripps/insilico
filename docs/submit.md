@@ -59,6 +59,34 @@ the editor will run it before triggering a review.
 6. **The editor merges or closes.** Merged means listed here with the review
    attached. Closed means declined, and nothing is published.
 
+## Resubmitting a revised draft
+
+Post the revised version to the same preprint server, then say so on your
+original submission issue. An editor runs `/revise` and the panel opens a new
+round on the new version.
+
+A revision round is not a fresh review. Each referee gets back the specific
+points *it* raised, by id, and has to rule on each one: addressed, partly
+addressed, or not. A compliance auditor takes the previous decision letter's
+numbered required revisions and checks them against the new draft. The editor
+then decides on the delta rather than re-reading the paper cold.
+
+The earlier review is never edited or removed. It stays published as the record
+of that revision, and the paper's page shows the whole arc — what each round
+required, and how the recommendation moved.
+
+**You can include a response letter.** Give the editor a public URL to it and it
+goes to the panel — but not as prose. It is screened for hidden instructions at
+the same gate as the manuscript, and then read by a verifier that checks each
+claim against the manuscript itself. Only corroborated pointers reach the
+referees: *"the authors say X was added at §3.2 — go read §3.2 and judge it."*
+A response letter can direct attention. It cannot move a score by asserting
+something, and the verification is published so you can see exactly what the
+panel was shown.
+
+There is a **cap of three rounds**. An endless revise-and-resubmit loop is a
+failure rather than a process, and at that point the submission gets decided.
+
 ### If your submission is stopped at the desk
 
 You'll get a short note on your issue saying it was held, and no review will

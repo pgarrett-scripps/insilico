@@ -100,6 +100,52 @@ unsupported" from "I could not verify this", and to say which they mean.
 
 See the [editorial policy](policy.md) for the full list.
 
+## Revision rounds
+
+When authors revise and resubmit, the panel does not re-read the paper cold.
+Round 2 evaluates the *delta*:
+
+- **Each referee gets its own prior report back**, with every weakness it raised
+  addressable by a stable id, and rules on each one. Referees never see each
+  other's reports — the panel's independence is not quietly abandoned in later
+  rounds.
+- **A compliance auditor** takes the previous decision letter's numbered
+  required revisions and checks each against the new draft.
+- **The editor decides on what changed**, and is told which round this is and
+  how many remain.
+
+Two things make this checkable rather than asserted.
+
+**The round record.** Every round writes `round.json` next to its markdown —
+required revisions with stable ids (`R1-03` names the third ask of round 1 for
+the life of the manuscript), per-referee weaknesses, scores. Round 2 reports
+against those ids rather than string-matching prose, and the record is published
+in the bundle so you can verify what was carried forward.
+
+**The draft comparison.** A revision round diffs the old and new manuscripts.
+Because the reviewed PDF is fingerprinted, that baseline is rebuilt by
+re-fetching the exact version reviewed and confirming it still hashes to what
+the panel saw. If it doesn't — or if it can't be fetched — **the round says so
+on its own page and in the paper's history**, because a round that ruled without
+a verified comparison is weaker evidence than one that did, and the two would
+otherwise look identical.
+
+### The author response letter
+
+Authors may submit a response letter. It is treated as untrusted,
+interested-party input:
+
+1. Screened for concealed instructions at the same desk gate as the manuscript.
+2. Read by a verifier that checks each claim against the manuscript.
+3. Reduced to corroborated pointers — passages the referees must go and read for
+   themselves.
+
+The referees never see the letter's prose. It can direct attention; it cannot
+move a score by asserting something. The verification is published in the
+bundle, which is what makes that claim inspectable.
+
+Rounds are capped at three.
+
 ## Who does what
 
 | Stage | Agents | What it produces |

@@ -20,12 +20,19 @@ import re
 import shutil
 import sys
 import tempfile
+import urllib.parse
 from pathlib import Path
 from queue import Empty, Queue
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from fetch_preprint import Preprint, download, extract_url, resolve  # noqa: E402
+from fetch_preprint import _get, Preprint, download, extract_url, resolve  # noqa: E402
+
+# Written by the pipeline next to the markdown. It is what makes a review
+# revisable — the machine-readable record of what this round asked for, with
+# stable ids a later round rules on. Published, not internal: without it in
+# the bundle there is nothing to point `--revision-of` at.
+ROUND_RECORD = "round.json"
 
 REPO = Path(__file__).resolve().parent.parent
 REVIEWS = REPO / "docs" / "reviews"
@@ -80,6 +87,11 @@ BUNDLE_ORDER = [
     # material rather than buried at the end.
     ("integrity.md", "Submission integrity scan"),
     ("desk_screen.md", "Desk screen"),
+    # Revision rounds only. The verification is what the panel was actually
+    # allowed to see of the authors' response letter — corroborated pointers,
+    # never the letter's own prose — so publishing it is what makes the claim
+    # "the letter could not move a score" checkable rather than asserted.
+    ("author_response_verification.md", "Author response verification"),
     ("meta_review.md", "Area chair synthesis"),
     ("author_rebuttal.md", "Simulated author rebuttal"),
     ("debate_transcript.md", "Advocate / skeptic debate"),
@@ -131,6 +143,36 @@ def paper_slug(preprint: Preprint, title: str) -> str:
     id_part = slugify(preprint.identifier or preprint.doi or preprint.url, limit=40)
     slug = "-".join(p for p in (title_part, id_part) if p)
     return slug or "submission"
+
+
+def find_prior_bundle(preprint: Preprint, title: str) -> Path | None:
+    """The most recent revisable round already published for this preprint.
+
+    Searched across all year directories, not just this preprint's own year:
+    a revised preprint can carry a later posting date than the version we
+    reviewed, which would put v2 in a different year folder from v1 and make
+    the paper's own history invisible to it.
+
+    Only bundles with a round record count. A review published before round
+    records existed cannot be the basis of a revision round, and silently
+    treating it as round 1 would produce a round 2 that had nothing to rule on.
+    """
+    slug = paper_slug(preprint, title)
+    best: tuple[int, Path] | None = None
+    for paper_dir in sorted(REVIEWS.glob(f"*/{slug}")):
+        for bundle in paper_dir.glob("v*"):
+            if not (bundle / ROUND_RECORD).is_file():
+                continue
+            try:
+                record = json.loads(
+                    (bundle / ROUND_RECORD).read_text(encoding="utf-8")
+                )
+            except (OSError, json.JSONDecodeError):
+                continue
+            rnd = int(record.get("round", 1))
+            if best is None or rnd > best[0]:
+                best = (rnd, bundle)
+    return best[1] if best else None
 
 
 def next_version(paper_dir: Path) -> int:
@@ -229,9 +271,11 @@ def write_bundle(
     submission_id: str,
     submitter: str,
     cost_by_node: dict[str, float] | None = None,
+    revision: dict | None = None,
 ) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     cost_by_node = cost_by_node or {}
+    revision = revision or {}
 
     # On a desk reject the pipeline sets decision_letter, desk_screen and
     # integrity to the *same* body, so all three land here byte-identical.
@@ -256,6 +300,12 @@ def write_bundle(
     for src in reviewer_files + audit_files:
         shutil.copy2(src, dest / src.name)
 
+    # Not in BUNDLE_ORDER because it is data, not a document to link from the
+    # landing page — but it has to travel with the bundle, since it is the
+    # thing a later round is pointed at.
+    if (run_dir / ROUND_RECORD).exists():
+        shutil.copy2(run_dir / ROUND_RECORD, dest / ROUND_RECORD)
+
     decision = state.get("decision", "unknown")
     title = preprint.title or state.get("manuscript_title") or "Untitled submission"
     scores = panel_scores(state)
@@ -279,6 +329,12 @@ def write_bundle(
         # debate, the other stops before any of that. Readers and the index
         # both need to tell them apart, and `decision` alone cannot.
         "desk_rejected": bool(state.get("desk_rejected")),
+        # The review round, which is NOT the bundle's vN. Re-running a review
+        # of the same manuscript under new criteria makes a new bundle at
+        # round 1; only a review of a revised draft advances the round. Left
+        # separate so the two can never be read off each other.
+        "round": int(revision.get("round") or 1),
+        "revision": revision,
         "screens": json.loads(os.environ.get("REVIEW_SCREENS") or "{}"),
         "panel": scores,
         "mean_score": round(sum(numeric) / len(numeric), 2) if numeric else None,
@@ -297,6 +353,118 @@ def write_bundle(
             site_path(dest),
         )
     )
+
+
+def restore_prior_draft(prior_bundle: Path, workdir: Path, config: dict) -> dict:
+    """Put the previously reviewed PDF back in the ingest cache.
+
+    A revision round diffs the new draft against the old one, but the round
+    record deliberately stores no copy of the manuscript — only its ingest
+    cache key. That cache lives on whichever machine ran the review, and a
+    CI runner is destroyed when the job ends, so on GitHub the previous draft
+    is always gone and the round would quietly degrade to a no-diff review.
+
+    We can rebuild it because we recorded exactly which bytes were reviewed:
+    the preprint's versioned PDF URL and a SHA-256 of the file. Re-fetch,
+    check it still hashes to what we reviewed, and re-parse it — the ingest
+    cache is keyed by file content, so parsing the identical file repopulates
+    the identical key.
+
+    Returns a status dict recorded in provenance. Never raises: a failed
+    restoration costs the diff, not the round, and the caller says so on the
+    published page rather than presenting a no-diff round as a real one.
+    """
+    status = {"restored": False, "reason": "", "verified": False}
+    try:
+        prov = json.loads((prior_bundle / "provenance.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        status["reason"] = f"could not read the previous round's provenance ({exc})"
+        return status
+
+    pre = prov.get("preprint") or {}
+    url, want_sha = pre.get("pdf_url", ""), pre.get("pdf_sha256", "")
+    if not url:
+        status["reason"] = "the previous round recorded no PDF URL"
+        return status
+
+    try:
+        data = _get(url)
+    except Exception as exc:  # noqa: BLE001 - any fetch failure is the same outcome
+        status["reason"] = f"could not re-fetch the previous draft ({exc})"
+        return status
+
+    got_sha = hashlib.sha256(data).hexdigest()
+    if want_sha and got_sha != want_sha:
+        # The file at that URL is no longer the file we reviewed. Diffing
+        # against it would produce a confident delta over the wrong baseline,
+        # which is worse than having no diff at all.
+        status["reason"] = (
+            f"the PDF at {url} no longer matches what round "
+            f"{prov.get('round', 1)} reviewed (recorded {want_sha[:12]}…, "
+            f"fetched {got_sha[:12]}…), so it is not a safe baseline"
+        )
+        return status
+    status["verified"] = bool(want_sha)
+
+    prior_pdf = workdir / "prior-draft.pdf"
+    prior_pdf.write_bytes(data)
+
+    try:
+        from peerreviewagents.ingest.cache import cache_key
+        from peerreviewagents.ingest.loader import load_manuscript
+
+        key = cache_key(prior_pdf, config)
+        recorded = _prior_cache_key(prior_bundle)
+        if recorded and key != recorded:
+            # Same bytes should give the same key; a mismatch means the key
+            # derivation changed upstream, and the graph will look up the old
+            # one and miss. Better to say so than to leave it looking fine.
+            status["reason"] = (
+                "the re-parsed draft does not land on the cache key the "
+                "previous round recorded, so the pipeline will not find it"
+            )
+            return status
+        load_manuscript(str(prior_pdf), config)
+    except Exception as exc:  # noqa: BLE001
+        status["reason"] = f"could not re-parse the previous draft ({exc})"
+        return status
+
+    status["restored"] = True
+    return status
+
+
+def fetch_statement(source: str, workdir: Path) -> Path:
+    """Materialise the authors' response letter as a local file.
+
+    A URL or a path, because a submitter has an issue comment to work with and
+    not a filesystem. Nothing is inspected here on purpose: the letter is
+    untrusted, interested-party input, and the pipeline screens it at the desk
+    on the same gate as the manuscript. Sniffing it first would just be a
+    second, worse screen.
+    """
+    if not source.lower().startswith(("http://", "https://")):
+        path = Path(source)
+        if not path.is_file():
+            raise SystemExit(f"author statement not found: {source}")
+        return path
+    data = _get(source)
+    # Extension decides the parser upstream, so keep the one the URL implies
+    # and fall back to markdown, which the loader treats as plain text.
+    suffix = Path(urllib.parse.urlparse(source).path).suffix.lower()
+    if suffix not in (".pdf", ".md", ".txt", ".tex", ".docx"):
+        suffix = ".md"
+    dest = workdir / f"author-statement{suffix}"
+    dest.write_bytes(data)
+    return dest
+
+
+def _prior_cache_key(prior_bundle: Path) -> str:
+    """The manuscript cache key the previous round wrote into round.json."""
+    try:
+        record = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return ""
+    return str(record.get("manuscript_cache_key") or "")
 
 
 def site_path(path: Path) -> str:
@@ -531,8 +699,8 @@ def write_paper_page(paper_dir: Path) -> None:
         "row. Earlier reviews are never edited or removed when a new one is added —",
         "they remain the record of what the panel said about that revision.",
         "",
-        "| Review | Manuscript version | Recommendation | Reviewed |",
-        "|---|---|---|---|",
+        "| Review | Round | Manuscript version | Recommendation | Reviewed |",
+        "|---|---|---|---|---|",
     ]
     for name, prov in records:
         p = prov.get("preprint", {})
@@ -542,13 +710,34 @@ def write_paper_page(paper_dir: Path) -> None:
             else VERDICT_LABEL.get(prov.get("decision", ""), prov.get("decision", "—"))
         )
         mver = f"v{p.get('version')}" if p.get("version") else "—"
+        rnd = int(prov.get("round") or 1)
+        # A round with no verified baseline is not the same evidence as one
+        # that diffed the drafts, and the history is where that comparison
+        # gets made — so it is flagged in the row, not only on the page.
+        if rnd > 1 and not ((prov.get("revision") or {}).get("baseline") or {}).get(
+            "restored"
+        ):
+            rnd_cell = f"{rnd} ⚠"
+        else:
+            rnd_cell = str(rnd)
         # `{name}/index.md`, not `{name}/`: MkDocs resolves .md targets and
         # warns on a bare directory in a markdown link.
         body.append(
-            f"| [{name}]({name}/index.md) | {mver} | {verdict} "
+            f"| [{name}]({name}/index.md) | {rnd_cell} | {mver} | {verdict} "
             f"| {str(prov.get('generated_at', ''))[:10]} |"
         )
     body.append("")
+
+    if any(int(p.get("round") or 1) > 1 for _, p in records):
+        body += [
+            "A round above 1 means the authors revised the manuscript and the panel",
+            "ruled on what changed rather than re-reading it cold. ⚠ marks a round",
+            "that ran without a verified comparison of the old and new drafts — the",
+            "referees still held their earlier points, but the delta was not checked",
+            "against the previous file.",
+            "",
+        ]
+        body += revision_arc(paper_dir, records)
 
     # The fingerprint is what makes "which revision was this?" answerable
     # rather than a matter of trust. Only shown when one was recorded.
@@ -586,6 +775,107 @@ def write_paper_page(paper_dir: Path) -> None:
     (paper_dir / "index.md").write_text("\n".join(body), encoding="utf-8")
 
 
+def revision_arc(paper_dir: Path, records: list[tuple[str, dict]]) -> list[str]:
+    """How the recommendation moved across rounds, and what was asked each time.
+
+    This is the thing In Silico can publish that a conventional journal does
+    not: not just the final verdict but the whole trajectory — what was
+    required, whether the next round found it done, and how the panel moved.
+    Built from ``round.json`` in each bundle rather than from the prose, so it
+    reports the same numbered items the pipeline itself reasoned about.
+    """
+    # Oldest first: an arc reads forwards.
+    chron = sorted(records, key=lambda r: int(r[1].get("round") or 1))
+    steps = []
+    for name, prov in chron:
+        verdict = (
+            "desk reject"
+            if prov.get("desk_rejected")
+            else VERDICT_LABEL.get(prov.get("decision", ""), "—").lower()
+        )
+        steps.append(f"**{verdict}**")
+    if len(steps) < 2:
+        return []
+
+    lines = ["### How it moved", "", " → ".join(steps), ""]
+
+    for name, prov in chron:
+        rnd = int(prov.get("round") or 1)
+        asked = _required_count(paper_dir / name)
+        if asked is None:
+            continue
+        if asked:
+            lines.append(
+                f"- Round {rnd} required {asked} "
+                f"revision{'' if asked == 1 else 's'} "
+                f"([`round.json`]({name}/round.json))."
+            )
+        else:
+            lines.append(f"- Round {rnd} required no revisions.")
+    lines.append("")
+    return lines
+
+
+def _required_count(bundle: Path) -> int | None:
+    """How many numbered revisions a round required, from its own record.
+
+    Read from the bundle's round.json rather than from provenance: the
+    `revision` block in provenance describes the round this one *followed*,
+    so its revision count belongs to the previous round, not this one.
+    """
+    try:
+        record = json.loads((bundle / ROUND_RECORD).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    items = record.get("required_revisions")
+    return len(items) if isinstance(items, list) else None
+
+
+def revision_note(provenance: dict) -> list[str]:
+    """State what this round was compared against, including when it wasn't.
+
+    A revision round whose baseline could not be recovered still produces a
+    full review — the reviewers still hold their prior points, the compliance
+    auditor still checks the required revisions — but nothing in it is
+    grounded in an actual v1→v2 comparison. On the page those two rounds look
+    identical unless we say otherwise, so we say otherwise.
+    """
+    rev = provenance.get("revision") or {}
+    if int(provenance.get("round") or 1) <= 1:
+        return []
+
+    prior = rev.get("prior_decision", "")
+    lines = [
+        f'!!! info "Revision round {provenance["round"]}"',
+        "    The authors revised the manuscript after a previous review, and this",
+        "    round rules on what changed: each referee revisits the points it",
+        "    raised, and an auditor checks the previous decision letter's required",
+        "    revisions against the new draft.",
+        "",
+    ]
+    if prior:
+        lines.insert(
+            4,
+            f"    The previous round recommended "
+            f"**{VERDICT_LABEL.get(prior, prior)}**.",
+        )
+        lines.insert(5, "")
+
+    baseline = rev.get("baseline") or {}
+    if not baseline.get("restored"):
+        lines += [
+            '!!! warning "No draft comparison in this round"',
+            "    The previously reviewed PDF could not be recovered, so this round",
+            "    has no section-by-section comparison of the old and new drafts.",
+            "    The referees still hold their earlier points and rule on them, but",
+            "    nothing here rests on a verified diff of what actually changed.",
+            "",
+            f"    Reason: {baseline.get('reason') or 'unknown'}.",
+            "",
+        ]
+    return lines
+
+
 def render_landing(
     preprint: Preprint,
     provenance: dict,
@@ -619,6 +909,8 @@ def render_landing(
         # Surfaced in frontmatter so the index can mark these distinctly
         # rather than filing them next to reasoned panel rejections.
         fm.append("desk_rejected: true")
+    if int(provenance.get("round") or 1) > 1:
+        fm.append(f"round: {int(provenance['round'])}")
     fm.append("---")
 
     rows = [
@@ -654,6 +946,10 @@ def render_landing(
         label = f"Panel recommendation: {VERDICT_LABEL.get(decision, decision)}"
         note = "advisory — a human editor decides"
 
+    round_no = int(provenance.get("round") or 1)
+    if round_no > 1:
+        note = f"round {round_no} · {note}"
+
     body = [
         "\n".join(fm),
         "",
@@ -666,6 +962,7 @@ def render_landing(
         "</div>",
         "",
     ]
+    body += revision_note(provenance)
     if desk_rejected:
         body += [
             "!!! danger \"Rejected at the desk — no referee panel was convened\"",
@@ -822,8 +1119,39 @@ def main() -> int:
         if os.environ.get("REVIEW_DEBATE_ROUNDS")
         else None,
     )
+    ap.add_argument(
+        "--revision-of",
+        metavar="BUNDLE",
+        help="path to the previous round's bundle directory (e.g. "
+             "docs/reviews/2026/<slug>/v1). Turns this into a revision round: "
+             "reviewers rule on the points they raised, a compliance auditor "
+             "checks the previous letter's required revisions against the new "
+             "draft, and the editor decides on the delta.",
+    )
+    ap.add_argument(
+        "--revise",
+        action="store_true",
+        help="continue this preprint's most recent round automatically, "
+             "instead of naming the previous bundle with --revision-of.",
+    )
+    ap.add_argument(
+        "--author-statement",
+        metavar="URL_OR_PATH",
+        help="the authors' response letter. Treated as untrusted, "
+             "interested-party input: injection-screened at the desk and "
+             "never shown to the panel as prose. Requires --revision-of.",
+    )
     ap.add_argument("--dry-run", action="store_true", help="resolve + download only")
     args = ap.parse_args()
+
+    if args.revise and args.revision_of:
+        ap.error("--revise and --revision-of do the same job; pass one.")
+    if args.author_statement and not (args.revision_of or args.revise):
+        ap.error(
+            "--author-statement requires --revision-of or --revise: a "
+            "response letter answers a previous round's review, so there has "
+            "to be one."
+        )
 
     url = args.url or extract_url(args.issue_body)
     preprint = resolve(url)
@@ -854,7 +1182,74 @@ def main() -> int:
     if args.debate_rounds is not None:
         overrides["max_debate_rounds"] = args.debate_rounds
 
+    revision: dict = {"round": 1}
+    if args.revise:
+        found = find_prior_bundle(
+            preprint, preprint.title or preprint.identifier
+        )
+        if found is None:
+            print(
+                "No revisable round found for this preprint. Either it has "
+                "never been reviewed here, or its reviews predate round "
+                "records — run /review for a fresh round instead.",
+                file=sys.stderr,
+            )
+            return 1
+        args.revision_of = str(found)
+
+    if args.revision_of:
+        prior_bundle = Path(args.revision_of).resolve()
+        if not (prior_bundle / ROUND_RECORD).is_file():
+            print(
+                f"--revision-of {args.revision_of}: no {ROUND_RECORD} there.\n"
+                "A revision round needs the previous round's machine-readable "
+                "record. Reviews published before round records existed cannot "
+                "be revised — re-review the current draft as a fresh round "
+                "instead.",
+                file=sys.stderr,
+            )
+            return 1
+        overrides["revision_of"] = str(prior_bundle)
+        if args.author_statement:
+            overrides["author_statement_path"] = str(
+                fetch_statement(args.author_statement, workdir)
+            )
+
     config = get_config(**overrides)
+
+    if args.revision_of:
+        prior = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
+        revision = {
+            "round": int(prior.get("round", 1)) + 1,
+            "prior_bundle": prior_bundle.name,
+            "prior_decision": str(prior.get("decision", "")),
+            "prior_round": int(prior.get("round", 1)),
+            # The count the PREVIOUS round asked for. This round's own count
+            # lives in its round.json; keeping them apart stops the paper
+            # page attributing one round's asks to another.
+            "prior_required_revisions": len(prior.get("required_revisions") or []),
+            "author_statement": bool(args.author_statement),
+            # Restore before the graph runs: the diff is read during the
+            # review, not after it.
+            "baseline": restore_prior_draft(prior_bundle, workdir, config),
+        }
+        max_rounds = int(config.get("max_rounds") or 3)
+        if revision["round"] > max_rounds:
+            print(
+                f"This would be round {revision['round']}, and max_rounds is "
+                f"{max_rounds}. An endless revise-and-resubmit loop is a "
+                "failure, not a process — decide the submission instead.",
+                file=sys.stderr,
+            )
+            return 1
+        b = revision["baseline"]
+        print(
+            f"revision  round {revision['round']} of {prior_bundle.name}"
+            f" — baseline {'restored' if b['restored'] else 'UNAVAILABLE'}",
+            file=sys.stderr,
+        )
+        if not b["restored"]:
+            print(f"          {b['reason']}", file=sys.stderr)
 
     # Record what actually ran, not what was requested — with roles configured
     # these differ per agent, so the resolved config is the honest answer.
@@ -908,7 +1303,7 @@ def main() -> int:
 
     write_bundle(
         preprint, state, run_dir, dest,
-        args.submission_id, args.submitter, cost_by_node,
+        args.submission_id, args.submitter, cost_by_node, revision,
     )
     write_paper_page(paper_dir)
     rel = dest.relative_to(REPO)
@@ -928,6 +1323,15 @@ def main() -> int:
             # The re-review case needs to be visible in the PR: "v2" means an
             # earlier review of this paper already exists and is not replaced.
             fh.write(f"version={version}\n")
+            fh.write(f"round={revision['round']}\n")
+            # Surfaced so the PR can say a revision round ran without a
+            # verified diff, which changes how much the delta is worth.
+            fh.write(
+                "baseline="
+                + ("restored" if (revision.get("baseline") or {}).get("restored")
+                   else "unavailable" if revision["round"] > 1 else "n/a")
+                + "\n"
+            )
             fh.write(f"title={title}\n")
             fh.write(f"cost={state.get('total_cost') or 0}\n")
 
