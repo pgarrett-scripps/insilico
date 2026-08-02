@@ -34,7 +34,7 @@ env:
   # exist on this branch, and `/revise` cannot work without them. The run
   # still records the resolved SHA, so a review always names exact code
   # regardless of which ref it came from.
-  PIPELINE_REF: revision-rounds
+  PIPELINE_REF: correction-mode
 
 jobs:
   review:
