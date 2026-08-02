@@ -28,15 +28,11 @@ a careful reader can evaluate from the manuscript itself and the materials it
 cites or deposits. Empirical, theoretical, computational and methodological work
 all qualify, as do negative results, replications and reanalyses.
 
-We started computational-only, on the reasoning that those claims are the ones a
-model can check. That was the wrong line. What actually determines whether a
-review is worth reading is whether the *evidence is inspectable*, and that cuts
-across fields — an unsupported inference in a wet-lab paper is exactly as
-findable as one in a simulation. The panel's real limits (below) apply equally
-everywhere, so scoping by discipline gave a false sense of where they bite.
+Scope is set by whether the evidence can be inspected, not by discipline. An
+unsupported inference is as findable in a wet-lab paper as in a simulation, and
+the panel's limits (below) apply in every field alike.
 
-The name stays. It describes how the reviewing is done, not what may be
-reviewed.
+The name describes how the reviewing is done, not what may be reviewed.
 
 **Out of scope.**
 

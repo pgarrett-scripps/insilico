@@ -1,10 +1,8 @@
-# In Silico's own venue profile.
+# In Silico's own venue profile — the criteria the panel is held to.
 #
-# Until now reviews ran against the pipeline's "general" profile — sound
-# field-general standards, but standing in for *some other journal* we were
-# guessing at. That was the wrong frame. In Silico is the venue, so it should
-# state its own criteria and be judged against them, and authors should be
-# able to read exactly what the panel was told to weigh.
+# In Silico is the venue, so it states its own standards rather than borrowing
+# a generic profile that stands in for some other journal. Authors can read
+# exactly what the panel was told to weigh.
 #
 # Loaded via `journals_dir = "journals"` + `target_journal = "insilico"` in
 # peerreview.toml. The pipeline injects scope, guidelines and limits into the

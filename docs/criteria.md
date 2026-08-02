@@ -18,12 +18,9 @@ limits and its house guidance, and those get injected into the reviewer,
 synthesis and editor prompts. Reviewing "for *Nature Methods*" genuinely reads
 differently from reviewing "for *PLOS ONE*", because the standards differ.
 
-In Silico used to run against the pipeline's `general` profile — a stand-in for
-"some reputable journal we don't have a file for". That was a placeholder, and
-it meant our reviews were conditioned on a guess about an imaginary venue.
-
-**In Silico is now its own profile.** We are the venue, so we state our criteria
-and are judged against them.
+In Silico has its own profile. We are the venue, so we state our own criteria
+and the panel is held to them — rather than to a generic stand-in for whatever
+journal a paper might otherwise have gone to.
 
 ## The five things, in order
 

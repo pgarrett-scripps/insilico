@@ -277,6 +277,92 @@
 
 .ins-card__score { margin-left: auto; font-variant-numeric: tabular-nums; }
 
+/* --- Filter / sort toolbar ---------------------------------------------- */
+
+.ins-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 1.4rem 0 0.2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ins-rule);
+}
+
+.ins-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: var(--md-text-font-family);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.36em 0.8em;
+  border: 1px solid var(--ins-rule);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ins-muted);
+  cursor: pointer;
+  transition: border-color 110ms ease, color 110ms ease, background 110ms ease;
+}
+
+.ins-filter:hover { border-color: var(--md-accent-fg-color); }
+
+/* The pressed chip takes the verdict's own colour, so the control and the
+ * chips on the cards below it agree at a glance. */
+.ins-filter[aria-pressed="true"] {
+  color: var(--md-default-fg-color);
+  border-color: currentcolor;
+  background: var(--ins-panel);
+}
+
+.ins-filter--accept[aria-pressed="true"] { color: var(--ins-accept); }
+.ins-filter--minor[aria-pressed="true"]  { color: var(--ins-minor); }
+.ins-filter--major[aria-pressed="true"]  { color: var(--ins-major); }
+.ins-filter--reject[aria-pressed="true"] { color: var(--ins-reject); }
+.ins-filter--desk[aria-pressed="true"]   { color: var(--ins-desk); }
+
+.ins-filter__count {
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.6;
+}
+
+.ins-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  font-size: 0.66rem;
+  color: var(--ins-muted);
+}
+
+.ins-sort__label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+.ins-sort__select {
+  font-family: var(--md-text-font-family);
+  font-size: 0.7rem;
+  padding: 0.32em 0.5em;
+  border: 1px solid var(--ins-rule);
+  border-radius: 5px;
+  background: var(--md-default-bg-color);
+  color: var(--md-default-fg-color);
+  cursor: pointer;
+}
+
+
+/* Filtered-out cards are hidden with the `hidden` attribute; the grid's
+ * display rule would otherwise override it and show them anyway. */
+.ins-cards .ins-card[hidden] { display: none; }
+
+@media screen and (max-width: 34rem) {
+  .ins-sort { margin-left: 0; width: 100%; }
+}
+
 /* --- Review landing pages ----------------------------------------------- */
 
 /* The decision, restated as a band under the title so it is legible before

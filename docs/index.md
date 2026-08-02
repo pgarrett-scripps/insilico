@@ -61,16 +61,15 @@ wrote which report. Engine:
 
 ## Any field
 
-In Silico reviews manuscripts from any discipline. We began computational-only,
-on the reasoning that those are the claims a model can check — but the line that
-actually matters is whether the *evidence is inspectable*, and that cuts across
-fields rather than along them. An unsupported inference in a wet-lab paper is
-exactly as findable as one in a simulation.
+In Silico reviews manuscripts from any discipline. What decides whether a paper
+belongs here is not its field but whether its evidence can be inspected — an
+unsupported inference in a wet-lab paper is exactly as findable as one in a
+simulation.
 
-The panel's real limits — it cannot run your code, execute your experiments,
-check a derivation line by line, or see your figures — apply equally everywhere,
-so scoping by discipline only disguised where they bite. The reports name which
-claims they could not verify instead.
+The panel cannot run your code, execute your experiments, check a derivation
+line by line, or see your figures. Those limits apply in every field, so the
+reports name which claims they could not verify rather than pretending to have
+checked them.
 
 The name describes how the reviewing is done, not what may be reviewed. The one
 hard exclusion is work where a wrong machine-generated review could affect

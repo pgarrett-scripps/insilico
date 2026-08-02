@@ -42,10 +42,9 @@ debate_rounds = 1
 # Review posture
 # ---------------------------------------------------------------------------
 
-# Review against In Silico's own criteria, not a stand-in for some other
-# journal. `general` was the pipeline's placeholder for "a venue we don't have
-# a profile for" — reasonable while there was nothing better, but In Silico
-# *is* the venue, so it states its own standards and is judged against them.
+# Review against In Silico's own criteria. In Silico *is* the venue, so it
+# states its own standards rather than borrowing the pipeline's `general`
+# profile, which stands in for an unspecified journal we would be guessing at.
 #
 # The profile lives in ./journals/insilico.toml, which is version-controlled
 # next to the reviews it produced: anyone reading a review can check out the
@@ -87,11 +86,10 @@ injection_screen_action = "reject"
 # 2. Editorial triage — a single fast pass that desk-rejects work plainly
 #    below the bar before spending the full panel on it.
 #
-#    This was previously off, on the reasoning that a human editor running
-#    `/review` had already decided. That conflated two different decisions:
-#    the editor decides whether a submission is worth *considering*, the desk
-#    screen decides whether it clears the bar for full review. They are not
-#    the same judgment.
+#    On even though a human editor already ran `/review`, because those are
+#    two different decisions: the editor decides whether a submission is worth
+#    *considering*, the desk screen decides whether it clears the bar for full
+#    review.
 #
 #    It is also close to free, and may be cheaper than not running it. The
 #    screen deliberately shares the reviewers' model and manuscript prefix, so

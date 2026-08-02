@@ -114,11 +114,23 @@ def render_card(entry: dict) -> str:
     if len(authors) > 3:
         shown += ", et al."
 
+    # Data attributes drive the filter/sort toolbar. Emitted for every card so
+    # the controls work off the DOM alone — no second copy of the corpus to
+    # fetch, and no way for the list and the filters to disagree.
+    verdict = "desk" if entry.get("desk_rejected") else str(entry.get("decision", ""))
+    score = entry.get("mean_score")
+    attrs = (
+        f' data-verdict="{esc(verdict)}"'
+        f' data-date="{esc(str(entry.get("reviewed", "")))}"'
+        f' data-title="{esc(str(entry.get("title", "")).lower())}"'
+        f' data-score="{score if isinstance(score, (int, float)) else ""}"'
+    )
+
     # A directory URL, not `<path>/index.md`. MkDocs rewrites .md links written
     # in markdown, but leaves raw HTML alone — a card linking to index.md would
     # 404 on the built site while looking correct in the source.
     parts = [
-        f'<a class="ins-card" href="{esc(entry["path"])}/">',
+        f'<a class="ins-card" href="{esc(entry["path"])}/"{attrs}>',
         f"  {verdict_chip(entry)}",
         f'  <p class="ins-card__title">{title}</p>',
     ]

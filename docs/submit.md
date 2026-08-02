@@ -16,9 +16,8 @@ bioRxiv and medRxiv DOIs carry either the `10.1101` prefix or the newer
 
 ### Why not a direct PDF link?
 
-We used to accept any URL ending in `.pdf` and stopped, because a review has to
-name a specific, permanent revision of a manuscript and a bare PDF URL doesn't
-provide one.
+A review has to name a specific, permanent revision of a manuscript, and a bare
+PDF URL doesn't provide one.
 
 A preprint server gives us a DOI *and* a version number, so a review can state
 exactly which revision it read — and we record a SHA-256 of the file to prove
