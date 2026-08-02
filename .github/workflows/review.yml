@@ -39,7 +39,7 @@ env:
   # yet; point it at a release wheel once one exists, which will also drop the
   # Rust toolchain requirement from this job.
   RUSTYPDF_SPEC: >-
-    rustypdf @ git+https://github.com/pgarrett-scripps/rustypdf2markdown#subdirectory=python
+    rustypdf @ git+https://github.com/pgarrett-scripps/rustypdf#subdirectory=python
   # The text as written. Compression was measured and reverted: under `light`
   # the clarity reviewer reported "grammatical errors that obscure the main
   # claims" three times on a paper where the uncompressed run reported none —

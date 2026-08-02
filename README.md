@@ -183,7 +183,7 @@ The bundle appears under `docs/reviews/`, and the site picks it up on the next
 build. There is no index to regenerate.
 
 The panel reads a markdown rendering of the PDF, not the PDF — the pipeline
-converts it with [rustypdf](https://github.com/pgarrett-scripps/rustypdf2markdown),
+converts it with [rustypdf](https://github.com/pgarrett-scripps/rustypdf),
 which is a required dependency and has no fallback. The reader it replaced
 fused 2% of all words together on a real submission
 (`comparableefficacyatlowerdoseusingonlycausallyavailableinformation`), lost
@@ -192,7 +192,7 @@ rustypdf reads the same file with 3 fused tokens instead of 235. Install it
 alongside the pipeline:
 
 ```bash
-uv pip install "rustypdf @ git+https://github.com/pgarrett-scripps/rustypdf2markdown#subdirectory=python"
+uv pip install "rustypdf @ git+https://github.com/pgarrett-scripps/rustypdf#subdirectory=python"
 ```
 
 We pass the pipeline the **PDF**, never a conversion of it. The submission
