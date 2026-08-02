@@ -25,7 +25,6 @@ from queue import Empty, Queue
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from manuscript import describe as describe_ingest, prepare as prepare_manuscript  # noqa: E402
 from fetch_preprint import (  # noqa: E402
     _get,
     Preprint,
@@ -341,12 +340,12 @@ def write_bundle(
         # say which. Recorded as a claim, because nothing here verifies it.
         "submitter": submitter,
         "submitter_is_author": submitter_is_author,
-        # How the manuscript was read. The panel is given a markdown
-        # rendering of the PDF rather than the PDF itself, and at `light`
-        # compression a quoted sentence will be missing its articles and
-        # copulas — so a reader checking a quotation against the paper needs
-        # to know this before concluding the referee misquoted it.
-        "ingest": ingest or {"format": "pdf", "tool": "pypdf (pipeline default)"},
+        # How the manuscript was read, as the pipeline recorded it. The panel
+        # is given a markdown rendering of the PDF rather than the PDF itself,
+        # and under compression a quoted sentence will be missing its articles
+        # and copulas — so a reader checking a quotation against the paper
+        # needs to know this before concluding the referee misquoted it.
+        "ingest": ingest or {},
         "screens": json.loads(os.environ.get("REVIEW_SCREENS") or "{}"),
         "panel": scores,
         "mean_score": round(sum(numeric) / len(numeric), 2) if numeric else None,
@@ -557,12 +556,6 @@ def _run(args, workdir: Path) -> int:
         )
         return 1
 
-    # What the panel reads. The PDF stays the citable artifact and keeps its
-    # fingerprint; this is a better rendering of it, and provenance records
-    # which one the referees were actually given.
-    manuscript, ingest = prepare_manuscript(pdf)
-    print(describe_ingest(ingest), file=sys.stderr)
-
     from peerreviewagents.agents.editor.desk_screen import screen_mode
     from peerreviewagents.default_config import get_config
     from peerreviewagents.graph.review_graph import PeerReviewGraph
@@ -673,7 +666,12 @@ def _run(args, workdir: Path) -> int:
     # from a breakdown instead of an inference.
     graph = PeerReviewGraph(config)
     with _cost_recorder(graph.run_id) as cost_by_node:
-        state = graph.review(str(manuscript))
+        # The PDF, not a conversion of it. The pipeline converts it to
+        # markdown internally; handing it a .md instead would route the
+        # integrity screen to its markup scanner, which cannot see text
+        # concealed in a content stream, and would change the manuscript
+        # cache key that the next round re-derives to recover this draft.
+        state = graph.review(str(pdf))
 
     decision = state.get("decision")
     if decision not in VERDICT_LABEL:
@@ -703,7 +701,7 @@ def _run(args, workdir: Path) -> int:
         preprint, state, run_dir, dest,
         args.submission_id, args.submitter, cost_by_node, revision,
         submitter_is_author=args.submitter_is_author,
-        ingest=ingest,
+        ingest=state.get("ingest"),
     )
     rel = dest.relative_to(REPO)
     desk_rejected = bool(state.get("desk_rejected"))

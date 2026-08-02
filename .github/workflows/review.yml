@@ -47,7 +47,7 @@ env:
   # manuscript is a cached prefix on the cheapest model tier, so compressing
   # it saves under a cent a review, which does not buy a published criticism
   # of real people for something we did to their text.
-  INSILICO_CAVEMAN: "off"
+  PEERREVIEW_CAVEMAN: "off"
 
 jobs:
   review:
@@ -171,17 +171,17 @@ jobs:
             pip install --quiet "peerreviewagents[research] @ git+${PIPELINE_REPO}@${sha}"
           pip install --quiet pyyaml
 
-          # The manuscript converter. pypdf fuses ~2% of words together and
-          # drops structure entirely; rustypdf reads the same file cleanly and
-          # emits headings, tables and mathematics. Installed separately
-          # because it is a compiled extension with its own release cadence.
-          #
-          # Not fatal if it fails: run_review.py falls back to the pipeline's
-          # own PDF ingest and records that it did, so a review still happens
-          # and the published page says how the manuscript was read.
-          pip install --quiet "$RUSTYPDF_SPEC" || \
-            echo "::warning::rustypdf did not install; reviews will fall back to"\
-                 "pypdf ingest. The published page will record that."
+          # The manuscript converter, and the only one: the pipeline reads
+          # PDFs through rustypdf and has no fallback, because the fallback
+          # fused ~2% of words together and flattened every heading and table
+          # into prose. A panel given that reviews a document the authors did
+          # not write, so a converter that will not install has to stop the
+          # run rather than quietly downgrade it.
+          pip install --quiet "$RUSTYPDF_SPEC" || {
+            echo "::error::rustypdf did not install, so there is no way to read"\
+                 "the manuscript. Nothing is published from this run."
+            exit 1
+          }
 
           # Confirm the optional vendor actually landed, rather than
           # discovering months later that every review skipped arXiv.

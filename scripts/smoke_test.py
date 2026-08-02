@@ -193,76 +193,70 @@ def check_unscorable_dimension_is_not_a_good_score() -> None:
 def check_manuscript_ingest_is_recorded() -> None:
     """However the manuscript was read, the record has to say so.
 
-    The panel is handed a markdown rendering of the PDF, not the PDF, and at
-    `light` compression a quoted sentence is missing its articles and copulas.
+    The panel is handed a markdown rendering of the PDF, not the PDF, and
+    under compression a quoted sentence is missing its articles and copulas.
     A reader checking a referee's quotation against the paper will not find it
     verbatim — so the record must name the tool and the compression level, or
     the mismatch reads as the referee having misquoted.
 
-    Failure must never be silent either. A missing converter, a scanned PDF,
-    or a conversion that returns almost nothing all fall back to the old
-    ingest path, and each falls back with a stated reason.
+    The pipeline builds that record now; this script's job is to check it
+    survives into provenance.json unaltered, and that the pages still render
+    when it is absent — every review published before the record existed has
+    no ingest field at all.
     """
-    import manuscript
-
-    real_import = manuscript._import_rustypdf
     with tempfile.TemporaryDirectory() as tmp:
-        pdf = Path(tmp) / "paper.pdf"
-        pdf.write_bytes(b"%PDF-1.4 fixture")
+        preprint = Preprint(
+            url="https://arxiv.org/abs/2401.00001", source="arxiv",
+            pdf_url="https://arxiv.org/pdf/2401.00001v1",
+            identifier="2401.00001", version="1", title="Ingest Fixture",
+            authors=["A. Author"], abstract="x", published="2026-01-02",
+        )
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        (run_dir / "summary.md").write_text("# Summary\n")
+        (run_dir / "decision_letter.md").write_text("# Decision\n")
 
-        # No converter: fall back to the PDF, and say why.
-        manuscript._import_rustypdf = lambda: (None, "rustypdf unavailable (test)")
-        try:
-            out, rec = manuscript.prepare(pdf)
-        finally:
-            manuscript._import_rustypdf = real_import
-        assert out == pdf, "a missing converter must not lose the manuscript"
-        assert rec["format"] == "pdf"
-        assert rec["reason"], "a fallback with no reason is a silent fallback"
+        record = {
+            "format": "markdown",
+            "tool": "rustypdf 9.9.9",
+            "caveman": "light",
+            "chars": 41234,
+        }
+        dest = Path(tmp) / "v1"
+        write_bundle(
+            preprint,
+            {"decision": "minor", "manuscript_title": preprint.title,
+             "total_cost": 1.0, "errors": [], "reports": [], "ingest": record},
+            run_dir, dest, "1", "octocat", ingest=record,
+        )
+        got = provenance_of(dest)["ingest"]
+        assert got == record, f"the ingest record must travel verbatim, got {got}"
+        assert got["caveman"] == "light", "the compression level must be on the record"
+        assert "9.9.9" in got["tool"], "the converter version must be on the record"
 
-        # Conversion that returns almost nothing — a scanned PDF. Falling
-        # through would run a full panel over an empty manuscript.
-        class _Thin:
-            __version__ = "test"
-            @staticmethod
-            def to_markdown(path, caveman=None):
-                return "# Title\n"
+        # "off" reaches the record as null rather than as the string "off",
+        # so a page can test the field instead of parsing it.
+        plain = dict(record, caveman=None)
+        dest2 = Path(tmp) / "v2"
+        write_bundle(
+            preprint,
+            {"decision": "minor", "manuscript_title": preprint.title,
+             "total_cost": 1.0, "errors": [], "reports": [], "ingest": plain},
+            run_dir, dest2, "1", "octocat", ingest=plain,
+        )
+        assert provenance_of(dest2)["ingest"]["caveman"] is None
 
-        manuscript._import_rustypdf = lambda: (_Thin, "")
-        try:
-            out, rec = manuscript.prepare(pdf)
-        finally:
-            manuscript._import_rustypdf = real_import
-        assert out == pdf, "a near-empty conversion must not be handed to the panel"
-        assert "characters" in rec["reason"], rec["reason"]
-
-        # A real conversion is recorded with its tool and level.
-        body = "# Paper\n\n" + ("content word " * 2000)
-
-        class _Good:
-            __version__ = "9.9.9"
-            @staticmethod
-            def to_markdown(path, caveman=None):
-                return body
-
-        manuscript._import_rustypdf = lambda: (_Good, "")
-        try:
-            out, rec = manuscript.prepare(pdf, caveman="light")
-        finally:
-            manuscript._import_rustypdf = real_import
-        assert out.suffix == ".md" and out.read_text() == body
-        assert rec["format"] == "markdown"
-        assert rec["caveman"] == "light", "the compression level must be on the record"
-        assert "9.9.9" in rec["tool"], "the converter version must be on the record"
-
-        # "off" is recorded as no compression rather than as the string "off",
-        # so a page can test the field rather than parse it.
-        manuscript._import_rustypdf = lambda: (_Good, "")
-        try:
-            _, rec = manuscript.prepare(pdf, caveman="off")
-        finally:
-            manuscript._import_rustypdf = real_import
-        assert rec["caveman"] is None, rec["caveman"]
+        # A review published before the record existed. The page has to say
+        # "not recorded" rather than invent a tool it never used.
+        dest3 = Path(tmp) / "v3"
+        write_bundle(
+            preprint,
+            {"decision": "minor", "manuscript_title": preprint.title,
+             "total_cost": 1.0, "errors": [], "reports": []},
+            run_dir, dest3, "1", "octocat",
+        )
+        assert provenance_of(dest3)["ingest"] == {}, \
+            "an unrecorded ingest must be empty, not a guess at what was used"
 
 
 def check_desk_reject() -> None:

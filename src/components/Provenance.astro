@@ -43,12 +43,14 @@ const screens = provenance.screens || {};
 // under compression a quoted sentence is missing its articles and copulas.
 // Someone checking a quotation against the paper needs to know that before
 // concluding the referee misquoted it.
-const ingest = provenance.ingest || { format: "pdf", tool: "pypdf (pipeline default)" };
+const ingest = provenance.ingest || {};
 const ingestNote = ingest.format === "markdown"
   ? (ingest.caveman
       ? `Converted by ${ingest.tool}, then compressed — quotations are shortened and will not match the PDF word for word.`
       : `Converted by ${ingest.tool}. Quotations match the manuscript text.`)
-  : "Text extracted from the PDF directly.";
+  : ingest.tool
+    ? `Read by ${ingest.tool}.`
+    : "Not recorded — this review predates the ingest record.";
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 ---
 
@@ -90,7 +92,7 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
     <div class="prov__cell">
       <p class="label">Manuscript read as</p>
       <p class="prov__value mono">
-        {ingest.format === "markdown" ? "markdown" : "PDF text"}
+        {ingest.format === "markdown" ? "markdown" : ingest.format || "unrecorded"}
         {ingest.caveman ? ` · ${ingest.caveman}` : ""}
       </p>
       <p class="prov__hash">{ingestNote}</p>
