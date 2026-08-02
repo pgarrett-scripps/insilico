@@ -1,0 +1,132 @@
+{
+  "generated_at": "2026-08-02T08:34:42+00:00",
+  "pipeline": {
+    "sha": "",
+    "version": "0.1.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "author_rebuttal": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 2,
+  "revision": {
+    "round": 2,
+    "prior_bundle": "v1",
+    "prior_decision": "major",
+    "prior_round": 1,
+    "prior_required_revisions": 10,
+    "author_statement": false,
+    "kind": "revision",
+    "statement_source": "",
+    "statement_path": "",
+    "only_reviewers": [],
+    "baseline": {
+      "restored": true,
+      "reason": "",
+      "verified": true
+    },
+    "response_published": false
+  },
+  "submitter": "insilico-test",
+  "submitter_is_author": "no",
+  "screens": {
+    "desk_screen_mode": "gate",
+    "injection_screen": true,
+    "injection_screen_action": "reject"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.88,
+  "total_cost_usd": 2.3750129999999996,
+  "cost_by_node": {
+    "audit_citation_integrity": 0.206556,
+    "reviewer_literature": 0.154365,
+    "reviewer_novelty": 0.160789,
+    "unattributed": 1.853303
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://arxiv.org/abs/2607.24356",
+    "source": "arxiv",
+    "pdf_url": "https://arxiv.org/pdf/2607.24356v2",
+    "identifier": "2607.24356",
+    "doi": "10.48550/arXiv.2607.24356",
+    "title": "Optimal stimulation sites are not the most affected: personalised models of resting-state fMRI in Alzheimer's disease",
+    "authors": [
+      "Cristiano Capone",
+      "Enza Cece",
+      "Andrea Ciardiello",
+      "Guido Gigante",
+      "Evaristo Cisbani",
+      "Maurizio Mattia"
+    ],
+    "abstract": "Resting-state functional connectivity (FC) is altered in Alzheimer's disease (AD), widely regarded as a distributed network process; whether its signature reduces to a few focal sites has not been tested causally, a question central to targeted neuromodulation. We fit subject-specific, cross-subject-identifiable models whose free-running dynamics reproduce those of each individual patient. The fitted model parameters classify AD from controls at modest accuracy, below that of structural atrophy; we build on the functional model nonetheless, because dynamics, not tissue loss, are what stimulation can act on. Changing a virtual patient's model connectivity toward the control template reverts its AD classification, establishing in silico that the disease signature is correctable, yet the required correction is intrinsically distributed: a coordinated, multi-site change of the model connectivity that no single-node edit reproduces. Where, then, should a physically realisable focal drive act? A single-site drive at the node whose connectivity is most altered fails to revert the classification even at supra-physiological amplitudes, whereas selecting each patient's site by its effect on the disease discriminant achieves complete, individualised reclassification from one site, and a real-time closed-loop controller reaches comparable efficacy at lower dose using only causally available information. Optimal targets are cortical and heterogeneous: the site to stimulate is not where connectivity is most altered but where the network is most therapeutically responsive.",
+    "published": "2026-07-27",
+    "version": "2",
+    "pdf_sha256": "248f8d949330dd3d0c886baac332746e90a0a848ead087724e045c8074663ad2",
+    "pdf_bytes": 3226933
+  }
+}

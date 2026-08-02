@@ -1,0 +1,429 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260802-005716-on-the-sensitivity-of-machine-learned-probabilisti",
+  "manuscript_title": "On the sensitivity of machine-learned probabilistic weather forecast",
+  "manuscript_cache_key": "318be76cbd29966d1308a613318748a2dff7baba90a9fe853a91dd1007c2f2b2",
+  "decision": "minor",
+  "weighted_score": 4.0294,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Rescope the abstract, title and Discussion to match the evidence: state that forecast skill is broadly insensitive to the three scoring rules tested (noting the tropical degradation of the global energy score explicitly in the abstract), and that scale-aware objectives with appropriate scale/variable weighting yield more realistic spectra in these single-run, reduced-capacity experiments — without attributing the improvement to scale-awareness independent of weighting.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Add explicit caveat language in Section 4.2 and the Discussion stating that scoring rule, model capacity (256 vs 512 embedding), training schedule and weighting are confounded across the twelve Section 3.2 runs, and that the design cannot separate their contributions.",
+      "source_reviewer": "methodology",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Add a table reporting a scalar spectral-fidelity metric (e.g. integrated log-spectral error relative to ERA5) per experiment and lead time, with the spread across the 84 initialization dates as an uncertainty measure, so Section 4.2 no longer rests on visual inspection alone.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Report all numerical hyperparameters currently given only qualitatively: scale weights zeta_i, per-waveband weights, Gaussian smoothing kernel widths (exact, not 'approximately'), the anchor coefficient for every Table 2 row, and the relative weights of all combined loss terms (e.g. multi-scale CRPS + edge CRPS, graph energy + 0.1 fES). An appendix table is acceptable.",
+      "source_reviewer": "novelty",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "State the random seed(s) used per experiment and whether any configuration was run more than once; if not, add an explicit statement that run-to-run variance is uncharacterised, with at least a qualitative expectation of its magnitude.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Add a code- and data-availability statement giving the exact Anemoi commit hash or release tag, the training configuration files (deposited with a DOI where possible), model checkpoints where storage permits, and confirmation of whether the scoring-rule implementations are merged into the public repository.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Specify the exact ERA5 train/validation split (dates or fraction) within 1979-2020 and confirm whether 2022 inference constitutes a fully held-out test set.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Name the spherical-harmonic transform library and version used for the T191 transform, and state the PyTorch version and the GPU configuration used for training.",
+      "source_reviewer": "reproducibility",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Quantify the Section 3.1 result: replace 'broadly similar' and 'somewhat better' with numbers, state n and the independence structure of the verification sample, and report the tropical energy-score degradation numerically.",
+      "source_reviewer": "rigor",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "Rewrite the paired figure captions (3/4, 5/6, 7/8, etc.) to state what differs between them, and add a legend or table mapping each panel and line to its Table 2 loss configuration.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "Add a competing-interests statement noting the authors' ECMWF affiliation and role in developing Anemoi.",
+      "source_reviewer": "ethics",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "Add a sentence in the Introduction clarifying the relationship to the companion multi-scale loss paper [14] (which introduces the formalism used here) and what the present study adds; verify the Pacchiardi et al. [19] 'patched energy scores performed best' attribution against a specific section or figure.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-13",
+      "text": "Regarding the propriety of the combined fGES_graph + 0.1 fES objective: either cite a specific result establishing strict propriety of the combination or state plainly in Section 2 that this is asserted rather than proven here.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Retain the Section 2 hedge on graph scores for irregular grids and sparse observation networks — the quoted 'in principle' framing is adequate — but ensure Section 4 and the Discussion do not restate it as a demonstrated result.",
+    "Specify the interpolation method used to regrid fields to 1.5 deg for verification, and the spectral averaging procedure used for the tendency spectra.",
+    "Give the k-NN graph construction details (distance metric, tie-breaking) and any ERA5 preprocessing (regridding, normalisation) even briefly, or cite a resolvable source for them.",
+    "Report an approximate compute budget (GPU hours or wall-clock per run); this helps readers judge the feasibility of the seed-replication study the paper does not attempt.",
+    "Consider adding an environment file or requirements listing to the deposited configuration bundle.",
+    "Confirm the architectural details for the Section 3.1 experiments (processor layer count, embedding dimension, activations) rather than delegating entirely to AIFS-CRPS [13], and note any deviations.",
+    "Confirm the FGN conditional-layer-norm noise-injection description attributed to Alet et al. [1], and the training schedule attributed to AIFS-CRPS [13] (150,000 / 30,000 iterations); the citation audit could not verify either from abstracts alone."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "Inconsistent terminology: 'scale-aware' and 'scale-aware loss' are used interchangeably with 'multi-scale loss', but these are not identical concepts (multi-scale is one mechanism for achieving scale-awareness; spectral losses are another). The distinction is blurred in places, e.g., Section 4.2 states 'Making the forecast scores scale-aware substantially improves small-scale variability' without clarifying whether this refers only to multi-scale or to all scale-aware approaches tested."
+        },
+        {
+          "id": "clarity-2",
+          "text": "Soft redundancy between Sections 2 and 3.2: Table 2 re-describes loss objectives that were already defined in Section 2 (e.g., 'Multi-scale CRPS' is listed without explaining what 'multi-scale' means in this context, forcing readers to backtrack to Section 2). A forward reference in Section 2 would reduce friction."
+        },
+        {
+          "id": "clarity-3",
+          "text": "Figure ordering and narrative: Figures 3–14 are presented as pairs (e.g., Figures 3 and 4 both show geopotential spectra, Figures 5 and 6 show ratios) without clear explanation of why the same variable is shown twice or what distinguishes the two panels. The caption does not explain the difference between Figures 3 and 4, or between 5 and 6. This creates ambiguity about whether they represent different lead times, different subsets of experiments, or different plotting conventions."
+        },
+        {
+          "id": "clarity-4",
+          "text": "Vague quantifiers in results: Section 4.1 states 'In the tropics, however, the graph energy score experiment appears to perform best, while the energy score experiment shows some degradation relative to the other two experiments.' The word 'some' is not quantified. Figure 2 shows the differences visually, but the text should state the magnitude (e.g., 'CRPS difference of X%' or 'statistically significant at Y confidence level')."
+        },
+        {
+          "id": "clarity-5",
+          "text": "The term 'accumulated tendency' is used without definition in Section 4.2. While meteorologists may recognize it, the manuscript should state explicitly: 'accumulated tendency = forecast field at lead time t minus initial state' (or reference to ERA5 analyses in the same sentence is insufficient for clarity)."
+        },
+        {
+          "id": "clarity-6",
+          "text": "Soft: Section 5 (Discussion and Conclusion) repeats findings from Section 4 without adding new interpretation. For example, 'scale-aware losses improve spectral fidelity' is stated in Section 4.2 and restated in Section 5 without elaboration on why or implications."
+        },
+        {
+          "id": "clarity-7",
+          "text": "Soft: The phrase 'ad hoc and were chosen only to be of the right order of magnitude' (Section 3.2, describing weighting factors) is candid but vague. What does 'right order of magnitude' mean quantitatively? Were these weights 0.1, 1, 10? This affects reproducibility."
+        },
+        {
+          "id": "clarity-8",
+          "text": "Soft: The paper does not explicitly state which experiments are 'cheaper' (Section 3.2) or how much cheaper. Readers cannot assess whether the reduced model capacity and training schedule materially affect the conclusions about spectral behavior."
+        }
+      ],
+      "questions": [
+        "In Section 4.2, Figures 3 and 4 both show 'Accumulated tendency spectra for geopotential at 500 hPa'—what is the difference between these two figures? Are they different lead times, different subsets of the 12 experiments, or different plotting conventions? The caption should clarify.",
+        "The manuscript states that weighting factors for multi-scale experiments were 'chosen only to be of the right order of magnitude—estimated from the data'. Can you provide the actual numerical values of these weights for each scale and variable? This is essential for reproducibility.",
+        "In Section 4.1, you state the graph energy score 'performs best' in the tropics and the energy score 'shows some degradation'. Can you quantify these differences (e.g., CRPS improvement in %, or statistical significance)?",
+        "Section 3.2 mentions a 'smaller model' and 'shorter training schedule' to reduce computational cost. How do these reductions affect the conclusions about spectral behavior? Would the same ranking of loss objectives hold with the full model and training schedule from Section 3.1?",
+        "The graph energy score is described as potentially not strictly proper (Section 2), yet it is combined with a 'weak global anchor' to recover propriety. How sensitive are the results (Section 4) to the strength of this anchor (currently 0.1 × fES)? Was this weight tuned or chosen ad hoc?",
+        "In Section 2, you define the graph energy score using a k-nearest-neighbour graph with k=16. Was this value chosen based on prior work, tuned on validation data, or fixed a priori? How sensitive are results to this choice?",
+        "The abstract claims multivariate scores are 'a viable alternative to CRPS-based training', but Section 4.1 shows 'broadly similar' skill across all three training objectives. Does 'viable' mean 'equally good', or does it allow for small differences? This framing could be sharpened.",
+        "In Section 4.2, you note that 'differences between scale-aware loss objectives are comparatively small'. Can you quantify 'small' (e.g., as a percentage of variance explained, or spectral slope difference)?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The forecast skill comparison (Figure 2, Section 4.1) presents no statistical test, confidence intervals, or sample size. The claims 'broadly similar' and 'somewhat better' are qualitative. No n is stated; it is unclear whether differences are computed over grid points, time steps, or initialization dates, and whether these are independent replicates."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "No error bars or uncertainty quantification appear in Figure 2 or Figure 3–14. For spectral plots, it is unclear whether bands represent standard deviation, standard error, confidence intervals, or something else. The number of independent samples (84 initialization dates in 2022) is stated only in passing (Section 4.2) and not used to compute or justify any uncertainty measure."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The weighting factors for multi-scale and spectral experiments are described as 'ad hoc' and 'chosen only to be of the right order of magnitude' (Section 3.2). This introduces an uncontrolled variable that could confound the comparison between loss objectives. No sensitivity analysis is provided to show results are robust to these choices."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "No multiple-comparison correction is applied. Twelve experiments are compared in Section 3.2 (Table 2), and statements like 'edge-CRPS experiment and spectral magnitude CRPS experiment seem to be slightly more successful' (Section 4.2) are made without adjustment for multiple testing or a pre-registered hypothesis."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "The definition of 'accumulated tendency' spectra is stated only once in passing ('differences between the state at a given lead time and the initial state', Section 4.2) and not formally defined. It is unclear whether this is computed per variable, per ensemble member, or averaged; whether it is differenced in space or time; or how the spectral transform is applied."
+        },
+        {
+          "id": "data_analysis-6",
+          "text": "Figure 2 uses a single verification metric (fair CRPS at 1.5° resolution) without justification for this choice. The text states 'conclusions are also consistent when the fair energy score or fair graph energy score is used for verification' but provides no figure or table to support this claim."
+        },
+        {
+          "id": "data_analysis-7",
+          "text": "The training schedule differs between Section 3.1 (150k + 30k + 1k per rollout) and Section 3.2 (150k one-step + 1k per rollout up to 8 steps), but it is not stated whether this difference could affect the comparison. No ablation or sensitivity analysis justifies these choices."
+        }
+      ],
+      "questions": [
+        "In Figure 2, what is n? Are differences computed over grid points, time steps, initialization dates, or ensemble members? Which of these are independent replicates? Are error bars or confidence intervals available, and if so, what do they represent?",
+        "For the spectral plots (Figures 3–14), what is the definition of the error band or shaded region? Is it standard deviation, standard error, 95% confidence interval, or something else? Over how many samples (initialization dates, ensemble members, grid points) is it computed?",
+        "The manuscript states 'conclusions are also consistent when the fair energy score or fair graph energy score is used for verification instead of the fair CRPS' (Section 4.1). Can the authors provide a table or figure showing these alternative verification metrics for Figure 2?",
+        "In Section 3.2, the weighting factors for multi-scale and spectral experiments are 'ad hoc' and 'not tuned'. How sensitive are the spectral results (Figures 3–14) to these choices? A sensitivity analysis varying the weights by ±50% would strengthen the claim that scale awareness, not arbitrary weighting, drives the improvement.",
+        "The manuscript compares 12 loss configurations in Section 3.2 without a multiple-comparison correction. Were these comparisons pre-registered, or should a correction (e.g., Bonferroni or FDR) be applied to statements like 'edge-CRPS experiment and spectral magnitude CRPS experiment seem to be slightly more successful'?",
+        "How are the accumulated tendency spectra computed? Specifically: (i) are they computed per variable, per ensemble member, or averaged over ensemble members? (ii) is the spectral transform applied to the full field or to differences? (iii) are spectra then averaged over the 84 initialization dates, and if so, is the variance across dates reported?",
+        "The training schedule differs between the two experimental setups (Section 3.1 vs. 3.2). Could this difference affect the comparison? An ablation showing that the choice of training schedule does not confound the results would be helpful.",
+        "In Section 4.2, the statement 'achieving realistic spectra for geopotential appears more challenging' is qualitative. Can the authors quantify this, e.g., by computing a metric of spectral realism (e.g., integrated squared error relative to ERA5) and testing whether differences are statistically significant?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "No explicit declaration of competing interests or conflicts of interest is provided. The authors appear to be affiliated with ECMWF and are developing/using the Anemoi framework (https://github.com/ecmwf/anemoi-core), which is central to the experiments; this relationship should be declared as present or absent."
+        },
+        {
+          "id": "ethics-2",
+          "text": "Code and data availability are not addressed. While ERA5 is public, the trained models, custom scoring-rule implementations, and experimental configurations are not stated to be deposited or made available, limiting reproducibility and transparency."
+        }
+      ],
+      "questions": [
+        "Do the authors have any competing interests, financial or otherwise, related to the Anemoi framework, ECMWF, or the scoring-rule implementations tested? Please provide an explicit declaration.",
+        "Will the trained models, code for the custom scoring rules, and experimental configurations be made available (e.g., on GitHub, Zenodo, or a supplementary repository)? If not, what are the barriers?",
+        "The manuscript states 'All scores are implemented in the Anemoi framework' — are these implementations already public in the Anemoi repository, or are they new contributions that will be released?"
+      ]
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The specific empirical claim that 'patched energy scores performed best' in [19] (Pacchiardi et al. 2024) is not independently verified in this review due to search tool limitations. The authors should confirm this claim is accurately attributed."
+        },
+        {
+          "id": "literature-2",
+          "text": "The relationship between this work and [14] (Lang & Leutbecher 2025, 'A multi-scale loss formulation...') is not clearly delineated. Both are by overlapping author groups and both address scale-aware losses. The manuscript should explicitly state whether [14] is concurrent work, prior work, or a companion paper, and how this work extends or differs from it."
+        },
+        {
+          "id": "literature-3",
+          "text": "The manuscript does not cite or discuss diffusion-based ensemble forecasting approaches (e.g., continuous ensemble weather forecasting with diffusion models, 2024), which are emerging alternatives to CRPS-based training. While not mandatory, a brief acknowledgment of this alternative direction would contextualize the contribution."
+        }
+      ],
+      "questions": [
+        "Can the authors confirm that the claim on page 3 — 'In the weather forecasting experiments of [19], patched energy scores performed best among the multivariate scoring rules they considered' — is accurately represented from Pacchiardi et al. (2024)? Please cite the specific section or figure.",
+        "What is the publication status and relationship of [14] (Lang, Leutbecher, Maciel 2025) to the present work? Is it concurrent, prior, or a companion paper? How does the multi-scale formulation in [14] differ from the scale-aware approaches tested here?",
+        "The manuscript mentions that 'the now operational version of the AIFS ensemble uses the scale aware loss formulation introduced in [14]' (Discussion, page 26). Does this mean [14] has already been operationalized, or is this planned? This affects how to position the novelty of the present study."
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": " HARD — Confounding of scoring rule and model configuration in Section 3.2: the twelve experiments in Table 2 differ not only in the scoring rule but also in model size (256 embedding vs. 512 in Section 3.1), training schedule (two phases vs. three), and ad hoc weighting schemes ('chosen only to be of the right order of magnitude - estimated from the data - rather than tuned'). This makes it impossible to isolate whether differences in spectral fidelity arise from the scoring rule, the weighting scheme, or the reduced model capacity. The authors acknowledge weighting matters ('as much as, or more than, the specific mechanism'), but the design does not cleanly separate these factors."
+        },
+        {
+          "id": "methodology-2",
+          "text": "HARD — Lack of ablation for scale-aware weighting in Section 3.2: the paper shows that scale-aware losses improve spectra and that weighting matters, but does not systematically ablate the weighting scheme itself (e.g., by comparing the same scoring rule with and without ad hoc variable/scale weighting). This is a critical confound because the authors note that 'after introducing waveband weighting factors, the spectra look very similar' (Section 4.2), suggesting weighting dominates the choice of score. Without isolating weighting from scoring rule, the claim that 'multivariate scoring rules are a promising direction' is not fully supported by the spectral results."
+        },
+        {
+          "id": "methodology-3",
+          "text": "HARD — Single-run experiments without replication: each of the twelve Section 3.2 experiments appears to be run once (no mention of multiple seeds or replicates). For a machine-learning study, this is a significant limitation. Variance in training (initialization, data shuffling) could be comparable to or larger than differences between loss functions, especially given the shortened training schedule. The paper does not report error bars, confidence intervals, or multiple runs."
+        },
+        {
+          "id": "methodology-4",
+          "text": "SOFT — Limited resolution and model scale: the O96 (~1°) resolution in Section 3.1 and the smaller model in Section 3.2 are acknowledged limitations, but they raise questions about whether conclusions generalize to operational scales. The authors note (Section 5) that 'experiments at higher resolution may yield different conclusions,' which suggests the design may not capture the phenomena of interest at scales where the method will be deployed."
+        },
+        {
+          "id": "methodology-5",
+          "text": "SOFT — Incomplete specification of graph construction: the paper states that the graph connectivity for graph-based scores uses 'a k-nearest-neighbour graph with k=16 on the O96 reduced Gaussian grid' (Section 3.1), but does not justify this choice or test sensitivity to it. For a method that claims to be 'flexible' and 'not tied to fixed rectangular windows,' the choice of k and its impact on results is underexplored."
+        },
+        {
+          "id": "methodology-6",
+          "text": "SOFT — Spectral analysis limited to one lead time and aggregation: accumulated tendency spectra are shown for 2022 forecasts, but the paper does not report how results vary across lead times (1–12 steps) or seasons. Spectral properties may degrade differently across lead times for different loss functions, and this variation is not characterized."
+        },
+        {
+          "id": "methodology-7",
+          "text": "SOFT — No comparison to other scale-aware approaches: the paper compares different scoring rules and scale-aware formulations, but does not compare to other methods for improving spectral fidelity mentioned in Section 5 (e.g., conditional layer norms, reference field truncation, spatially correlated noise). This limits the ability to position the contribution relative to existing practice."
+        }
+      ],
+      "questions": [
+        "In Section 3.2, were the twelve experiments each run once, or were multiple random seeds used? If single runs, what is the estimated variance in the metrics due to training stochasticity?",
+        "Can the authors provide an ablation in which the same scoring rule (e.g., multi-scale CRPS) is trained with and without the ad hoc variable/scale weighting, to isolate the effect of weighting from the effect of the scoring rule itself?",
+        "The choice of k=16 for the k-nearest-neighbour graph in Section 3.1 is not justified. How sensitive are the results to this choice? Does the graph energy score remain superior to CRPS across a range of k values?",
+        "In Section 3.2, how do spectral properties vary across lead times (1–12 steps)? Do all loss functions degrade similarly, or do some maintain spectral fidelity longer?",
+        "The paper states that the global energy score 'does not appear to offer an advantage over CRPS' in Section 4.2, but Figure 2 shows it performs worse in the tropics (Section 4.1). Is this a genuine degradation, or is it within the noise of the experiment? What is the statistical significance of the tropical difference?",
+        "Can the authors clarify whether the 'weak global energy score anchor' (0.1 × fES) in the graph energy score experiment was tuned, or was this weight chosen a priori? If tuned, on what data?",
+        "The paper claims 'multivariate scoring rules are a promising direction for generative modelling' (Section 5), but the spectral results show that weighting matters more than the choice of score. Does this conclusion still hold given the confounding of weighting and scoring rule in Section 3.2?",
+        "How do the results change if the model capacity in Section 3.2 is increased to match Section 3.1? Would the differences between scoring rules persist, or would they be washed out by improved model capacity?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "Graph energy score propriety claim is understated and unverified: the manuscript states the graph energy score 'may fail to be strictly proper' and claims combining it with a weak global anchor (0.1 fES) recovers strict propriety, but provides no formal proof or citation of a theorem establishing this, making a core claim about score validity rest on unverified assertion."
+        },
+        {
+          "id": "novelty-2",
+          "text": "Spectral weighting choices are ad hoc and substantially affect results without justification: Section 3.2 explicitly states weighting factors are 'ad hoc and chosen only to be of the right order of magnitude' yet Figures 3-14 show these weights matter substantially, undermining the main result that scale-awareness improves spectra."
+        },
+        {
+          "id": "novelty-3",
+          "text": "Incomplete hyperparameter reporting prevents reproducibility: Table 2 does not specify the weighting coefficient for global energy score anchor in all experiments, exact smoothing kernel widths are given as 'approximately' rather than precisely, and exact scale weights ζ_i in multi-scale loss are not reported."
+        },
+        {
+          "id": "novelty-4",
+          "text": "Novelty positioning could be sharper: the manuscript does not clearly distinguish which graph-based scores are entirely new versus adaptations of existing approaches (e.g., graph energy score as localization of standard energy score using graph neighborhoods versus rectangular patches)."
+        },
+        {
+          "id": "novelty-5",
+          "text": "Missing direct comparison to patched energy scores from reference [19] (Pacchiardi et al., 2024), which introduced patched energy scores and found them to perform best among multivariate scores in weather forecasting, limiting evidence that graph-based localization is a viable alternative."
+        },
+        {
+          "id": "novelty-6",
+          "text": "Tropical performance difference is reported but not explained: Section 4.1 notes graph energy score performs better and global energy score degrades in tropics but provides no mechanistic insight into why or what the graph energy score captures that global energy score misses."
+        },
+        {
+          "id": "novelty-7",
+          "text": "Scale-awareness mechanism comparison is incomplete: multi-scale decomposition and spectral losses are compared separately but not directly against each other, with no quantitative assessment of which mechanism is more effective or under what conditions."
+        },
+        {
+          "id": "novelty-8",
+          "text": "Limited experimental scope with O96 (~1°) resolution coarse by modern standards, 8-member ensemble small, and shortened training schedule, with no testing of whether findings generalize to higher resolution or larger ensembles."
+        }
+      ],
+      "questions": [
+        "Can you provide a formal proof or cite a theorem showing that fGESgraph + 0.1 fES is strictly proper? If not, what is the justification for using this combination, and should the manuscript state that strict propriety is not guaranteed?",
+        "What are the exact scale weights ζ_i used in the multi-scale experiments, and the exact per-waveband weights used in spectral experiments? Can you justify these choices a priori rather than post hoc?",
+        "Is the 0.1 coefficient for the global energy score anchor used in the 'Graph energy' experiment (Section 3.1) also applied in the multi-scale graph energy and multi-scale graph edge energy experiments (Table 2)? If not, what values are used?",
+        "What are the exact kernel widths in grid points or kilometers for the Gaussian smoothing operators, rather than 'approximately 100, 200, 400, and 800 km'?",
+        "Why was a direct comparison to the patched energy scores of reference [19] not included? Would the graph-based approach outperform or underperform rectangular patches?",
+        "What causes the global energy score to degrade in the tropics relative to CRPS and graph energy? Is this a known limitation of global energy scores or specific to your setup?",
+        "Do you expect the relative performance of multivariate scores to change at higher resolution (e.g., O320 or higher), given that maintaining spatial coherence is particularly challenging at high resolution?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "Code availability is stated only as 'All scores are implemented in the Anemoi framework (https://github.com/ecmwf/anemoi-core)' with no commit hash, version tag, or confirmation that the exact implementation used is in the public repository. This is a HARD flag: a replicator cannot know which version of the code to use."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "No trained model weights, checkpoints, or intermediate outputs are deposited or made accessible. The paper does not state whether these will be released, when, or under what conditions. This prevents verification of the reported results."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "Random seed handling is not mentioned anywhere in the manuscript. For machine-learning experiments, seed specification is essential for reproducibility. This is a HARD flag for the neural network training."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "The exact procedure for transitioning between rollout stages (1 → 2 → 3–12) is underspecified. It is unclear whether models trained at rollout 1 are initialized into rollout 2 training, or whether rollout 2 is trained from scratch. The phrase 'the corresponding one-step model is used to initialize rollout training' (Section 3.2) applies only to the spectral-loss experiments, leaving the main experiments ambiguous."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "The mapping between loss configurations in Table 2 and their actual implementation is unclear. For example, 'Multi-scale edge CRPS' is described as 'Multi-scale CRPS combined with edge CRPS' but the weighting between these terms is not specified. Similarly, the weight 0.1 for the global energy score anchor in the graph energy experiment (Section 3.1) is not justified or explored."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "Spectral truncation (T191) and spherical harmonic transform details are mentioned but the exact spectral library/tool used is not named, nor is its version specified. This affects reproducibility of spectral calculations."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "The paper does not specify how ensemble members are initialized or sampled during training. For probabilistic forecasting, the ensemble generation procedure is load-bearing."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "No statement is made about whether code will be released upon publication, or under what license. The GitHub link is provided but without assurance of completeness or version control."
+        },
+        {
+          "id": "reproducibility-9",
+          "text": "Figures 3–14 show spectral results but do not indicate which of the 12 experiments (Table 2) each panel corresponds to. The figure captions do not map loss configurations to panels, making it impossible to trace results back to specific experimental setups."
+        }
+      ],
+      "questions": [
+        "Which specific commit or version tag of the Anemoi framework was used to generate the results? Can you confirm that the exact code is currently in the public repository?",
+        "Will trained model weights, checkpoints, and intermediate outputs (e.g., spectral calculations, forecast fields) be deposited in a public archive (e.g., Zenodo, OSF) with a DOI? If so, when and under what access conditions?",
+        "What random seed(s) were used for model initialization and training? Were multiple seeds run and results averaged, or is a single seed reported?",
+        "For the main experiments (Section 3.1), are the models trained at rollout 1 then fine-tuned at rollout 2, or is rollout 2 trained independently? Please clarify the initialization procedure.",
+        "In Table 2, what are the exact loss weights for combined objectives? For example, in 'Multi-scale edge CRPS', what is the relative weight of the multi-scale CRPS term versus the edge CRPS term?",
+        "Which Python library or tool was used for the spherical harmonic transform (e.g., SHTns, xarray, shtab)? What version?",
+        "How are ensemble members initialized during training? Are they sampled from a learned distribution, or generated by other means?",
+        "Figures 3–14 do not clearly indicate which loss configuration (from Table 2) each panel represents. Can you provide a detailed figure caption or supplementary table mapping each panel to the corresponding experiment?",
+        "The paper states results are 'broadly similar' across experiments (Section 4.1) but provides no quantitative comparison (e.g., RMSE differences, statistical significance tests). How were differences assessed, and what threshold was used to define 'noticeable'?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "The title claims 'sensitivity of machine-learned probabilistic weather forecast models to scale-aware scoring rules,' but the experiments test only three univariate/multivariate scoring rules in Section 3.1 (CRPS, global energy, graph energy). The word 'sensitivity' implies a systematic exploration of how forecast properties vary with scoring rule choice; instead, the paper shows that three specific rules produce 'broadly similar' skill (Section 4.1, Figure 2). This is a null result for sensitivity, not a demonstration of it. The title should be reworded to reflect that the paper compares specific rules, not explores sensitivity across a range."
+        },
+        {
+          "id": "rigor-2",
+          "text": "The abstract states 'multivariate scores are a viable alternative to CRPS-based training' based on Section 4.1, but Figure 2 shows the graph energy score performs 'somewhat better' only in the tropics, while the global energy score 'shows some degradation.' The claim of viability is supported, but the abstract does not mention the tropical degradation of the global energy score, which is a material qualifier."
+        },
+        {
+          "id": "rigor-3",
+          "text": "Section 4.2 (spectra results) relies heavily on visual inspection of Figures 3–14 without quantitative metrics. The claim that 'scale-aware losses improve spectral fidelity' (Discussion, line 1) is supported by visual comparison, but no numerical summary (e.g., RMS error vs. ERA5 spectra, correlation of spectral slopes) is provided. This makes it difficult to assess the magnitude of improvement or whether differences are meaningful. The statement 'differences between scale-aware loss objectives are comparatively small' (Section 4.2) is qualitative; a quantitative threshold would strengthen this."
+        },
+        {
+          "id": "rigor-4",
+          "text": "The paper states that 'the weighting of different fields, scales, and variables can matter as much as, or more than, the specific mechanism' (Discussion), but this is inferred from visual comparison of Figures 3–14 (e.g., spectral energy score vs. spectral energy score weighted). No ablation or statistical test isolates the contribution of weighting vs. mechanism, so this claim is suggestive but not rigorously supported."
+        },
+        {
+          "id": "rigor-5",
+          "text": "The claim that the graph energy score 'does not rely on fixed rectangular patches on a regular grid' and 'can therefore be applied to irregular grids or sparse observation networks' (Discussion) is stated as a property of the method but is not demonstrated experimentally. The paper tests only on a regular O96 Gaussian grid. This is a theoretical advantage, not an empirical finding."
+        },
+        {
+          "id": "rigor-6",
+          "text": "Section 3.2 states that 'weighting factors are ad hoc and were chosen only to be of the right order of magnitude - estimated from the data - rather than tuned.' This is transparent but raises the question: how sensitive are the spectral results to these choices? No sensitivity analysis is provided, so the robustness of the scale-aware loss conclusions is unclear."
+        },
+        {
+          "id": "rigor-7",
+          "text": "The abstract claims the results 'suggest that multivariate scores are a viable alternative to CRPS-based training for global machine-learned weather forecasting,' but the experiments use a smaller model (O96 ≈ 1°) and shorter training schedule than operational AIFS-CRPS (which the paper cites as using higher resolution and longer training). The generalizability to full-scale global forecasting is not tested, and this scope limitation should be stated in the abstract or early in the paper, not buried in Section 5."
+        }
+      ],
+      "questions": [
+        "Can the authors provide quantitative metrics (e.g., spectral slope error, RMS difference from ERA5 spectra, or a summary statistic) for the spectral comparisons in Section 4.2, rather than relying on visual inspection? This would allow readers to assess the magnitude of improvement claimed for scale-aware losses.",
+        "The title uses the word 'sensitivity,' which typically implies a systematic study of how a quantity varies with a parameter. The paper compares three specific scoring rules and finds 'broadly similar' skill. Is the title intended to convey that forecast skill is insensitive to the choice of scoring rule (a null result), or is it meant to highlight differences in tropical regions? A reworded title would clarify the main finding.",
+        "In Section 3.2, the authors state that weighting factors were 'chosen only to be of the right order of magnitude.' How much do the spectral results in Section 4.2 depend on these choices? A brief sensitivity analysis (e.g., varying the scale weights by ±50%) would strengthen confidence in the conclusion that scale-aware losses improve spectral fidelity.",
+        "The paper claims the graph energy score 'can in principle be applied on irregular grids, sparse spatial meshes, or sparse observation networks' (Section 2). Is this a theoretical property, or have the authors tested it? If untested, the claim should be qualified as 'in principle' or 'potentially.'",
+        "Figure 2 shows that the global energy score experiment exhibits 'some degradation' in the tropics relative to CRPS and graph energy. Can the authors provide a hypothesis for why the global energy score underperforms in the tropics? This would help readers understand whether the result is specific to the tropical regime or reflects a general limitation of global multivariate scores."
+      ]
+    }
+  ],
+  "prior_job_id": "",
+  "desk_rejected": false
+}

@@ -680,6 +680,22 @@ def _run(args, workdir: Path) -> int:
         print(json.dumps(preprint.to_dict(), indent=2))
         return 0
 
+    # Stop before the panel if the metadata lookup came back empty. The
+    # resolvers treat that as survivable — the PDF is what gets reviewed — but
+    # a published review with no title, no authors and no DOI cannot be cited,
+    # cannot be found, and does not name the work it judges. It is not worth
+    # the cost of a panel, and the failure is nearly always transient
+    # throttling that a later re-run will not hit.
+    if not preprint.title:
+        print(
+            f"no metadata for {preprint.identifier or url}: the source returned "
+            "no title, authors or DOI, so a review of it could not be cited or "
+            "found. This is usually the API throttling us — wait a minute and "
+            "run it again.",
+            file=sys.stderr,
+        )
+        return 1
+
     from peerreviewagents.agents.editor.desk_screen import screen_mode
     from peerreviewagents.default_config import get_config
     from peerreviewagents.graph.review_graph import PeerReviewGraph

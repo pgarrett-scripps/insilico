@@ -1,0 +1,387 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260802-012648-to-police-or-to-guide-how-higher-education-compute",
+  "manuscript_title": "To Police or to Guide: How Higher Education Computer Science Instructors",
+  "manuscript_cache_key": "07c3b88381a7434c040b298b517adc03d20923e1ebe87b17511455991893129a",
+  "decision": "minor",
+  "weighted_score": 4.1714,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Retitle and reframe all causal/directional claims. Revise the title, abstract, introduction and Section 5.2 so that no sentence asserts that policies worsen relationships, hinder learning, or reshape dynamics as an established effect. Every such statement must be explicitly attributed to instructor perception or report (e.g. 'instructors describe more adversarial dynamics'), matching the hedging already used in the body and Limitations. Section 5.2 recommendations must be labelled as exploratory suggestions warranting empirical validation, consistent with the p.18 admission that effectiveness evidence is lacking.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Rewrite the abstract to state the paper's central contribution and the learning-harms vs. assessment-harms distinction that structures the analysis, including the finding that assessment-oriented policies predominate in this sample. Replace all vague quantifiers ('most', 'surprisingly common', 'several') throughout the manuscript with explicit counts out of 13.",
+      "source_reviewer": "clarity",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Deposit, as a supplementary appendix or in a public repository linked from the paper, (a) the full interview protocol and (b) the final codebook, giving code names, definitions and at least one example excerpt per code, with the mapping from codes to the reported themes. A citable, permanent link must appear in the manuscript.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Add a Data Availability statement that explicitly addresses transcripts: state that they cannot be deposited, give the consent and re-identification justification (small describable population of US CS instructors), and specify the conditions under which de-identified coded excerpts can be obtained. Non-deposition is acceptable here only if the justification is stated in the paper rather than left implicit.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Add explicit informed-consent documentation to Section 3.1: state that consent was obtained, how (written/verbal, recorded), what participants consented to regarding recording and quotation, and the data storage/retention practice for recordings and transcripts. Add the IRB committee name and protocol/exemption number.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Move the demographic non-reporting decision into the Methods as an explicit statement (currently only in Section 3.2), naming what was collected, what is withheld, and why, so a reader can assess sample composition limits without inferring the rationale.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Add the alternative-explanations paragraph to Sections 4.1.3/4.2.2 as proposed: state that reduced office-hour attendance and paper-exam learning effects are instructor-attributed observations with plausible competing explanations (scheduling, general help-seeking trends) that this design cannot adjudicate.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Add a positioning paragraph in Section 2.2 explicitly contrasting this study's enforcement/implementation-level interview data with Luo (2025) survey-based trust findings and the syllabus-text analyses of Ali et al. (2025) and Tom Tong et al. (2025), stating precisely what layer of the phenomenon this study captures that those do not.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Re-check the Baldeo (2026) and Shen & Tamkin (2026) citations in Section 2.1 against the specific programming-skill claims attributed to them. If the sources address executive function or general skill formation rather than programming/debugging, narrow the in-text claim to the sources' actual scope or substitute a directly relevant citation. State in the response letter which option was taken for each.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "Add the missing conceptual citations: restorative-justice-in-academic-integrity literature (Section 4.4.1), test-anxiety/assessment-validity literature (Section 4.2.2), and Deci & Ryan on self-determination theory (Section 4.3.3).",
+      "source_reviewer": "literature",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "Define 'AI-proof' at first use (Section 1) and 'second-order costs' at first use (Section 4.2) in one sentence each.",
+      "source_reviewer": "clarity",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "State the stopping criterion for recruitment at n=13 \\u2014 whether saturation was assessed, and if the authors reject saturation as inconsistent with reflexive TA (a defensible position), say so and explain what determined the sample size instead.",
+    "Name the analysis tool, or state that coding was done manually.",
+    "Briefly document the concrete reflexive safeguards used (memo-writing, checking codes against raw quotes, the independent-notes-before-group-discussion sequence described in the rebuttal). The rebuttal's account of three researchers with divergent GenAI stances converging independently is a stronger reflexivity claim than the manuscript currently makes \\u2014 it is worth putting in Section 3.3.",
+    "Consider stating explicitly in the Limitations that participant quotations cannot be independently verified by readers given the non-deposition of transcripts; candour here costs nothing and pre-empts the obvious reader question."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "The abstract (lines 1–10) does not explicitly state the paper's central contribution or the distinction between learning harms and assessment harms that structures the entire analysis. A reader encountering only the abstract would not know the paper's core argument. The abstract should name these two harm types and state that most policies address assessment harms rather than learning harms."
+        },
+        {
+          "id": "clarity-2",
+          "text": "The term 'AI-proof' appears frequently (e.g., 'AI-proof assessments', 'AI-proofing their assessment') but is never formally defined. While context makes the meaning recoverable (preventing AI use in assessments), explicit definition at first use would improve clarity."
+        },
+        {
+          "id": "clarity-3",
+          "text": "Quantitative claims about policy adoption lack precision in places. For example, '9 interviewees adopting some form of it [paper exams]' is stated, but the text does not clearly indicate whether this is 9 out of 13 total (69%) or some other denominator. The phrase 'surprisingly common' (page 10) is vague; a percentage would be clearer."
+        },
+        {
+          "id": "clarity-4",
+          "text": "Section 4.4 uses the pronoun 'it' ambiguously in places. For instance, 'When instructors move away from policing their students' AI use, whether due to the intractability of detecting AI use or their teaching philosophy, it does not change the fact that...' — the referent of 'it' is unclear (the action of moving away? the intractability?). Restructuring would help."
+        },
+        {
+          "id": "clarity-5",
+          "text": "The phrase 'most instructors more readily reacted to assessment harms' (page 2, abstract) uses 'most' without quantification. The findings section shows 9 of 13 adopted paper exams, but the claim about 'most' instructors' general tendency is not precisely supported by the data presented. Clarify whether 'most' means >50% of the 13, or is a qualitative observation."
+        },
+        {
+          "id": "clarity-6",
+          "text": "Inconsistent reference to the same concept: instructors' shift from 'policing' to 'guiding' is framed as a role change, but the paper sometimes refers to this as a shift in responsibility and sometimes as a shift in philosophy. A single consistent framing would reduce friction."
+        },
+        {
+          "id": "clarity-7",
+          "text": "The term 'second-order costs' (page 10, section 4.2) is introduced without definition. While context suggests it means costs that result from the policy itself (not from AI), explicit definition at first use would clarify."
+        },
+        {
+          "id": "clarity-8",
+          "text": "Figure/table check: Table 1 (interview protocol) lists example questions but does not indicate how many questions were asked per section or the full protocol structure. This is a soft issue (the protocol is described in text), but the table's utility is limited."
+        }
+      ],
+      "questions": [
+        "The abstract states 'AI policies primarily seek to AI-proof assessments without directly addressing student learning.' Does this mean (a) all policies are assessment-focused, or (b) the majority are? The findings show 9 of 13 adopted paper exams (assessment-focused), but several instructors also adopted learning-oriented policies (transparency, metacognition, motivation). How should the abstract characterize the distribution?",
+        "In section 4.2.1, you note that detecting AI use via 'uncovered code' can lead to 'false positives, where students who genuinely learned the content from other sources would be penalized.' Can you clarify what 'other sources' means here? Does it include legitimate learning resources, or does it refer to students who learned the concept but happened to use a feature not yet taught?",
+        "Section 4.3.1 states that 'instructors adopting this approach would need to diligently explain to students what their expectations with AI are and why that is.' Is this a recommendation you are making, or a finding from the interviews? If a finding, which instructors did this and what was the outcome?",
+        "The paper distinguishes 'learning harms' (cognitive offloading, illusion of competence, social isolation) from 'assessment harms' (inability to tell who learned). Are these mutually exclusive categories, or can a single policy address both? For instance, does a formative assessment address learning harm, assessment harm, or both?",
+        "In section 4.4.2, you write that some instructors 'count on their assessments to show students who overuse AI the consequences.' Is this a learning-oriented or assessment-oriented policy? It seems to blur the distinction you've established. Clarify the categorization.",
+        "Table 2 lists 'Recently Taught Courses' but does not indicate whether each instructor teaches all listed courses simultaneously or sequentially. Does this affect the generalizability of their AI policy accounts? For instance, did I1 design one policy for all courses or different policies per course?",
+        "The reflexive thematic analysis section (3.3) states that 'the findings from the analysis are not meant to be representative of a broader population.' Yet the abstract and discussion make claims like 'instructors perceive two types of harms' and 'most instructors more readily reacted to assessment harms.' How do you reconcile the exploratory framing with the generalizing language in the abstract and findings?",
+        "You note that 'not all policies are always enforced as written' (page 1), and section 4.4.1 confirms this (e.g., I13's policy is 'an empty threat'). How did you distinguish between stated policies and actual practices in your analysis? Did you code them separately, or merge them?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": [
+        "The manuscript is a qualitative study and does not fall within the scope of statistical and data-analysis review. Are there any quantitative analyses, statistical tests, or numerical comparisons in the manuscript that I should have flagged but may have missed?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "IRB approval body and protocol number not named: while exemption is stated, the specific IRB committee name and protocol identifier are absent, preventing verification and limiting transparency (Section 3.1)."
+        },
+        {
+          "id": "ethics-2",
+          "text": "No explicit statement on data retention, storage security, or long-term archival plans for interview recordings and transcripts, which is a SOFT transparency gap for qualitative data involving human subjects."
+        },
+        {
+          "id": "ethics-3",
+          "text": "Recruitment method mixes purposive and snowball sampling without explicit safeguards against bias: 'Most interviewees were recruited by purposive sampling, with some instructors recruited by snowball sampling' (Section 3.1) could introduce selection bias, though this is a methodological rather than ethics issue and belongs to the methods reviewer."
+        }
+      ],
+      "questions": [
+        "Can you provide the name of the IRB committee and the protocol number under which this study was reviewed and exempted? This is standard for transparency and verification.",
+        "How were interview recordings and transcripts stored, secured, and will they be retained or destroyed after the study? Were participants informed of these data-handling practices?",
+        "Did the informed consent process explicitly address the use of direct quotes in publication, given that some quotes are quite detailed and could potentially identify instructors? How did you balance transparency with anonymity?"
+      ]
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "Baldeo (2026) [ref 6] claim requires verification: manuscript attributes 'reduce[s] code reading and debugging skills' to a work titled 'Generative artificial intelligence reliance and executive function attenuation,' which appears to make a broader claim about executive function rather than specifically programming skills"
+        },
+        {
+          "id": "literature-2",
+          "text": "Shen & Tamkin (2026) [ref 68] claim requires verification: the claim that this work shows AI reduces 'code reading and debugging skills' should be checked against actual content, as the title 'How AI Impacts Skill Formation' is general and may not specifically address programming skills"
+        },
+        {
+          "id": "literature-3",
+          "text": "Restorative justice framework discussed but not cited: Section 4.4.1 quotes I8 on 'rehabilitative or restorative justice' but does not cite literature on restorative justice in academic integrity contexts"
+        },
+        {
+          "id": "literature-4",
+          "text": "Test anxiety mentioned but not grounded: I5's discussion of test anxiety (Section 4.2.2) is not supported by citations to educational psychology literature on test anxiety and assessment validity"
+        },
+        {
+          "id": "literature-5",
+          "text": "Self-determination theory missing: Section 4.3.3 discusses intrinsic motivation and interest but cites only Elliot (1999) on achievement goals; Deci & Ryan's self-determination theory would be more directly relevant"
+        },
+        {
+          "id": "literature-6",
+          "text": "Prather et al. (2023) [ref 61] genre unclear: cited as source for instructor adoption of AI tools, but the reference is a working group report, not a primary empirical study"
+        },
+        {
+          "id": "literature-7",
+          "text": "Albluwi (2019) [ref 2] scope unclear: claim about 'mixed results' in cheating deterrence cites a 2019 systematic review on plagiarism detection in the pre-AI era; generalizability to broader cheating-deterrence literature should be verified"
+        }
+      ],
+      "questions": [
+        "Can the authors confirm that Baldeo (2026) specifically addresses code reading and debugging skills, or should a more targeted reference be used for this claim?",
+        "Can the authors confirm that Shen & Tamkin (2026) specifically addresses programming skill formation, or is the title's broader framing more accurate?",
+        "Would the manuscript benefit from citing literature on restorative justice in academic integrity to ground the shift from 'policing' to 'guiding' discussed in Section 4.4.1?",
+        "Is Prather et al. (2023) a working group report or a primary empirical study, and should this be clarified when citing it for specific claims about instructor adoption?",
+        "For the claim that Albluwi (2019) shows 'mixed results' in cheating deterrence, does this conclusion apply to the broader literature or specifically to pre-AI plagiarism detection methods?",
+        "Would citing Deci & Ryan's self-determination theory strengthen the discussion of intrinsic motivation in Section 4.3.3?"
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "The study makes causal and comparative claims about policy effects that the design cannot support. For example, the conclusion that 'assessment-oriented policies can be stress-inducing, less effective at evaluating learning' (p.17) and that they 'hinder student learning' (p.3) rests entirely on instructor perception without independent measurement of student stress, learning outcomes, or actual policy effectiveness. This is a HARD design limitation: there is no control group, no measurement of actual student learning, no comparison of outcomes between classrooms with different policies."
+        },
+        {
+          "id": "methodology-2",
+          "text": "The claim that paper exams 'do not necessarily help students learn better—it might actually cause some students to perform worse' (p.10) is supported only by I5's statement about test anxiety, not by any systematic comparison or measurement. The design cannot distinguish between instructor speculation and actual effects."
+        },
+        {
+          "id": "methodology-3",
+          "text": "No independent verification of whether stated policies match enacted policies. While the protocol asks about enforcement, the answers are instructor self-reports. The manuscript notes 'not all policies are always enforced as written' (p.1) but provides no systematic method to verify actual enforcement or its consistency."
+        },
+        {
+          "id": "methodology-4",
+          "text": "The study cannot support the recommendation that 'learning-oriented AI policies' are more effective than assessment-oriented ones. Section 4.3 presents these approaches as promising, but the authors acknowledge 'this study only involves interviews with instructors, so it does not have the empirical evidence to suggest whether these learning-oriented AI policies are effective' (p.18). Yet the abstract and discussion frame these as recommendations, which overstates what the design supports."
+        },
+        {
+          "id": "methodology-5",
+          "text": "No student perspective or outcome data. The study examines how instructors perceive student learning harms, social isolation, and illusion of competence, but has no independent measure of whether students actually experience these effects or how they perceive policies. Instructor observations of 'less office hours traffic' (p.8) could reflect multiple causes (student scheduling, pandemic effects, etc.) not controlled for."
+        },
+        {
+          "id": "methodology-6",
+          "text": "The sample size (n=13) and recruitment method (purposive + snowball) introduce selection bias. Instructors who volunteer to discuss their AI policies may differ systematically from those who do not. No information is provided on recruitment response rate or characteristics of non-respondents."
+        },
+        {
+          "id": "methodology-7",
+          "text": "Temporal confound: the study was conducted at a single time point (interviews conducted remotely over Zoom, no date specified in methods, though references suggest 2025-2026). Instructors' policies and perceptions may have changed since implementation. No baseline or longitudinal comparison exists."
+        },
+        {
+          "id": "methodology-8",
+          "text": "The distinction between learning harms and assessment harms, while conceptually useful, is not operationalized in a way that allows systematic comparison. Some policies are classified as 'assessment-oriented' but may have learning effects; the design does not isolate which policies actually address which harms."
+        }
+      ],
+      "questions": [
+        "Can the authors clarify what specific evidence would be needed to support the causal claims about policy effects? For instance, the statement that assessment-oriented policies 'hinder student learning' (p.3)—what would constitute evidence of this beyond instructor perception?",
+        "The study notes that 'not all policies are always enforced as written' (p.1). Did the interview protocol include questions to verify the gap between stated and enacted policies? If so, how systematic was this verification, and can you provide examples of discrepancies found?",
+        "For the claim that paper exams 'do not reliably measure student learning without having the curriculum designed around it' (p.10), is this based on instructor statements or on any measurement of exam validity? The evidence presented appears to be I1's comment about lack of time for backward design, not a validity analysis.",
+        "The study identifies social isolation as a learning harm (section 4.1.3), citing reduced office hours attendance. What alternative explanations for reduced office hours traffic were considered (e.g., pandemic effects, shift to online resources, student scheduling)? How does the timing of policy implementation relate to these observations?",
+        "Section 4.3 presents learning-oriented policies as alternatives, but the design does not compare outcomes between instructors using these approaches versus assessment-oriented approaches. Can you clarify whether the study is presenting these as instructor innovations observed in the sample, or as evidence-based recommendations?",
+        "The authors state they 'opted to take extra care in protecting the participants' identities and not report their demographic information' (p.4). Does this mean instructor demographics (e.g., career stage, prior experience with AI, disciplinary background) were not collected, or simply not reported? If not collected, does this limit understanding of whether policy choices vary by instructor characteristics?",
+        "How were the three researchers' differing levels of AI skill and trust (noted on p.6) managed during analysis to avoid bias in interpreting instructor statements about AI harms? Were codes and themes reviewed independently before discussion, or only discussed collaboratively?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "Overstated novelty claim: The abstract and introduction position this as addressing a gap in 'tool-oriented research' and focusing on 'instructor-student relationships,' but Luo (2025) [51] explicitly studies 'How does GenAI affect trust in teacher-student relationships?' and Lau & Guo (2023) [44] examined instructor perspectives on adaptation. The manuscript does not clearly articulate what is novel beyond these works."
+        },
+        {
+          "id": "novelty-2",
+          "text": "Insufficient differentiation from concurrent work: The manuscript cites Ali et al. (2025) [3] and Tom Tong et al. (2025) [73], which also analyze instructor AI policies in syllabi, but does not explain how this work's methods, sample, or findings differ. Are the samples overlapping? Do the findings contradict or extend prior work? This is left unclear."
+        },
+        {
+          "id": "novelty-3",
+          "text": "Learning vs. assessment harms as empirical finding, not novel framework: The manuscript presents the distinction between learning harms and assessment harms as an empirical discovery, but the underlying concerns (cognitive offloading, assessment integrity) are well-established in the cited literature. The novelty of the framing is not clearly articulated—is this a new conceptual model, or a useful way to organize existing observations?"
+        },
+        {
+          "id": "novelty-4",
+          "text": "Learning-oriented policy recommendations lack novelty: The recommended policies (transparency, modeling good use, formative assessment, motivation/engagement) are standard pedagogical practices. The manuscript does not claim to have invented these; rather, it documents that some instructors are already using them. The contribution is thus primarily in connecting these practices to AI policy design, which is incremental."
+        },
+        {
+          "id": "novelty-5",
+          "text": "Unclear scope of 'first' or 'novel' claims: The manuscript does not use explicit 'first' or 'novel' language, but the framing implies this is the first work to examine the relationship between AI policies and instructor-student relationships. However, Luo (2025) [51] already examines this relationship empirically. The manuscript should clarify what is genuinely new."
+        },
+        {
+          "id": "novelty-6",
+          "text": "Limited generalizability not acknowledged in contribution claims: The sample is n=13 from US institutions only, undergraduate CS only. The manuscript acknowledges this in limitations but frames findings as broadly applicable. This is a soft issue but worth noting."
+        }
+      ],
+      "questions": [
+        "How does this work's sample, methods, or findings differ from or extend Ali et al. (2025) [3] and Tom Tong et al. (2025) [73], which also analyze instructor AI policies? Are there overlapping participants or institutions?",
+        "The manuscript distinguishes 'learning harms' from 'assessment harms,' but are these truly novel categories, or a reframing of existing concerns (cognitive offloading, assessment integrity) documented in prior work? If the latter, what is the conceptual contribution of the distinction?",
+        "Luo (2025) [51] explicitly studies trust in teacher-student relationships in the context of AI policies. How does this work's analysis of 'fraying relationships' and 'responsibility rhetoric' extend or differ from Luo's findings?",
+        "The recommended learning-oriented policies (transparency, modeling, formative assessment, motivation) are standard pedagogical practices. What is novel about connecting them to AI policy design, versus applying existing pedagogy to a new context?",
+        "The manuscript states instructors 'perceive' certain effects (e.g., reduced office hours, illusion of competence) but relies entirely on self-report without triangulation. How confident are you in these perceptions as evidence of actual effects, versus instructor interpretations?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The full interview protocol is not provided in the manuscript or referenced as a supplementary document or deposited resource. Only Table 1 shows example questions; the complete protocol needed to assess question design and potential bias is absent (HARD)."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "Interview transcripts are not deposited in any repository, not made available as supplementary materials, and no statement indicates they will be deposited upon publication or are available on request with access conditions specified (HARD for load-bearing data)."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "The coding scheme or codebook is not provided, deposited, or referenced. The manuscript describes codes like 'time and human cost of detecting AI use' and 'responsibility rhetoric' (Section 3.3) but does not provide the full codebook that would allow verification of how quotes were assigned to themes (HARD)."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "No information is provided about how the three researchers' individual coding was compared or reconciled. The manuscript states 'we met over several meetings to compare our notes and discuss our interpretations' but does not specify the reconciliation procedure, inter-rater agreement metrics, or how disagreements were resolved (SOFT)."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "The mapping between raw data (interview segments) and reported themes is opaque. While representative quotes are provided, it is unclear how many interview segments support each theme, whether all themes are equally represented across participants, or how the selection of quotes for inclusion was made (HARD for results-to-artifact mapping)."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "No audio recordings, transcription protocols, or transcription software/version are mentioned. It is unclear whether interviews were transcribed verbatim, by whom, or using what tool, which affects reproducibility of the text data (SOFT)."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "The manuscript does not specify the software or tool used for qualitative data analysis (e.g., NVivo, Atlas.ti, MAXQDA, or manual coding). This is relevant for reproducibility of the coding and theme-building process (SOFT)."
+        }
+      ],
+      "questions": [
+        "Will the interview transcripts be deposited in a qualitative data repository (e.g., OSF, Zenodo, or a university institutional repository) with appropriate consent and anonymization? If so, what is the accession number or DOI?",
+        "Can the authors provide the full interview protocol as a supplementary document or deposited resource?",
+        "Can the authors provide the complete coding scheme or codebook used in the thematic analysis, showing the definitions and hierarchies of codes and how they map to final themes?",
+        "How were disagreements between the three researchers' initial codes resolved? Was there a formal reconciliation procedure, and if so, what was it?",
+        "What qualitative data analysis software, if any, was used to manage and code the interview transcripts? If manual coding was used, how was consistency maintained across the three researchers?",
+        "How were the representative quotes selected for inclusion in the manuscript? Was this a systematic sample, or were quotes chosen based on illustrative power? How many interview segments supported each major theme?",
+        "Were the interviews transcribed verbatim? By whom, and using what tool or process? Are transcription quality checks documented?",
+        "Can the authors clarify the consent conditions for the interviews? Were participants informed that interview data might be deposited in a repository, or do consent limitations restrict data sharing?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": " **HARD: Abstract claim on policy effects.** The abstract states 'policies such as switching to paper exams can preserve assessment integrity in the short term, [but] instructors report extra burden of policing student AI use behaviors and worsening relationships with students.' The evidence for 'worsening relationships' is instructor self-report of burden and adversarial framing (e.g., I4: 'I don't want to run around behind them and try and catch them using AI'), not measured relationship quality or student-reported erosion of trust. The causal link 'policies → worsening relationships' is inferred from instructor discomfort with enforcement, not from data on relationship outcomes. This should be reworded to 'instructors report experiencing burden and express concern about adversarial dynamics' or similar."
+        },
+        {
+          "id": "rigor-2",
+          "text": "**HARD: Title and introduction use 'disrupting' and 'reshaping' without establishing causation.** The title claims policies are 'reshaping the relationships between instructors and students', and the introduction states 'AI is directly altering the nature of instructor-student interactions' (p. 3). The study documents instructor perceptions that AI has changed student behavior (less office hours traffic, more perfect homework + poor exams) and instructor policy responses, but does not measure instructor-student relationship quality before and after AI, nor isolate AI as the cause of observed changes. Instructors' own accounts (e.g., I5 on student solitude) are anecdotal and attributed speculatively to AI. The claim should be hedged: 'instructors perceive AI as altering interactions' or 'instructors report policy changes in response to perceived AI effects.'"
+        },
+        {
+          "id": "rigor-3",
+          "text": "**SOFT: Causal language in policy outcome claims.** Section 4.2.2 states 'paper exams do not directly intervene on AI's learning harms' and 'giving students paper exams…restore[s] their confidence in the assessment.' The first is correct (paper exams don't teach better debugging). The second uses 'restore' as if confidence was previously high and is now recovered, but the study has no baseline. Reword to 'instructors believe paper exams restore their confidence' or 'instructors report increased confidence in assessment integrity.'"
+        },
+        {
+          "id": "rigor-4",
+          "text": "**SOFT: Generalization of 'second-order costs' beyond the sample.** The abstract and Section 5.1 generalize that assessment-oriented policies 'exact second-order costs on instructor-student relationships' as a broad claim. The evidence is 9 of 13 instructors adopting paper exams and several expressing discomfort with policing. The study does not measure whether these policies actually harm relationships (no student data, no relationship metrics), only that instructors find them burdensome and philosophically uncomfortable. The claim should be: 'instructors report that assessment-oriented policies incur costs in terms of workload and perceived classroom dynamics.'"
+        },
+        {
+          "id": "rigor-5",
+          "text": "**SOFT: Mechanism claims about cognitive offloading lack direct evidence.** Section 4.1.1 attributes student struggles to 'cognitive offloading' based on instructor observations (e.g., 'students who I think, honestly, cheated their way through previous courses…don't know anything'). This is consistent with the cognitive offloading hypothesis but does not isolate it as the mechanism; students could have struggled for other reasons (poor prior preparation, insufficient effort, etc.). The authors appropriately use 'instructors observe' and 'instructors believe', but the Discussion (Section 5.1) states 'AI impacts students cognitively, metacognitively, and socially' as if established, when it is inferred from instructor accounts. Reword to 'instructors attribute observed struggles to cognitive offloading and related mechanisms.'"
+        },
+        {
+          "id": "rigor-6",
+          "text": "**SOFT: Novelty claim in introduction.** The introduction (p. 2) states 'In contrast to existing tool-oriented research on how instructors view and adopt AI, this study investigates how instructors think about their roles and responsibilities to students through their course AI policies.' This is a reasonable positioning, but the claim of contrast is not rigorously established—the authors do not systematically compare their findings to prior work on instructor roles. This is a positioning issue, not a factual error, but the claim is somewhat overstated."
+        },
+        {
+          "id": "rigor-7",
+          "text": "**SOFT: Recommendations lack empirical grounding.** Section 4.3 and the Discussion present 'learning-oriented' policies (transparent AI instruction, modeling good use, formative assessments, motivation-building) as 'promising' alternatives. The authors explicitly state (p. 18) 'this study only involves interviews with instructors, so it does not have the empirical evidence to suggest whether these learning-oriented AI policies are effective.' Yet the abstract and conclusion present these as actionable recommendations. The recommendations are defensible as harm-reduction approaches, but should be framed as 'exploratory suggestions warranting empirical validation' rather than as evidence-based guidance."
+        }
+      ],
+      "questions": [
+        "In the abstract, what specific evidence supports the claim that assessment-oriented policies lead to 'worsening relationships with students'? Is this measured relationship quality, or instructor-reported burden with enforcement?",
+        "The title claims policies are 'reshaping the relationships between instructors and students.' Can you clarify whether the study measures relationship changes (e.g., pre/post AI, or student-reported trust) or documents instructor perceptions of AI's effects on interactions?",
+        "Section 4.1.1 attributes student struggles to 'cognitive offloading.' What alternative explanations for the observed patterns (perfect homework, poor exams) did instructors consider, and how do you rule them out?",
+        "In Section 5.1, you state 'AI impacts students cognitively, metacognitively, and socially' as a finding. Is this a direct result of your analysis, or a synthesis of instructor perceptions with prior literature? If the latter, please clarify the boundary.",
+        "The study recommends learning-oriented policies but acknowledges (p. 18) lacking empirical evidence on their effectiveness. How should practitioners weigh these exploratory suggestions against the documented burden of assessment-oriented policies, given the lack of outcome data for either approach?",
+        "You note (p. 16) that some instructors recognize students face external pressure to use AI (e.g., from employers). Does your analysis explore how institutional or curricular factors (e.g., time pressure, grading incentives) interact with AI availability to shape student behavior, or is the focus solely on instructor policy responses?",
+        "The study is limited to US institutions and undergraduate CS. Do you expect the findings (e.g., prevalence of paper exams, instructor burden) to generalize to other countries or educational levels, or should readers treat these as context-specific?"
+      ]
+    }
+  ],
+  "prior_job_id": "",
+  "desk_rejected": false
+}

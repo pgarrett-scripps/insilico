@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This manuscript presents a systematic empirical study comparing different proper scoring rules (CRPS, energy scores, graph-based variants) as training objectives for machine-learned probabilistic weather forecasting models. The work is clearly within scope for In Silico: it is original research with checkable claims, the methods are described in sufficient detail to evaluate, and the authors have conducted controlled experiments comparing different loss functions. The paper explicitly acknowledges its preliminary nature and limitations (smaller models, lower resolution, shorter training than operational systems). The central claims—that multivariate scoring rules can match CRPS-based training and that scale-aware losses improve spectral fidelity—are supported by the presented evidence, though the differences are often modest. The work makes a methodological contribution to an active area (machine-learned weather forecasting) and will be of interest to researchers in both machine learning and atmospheric science. No fundamental flaw, missing evidence, or scope violation is apparent. The manuscript is suitable for full peer review.

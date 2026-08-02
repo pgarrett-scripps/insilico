@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This manuscript presents an original computational study using reservoir-computing models to investigate the distributed nature of Alzheimer's disease functional connectivity and to identify personalized neuromodulation targets in silico. The work is methodologically sound, clearly presented, and makes a substantive contribution to understanding network-level interventions for neurological disease. The central claims—that the AD FC signature is distributed rather than focal, and that therapeutic targets dissociate from pathology sites—are well-supported by the evidence presented. The study includes appropriate controls, honest cross-validation, and transparent discussion of limitations. The hidden text detected appears to be OCR or typesetting artifacts rather than concealed instructions. The work is in scope for In Silico (original computational research with checkable claims and deposited code), meets the journal's bar for methodological rigor, and warrants full expert review.

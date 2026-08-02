@@ -1,0 +1,33 @@
+# Reproducibility Reviewer
+
+## Summary
+This manuscript presents a comparative study of machine-learned weather forecast models trained with different scoring rules, with experiments on spectral properties of forecast fields. The work is technically sound and addresses a relevant question, but reproducibility is significantly hampered by incomplete specification of critical procedural details and missing or inaccessible code/data artifacts. The authors state that 'all scores are implemented in the Anemoi framework' and reference a GitHub repository, but do not provide a specific commit hash, version tag, or confirmation that the exact code used is publicly available. Training data (ERA5) is publicly available, but the processed datasets, trained model weights, and intermediate outputs are not deposited or made accessible. The experimental setup lacks sufficient detail in several areas: random seed handling is not mentioned; the exact training procedure for rollout stages is underspecified; and the mapping between loss configurations (Table 2) and their implementation is unclear. While the paper is presented as preliminary ('this note summarises a preliminary study'), the absence of code availability, model checkpoints, and reproducibility artifacts makes independent verification of the results infeasible. For a journal whose reviews are public and read by people evaluating preprints, this is a significant limitation.
+
+## Strengths
+- The manuscript clearly documents the mathematical formulation of all scoring rules (Section 2), making the loss functions themselves reproducible in principle.
+- Training uses publicly available ERA5 reanalysis data (1979–2020), which is a load-bearing input that is accessible.
+- The paper acknowledges limitations explicitly, including the use of smaller models and shorter training schedules (Discussion), which aids transparency.
+- Experimental configuration is described with specific hyperparameters: learning rates (10⁻³, 10⁻⁵, 10⁻⁶), iteration counts (150,000 at rollout 1, etc.), optimizer (AdamW with weight decay 0.1), and ensemble size (8 members).
+- The graph connectivity specification (k-nearest-neighbour with k=16 on O96 grid) and smoothing kernel widths (100, 200, 400, 800 km) are provided for multi-scale experiments.
+
+## Weaknesses
+- Code availability is stated only as 'All scores are implemented in the Anemoi framework (https://github.com/ecmwf/anemoi-core)' with no commit hash, version tag, or confirmation that the exact implementation used is in the public repository. This is a HARD flag: a replicator cannot know which version of the code to use.
+- No trained model weights, checkpoints, or intermediate outputs are deposited or made accessible. The paper does not state whether these will be released, when, or under what conditions. This prevents verification of the reported results.
+- Random seed handling is not mentioned anywhere in the manuscript. For machine-learning experiments, seed specification is essential for reproducibility. This is a HARD flag for the neural network training.
+- The exact procedure for transitioning between rollout stages (1 → 2 → 3–12) is underspecified. It is unclear whether models trained at rollout 1 are initialized into rollout 2 training, or whether rollout 2 is trained from scratch. The phrase 'the corresponding one-step model is used to initialize rollout training' (Section 3.2) applies only to the spectral-loss experiments, leaving the main experiments ambiguous.
+- The mapping between loss configurations in Table 2 and their actual implementation is unclear. For example, 'Multi-scale edge CRPS' is described as 'Multi-scale CRPS combined with edge CRPS' but the weighting between these terms is not specified. Similarly, the weight 0.1 for the global energy score anchor in the graph energy experiment (Section 3.1) is not justified or explored.
+- Spectral truncation (T191) and spherical harmonic transform details are mentioned but the exact spectral library/tool used is not named, nor is its version specified. This affects reproducibility of spectral calculations.
+- The paper does not specify how ensemble members are initialized or sampled during training. For probabilistic forecasting, the ensemble generation procedure is load-bearing.
+- No statement is made about whether code will be released upon publication, or under what license. The GitHub link is provided but without assurance of completeness or version control.
+- Figures 3–14 show spectral results but do not indicate which of the 12 experiments (Table 2) each panel corresponds to. The figure captions do not map loss configurations to panels, making it impossible to trace results back to specific experimental setups.
+
+## Questions
+- Which specific commit or version tag of the Anemoi framework was used to generate the results? Can you confirm that the exact code is currently in the public repository?
+- Will trained model weights, checkpoints, and intermediate outputs (e.g., spectral calculations, forecast fields) be deposited in a public archive (e.g., Zenodo, OSF) with a DOI? If so, when and under what access conditions?
+- What random seed(s) were used for model initialization and training? Were multiple seeds run and results averaged, or is a single seed reported?
+- For the main experiments (Section 3.1), are the models trained at rollout 1 then fine-tuned at rollout 2, or is rollout 2 trained independently? Please clarify the initialization procedure.
+- In Table 2, what are the exact loss weights for combined objectives? For example, in 'Multi-scale edge CRPS', what is the relative weight of the multi-scale CRPS term versus the edge CRPS term?
+- Which Python library or tool was used for the spherical harmonic transform (e.g., SHTns, xarray, shtab)? What version?
+- How are ensemble members initialized during training? Are they sampled from a learned distribution, or generated by other means?
+- Figures 3–14 do not clearly indicate which loss configuration (from Table 2) each panel represents. Can you provide a detailed figure caption or supplementary table mapping each panel to the corresponding experiment?
+- The paper states results are 'broadly similar' across experiments (Section 4.1) but provides no quantitative comparison (e.g., RMSE differences, statistical significance tests). How were differences assessed, and what threshold was used to define 'noticeable'?

@@ -780,6 +780,59 @@ def check_link_forms_a_browser_produces() -> None:
             raise AssertionError(f"not a preprint DOI, should be rejected: {bad}")
 
 
+def check_metadata_fetch_retries_throttling() -> None:
+    """A throttled metadata lookup must be retried, not silently swallowed.
+
+    Both resolvers treat a metadata failure as survivable, on the reasoning
+    that the PDF is what gets reviewed. That reasoning is wrong at the point
+    it matters: arXiv answers 429 when called too quickly, the exception is
+    caught, and the run continues to spend a full panel on a manuscript whose
+    published review then carries no title, no authors and no DOI — a record
+    that cannot be cited and cannot be found. Observed live, twice.
+
+    So transient failures are retried, and permanent ones are not: asking
+    again for something that 404s just wastes the backoff.
+    """
+    import fetch_preprint as fp
+
+    calls = {"n": 0}
+    sleeps = []
+    real_once, real_sleep = fp._get_once, fp.time.sleep
+    fp.time.sleep = lambda s: sleeps.append(s)
+
+    def throttled_twice(url, max_bytes=None, opener=None):
+        calls["n"] += 1
+        if calls["n"] <= 2:
+            raise urllib.error.HTTPError(url, 429, "Too Many Requests", {}, None)
+        return b"<ok/>"
+
+    fp._get_once = throttled_twice
+    try:
+        assert fp._get("https://example.org/api", retries=3) == b"<ok/>", \
+            "a throttled lookup should succeed once the throttle lifts"
+        assert calls["n"] == 3, f"expected 3 attempts, got {calls['n']}"
+        assert sleeps and sleeps == sorted(sleeps), \
+            f"backoff should grow between attempts, got {sleeps}"
+
+        # A 404 is permanent. Retrying it only delays the error.
+        calls["n"] = 0
+
+        def missing(url, max_bytes=None, opener=None):
+            calls["n"] += 1
+            raise urllib.error.HTTPError(url, 404, "Not Found", {}, None)
+
+        fp._get_once = missing
+        try:
+            fp._get("https://example.org/gone", retries=3)
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 404
+        else:
+            raise AssertionError("a 404 should propagate")
+        assert calls["n"] == 1, f"a 404 must not be retried, tried {calls['n']} times"
+    finally:
+        fp._get_once, fp.time.sleep = real_once, real_sleep
+
+
 def check_bare_doi_picks_the_right_server() -> None:
     """bioRxiv and medRxiv share both DOI prefixes, so a bare DOI names neither.
 
@@ -863,6 +916,8 @@ def main() -> int:
     print("ok  every browser link form yields the same identifier")
     check_bare_doi_picks_the_right_server()
     print("ok  a bare DOI resolves to the server that actually holds it")
+    check_metadata_fetch_retries_throttling()
+    print("ok  a throttled metadata lookup is retried, a missing one is not")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This manuscript presents an original computational study using reservoir computing models to investigate Alzheimer's disease functional connectivity and neuromodulation targets. The work is in scope for In Silico: it makes checkable claims about network dynamics in AD, employs sound methodology (subject-specific generative models, honest cross-validation), provides reproducible analysis (code and data availability stated), and addresses a substantive question about the relationship between pathology localization and therapeutic intervention sites. The modest classification accuracy is transparently reported and appropriate for the functional read-out chosen; the central contribution—that optimal stimulation sites differ from most-affected sites—is supported by systematic in-silico perturbation experiments. The hidden text flagged by the integrity screen appears to be OCR or typesetting artifacts rather than concealed instructions. While the work is preliminary (cross-sectional, modest cohort, phenomenological model, infraslow timescale), these are presented as limitations rather than hidden flaws. The manuscript merits full expert review.

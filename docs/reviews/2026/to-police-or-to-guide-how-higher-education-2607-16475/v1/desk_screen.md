@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This manuscript presents an empirical qualitative study examining how undergraduate CS instructors design and implement generative AI policies in their courses. The work is based on 13 semi-structured interviews with instructors across diverse US institutions and employs reflexive thematic analysis. The research addresses an important and timely topic at the intersection of education, AI, and instructor-student relationships. The manuscript is complete, clearly written, and makes a checkable contribution by documenting instructor perspectives on AI policy design and implementation, distinguishing between assessment-oriented and learning-oriented approaches. While the study is limited to US institutions and undergraduate CS education, these limitations are acknowledged. The work is within scope for In Silico as original research whose claims can be evaluated from the manuscript and its cited materials. The qualitative methodology is appropriate for the research questions, and the findings are grounded in interview data. The manuscript should proceed to full review where the panel can assess the depth of analysis, the validity of the thematic coding, the generalizability of findings, and the strength of the recommendations.

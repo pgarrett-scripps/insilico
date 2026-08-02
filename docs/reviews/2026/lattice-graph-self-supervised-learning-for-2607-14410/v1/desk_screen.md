@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This manuscript presents LATTICE, a graph-based self-supervised learning framework for integrating multimodal spatial omics data. The work is within scope for In Silico: it is an original research manuscript making checkable computational and methodological claims, with evidence presented in the paper and supplementary materials. The authors evaluate their method on a private 11-sample melanoma cohort, report quantitative metrics, provide ablation studies, and acknowledge limitations including the lack of external benchmarking and the need for broader validation. While the evaluation is limited to a single private dataset and some design choices warrant scrutiny (e.g., the multimodal utility score is author-defined rather than established), these are appropriate topics for full peer review rather than grounds for desk rejection. The manuscript is complete, clearly written, and makes explicit claims about multimodal integration that reviewers can evaluate against the evidence provided. The authors appropriately flag that their work is preliminary in scope and that stronger supervision and external benchmarking are needed. Proceed to full review.

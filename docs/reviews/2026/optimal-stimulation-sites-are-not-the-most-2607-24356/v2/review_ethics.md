@@ -1,0 +1,27 @@
+# Ethics & Compliance Reviewer — Revision Review
+
+**Score:** 5/5 → 5/5 (confidence 5/5)
+
+## Summary
+The revision substantially strengthens the ethics and compliance posture. The exemption pathway for secondary analysis of de-identified ADNI data is now explicitly stated, resolving the primary ambiguity about IRB review. Data governance is clarified: the DUA restrictions are acknowledged and the GitHub repository is stated to contain code only, not redistributed data. Cohort definitions and exclusion criteria are now fully documented in Table S1 and Methods. However, two soft transparency gaps remain: no disclosure of AI tool use in any phase of the work (analysis, figure generation, manuscript preparation), and no explicit confirmation that the GitHub repository contains no derived imaging data. These are transparency norms rather than compliance violations, but given the computational nature and the 2026 date, a brief statement would be consistent with emerging standards.
+
+## Score rationale
+The score remains 5/5. The revision fully resolves the primary ethics concern (ethics-1: exemption pathway) and substantially improves data governance transparency (ethics-4: cohort definitions and exclusion criteria). The two outstanding items (ethics-2: AI tool disclosure; ethics-3: explicit confirmation of GitHub contents) are soft transparency improvements, not hard compliance failures. The work is secondary analysis of de-identified public data with prior IRB approval at source, no new human subjects are involved, and the DUA restrictions are correctly respected. The manuscript now meets the hard compliance threshold for publication. The soft gaps are minor and do not warrant a score reduction, as they reflect emerging norms rather than established requirements, and the authors have been transparent about data availability and the exemption pathway.
+
+## Points from the previous round
+- **[ethics-1] resolved** — The Ethics section now explicitly states: 'This work is a secondary analysis of de-identified, publicly available human imaging data obtained from ADNI. The ADNI study was approved by the institutional review boards of all participating sites, and all participants (or their authorised representatives) provided written informed consent at enrollment; no new data were acquired for the present study.' This directly addresses the exemption pathway and clarifies that no new IRB review was required because the work is secondary analysis of de-identified public data with prior consent and IRB approval at the source.
+- **[ethics-2] outstanding** — The manuscript contains no disclosure of AI tool use in analysis, figure generation, or manuscript preparation. The Methods section describes computational pipelines (Python, NumPy, scikit-learn, nilearn, Matplotlib) but does not state whether any large language models, generative AI, or AI-assisted tools were used in any phase of the work. Given the computational nature of the work and the 2026 date, a statement on AI use (even if none was used) would strengthen transparency. The authors were asked to provide this disclosure but have not done so in the revision.
+- **[ethics-3] outstanding** — The Data and code availability section states: 'ADNI data are available to qualified researchers upon registration and acceptance of the ADNI Data Use Agreement; in accordance with that agreement, the raw and derived imaging data are not redistributed here. All analysis and figure-generation code is openly available at github.com/cristianocapone/AD-reservoir-FC-stimulation.' This addresses the DUA restriction correctly, but the manuscript does not explicitly confirm that the GitHub repository contains only code and non-data outputs, not derived imaging data. The authors were asked to clarify whether derived data (preprocessed BOLD, FC matrices, model outputs) are posted; the current statement implies they are not, but an explicit confirmation would remove ambiguity.
+- **[ethics-4] resolved** — Table S1 now comprehensively lists cohort definitions for every analysis, including the specific sample sizes, session counts, and cross-validation schemes. The Methods section explicitly states the '>100-volume filter' applied to the tangent-space SVM benchmark (557 CC + 145 AD sessions passing this filter). Exclusion criteria and data-governance details are now documented sufficiently to support reproducibility and audit.
+
+## Strengths
+- Explicit statement of exemption pathway for secondary analysis of de-identified ADNI data
+- Clear acknowledgement of ADNI IRB approval and participant consent at source
+- Comprehensive cohort definitions in Table S1 with all exclusion criteria documented
+- Correct acknowledgement of ADNI DUA restrictions on data redistribution
+- Code availability statement with GitHub repository link
+- No new human subjects or identifiable data involved
+
+## Questions
+- Did the authors use any large language models, generative AI, or AI-assisted tools in analysis, figure generation, or manuscript preparation? A brief disclosure (even 'none were used') would strengthen transparency.
+- Can the authors explicitly confirm that the GitHub repository at github.com/cristianocapone/AD-reservoir-FC-stimulation contains only analysis code and non-data outputs, and does not include any derived imaging data (preprocessed BOLD, FC matrices, model weights, or other outputs derived from ADNI data)? This would remove any ambiguity about DUA compliance.

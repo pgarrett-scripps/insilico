@@ -15,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -24,6 +25,11 @@ from pathlib import Path
 
 USER_AGENT = "InSilico-overlay-journal/0.1 (+https://github.com/pgarrett-scripps)"
 TIMEOUT = 60
+
+# arXiv asks for a few seconds between API calls and refuses outright when it
+# does not get them. Start above their stated interval and double from there.
+RETRY_BACKOFF_SECONDS = 4
+METADATA_RETRIES = 3
 
 # A URL sitting on its own in an issue-form field.
 URL_RE = re.compile(r"https?://[^\s<>\"')\]]+")
@@ -102,6 +108,7 @@ def _get(
     url: str,
     max_bytes: int = MAX_DOWNLOAD_BYTES,
     opener: urllib.request.OpenerDirector | None = None,
+    retries: int = 0,
 ) -> bytes:
     """Fetch a URL, refusing anything implausibly large.
 
@@ -112,7 +119,33 @@ def _get(
     one case: an author-supplied URL, where every redirect hop has to be
     re-checked rather than trusted. Preprint fetches leave it unset, since
     those URLs are rebuilt by :func:`resolve` for three known hosts.
+
+    ``retries`` is for the metadata APIs, which throttle. arXiv asks callers
+    to leave a few seconds between requests and simply refuses when they
+    don't; a review that resolves during a busy minute would otherwise be
+    published with no title, no authors and no DOI. The backoff starts above
+    arXiv's stated interval deliberately.
     """
+    last: Exception | None = None
+    for attempt in range(retries + 1):
+        if attempt:
+            time.sleep(RETRY_BACKOFF_SECONDS * (2 ** (attempt - 1)))
+        try:
+            return _get_once(url, max_bytes, opener)
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            # A 404 means the thing is not there and asking again will not
+            # change that. Only transient failures are worth a second try.
+            if isinstance(exc, urllib.error.HTTPError) and exc.code < 500 and exc.code != 429:
+                raise
+            last = exc
+    raise last if last else RuntimeError(f"could not fetch {url}")
+
+
+def _get_once(
+    url: str,
+    max_bytes: int = MAX_DOWNLOAD_BYTES,
+    opener: urllib.request.OpenerDirector | None = None,
+) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     open_url = opener.open if opener is not None else urllib.request.urlopen
     with open_url(req, timeout=TIMEOUT) as resp:  # noqa: S310
@@ -199,7 +232,7 @@ def _resolve_arxiv(url: str, arxiv_id: str) -> Preprint:
     )
     try:
         api = f"http://export.arxiv.org/api/query?id_list={urllib.parse.quote(bare)}"
-        entry = ET.fromstring(_get(api)).find("a:entry", _ATOM)
+        entry = ET.fromstring(_get(api, retries=METADATA_RETRIES)).find("a:entry", _ATOM)
         if entry is None:
             return pp
         # The entry id carries the current version: .../abs/1706.03762v5
@@ -249,7 +282,9 @@ def _clean(s: str) -> str:
 
 def _rxiv_records(server: str, doi: str) -> list[dict]:
     """Metadata records for a DOI on one server, newest last. [] if unknown."""
-    payload = json.loads(_get(f"https://api.biorxiv.org/details/{server}/{doi}"))
+    payload = json.loads(
+        _get(f"https://api.biorxiv.org/details/{server}/{doi}", retries=METADATA_RETRIES)
+    )
     records = payload.get("collection") or []
     return records if isinstance(records, list) else []
 
