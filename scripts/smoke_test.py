@@ -532,6 +532,62 @@ def check_statement_url_is_external() -> None:
         raise AssertionError(f"{why} was not rejected: {bad}")
 
 
+def check_solicitation_is_labelled() -> None:
+    """Whether the authors asked for the review has to be on the page.
+
+    Anyone may submit any public preprint, which makes In Silico usable for
+    scrutinising unexamined work and equally usable for attaching a permanent
+    public criticism to a rival's paper. Publishing both identically would let
+    the second hide inside the first.
+    """
+    from fetch_preprint import extract_authorship
+    import run_review
+
+    # Parsed from the submission form, which asks outright.
+    assert extract_authorship(
+        "### Are you an author of this paper?\n\nYes — I am an author\n"
+    ) == "yes"
+    assert extract_authorship(
+        "### Are you an author of this paper?\n\nNo — I am not an author\n"
+    ) == "no"
+    assert extract_authorship("### Preprint URL\n\nhttps://x\n") == "", \
+        "an absent field must not be read as either answer"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        for name, _ in BUNDLE_ORDER:
+            (run_dir / name).write_text("x")
+        os.environ["REVIEW_MODELS"] = "{}"
+        os.environ["REVIEW_AGENT_MODELS"] = "{}"
+        preprint = Preprint(
+            url="https://arxiv.org/abs/1706.03762", source="arxiv",
+            pdf_url="p", identifier="1706.03762", title="A paper",
+        )
+        state = {"decision": "major", "manuscript_title": "A paper",
+                 "total_cost": 1.0, "errors": [], "reports": []}
+
+        pages = {}
+        for claim in ("yes", "no", ""):
+            dest = Path(tmp) / f"v-{claim or 'unset'}"
+            write_bundle(preprint, state, run_dir, dest, "1", "someone",
+                         submitter_is_author=claim)
+            pages[claim] = (dest / "index.md").read_text()
+            prov = json.loads((dest / "provenance.json").read_text())
+            assert prov["submitter_is_author"] == claim, "claim not recorded"
+
+        assert "did not request this review" in pages["no"], \
+            "an unsolicited review must say so"
+        assert "states they are **not** an author" in pages["no"]
+        assert "did not request" not in pages["yes"], \
+            "an author-requested review must not carry the warning"
+        assert "Requested by an author" in pages["yes"]
+        assert "Solicitation unrecorded" in pages[""], \
+            "an unknown claim must be stated as unknown, not assumed"
+        # The claim is unverifiable and the page has to admit it.
+        assert "do not verify" in pages["yes"] or "states" in pages["yes"]
+
+
 def check_slug_uniqueness() -> None:
     """Titles truncate at 60 chars, so they cannot be the whole directory name."""
     long_a = "Deep learning approaches for the prediction of protein structure from sequence"
@@ -575,6 +631,8 @@ def main() -> int:
     print("ok  bundle version and review round stay distinct")
     check_correction()
     print("ok  a correction is not a revision")
+    check_solicitation_is_labelled()
+    print("ok  unsolicited reviews say so on the page")
     check_metadata_is_sanitised_at_ingestion()
     print("ok  metadata is stripped of tags where it enters")
     check_metadata_is_escaped()

@@ -26,7 +26,14 @@ from queue import Empty, Queue
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from fetch_preprint import _get, Preprint, download, extract_url, resolve  # noqa: E402
+from fetch_preprint import (  # noqa: E402
+    _get,
+    Preprint,
+    download,
+    extract_authorship,
+    extract_url,
+    resolve,
+)
 
 # Written by the pipeline next to the markdown. It is what makes a review
 # revisable — the machine-readable record of what this round asked for, with
@@ -316,6 +323,9 @@ def write_bundle(
     submitter: str,
     cost_by_node: dict[str, float] | None = None,
     revision: dict | None = None,
+    # Appended rather than inserted: write_bundle is called positionally in
+    # several places, and a new parameter in the middle silently rebinds them.
+    submitter_is_author: str = "",
 ) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     cost_by_node = cost_by_node or {}
@@ -387,6 +397,11 @@ def write_bundle(
         # separate so the two can never be read off each other.
         "round": int(revision.get("round") or 1),
         "revision": revision,
+        # Anyone may submit any public preprint, so a review the authors asked
+        # for and one they did not are different things and the page has to
+        # say which. Recorded as a claim, because nothing here verifies it.
+        "submitter": submitter,
+        "submitter_is_author": submitter_is_author,
         "screens": json.loads(os.environ.get("REVIEW_SCREENS") or "{}"),
         "panel": scores,
         "mean_score": round(sum(numeric) / len(numeric), 2) if numeric else None,
@@ -939,6 +954,45 @@ def _required_count(bundle: Path) -> int | None:
     return len(items) if isinstance(items, list) else None
 
 
+def solicitation_note(provenance: dict) -> list[str]:
+    """Say whether the authors asked for this review.
+
+    Anyone may submit any public preprint here, which makes In Silico usable
+    for scrutinising work nobody has looked at — and equally usable for
+    attaching a permanent public criticism to a rival's paper. Publishing both
+    kinds identically would let the second hide inside the first.
+
+    So the page states which it is. The claim is the submitter's and nothing
+    verifies it; saying so is the point, since an unverifiable claim presented
+    as fact is worse than one presented as a claim.
+    """
+    claim = provenance.get("submitter_is_author") or ""
+    if claim == "yes":
+        return [
+            '!!! note "Requested by an author"',
+            "    Submitted by someone who states they are an author of this paper.",
+            "    We do not verify that claim.",
+            "",
+        ]
+    if claim == "no":
+        return [
+            '!!! warning "The authors did not request this review"',
+            "    It was submitted by someone who states they are **not** an author.",
+            "    The authors were not consulted, have not seen it, and have not",
+            "    replied to it. Weigh it accordingly.",
+            "",
+            "    Authors: if this misreads your paper, open an issue and we will",
+            "    correct or withdraw it. See [contesting a review](../../../../policy.md#contesting-a-review).",
+            "",
+        ]
+    return [
+        '!!! note "Solicitation unrecorded"',
+        "    This review predates our recording of whether the submitter was an",
+        "    author, so we cannot say whether the authors asked for it.",
+        "",
+    ]
+
+
 def revision_note(provenance: dict) -> list[str]:
     """State what this round was compared against, including when it wasn't.
 
@@ -1071,7 +1125,14 @@ def render_landing(
     if submission_id:
         rows.append(f"| Submission | [#{submission_id}]({REPO_URL}/issues/{submission_id}) |")
     if submitter:
-        rows.append(f"| Submitted by | [@{submitter}](https://github.com/{submitter}) |")
+        claim = {
+            "yes": " — states they are an author",
+            "no": " — **states they are not an author**",
+        }.get(provenance.get("submitter_is_author") or "", "")
+        rows.append(
+            f"| Submitted by | [@{submitter}](https://github.com/{submitter})"
+            f"{claim} |"
+        )
 
     desk_rejected = provenance.get("desk_rejected")
     # "Panel recommendation" would be a false claim on a desk reject: no panel
@@ -1105,6 +1166,7 @@ def render_landing(
         "",
     ]
     body += revision_note(provenance)
+    body += solicitation_note(provenance)
     if desk_rejected:
         body += [
             "!!! danger \"Rejected at the desk — no referee panel was convened\"",
@@ -1249,6 +1311,14 @@ def main() -> int:
     src.add_argument("--issue-body", help="free text to scrape a URL out of")
     ap.add_argument("--submission-id", default="", help="submission issue number")
     ap.add_argument("--submitter", default="", help="GitHub login of the submitter")
+    ap.add_argument(
+        "--submitter-is-author",
+        choices=("yes", "no", ""),
+        default="",
+        help="whether the submitter stated they are an author. Read from the "
+             "submission form when --issue-body is given; recorded and shown "
+             "on the published review.",
+    )
     ap.add_argument("--provider", default=os.environ.get("REVIEW_PROVIDER") or None)
     # Left unset by default so ./peerreview.toml owns model selection — an
     # explicit value here would beat the TOML and silently defeat the [roles]
@@ -1328,6 +1398,10 @@ def main() -> int:
         )
 
     url = args.url or extract_url(args.issue_body)
+    # The form asks directly; a `/review` on a plain issue has no field to
+    # read, and the page then says so rather than assuming either way.
+    if not args.submitter_is_author and args.issue_body:
+        args.submitter_is_author = extract_authorship(args.issue_body)
     preprint = resolve(url)
     print(f"resolved  {preprint.source}: {preprint.identifier or preprint.url}", file=sys.stderr)
     if preprint.title:
@@ -1512,6 +1586,7 @@ def main() -> int:
     write_bundle(
         preprint, state, run_dir, dest,
         args.submission_id, args.submitter, cost_by_node, revision,
+        submitter_is_author=args.submitter_is_author,
     )
     write_paper_page(paper_dir)
     rel = dest.relative_to(REPO)

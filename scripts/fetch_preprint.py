@@ -105,6 +105,32 @@ def _get(url: str, max_bytes: int = MAX_DOWNLOAD_BYTES) -> bytes:
         return b"".join(chunks)
 
 
+def extract_authorship(text: str) -> str:
+    """Whether the submitter said they are an author: 'yes' | 'no' | ''.
+
+    Issue forms render as ``### Heading\n\nvalue``, so the answer is the first
+    non-empty line under its heading. Returns '' when the field is absent —
+    submissions predating it, or a `/review` run from a plain issue — and the
+    published page then says the relationship is unrecorded rather than
+    guessing at one.
+    """
+    lines = (text or "").splitlines()
+    for i, line in enumerate(lines):
+        if "are you an author" not in line.lower():
+            continue
+        for value in lines[i + 1:]:
+            value = value.strip()
+            if not value or value.startswith("#"):
+                continue
+            low = value.lower()
+            if low.startswith("yes"):
+                return "yes"
+            if low.startswith("no"):
+                return "no"
+            break
+    return ""
+
+
 def extract_url(text: str) -> str:
     """Pull the first plausible preprint URL out of free text (e.g. an issue body).
 

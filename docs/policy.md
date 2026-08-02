@@ -52,6 +52,33 @@ grounds for lower confidence, and the reports say so.
 
 We decline submissions outside scope at the desk, without running the panel.
 
+## Who may submit
+
+Anyone may submit any public preprint, including one they did not write. That
+is deliberate — work nobody has scrutinised is exactly what benefits from being
+looked at, and preprints are public.
+
+But a review the authors asked for and a review attached to someone's paper
+without their knowledge are different things, and we will not publish them as
+though they were the same. **Every review states which it is.** The submission
+form asks outright whether you are an author, and the answer appears on the
+published page. Where the submitter says they are not, the review carries a
+notice that the authors did not request it, were not consulted, and have not
+replied.
+
+We do not verify the claim. Saying so is the point: an unverifiable claim
+presented as fact would be worse than one presented as a claim.
+
+Submitting a rival's work to attach a public criticism to it is not a use we
+support. The form asks non-authors to say why they are submitting, an editor
+reads that before running anything, and we decline submissions that read as
+score-settling.
+
+Authors who find an unrequested review of their work: open an issue. If it
+misreads the paper we will correct it, and if you object to its existence we
+will take it down. That is a lower bar than we apply to reviews the authors
+asked for, because you did not choose this.
+
 ## The desk
 
 Two checks run before any referee is assigned. Either can stop a submission

@@ -45,14 +45,37 @@ body:
     validations:
       required: false
 
+  - type: dropdown
+    id: relationship
+    attributes:
+      label: Are you an author of this paper?
+      description: |
+        Recorded on the published review. Anyone may submit any public
+        preprint, but a review the authors did not ask for is a different
+        thing from one they did, and a reader deserves to see which this is.
+      options:
+        - "Yes — I am an author"
+        - "No — I am not an author"
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: If you're not an author, why are you submitting it?
+      description: |
+        Leave blank if you are an author. An editor reads this before running
+        anything — submitting someone else's work to attach a public criticism
+        to it is not a use we support.
+    validations:
+      required: false
+
   - type: checkboxes
     id: confirmations
     attributes:
       label: Before you submit
       options:
         - label: The preprint is publicly accessible and the PDF is text (not scanned).
-          required: true
-        - label: I'm an author, or I have a reason to be submitting someone else's work that I'll explain above.
           required: true
         - label: I understand the review is machine-generated, advisory, and published regardless of the verdict.
           required: true
