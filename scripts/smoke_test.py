@@ -218,7 +218,7 @@ def check_manuscript_ingest_is_recorded() -> None:
 
         record = {
             "format": "markdown",
-            "tool": "rustypdf 9.9.9",
+            "tool": "rustypaper 9.9.9",
             "caveman": "light",
             "chars": 41234,
         }

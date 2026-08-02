@@ -35,11 +35,13 @@ env:
   # run records the SHA it resolved to either way, so a review always names
   # exact code regardless of which ref produced it.
   PIPELINE_REF: main
-  # PDF -> markdown converter. Kept as a knob because the repo is not public
-  # yet; point it at a release wheel once one exists, which will also drop the
-  # Rust toolchain requirement from this job.
-  RUSTYPDF_SPEC: >-
-    rustypdf @ git+https://github.com/pgarrett-scripps/rustypdf#subdirectory=python
+  # PDF -> markdown converter, from PyPI. A per-platform wheel, so this needs
+  # no Rust toolchain on the runner. Pinned rather than floating: the panel
+  # reads whatever this produces, and a converter that changed how it reads a
+  # two-column page between two rounds of the same paper would show up as the
+  # authors having rewritten it. Kept as a knob so a fix can be pulled from a
+  # branch without editing the install step.
+  RUSTYPAPER_SPEC: "rustypaper==0.1.0"
   # The text as written. Compression was measured and reverted: under `light`
   # the clarity reviewer reported "grammatical errors that obscure the main
   # claims" three times on a paper where the uncompressed run reported none —
@@ -172,14 +174,18 @@ jobs:
           pip install --quiet pyyaml
 
           # The manuscript converter, and the only one: the pipeline reads
-          # PDFs through rustypdf and has no fallback, because the fallback
+          # PDFs through rustypaper and has no fallback, because the fallback
           # fused ~2% of words together and flattened every heading and table
           # into prose. A panel given that reviews a document the authors did
           # not write, so a converter that will not install has to stop the
           # run rather than quietly downgrade it.
-          pip install --quiet "$RUSTYPDF_SPEC" || {
-            echo "::error::rustypdf did not install, so there is no way to read"\
-                 "the manuscript. Nothing is published from this run."
+          #
+          # peerreviewagents depends on rustypaper too, so this normally lands
+          # with it; the explicit install is what pins the version and what
+          # turns a resolution failure into a message naming the converter.
+          pip install --quiet "$RUSTYPAPER_SPEC" || {
+            echo "::error::rustypaper did not install, so there is no way to"\
+                 "read the manuscript. Nothing is published from this run."
             exit 1
           }
 
