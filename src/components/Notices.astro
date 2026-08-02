@@ -8,7 +8,7 @@
  * versus one that couldn't, a review the authors asked for versus one attached
  * to their paper by a stranger.
  */
-const { provenance, docHref = "" } = Astro.props;
+const { provenance } = Astro.props;
 
 const VERDICT = {
   accept: "Accept",
@@ -35,34 +35,7 @@ if (provenance.desk_rejected) {
   });
 }
 
-if (revision.kind === "correction") {
-  const who = Array.isArray(revision.only_reviewers) ? revision.only_reviewers : [];
-  const scope = who.length
-    ? `Only ${who.join(", ")} re-ran; every other referee's assessment is carried forward unchanged, so the panel score still reflects all of them.`
-    : "The whole panel re-ran.";
-  const body = [
-    "The authors challenged the review itself. The manuscript is unchanged — this is not a revision round and does not advance the round number.",
-    scope,
-  ];
-  if (revision.prior_decision) {
-    body.push(
-      `The review being corrected recommended ${VERDICT[revision.prior_decision] || revision.prior_decision}.`,
-    );
-  }
-  body.push(
-    revision.response_published
-      ? "The authors' response was checked against the manuscript before the panel saw it. Referees received corroborated pointers to passages to re-read, never the response as prose, so it could direct attention but not move a score by assertion."
-      : "No author response accompanied this appeal, so there was nothing to check against the manuscript. The referees named above simply re-read the paper; nothing here answers a specific objection.",
-  );
-  notices.push({
-    tone: "info",
-    title: "Correction to the review, not a new manuscript",
-    body,
-    link: revision.response_published && docHref
-      ? { href: `${docHref}author_response/`, label: "Read the response as submitted" }
-      : null,
-  });
-} else if (round > 1) {
+if (round > 1) {
   const body = [
     "The authors revised the manuscript after a previous review, and this round rules on what changed: each referee revisits the points it raised, and an auditor checks the previous decision letter's required revisions against the new draft.",
   ];
@@ -91,7 +64,7 @@ if (claim === "no") {
     title: "The authors did not request this review",
     body: [
       "It was submitted by someone who states they are not an author. The authors were not consulted, have not seen it, and have not replied to it. Weigh it accordingly.",
-      "Authors: if this misreads your paper, open an issue and we will correct or withdraw it.",
+      "Authors: if this misreads your paper, open an issue. We will publish your reply beside the review, and an editor can correct or withdraw it.",
     ],
   });
 } else if (claim === "yes") {
@@ -120,11 +93,6 @@ if (claim === "no") {
           {n.body.map((para) => (
             <p class="notice__body">{para}</p>
           ))}
-          {n.link && (
-            <p class="notice__body">
-              <a href={n.link.href}>{n.link.label}</a>
-            </p>
-          )}
         </aside>
       ))}
     </div>

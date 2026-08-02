@@ -30,7 +30,6 @@ REPO = Path(__file__).resolve().parent.parent
 
 from fetch_preprint import Preprint, resolve  # noqa: E402
 from run_review import (  # noqa: E402
-    AUTHOR_RESPONSE,
     BUNDLE_FILES,
     next_version,
     paper_slug,
@@ -121,6 +120,74 @@ def check(title: str) -> None:
         assert len(list(dest.glob("audit_*.md"))) == 2, "audit reports not copied"
 
         assert slugify(title), f"title produced an empty slug: {title!r}"
+
+
+def check_unscorable_dimension_is_not_a_good_score() -> None:
+    """A dimension that does not apply must leave the mean, not inflate it.
+
+    A reviewer with nothing in its remit to judge used to be forced to invent
+    a number, and reliably invented a generous one: on a qualitative interview
+    study the data-analysis reviewer wrote that there were "no p-values,
+    confidence intervals, effect sizes, sample-size calculations, or
+    statistical claims to evaluate" and scored the paper 5/5 — the highest
+    data-analysis score in the corpus. The pipeline now returns null there,
+    and this asserts the record keeps it null and averages without it. Filling
+    the gap in — with a zero, a midpoint, anything — reintroduces the bug in
+    the other direction, so the null has to survive all the way to the page.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        for name in BUNDLE_FILES:
+            (run_dir / name).write_text("x")
+        os.environ["REVIEW_MODELS"] = "{}"
+        os.environ["REVIEW_AGENT_MODELS"] = "{}"
+        preprint = Preprint(
+            url="https://arxiv.org/abs/1706.03762", source="arxiv",
+            pdf_url="p", identifier="1706.03762", title="A qualitative study",
+        )
+        reports = [
+            {"reviewer": "methodology", "score": 3.0, "confidence": 4},
+            {"reviewer": "clarity", "score": 4.0, "confidence": 5},
+            {"reviewer": "data_analysis", "score": None, "confidence": 5,
+             "not_applicable_reason": "No quantitative analysis in this manuscript."},
+        ]
+        dest = Path(tmp) / "v1"
+        write_bundle(
+            preprint,
+            {"decision": "minor", "manuscript_title": preprint.title,
+             "total_cost": 1.0, "errors": [], "reports": reports},
+            run_dir, dest, "1", "octocat",
+        )
+        prov = provenance_of(dest)
+
+        by = {e["reviewer"]: e for e in prov["panel"]}
+        assert by["data_analysis"]["score"] is None, \
+            "an unscorable dimension must stay null in the record"
+        assert by["data_analysis"]["not_applicable_reason"], \
+            "the reason must travel with it, or the page cannot say why"
+
+        # 3.0 and 4.0 average to 3.5. Counting the null as anything at all
+        # moves this: as a 5 it would read 4.0, as a 0 it would read 2.33.
+        assert prov["mean_score"] == 3.5, \
+            f"the mean must be over scored referees only, got {prov['mean_score']}"
+        assert prov["scored_count"] == 2, prov["scored_count"]
+        assert prov["panel_size"] == 3, prov["panel_size"]
+        assert prov["scored_count"] != prov["panel_size"], \
+            "the page needs both numbers to say 'mean over 2 of 3'"
+
+        # A panel where nobody could score has no mean — not a zero.
+        allna = [dict(r, score=None) for r in reports]
+        dest2 = Path(tmp) / "v2"
+        write_bundle(
+            preprint,
+            {"decision": "reject", "manuscript_title": preprint.title,
+             "total_cost": 1.0, "errors": [], "reports": allna},
+            run_dir, dest2, "1", "octocat",
+        )
+        prov2 = provenance_of(dest2)
+        assert prov2["mean_score"] is None, "no scores means no mean, not zero"
+        assert prov2["scored_count"] == 0
 
 
 def check_desk_reject() -> None:
@@ -333,70 +400,6 @@ def check_round_is_not_version() -> None:
             "the reason must reach the record, or the page cannot give it"
 
 
-def check_correction() -> None:
-    """A correction is not a revision, and the pages must not conflate them.
-
-    It leaves the round number alone (rounds count manuscript revisions), says
-    plainly that the manuscript is unchanged, and publishes the authors'
-    response verbatim — GitHub comments are editable, so a link would let the
-    record drift out from under the review that answered it.
-    """
-    with tempfile.TemporaryDirectory() as tmp:
-        run_dir = Path(tmp) / "run"
-        run_dir.mkdir()
-        for name in BUNDLE_FILES:
-            (run_dir / name).write_text("x")
-        statement = Path(tmp) / "response.md"
-        statement.write_text("Effect sizes are in Table 2, not omitted.\n")
-
-        os.environ["REVIEW_MODELS"] = "{}"
-        os.environ["REVIEW_AGENT_MODELS"] = "{}"
-        preprint = Preprint(
-            url="https://arxiv.org/abs/1706.03762", source="arxiv",
-            pdf_url="p", identifier="1706.03762", title="A paper", version="1",
-        )
-        state = {"decision": "minor", "manuscript_title": "A paper",
-                 "total_cost": 0.3, "errors": [], "reports": []}
-
-        paper = Path(tmp) / "2026" / "a-paper"
-        write_bundle(preprint, state, run_dir, paper / "v1", "1", "me")
-        write_bundle(
-            preprint, state, run_dir, paper / "v2", "1", "me", None,
-            {"round": 1, "kind": "correction", "prior_decision": "major",
-             "only_reviewers": ["methodology"],
-             "statement_path": str(statement),
-             "statement_source": "https://github.com/x/y/issues/3#issuecomment-1",
-             "baseline": {"restored": False, "reason": "", "n/a": True}},
-        )
-
-        prov = provenance_of(paper / "v2")
-        assert prov["round"] == 1, "a correction must not advance the round"
-        assert prov["revision"]["kind"] == "correction", \
-            "the site keys the whole correction notice off this"
-        assert prov["revision"]["only_reviewers"] == ["methodology"], \
-            "which referees re-ran must be recorded, or the page cannot name them"
-
-        # The response is published, not linked: a GitHub comment stays
-        # editable, and a record that cites mutable text is not a record.
-        assert (paper / "v2" / AUTHOR_RESPONSE).exists(), \
-            "the authors' response was not snapshotted into the bundle"
-        assert "Table 2" in (paper / "v2" / AUTHOR_RESPONSE).read_text()
-        assert prov["revision"]["response_published"] is True
-
-        # An appeal with no author comment is allowed by the workflow. The
-        # record has to say so, or the page would describe a verification that
-        # never happened and link a file that was never written.
-        write_bundle(
-            preprint, state, run_dir, paper / "v3", "1", "me", None,
-            {"round": 1, "kind": "correction", "prior_decision": "major",
-             "only_reviewers": ["methodology"], "statement_path": "",
-             "baseline": {"restored": False, "reason": "", "n/a": True}},
-        )
-        assert not (paper / "v3" / AUTHOR_RESPONSE).exists(), \
-            "no response was supplied, so none should be published"
-        assert provenance_of(paper / "v3")["revision"]["response_published"] is False, \
-            "an appeal with no response must be recorded as having none"
-
 
 def check_site_never_injects_raw_html() -> None:
     """Layer 2: nothing in the site may hand untrusted metadata to the parser.
@@ -513,50 +516,6 @@ def check_download_is_bounded() -> None:
         fetch_preprint.urllib.request.urlopen = real
 
 
-def check_statement_url_is_external() -> None:
-    """A response-letter URL must not reach the runner's own network."""
-    import run_review
-
-    for bad, why in (
-        ("http://example.org/x.md", "plain http"),
-        ("https://127.0.0.1/x.md", "loopback"),
-        ("https://169.254.169.254/latest/meta-data/", "cloud metadata"),
-        ("https://10.0.0.5/x.md", "private range"),
-    ):
-        try:
-            run_review._reject_internal_url(bad)
-        except SystemExit:
-            continue
-        raise AssertionError(f"{why} was not rejected: {bad}")
-
-
-def check_statement_redirects_are_rechecked() -> None:
-    """Vetting only the submitted URL is not a control.
-
-    Whoever chooses the URL also chooses where it redirects, and urllib
-    follows redirects on its own. A public https host answering 302 with the
-    cloud metadata endpoint would otherwise put the runner's credentials into
-    the file that gets published as the authors' response.
-    """
-    import run_review
-
-    handler = run_review._GuardedRedirectHandler()
-    for target, why in (
-        ("http://169.254.169.254/latest/meta-data/", "metadata endpoint"),
-        ("https://127.0.0.1/secrets", "loopback"),
-        ("http://example.org/x.md", "downgrade to plain http"),
-    ):
-        try:
-            handler.redirect_request(None, None, 302, "Found", {}, target)
-        except SystemExit:
-            continue
-        raise AssertionError(f"redirect to {why} was not rejected: {target}")
-
-    # And the opener actually installs it, or the guard above is unreachable.
-    opener = run_review._public_opener()
-    assert any(
-        isinstance(h, run_review._GuardedRedirectHandler) for h in opener.handlers
-    ), "the guarded handler is not installed on the opener"
 
 
 def check_solicitation_is_labelled() -> None:
@@ -880,6 +839,8 @@ def main() -> int:
         check(title)
         print(f"ok  {title}")
 
+    check_unscorable_dimension_is_not_a_good_score()
+    print("ok  a dimension that does not apply leaves the mean")
     check_desk_reject()
     print("ok  desk reject records no panel and keeps every body")
     check_versioning()
@@ -894,8 +855,6 @@ def main() -> int:
     print("ok  a missing revision baseline is never silent")
     check_round_is_not_version()
     print("ok  bundle version and review round stay distinct")
-    check_correction()
-    print("ok  a correction is not a revision")
     check_solicitation_is_labelled()
     print("ok  the solicitation claim is recorded, all three ways")
     check_metadata_is_sanitised_at_ingestion()
@@ -906,10 +865,6 @@ def main() -> int:
     print("ok  stored URLs are rebuilt, not echoed")
     check_download_is_bounded()
     print("ok  downloads are size-capped")
-    check_statement_url_is_external()
-    print("ok  response URLs cannot reach the runner's network")
-    check_statement_redirects_are_rechecked()
-    print("ok  and neither can a redirect from one")
     check_rejected_sources()
     print("ok  only arXiv / bioRxiv / medRxiv accepted")
     check_link_forms_a_browser_produces()

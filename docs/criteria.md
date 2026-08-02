@@ -84,6 +84,23 @@ colleague read, the bottom for work whose central claim does not survive its
 evidence, and expect most sound papers to land in the middle. Left alone, LLM
 referees compress everything into 4s and 5s, which makes a score meaningless.
 
+## When a dimension doesn't apply
+
+A referee may return **not applicable** rather than a score. Every manuscript
+gets all eight, and some manuscripts contain nothing in a given referee's
+dimension — a qualitative interview study has no statistical analysis to judge.
+
+An n/a is excluded from the panel mean entirely, rather than counted as a good
+score, and the review page says how many referees the mean is over ("mean over
+7 of 8"). That matters because the forced number was reliably a generous one:
+told to score a qualitative study anyway, the data-analysis reviewer wrote that
+it had no statistical claims to evaluate and gave it 5 out of 5, the highest
+data-analysis score in the corpus.
+
+n/a is not for work judged harshly. Thin, unclear or missing evidence is a low
+score — the referee had something to weigh and found it wanting. n/a is only for
+a dimension the manuscript contains nothing of.
+
 ## What the panel cannot do
 
 Stated here rather than buried, because a report that does not know its own
@@ -124,9 +141,9 @@ required revisions with stable ids (`R1-03` names the third ask of round 1 for
 the life of the manuscript), per-referee weaknesses, scores. Round 2 reports
 against those ids rather than string-matching prose, and the record is published
 in the bundle so you can verify what was carried forward. The record is also
-what makes a later round possible at all: both revisions and corrections report
-against the previous round's `round.json`, so a review published before round
-records existed cannot be revised or appealed — it needs a fresh review instead.
+what makes a later round possible at all: a revision round reports against the
+previous round's `round.json`, so a review published before round records
+existed cannot be revised — it needs a fresh review instead.
 
 **The draft comparison.** A revision round diffs the old and new manuscripts.
 Because the reviewed PDF is fingerprinted, that baseline is rebuilt by
@@ -136,43 +153,20 @@ on its own page and in the paper's history**, because a round that ruled without
 a verified comparison is weaker evidence than one that did, and the two would
 otherwise look identical.
 
-### The author response letter
+### No author input
 
-Authors may submit a response letter. It is treated as untrusted,
-interested-party input:
+What a round reads is the manuscript. The engine can take an author response
+letter and In Silico never sends one, because we tried it and watched what
+happened: given a letter asserting that revisions had been made, the compliance
+auditor confirmed four of them and manufactured the supporting detail, citing a
+permutation test as "reported in the Fig. 6 legend" that appears nowhere in the
+paper. The editor moved the verdict a full grade on that. Re-run identically
+with no letter, the same auditor read the manuscript and got all ten items
+right. An interested party's prose is not evidence, and the panel could not be
+made to treat it as anything else.
 
-1. Screened for concealed instructions at the same desk gate as the manuscript.
-2. Read by a verifier that checks each claim against the manuscript.
-3. Reduced to corroborated pointers — passages the referees must go and read for
-   themselves.
-
-The referees never see the letter's prose. It can direct attention; it cannot
-move a score by asserting something. The verification is published in the
-bundle, which is what makes that claim inspectable.
-
-### Corrections
-
-A revision says the manuscript changed. A **correction** says the review is
-wrong about a manuscript that didn't. They run differently, and conflating them
-would punish authors who are right.
-
-Against an unchanged draft the compliance auditor would correctly report every
-required revision as undone and drive the verdict *down* — so a correction runs
-without it, and without the draft diff, since there is nothing to compare.
-
-Corrections do not advance the round number. Rounds count manuscript revisions;
-if a correction bumped one, "round 3" would stop telling you how many times the
-paper was actually rewritten. The paper's history shows corrections in place,
-against the round they correct.
-
-The editor may narrow a correction to the disputed referees; unless they are
-named, the whole panel re-runs. Narrowing is about accuracy before cost: if one
-referee misread a table, only that referee's assessment should move, and
-re-running all eight lets the other seven drift on resampling noise so the
-published change overstates what the correction actually did. Referees left out
-of a narrowed correction keep their previous reports, carried forward so the
-panel score still reflects all of them — and each carried report says on its
-face that it was not re-run.
+Authors are not left without recourse; the recourse is human rather than
+agentic. See [contesting a review](policy.md#contesting-a-review).
 
 ## Who does what
 

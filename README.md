@@ -38,17 +38,22 @@ Merging the review pull request is what publishes it. There is no other step —
 and it means the review is public, not that the panel's recommendation has been
 endorsed.
 
-Two follow-up commands continue an existing record:
+One follow-up command continues an existing record:
 
 | Command | Means | Effect |
 |---|---|---|
 | `/review <url>` | review this preprint | a fresh round 1 |
-| `/revise [letter-url]` | the **manuscript** changed | next round; referees rule on the delta, an auditor checks the previous letter's required revisions |
-| `/appeal <comment-url> [reviewers]` | the **review** is wrong, the manuscript is unchanged | a correction at the same round number; named referees re-run |
+| `/revise` | the **manuscript** changed | next round; referees rule on the delta, an auditor checks the previous letter's required revisions |
 
-Both need the previous round to have left a `round.json` in its bundle, which is
-what a later round is pointed at. Reviews published before round records existed
-cannot be revised — re-review the current draft as a fresh round instead.
+`/revise` needs the previous round to have left a `round.json` in its bundle,
+which is what a later round is pointed at. Reviews published before round records
+existed cannot be revised — re-review the current draft as a fresh round instead.
+
+Nothing an author writes enters a review. There is no appeal command and no
+response letter: a review the authors can argue with in prose is one they can
+move without changing the paper, and we measured that happening. Recourse is a
+published right of reply, editor withdrawal, or a re-review with no author input
+— see [`docs/policy.md`](docs/policy.md#contesting-a-review).
 
 ## Submitting
 
@@ -99,7 +104,6 @@ docs/                     # the record — written by the pipeline, read by the 
     ├── decision_letter.md
     ├── desk_screen.md         # only when the desk found something
     ├── integrity.md           #   ditto — the injection scan
-    ├── author_response.md     # revisions/appeals: the letter, verbatim
     ├── meta_review.md
     ├── author_rebuttal.md
     ├── debate_transcript.md
@@ -121,7 +125,7 @@ scripts/
 └── smoke_test.py         # the pipeline↔site data contract; no network, no key
 
 .github/workflows/
-├── review.yml            # /review, /revise, /appeal → opens a review PR
+├── review.yml            # /review, /revise → opens a review PR
 ├── ci.yml                # PR check: data contract holds, site builds, no bundle unrendered
 ├── publish.yml           # build + deploy the site on merge
 └── check-updates.yml     # monthly staleness sweep → files a tracking issue

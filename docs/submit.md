@@ -83,51 +83,56 @@ The earlier review is never edited or removed. It stays published as the record
 of that revision, and the paper's page shows the whole arc — what each round
 required, and how the recommendation moved.
 
-**You can include a response letter.** Give the editor a public URL to it and it
-goes to the panel — but not as prose. It is screened for hidden instructions at
-the same gate as the manuscript, and then read by a verifier that checks each
-claim against the manuscript itself. Only corroborated pointers reach the
-referees: *"the authors say X was added at §3.2 — go read §3.2 and judge it."*
-A response letter can direct attention. It cannot move a score by asserting
-something, and the verification is published so you can see exactly what the
-panel was shown.
+**No response letter goes to the panel.** The pipeline supports one; In Silico
+deliberately doesn't send it, and it is worth saying plainly why. Handed a
+letter asserting that revisions had been made, the compliance auditor confirmed
+four of them and invented the supporting detail — a permutation test it said was
+"reported in the Fig. 6 legend", which appears nowhere in the manuscript — and
+the editor moved the verdict a full grade on the strength of that. Re-run
+identically with no letter attached, the same auditor read the manuscript and
+got all ten items right. An interested party's prose is not evidence, and the
+system demonstrably could not treat it as anything else.
+
+So the panel reads the new draft and nothing else. If you want a change noticed,
+it has to be in the manuscript.
 
 There is a **cap of three rounds**. An endless revise-and-resubmit loop is a
 failure rather than a process, and at that point the submission gets decided.
 
 ## If the review got something wrong
 
-That's a different thing from a revision, and it has its own route. Comment on
-your submission issue saying what the review got wrong. An editor runs
-`/appeal`, which re-reviews **without** touching the round number — the
-manuscript hasn't changed, so nothing about it is being re-judged. Like
-`/revise`, it needs the earlier round to have left a `round.json` in its
-bundle; reviews that predate round records need a fresh `/review` instead.
+That's a different thing from a revision, and it does not go back through the
+panel. The manuscript hasn't changed, so there is nothing new for a referee to
+read — and for the reason above, nothing you write is shown to one. Say what the
+review got wrong on your submission issue. Three routes exist, and none of them
+asks a model to weigh your account against the referees'.
 
-What happens to your comment:
+**A right of reply.** We publish your response verbatim beside the review,
+clearly labelled as yours. It is read by no agent, ever, and it changes no
+score. It isn't edited down or summarised, and it doesn't have to be about a
+factual error — if you simply think the panel was wrong, say so there. A reader
+who reaches the review reaches your answer to it in the same place.
 
-1. It's fetched verbatim and **published in the bundle**. We snapshot rather
-   than link, because comments stay editable and a review that cited a mutable
-   comment wouldn't be a record of anything. (The published file itself carries
-   no byline; where the comment came from is recorded in provenance.)
-2. It's screened for hidden instructions, like any submitted text.
-3. A verifier checks each claim against your manuscript.
-4. Referees get **corroborated pointers only** — "the authors say effect sizes
-   are in Table 2; go read Table 2 and judge it" — never your words as prose.
+**Editor withdrawal or correction.** Where the panel demonstrably misread the
+paper — it said you reported no effect sizes and they are in Table 2 — a human
+editor can withdraw the review or annotate it with what it got wrong. A person
+reads the manuscript and decides. No agent is involved and nothing is re-scored,
+because the failure was a misreading and the fix for a misreading is a correct
+reading, not another sample.
 
-The editor may narrow the appeal to the referee you're disputing; when that
-happens, the rest keep their existing reports, so the panel score still reflects
-all eight and the change you get is the change you argued for rather than eight
-referees resampling. Left unnarrowed, the whole panel re-runs.
+**Re-review.** A fresh review of the unchanged manuscript, run with no author
+input at all. It can land anywhere, including exactly where the first one did;
+there is no thumb on the scale, which is what makes the result worth anything.
+The new review is published alongside the original and never replaces it.
 
-**What this can and can't do.** *"You said we didn't report effect sizes; they're
-in Table 2"* is checkable, and if it checks out the score can move. *"We think
-this is more novel than you credited"* is a disagreement about judgment — the
-panel won't re-run for it, and your comment stands publicly as your dissent
-next to the review.
+Which route fits depends on what went wrong. A factual error about what your
+manuscript says gets corrected or withdrawn — that is the one failure mode we
+treat as disqualifying. A disagreement about judgment — *"we think this is more
+novel than you credited"* — gets a right of reply, and stands publicly next to
+the review rather than being argued into it.
 
-The original review is never removed. A correction is published beside it, and
-the paper's page shows both.
+The original review is never removed. Whatever follows is published beside it,
+and the paper's page shows both.
 
 ### If your submission is stopped at the desk
 

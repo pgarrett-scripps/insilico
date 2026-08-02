@@ -44,8 +44,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request == null &&
        (startsWith(github.event.comment.body, '/review') ||
-        startsWith(github.event.comment.body, '/revise') ||
-        startsWith(github.event.comment.body, '/appeal')) &&
+        startsWith(github.event.comment.body, '/revise')) &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -182,60 +181,18 @@ jobs:
           SUBMISSION_ID: ${{ github.event.issue.number || github.event.inputs.submission_id }}
           SUBMITTER: ${{ github.event.issue.user.login }}
         run: |
-          # `/revise [response-letter-url]` continues this preprint's most
-          # recent round; `/review` always starts a fresh one. Kept as two
-          # commands rather than inferred, because re-reviewing the same draft
-          # under changed criteria and reviewing a revised draft are different
-          # acts that would otherwise be indistinguishable to the script.
+          # `/revise` continues this preprint's most recent round; `/review`
+          # always starts a fresh one. Kept as two commands rather than
+          # inferred, because re-reviewing the same draft under changed
+          # criteria and reviewing a revised draft are different acts.
+          #
+          # Neither accepts author text. The panel judges the manuscript and
+          # the diff between drafts; an author's account of what they changed
+          # is not evidence, and when it was accepted the compliance auditor
+          # confirmed claims that the manuscript did not support.
           args=()
           case "$COMMENT_BODY" in
-            /revise*)
-              args+=(--revise)
-              # Everything after the command, if it is a URL, is the authors'
-              # response letter. Extracted with grep rather than expanded by
-              # the shell — the comment body is attacker-controlled text.
-              letter="$(printf '%s' "$COMMENT_BODY" | head -1 \
-                        | grep -oE 'https?://[^[:space:]]+' | head -1 || true)"
-              if [ -n "$letter" ]; then args+=(--author-statement "$letter"); fi
-              ;;
-            /appeal*)
-              args+=(--appeal)
-              first="$(printf '%s' "$COMMENT_BODY" | head -1)"
-              # `/appeal <comment-url-or-id> [reviewer,reviewer]`
-              #
-              # The appeal points at the AUTHORS' comment rather than carrying
-              # their words in the editor's. Fetching it by id gets the body
-              # verbatim with the right attribution and timestamp, and the
-              # snapshot published in the bundle is then provably the text the
-              # panel answered — a link alone would rot, since comments stay
-              # editable after the fact.
-              cid="$(printf '%s' "$first" | grep -oE 'issuecomment-[0-9]+' \
-                     | grep -oE '[0-9]+' | head -1 || true)"
-              if [ -z "$cid" ]; then
-                cid="$(printf '%s' "$first" | grep -oE '(^|[[:space:]])[0-9]{6,}' \
-                       | tr -d '[:space:]' | head -1 || true)"
-              fi
-              if [ -n "$cid" ]; then
-                # --jq writes the body straight to a file; it never passes
-                # through the shell, so nothing in it can be expanded.
-                gh api "repos/${{ github.repository }}/issues/comments/${cid}" \
-                  --jq '.body' > /tmp/author-response.md
-                author="$(gh api "repos/${{ github.repository }}/issues/comments/${cid}" \
-                          --jq '.user.login')"
-                echo "Appeal cites comment ${cid} by @${author}"
-                args+=(--author-statement /tmp/author-response.md
-                       --statement-source "${{ github.event.issue.html_url }}#issuecomment-${cid}")
-              else
-                echo "::warning::/appeal named no author comment; the panel will" \
-                     "re-run without a response to check."
-              fi
-              # Trailing bare word list selects which referees re-run.
-              picks="$(printf '%s' "$first" \
-                       | grep -oE '[a-z_]+(,[a-z_]+)*$' | head -1 || true)"
-              if [ -n "$picks" ] && [ "$picks" != "appeal" ]; then
-                args+=(--only-reviewers "$picks")
-              fi
-              ;;
+            /revise*) args+=(--revise) ;;
           esac
 
           if [ -n "$INPUT_URL" ]; then

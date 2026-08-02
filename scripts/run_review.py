@@ -20,7 +20,6 @@ import re
 import shutil
 import sys
 import tempfile
-import urllib.parse
 from pathlib import Path
 from queue import Empty, Queue
 
@@ -40,11 +39,6 @@ from fetch_preprint import (  # noqa: E402
 # stable ids a later round rules on. Published, not internal: without it in
 # the bundle there is nothing to point `--revision-of` at.
 ROUND_RECORD = "round.json"
-
-# The authors' response, copied into the bundle verbatim. Published rather
-# than merely linked: a GitHub comment can be edited after the review answers
-# it, and a record that cites mutable text is not a record.
-AUTHOR_RESPONSE = "author_response.md"
 
 REPO = Path(__file__).resolve().parent.parent
 REVIEWS = REPO / "docs" / "reviews"
@@ -85,17 +79,23 @@ REPO_URL = (
 # site's business, and lives in src/lib/corpus.js.
 #
 # integrity.md and desk_screen.md are written only when the desk found
-# something. author_response_verification.md appears on revision rounds: it is
-# what the panel was actually allowed to see of the authors' letter —
-# corroborated pointers, never the letter's own prose — so publishing it is
-# what makes "the letter could not move a score" checkable rather than
-# asserted.
+# something.
+#
+# The pipeline also supports an author response letter, and In Silico
+# deliberately never sends one. Given a letter asserting that revisions were
+# made, the compliance auditor confirmed four of them and invented supporting
+# detail — a permutation test "reported in the Fig. 6 legend" that appears
+# nowhere in the manuscript — and the editor moved the verdict a full grade on
+# the strength of it. Re-running the identical round with no letter attached,
+# the same auditor read the manuscript and got all ten items right. Authors
+# still get a reply published beside the review; it simply never reaches an
+# agent, because an interested party's prose is not evidence and this system
+# demonstrably cannot treat it as anything else.
 BUNDLE_FILES = [
     "summary.md",
     "decision_letter.md",
     "integrity.md",
     "desk_screen.md",
-    "author_response_verification.md",
     "meta_review.md",
     "author_rebuttal.md",
     "debate_transcript.md",
@@ -210,17 +210,27 @@ def pipeline_version() -> dict[str, str]:
 
 
 def panel_scores(state: dict) -> list[dict]:
+    """Each referee's score, keeping a null one null.
+
+    A null score means the dimension had nothing to judge in this manuscript —
+    a data-analysis review of a paper with no quantitative analysis. It is
+    carried through as null and left out of the mean, never filled in: the
+    reviewer that had to invent a number reliably invented a generous one, and
+    the resulting inflation is invisible once it has become a float.
+    """
     out = []
     for report in state.get("reports", []) or []:
         if not isinstance(report, dict):
             continue
-        out.append(
-            {
-                "reviewer": report.get("reviewer", "unknown"),
-                "score": report.get("score"),
-                "confidence": report.get("confidence"),
-            }
-        )
+        entry = {
+            "reviewer": report.get("reviewer", "unknown"),
+            "score": report.get("score"),
+            "confidence": report.get("confidence"),
+        }
+        reason = str(report.get("not_applicable_reason") or "").strip()
+        if entry["score"] is None and reason:
+            entry["not_applicable_reason"] = reason
+        out.append(entry)
     return out
 
 
@@ -294,21 +304,6 @@ def write_bundle(
     if (run_dir / ROUND_RECORD).exists():
         shutil.copy2(run_dir / ROUND_RECORD, dest / ROUND_RECORD)
 
-    # Snapshot of the authors' response exactly as submitted. GitHub comments
-    # can be edited after the fact, so a published review that merely links to
-    # one would end up citing text that no longer says what we answered. The
-    # copy is what makes the record hold still.
-    #
-    # Whether one arrived is recorded rather than left to be inferred later:
-    # an `/appeal` with no author comment is explicitly allowed, and without
-    # this flag the correction notice would claim a response was verified and
-    # link to a file that was never written — on exactly the rounds where
-    # neither happened.
-    statement = revision.get("statement_path")
-    revision["response_published"] = bool(statement and Path(statement).is_file())
-    if revision["response_published"]:
-        shutil.copy2(statement, dest / AUTHOR_RESPONSE)
-
     decision = state.get("decision", "unknown")
     scores = panel_scores(state)
     numeric = [s["score"] for s in scores if isinstance(s.get("score"), (int, float))]
@@ -347,6 +342,11 @@ def write_bundle(
         "screens": json.loads(os.environ.get("REVIEW_SCREENS") or "{}"),
         "panel": scores,
         "mean_score": round(sum(numeric) / len(numeric), 2) if numeric else None,
+        # How many referees the mean is actually over. A 4.1 across eight
+        # referees and a 4.1 across three are different claims, and without
+        # both numbers a page showing only the mean cannot tell them apart.
+        "scored_count": len(numeric),
+        "panel_size": len(scores),
         "total_cost_usd": state.get("total_cost"),
         # Per-agent spend, so cost decisions are measured rather than guessed.
         "cost_by_node": dict(sorted(cost_by_node.items())) if cost_by_node else {},
@@ -438,108 +438,6 @@ def restore_prior_draft(prior_bundle: Path, workdir: Path, config: dict) -> dict
     return status
 
 
-def _reject_internal_url(source: str) -> None:
-    """Refuse a URL that points inside the runner's own network.
-
-    Unlike the preprint path, which only ever builds URLs for three known
-    hosts, this fetches whatever an editor pasted. On a CI runner that reaches
-    the cloud metadata endpoint and anything else on the local network, so a
-    mistyped or malicious link turns the reviewer into a request forwarder.
-
-    Address-based rather than an allowlist: a response letter can legitimately
-    live on any number of hosts, and the property that actually matters is
-    that it is not somewhere only the runner can see. Every resolved address
-    is checked, since a name can return several.
-
-    Checking the URL is necessary but not sufficient — see
-    :class:`_GuardedRedirectHandler` for the other half.
-    """
-    import ipaddress
-    import socket
-
-    parsed = urllib.parse.urlparse(source)
-    if parsed.scheme != "https":
-        raise SystemExit(
-            f"author statement must be an https URL, got {parsed.scheme or 'none'}."
-        )
-    host = parsed.hostname or ""
-    if not host:
-        raise SystemExit(f"could not read a hostname from {source}")
-    try:
-        infos = socket.getaddrinfo(host, parsed.port or 443, proto=socket.IPPROTO_TCP)
-    except socket.gaierror as exc:
-        raise SystemExit(f"could not resolve {host}: {exc}") from exc
-    for info in infos:
-        addr = ipaddress.ip_address(info[4][0])
-        if (
-            addr.is_private
-            or addr.is_loopback
-            or addr.is_link_local
-            or addr.is_reserved
-            or addr.is_multicast
-            or addr.is_unspecified
-        ):
-            raise SystemExit(
-                f"{host} resolves to {addr}, which is inside the runner's own "
-                "network. Response letters have to be fetchable from the "
-                "public internet."
-            )
-
-
-class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
-    """Re-check every redirect hop against the same rule as the first URL.
-
-    Vetting only the URL the submitter typed is not a control, because the
-    submitter also chooses what that URL redirects *to*. urllib follows
-    redirects automatically, so a perfectly public https host answering 302
-    with ``http://169.254.169.254/latest/meta-data/iam/security-credentials/``
-    lands the runner's cloud credentials in the fetched file — which this
-    pipeline then publishes verbatim into the review bundle as the authors'
-    response. The check that ran before the request is exactly the check that
-    has to run again at each hop.
-
-    Refusals are raised rather than returned so a blocked hop stops the run
-    with the reason, instead of degrading to a fetch of something else.
-    """
-
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        _reject_internal_url(newurl)
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
-
-
-def _public_opener() -> urllib.request.OpenerDirector:
-    """An opener that enforces :func:`_reject_internal_url` on every hop."""
-    return urllib.request.build_opener(_GuardedRedirectHandler)
-
-
-def fetch_statement(source: str, workdir: Path) -> Path:
-    """Materialise the authors' response letter as a local file.
-
-    A URL or a path, because a submitter has an issue comment to work with and
-    not a filesystem. Nothing is inspected here on purpose: the letter is
-    untrusted, interested-party input, and the pipeline screens it at the desk
-    on the same gate as the manuscript. Sniffing it first would just be a
-    second, worse screen.
-    """
-    if not source.lower().startswith(("http://", "https://")):
-        path = Path(source)
-        if not path.is_file():
-            raise SystemExit(f"author statement not found: {source}")
-        return path
-    _reject_internal_url(source)
-    # A response letter is prose. The default cap is sized for PDFs of whole
-    # manuscripts, which this is not.
-    data = _get(source, max_bytes=8 * 1024 * 1024, opener=_public_opener())
-    # Extension decides the parser upstream, so keep the one the URL implies
-    # and fall back to markdown, which the loader treats as plain text.
-    suffix = Path(urllib.parse.urlparse(source).path).suffix.lower()
-    if suffix not in (".pdf", ".md", ".txt", ".tex", ".docx"):
-        suffix = ".md"
-    dest = workdir / f"author-statement{suffix}"
-    dest.write_bytes(data)
-    return dest
-
-
 def _prior_cache_key(prior_bundle: Path) -> str:
     """The manuscript cache key the previous round wrote into round.json."""
     try:
@@ -591,56 +489,11 @@ def main() -> int:
         help="continue this preprint's most recent round automatically, "
              "instead of naming the previous bundle with --revision-of.",
     )
-    ap.add_argument(
-        "--appeal",
-        action="store_true",
-        help="the manuscript is unchanged and the REVIEW is being challenged. "
-             "Runs a correction against the most recent round: no compliance "
-             "audit, no draft diff, and normally only the disputed reviewers "
-             "re-run. Does not advance the round number.",
-    )
-    ap.add_argument(
-        "--only-reviewers",
-        metavar="NAMES",
-        help="comma-separated reviewers to re-run on an appeal, e.g. "
-             "'methodology,rigor'. The rest keep their previous reports, so "
-             "the panel is still scored over all of them. Default: all.",
-    )
-    ap.add_argument(
-        "--statement-source",
-        metavar="URL",
-        help="where the response came from (e.g. the GitHub comment URL), "
-             "recorded in provenance so the published snapshot is traceable.",
-    )
-    ap.add_argument(
-        "--author-statement",
-        metavar="URL_OR_PATH",
-        help="the authors' response letter. Treated as untrusted, "
-             "interested-party input: injection-screened at the desk and "
-             "never shown to the panel as prose. Requires --revision-of.",
-    )
     ap.add_argument("--dry-run", action="store_true", help="resolve + download only")
     args = ap.parse_args()
 
     if args.revise and args.revision_of:
         ap.error("--revise and --revision-of do the same job; pass one.")
-    if args.appeal and args.revise:
-        ap.error(
-            "--appeal and --revise are different acts: an appeal says the "
-            "review is wrong about an unchanged manuscript, a revision says "
-            "the manuscript changed. Pass one."
-        )
-    if args.only_reviewers and not args.appeal:
-        ap.error(
-            "--only-reviewers only applies to --appeal. A revision has a new "
-            "draft, which every reviewer needs to see."
-        )
-    if args.author_statement and not (args.revision_of or args.revise or args.appeal):
-        ap.error(
-            "--author-statement requires --revision-of, --revise or --appeal: "
-            "a response answers a previous round's review, so there has to "
-            "be one."
-        )
 
     workdir = Path(tempfile.mkdtemp(prefix="insilico-"))
     try:
@@ -712,7 +565,7 @@ def _run(args, workdir: Path) -> int:
         overrides["max_debate_rounds"] = args.debate_rounds
 
     revision: dict = {"round": 1}
-    if args.revise or args.appeal:
+    if args.revise:
         found = find_prior_bundle(
             preprint, preprint.title or preprint.identifier
         )
@@ -739,16 +592,6 @@ def _run(args, workdir: Path) -> int:
             )
             return 1
         overrides["revision_of"] = str(prior_bundle)
-        if args.appeal:
-            overrides["revision_mode"] = "correction"
-            if args.only_reviewers:
-                overrides["only_reviewers"] = [
-                    n.strip() for n in args.only_reviewers.split(",") if n.strip()
-                ]
-        statement_file = None
-        if args.author_statement:
-            statement_file = fetch_statement(args.author_statement, workdir)
-            overrides["author_statement_path"] = str(statement_file)
 
     config = get_config(**overrides)
 
@@ -756,10 +599,7 @@ def _run(args, workdir: Path) -> int:
         prior = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
         prior_round = int(prior.get("round", 1))
         revision = {
-            # An appeal does NOT advance the round. Rounds count manuscript
-            # revisions; if a correction bumped it, "round 3" would stop
-            # telling a reader how many times the paper was rewritten.
-            "round": prior_round if args.appeal else prior_round + 1,
+            "round": prior_round + 1,
             "prior_bundle": prior_bundle.name,
             "prior_decision": str(prior.get("decision", "")),
             "prior_round": int(prior.get("round", 1)),
@@ -767,19 +607,8 @@ def _run(args, workdir: Path) -> int:
             # lives in its round.json; keeping them apart stops the paper
             # page attributing one round's asks to another.
             "prior_required_revisions": len(prior.get("required_revisions") or []),
-            "author_statement": bool(args.author_statement),
-            "kind": "correction" if args.appeal else "revision",
-            "statement_source": args.statement_source or "",
-            "statement_path": str(statement_file) if statement_file else "",
-            "only_reviewers": list(config.get("only_reviewers") or []),
-            # A correction compares nothing: the manuscript is unchanged by
-            # definition, so there is no baseline to restore and no diff to
-            # make. Claiming an unavailable baseline would read as a defect.
-            "baseline": (
-                {"restored": False, "reason": "", "verified": False, "n/a": True}
-                if args.appeal
-                else restore_prior_draft(prior_bundle, workdir, config)
-            ),
+            "kind": "revision",
+            "baseline": restore_prior_draft(prior_bundle, workdir, config),
         }
         max_rounds = int(config.get("max_rounds") or 3)
         if revision["round"] > max_rounds:
@@ -791,21 +620,13 @@ def _run(args, workdir: Path) -> int:
             )
             return 1
         b = revision["baseline"]
-        if args.appeal:
-            who = ", ".join(revision["only_reviewers"]) or "the full panel"
-            print(
-                f"appeal    correction to round {revision['round']} "
-                f"({prior_bundle.name}); re-running {who}",
-                file=sys.stderr,
-            )
-        else:
-            print(
-                f"revision  round {revision['round']} of {prior_bundle.name}"
-                f" — baseline {'restored' if b['restored'] else 'UNAVAILABLE'}",
-                file=sys.stderr,
-            )
-            if not b["restored"]:
-                print(f"          {b['reason']}", file=sys.stderr)
+        print(
+            f"revision  round {revision['round']} of {prior_bundle.name}"
+            f" — baseline {'restored' if b['restored'] else 'UNAVAILABLE'}",
+            file=sys.stderr,
+        )
+        if not b["restored"]:
+            print(f"          {b['reason']}", file=sys.stderr)
 
     # Record what actually ran, not what was requested — with roles configured
     # these differ per agent, so the resolved config is the honest answer.

@@ -1,0 +1,34 @@
+# Journal Recommendations
+
+## As-is (current quality)
+- **In Silico**
+  - Fit: In Silico is designed to review preprints with transparent, public evaluation by LLM reviewers and human oversight. This manuscript is already on arXiv and fits In Silico's scope (empirical, checkable claims, original research). The platform's explicit tolerance for limitations and methodological novelty, combined with public peer-report, aligns well with a qualitative study whose evidentiary limits are clearly noted in Section 5.3.
+  - Realism: Realistic for overlay review but expect critical LLM reports on the perception-vs.-finding overclaiming in the title/abstract and the reproducibility gaps (no codebook/audit trail). A human editor would likely ask for revisions before publication of the review, making it equivalent to a 'major revisions' outcome in traditional peer review.
+- **Computers & Education**
+  - Fit: Broad, high-quality education journal that regularly publishes qualitative CS education research, including interview studies on teaching practice and policy. The focus on instructor decision-making, learning design, and educational technology aligns with the journal's scope. The manuscript's candid discussion of limitations (Section 5.3) and reflexive methodology fit the journal's standard for qualitative work.
+  - Realism: This manuscript at current quality would likely receive a major-revision verdict from Computers & Education, not acceptance. However, the venue is realistic for submission at this stage because the work is sound in design and the issues are known to be fixable (as the editor concedes). Acceptance odds post-revision: strong (70+%). Odds as-is: low (20–30%), contingent on a reviewer who weights the analytical contribution over reproducibility presentation.
+
+## After required revisions
+- **ACM Transactions on Computing Education (TOCE)**
+  - Fit: TOCE is the premier peer-reviewed outlet for CS education research, including qualitative studies on teaching practice, policy, and instructor decision-making. Once the manuscript reframes learning-oriented policies as hypotheses (not recommendations), provides explicit counts for vague quantifiers, and deposits codebook and audit trail, it becomes a model fit: timely topic, sound qualitative design, clear contribution (learning-harm vs. assessment-harm distinction), and reproducible analysis.
+  - Realism: Strong fit post-revision. The editor has already conceded that once the specific major-revision items (reframed claims, deposited codebook, explicit counts, data-availability statement) are addressed, the work merits acceptance. Realistic acceptance odds: 65–75%.
+- **ACM SIGCSE**
+  - Fit: SIGCSE is the flagship conference for CS education practitioners and researchers. This manuscript addresses a question directly relevant to SIGCSE's audience (how CS instructors are responding to GenAI in practice). The policy-design-and-implementation focus, emphasis on instructor-student relationships, and practical implications (transparent communication, modeling good use, formative assessment) are central to SIGCSE's scope. Post-revision clarity on what is tested vs. hypothesized strengthens the contribution.
+  - Realism: Realistic for acceptance post-revision. SIGCSE regularly accepts qualitative empirical studies on teaching innovation. The timely topic, modest but solid sample (n=13 across 9 institutions), and actionable findings appeal to conference reviewers. Realistic odds: 60–70% post-revision.
+- **Computers & Education**
+  - Fit: As noted above, this journal is appropriate post-revision as well. Once overclaiming is removed, quantifiers are explicit, and reproducibility materials are deposited, the manuscript becomes a model submission: clear research questions, transparent thematic analysis, explicit limitations, and practical implications for pedagogy.
+  - Realism: Realistic for acceptance post-revision. Given the journal's scope and the authors' transparency about limitations, this moves from 'major revisions' odds to 'accept' odds: 70–75%.
+
+## Alternative outlets
+- **arXiv cs.CY (Computers and Society)**
+  - Fit: The manuscript is already posted as arXiv:2607.16475v1. It can remain as a permanent open-access preprint in the Computers and Society category (appropriate for work on AI ethics, policy, and societal impact). This provides stable dissemination to the CS education and AI policy communities without peer review barriers.
+  - Realism: Already available; no additional acceptance needed. Useful as a permanent preprint if more-formal peer-reviewed venues decline or as a complement to journal publication.
+- **ACM ITiCSE (Innovation and Technology in Computer Science Education)**
+  - Fit: Smaller but well-regarded CS education research conference focused on innovation in teaching. Accepts empirical studies on teaching practice and policy design. Strong fit for the learning-harm vs. assessment-harm distinction and the practical policy recommendations (once recast as hypotheses).
+  - Realism: Fallback venue if SIGCSE or TOCE are full or reject. Realistic odds post-revision: 55–65%. Conference acceptance is typically easier than top-tier journals, and this work's practical focus aligns with ITiCSE's innovation remit.
+- **Educational Technology & Society**
+  - Fit: Open-access journal spanning education technology, policy, and learning design. Regularly publishes qualitative research on instructor perspectives, technology adoption, and pedagogy. The focus on how instructors mediate AI policy and its effects on teaching would fit within the journal's broader ed-tech scope, though it is less CS-education-specialist than TOCE or SIGCSE.
+  - Realism: Realistic fallback if main CS education venues are unavailable. More generalist in scope, so some reframing of CS-specific terms may be expected. Acceptance odds post-revision: 50–60%. Not the first choice but a solid safety option.
+
+## Notes
+The panel verdict (major revisions, 3.41/5 confidence-weighted) signals that the manuscript is fundamentally viable but requires specific fixes: (1) reframing of instructor perceptions as perceptions, not facts; (2) recasting untested learning-oriented policies as hypotheses, not recommendations; (3) explicit counts for all vague quantifiers; (4) deposited codebook and conflict-resolution audit trail; (5) data-availability statement explaining confidentiality constraints. These are revision-level fixes, not design problems. Once addressed, the work is realistic for top CS education journals (TOCE, SIGCSE). As-is, it would face major-revision verdicts at peer-reviewed venues but is suitable for In Silico's transparent preprint review model. The single reproducibility concern (no codebook deposited) is the highest-impact barrier and also the easiest to resolve.

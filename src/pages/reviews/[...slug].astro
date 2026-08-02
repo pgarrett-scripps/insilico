@@ -263,7 +263,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           </dl>
         </header>
 
-        <Notices provenance={bundle.provenance} docHref={`${paperHref}${bundle.version}/`} />
+        <Notices provenance={bundle.provenance} />
 
         <PanelReadout
           panel={bundle.panel}

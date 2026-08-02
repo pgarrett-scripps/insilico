@@ -37,12 +37,10 @@ const DOCUMENT_ORDER = [
   ["decision_letter.md", "Decision letter", "The editor's verdict and what it requires."],
   ["integrity.md", "Submission integrity scan", "Deterministic scan for text concealed from human readers."],
   ["desk_screen.md", "Desk screen", "Whether the submission cleared the bar for full review."],
-  ["author_response_verification.md", "Author response verification", "What of the authors' letter could be corroborated against the manuscript."],
   ["meta_review.md", "Area chair synthesis", "Ten reports weighed into one assessment."],
   ["author_rebuttal.md", "Simulated author rebuttal", "The authors' side, argued for the editor to weigh."],
   ["debate_transcript.md", "Advocate / skeptic debate", "The case for and against, in full."],
   ["journal_recommendations.md", "Venue suggestions", "Where this might be submitted."],
-  ["author_response.md", "Authors' response", "Submitted verbatim, snapshotted rather than linked."],
 ];
 
 const readJSON = (file) => {

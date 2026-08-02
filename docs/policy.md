@@ -12,9 +12,9 @@ Do not cite an In Silico listing as evidence that a result is correct.
 
 The editor-in-chief agent produces a recommendation — accept, minor revision,
 major revision, or reject — and that recommendation is published verbatim. It
-does not bind anyone. A human editor reads the bundle, reads any author
-response, and decides whether to publish it. Merging the review pull request is
-that decision; there is no other step.
+does not bind anyone. A human editor reads the bundle, reads anything the
+authors have said on the issue, and decides whether to publish it. Merging the
+review pull request is that decision; there is no other step.
 
 The editor may decline to publish a review that is incoherent, that misreads the
 paper badly enough to be misleading, or that the panel produced from a truncated
@@ -162,6 +162,22 @@ These are properties of the method, not bugs we expect to fix:
 - **It has model-shaped biases.** It rewards conventional structure and clear
   writing. Unusual-but-correct work will likely score worse than it deserves.
 
+One consequence of a fixed panel is worth stating separately. Eight referees are
+assigned to every manuscript, and some manuscripts contain nothing in a given
+referee's dimension — a qualitative interview study has no statistical analysis
+to judge. Those referees may return **not applicable** instead of a score, and
+an n/a is left out of the panel mean rather than averaged into it; the review
+page says how many referees the mean is actually over.
+
+That exists because the alternative was measured. Required to produce a number
+regardless, the data-analysis reviewer wrote that a paper had "no p-values,
+confidence intervals, effect sizes, sample-size calculations, or statistical
+claims to evaluate" and then scored it 5 of 5 — the highest data-analysis score
+in the corpus. A forced score is not a neutral score; it is a generous one. An
+n/a is not a quiet way of marking work down, either: thin, unclear or missing
+evidence is a low score. Only a dimension the manuscript contains nothing of
+gets an n/a.
+
 ## Reproducibility
 
 Every review ships a `provenance.json` recording the provider, the model used at
@@ -174,9 +190,10 @@ models aren't deterministic — but the configuration is fully disclosed.
 Not every stage runs on the same model, and the record is per-stage for that
 reason: reading a single model name off a review would misdescribe it.
 
-Reviews are never silently edited. A correction is published as a whole new
-bundle at the same round number, and the paper's review history marks that
-round as corrected; the earlier bundle stays exactly as it was.
+Reviews are never silently edited. Where one is wrong, a human editor withdraws
+it or annotates the page with what it got wrong, and the published bundle stays
+byte-for-byte as it was; where a fresh run is warranted, the new review is
+published beside the old one rather than over it.
 
 A revision round adds a review; it never replaces one. The earlier round stays
 published as the record of the draft it read, and each round records which
@@ -190,17 +207,23 @@ that the submission is decided rather than cycled.
 
 Comment on the review PR, or on your submission issue if it's already merged.
 
-- **The panel misread the paper** — say what it got wrong and where. A
-  substantive correction can trigger a re-review; a re-review is published
-  alongside the original, not in place of it. How that works — how your
-  comment is screened, verified and shown to the panel — is described in
-  [the appeal process](submit.md#if-the-review-got-something-wrong).
-- **You disagree with the judgment** — post your rebuttal. It gets linked from
-  the review page. We won't remove a recommendation because you disagree with
-  it.
-- **A statement about your paper is factually false** — that gets corrected or
-  the review gets pulled. Being wrong about what a paper says is the one failure
-  mode we treat as disqualifying.
+Nothing you write is shown to the panel. Author input into a review is a route
+we removed deliberately rather than one we never built — see
+[why](submit.md#resubmitting-a-revised-draft). What you get instead is three
+routes that don't route your words through a model, described in full under
+[if the review got something wrong](submit.md#if-the-review-got-something-wrong):
+
+- **A right of reply** — we publish your response verbatim beside the review,
+  labelled as yours. No agent reads it and it changes no score. This is the
+  route for disagreeing with the judgment: we won't remove a recommendation
+  because you dispute it, and your dissent sits next to it permanently.
+- **Editor withdrawal or correction** — where the panel demonstrably misread the
+  paper, a human editor withdraws the review or annotates it. A person decides;
+  no agent is involved. **A statement about your paper that is factually false**
+  gets corrected or the review gets pulled, because being wrong about what a
+  paper says is the one failure mode we treat as disqualifying.
+- **Re-review** — a fresh review of the unchanged manuscript, with no author
+  input, published alongside the original rather than in place of it.
 
 ## Conflicts and cost
 
@@ -214,10 +237,10 @@ page.
 ## Data
 
 We store: the preprint URL and its public metadata, the review bundle, the
-GitHub issue thread, and — if you supply one — your author response letter,
-which is published permanently in the bundle as `author_response.md`. We do not
-store manuscript PDFs — they're fetched into a temporary directory at review
-time and deleted after.
+GitHub issue thread, and — if you send one — your reply, which we publish
+verbatim beside the review and keep there permanently. We do not store
+manuscript PDFs — they're fetched into a temporary directory at review time and
+deleted after.
 
 Manuscript text is sent to a third-party model provider (currently Anthropic).
 Don't submit anything you can't send to a commercial API. Since we only accept

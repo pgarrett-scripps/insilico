@@ -61,3 +61,17 @@ jobs:
           if [ "$expected" -eq 0 ]; then
             echo "::warning::No review bundles found — nothing to check."
           fi
+
+      # The editorial pages link to each other as `policy.md#anchor` so they
+      # read correctly on GitHub; a remark plugin rewrites those into site URLs
+      # at build time. When that plugin stops matching a link, the page still
+      # builds and the link still looks right in the source — it just 404s for
+      # every reader. Seven of them shipped that way once.
+      - name: No unrewritten .md links escaped into the build
+        run: |
+          if grep -rlE 'href="[^"]*\.md([#"?]|$)' dist/ >/dev/null 2>&1; then
+            echo "::error::These links point at .md files and will 404:"
+            grep -rhoE 'href="[^"]*\.md[^"]*"' dist/ | sort -u
+            exit 1
+          fi
+          echo "no .md hrefs in the built site"
