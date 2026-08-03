@@ -1,0 +1,363 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260803-124644-functional-mapping-of-the-trypanosoma-cruzi-serino",
+  "manuscript_title": "Functional Mapping of the Trypanosoma cruzi Serinome by Fluorophosphonate Activity-Based Protein Profiling",
+  "manuscript_cache_key": "98cacd53d294c248954d6eb8395ce5b318f34136b9f02a7fd44ce346bbac2892",
+  "decision": "major",
+  "weighted_score": 3.7941,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Retitle the manuscript to reflect a 'chemoproteomic survey' rather than an 'activity-based chemoproteomic map' (e.g., 'Chemoproteomic Survey of the Trypanosoma cruzi Serinome by Fluorophosphonate Activity-Based Protein Profiling'). Update abstract, conclusions, and all framing accordingly.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Add a Benjamini–Hochberg FDR sensitivity analysis across all probe–protein tests using the deposited R scripts (Zenodo). Report the number of the 37 enriched proteins surviving FDR < 0.05 and the estimated false discovery proportion. Add a 'BH_adj_p' column to Supplementary Data 2-3 and describe the result in Results.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Insert an explicit Limitations paragraph in the Discussion stating that competitive ABPP (e.g., pre-treatment with broad-spectrum FP-biotin or PMSF) was not performed, so active-site-dependent labelling for each enriched protein remains inferred despite orthogonal support from AlphaFold catalytic geometry, FP-chemotype precedent, and Leishmania validation.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Create a consolidated Methods section with all subsections conceded in the rebuttal: 'Parasite culture and strain', 'FP-alkyne probe synthesis and characterization', 'Whole-cell ABPP labelling', 'Click chemistry and streptavidin enrichment', 'Sample preparation for LC-MS/MS', 'LC-MS/MS acquisition parameters', 'Proteomics data analysis', 'In silico serinome curation', 'Gene Ontology and PPI analysis'. Populate with every parameter currently missing per the Methods Completeness audit (16 HARD gaps): instrument model, acquisition mode (DDA/DIA), column, gradient, MS1/MS2 settings, search engine + version, database + version, FDR threshold, modifications, mass tolerances, lysis buffer composition, click chemistry reagent concentrations and incubation times, streptavidin bead amount, wash buffers, digestion enzyme and conditions, probe concentration/vehicle/schedule, cell line source/RRID/authentication/mycoplasma status, culture medium composition, software versions (R, limma, AlphaFold, Pfam/InterPro/CDD/Panther/MEROPS, STRING), random seed (set.seed(42)), error-bar definitions for all figures, and computational environment capture (conda environment.yml or Dockerfile deposited on Zenodo).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Generate a Dm28c→CL Brener orthologue mapping table (reciprocal best BLASTP, e-value < 1e-10, >80% identity) for all 37 enriched proteins. Deposit as Supplementary Data 6. Report mapping rate and exclude non-mapped proteins from STRING analysis in the revised text.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Fix all clarity defects conceded: abstract denominator (35/37 vs 35/56), Table 2 restructuring (move two non-enriched proteins to sub-table), Figure 4→Supplementary Figure S3 cross-reference, Figure 2 legend probe-class annotations (alkyl-FP 1–3, benzyl-FP 4, aryl-FP 5–7), Supplementary Data/Figure renumbering (Data 1–5, Figures S1–S3), copy-number columns per assembly (2018/2014/2017) in Table 2.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Resolve Reference 69 (Richter et al., Nat Commun 2026): replace with correct preprint DOI or update to actual publication year.",
+      "source_reviewer": "literature",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Verify or correct all unverifiable citation–claim links flagged by the Citation Integrity audit: (a) WHO/PAHO epidemiological statistics (6–8 million infected, 75 million at risk, 21 countries, 10,000 deaths/year) — confirm exact numbers in cited URLs or replace with PubMed-accessible WHO publications; (b) PPI enrichment p-value < 1×10⁻¹⁶ — reattribute to the authors' own STRING query, not to the STRING methods paper (ref 47); (c) lysophospholipase homologs in T. brucei/L. mexicana — provide correct citation or remove claim; (d) copy-number claims (e.g., lipase 17 copies, CPB1 12 copies) — ensure numbers are derivable from deposited genome assemblies and analysis scripts, or qualify as 'per our analysis of assemblies X, Y, Z'.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Deposit all Supplementary Data 1–5 and Supplementary Figures S1–S3 to the journal's supplementary system or a public repository (Zenodo) with DOIs. Update Data Availability Statement.",
+      "source_reviewer": "reproducibility",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "Deposit the 56 AlphaFold models with catalytic distance measurements (pLDDT, interatomic distances) on Zenodo with a DOI. Reference in Methods and Data Availability.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "Provide genome assembly accession numbers for Dm28c 2014/2017/2018 in Methods (conceded: GCA_000209165.1, GCA_002183835.1, GCA_003709585.1).",
+      "source_reviewer": "reproducibility",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "Add IUPAC names or structural identifiers for all seven FP-alkyne probes to Figure 2 legend and/or a new Supplementary Table 1.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Report culture medium composition (LIT medium supplements) in Methods.",
+    "Report compute budget (CPU/GPU hours) for AlphaFold modelling and R workflows in Methods or a footnote.",
+    "Consider adding a brief statement in the Discussion about stage-specific serinome dynamics (epimastigote vs. amastigote/trypomastigote) as a biological interpretation of the uncaptured 37%, referencing the Leishmania stage-dependent data (Isern et al., 2025).",
+    "Ensure all figure legends define error bars (SD/SEM/CI) and replicate type (biological/technical).",
+    "Add a sentence in Methods confirming that all R analyses used set.seed(42) for reproducibility (already conceded).",
+    "Double-check that the Zenodo deposition for R scripts (doi:10.5281/zenodo.20626073) includes the FDR sensitivity analysis script and the conda environment file."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "The abstract states '37 enriched SH-like proteins, including 35 with conserved... catalytic triad/dyad features. The 35 SHs represent approximately 63% of the 56 predicted SHs' — a reader cannot tell whether the 35 is a subset of the 37 or of the 56 without reading the Discussion; the two denominators are conflated in a single paragraph."
+        },
+        {
+          "id": "clarity-2",
+          "text": "Table 2 is titled 'Serine hydrolases identified in T. cruzi' and the text says '37 non-redundant enriched SH-like proteins', but two entries (C4B63_10g142*, C4B63_25g255*) carry a footnote stating they 'were not detected by chemoproteomics assay'; listing non-enriched proteins in a table of enriched proteins without visual distinction or a separate category is misleading."
+        },
+        {
+          "id": "clarity-3",
+          "text": "The conservation summary ('29 present in both... two proteins absent from both') cites Figure 4, but Figure 4 shows Pfam domain architectures; the conservation data appear in Supplementary Figure S3, so the cross-reference is wrong."
+        },
+        {
+          "id": "clarity-4",
+          "text": "Figure 2's legend labels probe classes by color (alkyl/benzyl/aryl) but does not map the numbered structures (1–7) to those classes, forcing the reader to infer which probe is 'alkyl probe 1' or 'Probe 7' from the text."
+        },
+        {
+          "id": "clarity-5",
+          "text": "The manuscript lacks a dedicated Methods section; critical parameters (probe concentrations, incubation times, lysis buffer composition, LC-MS/MS settings, limma design matrix) are scattered across Results, figure legends, and Supplementary Data, making it unnecessarily hard to reconstruct the full protocol."
+        },
+        {
+          "id": "clarity-6",
+          "text": "Supplementary Data numbering is inconsistent: 'Supplementary Data 1', 'Supplementary Data 2-3', 'Supplementary Data 4', 'Supplementary Data 5', and 'Supplementary Data S4' are all used; a reader cannot reliably locate the referenced files."
+        },
+        {
+          "id": "clarity-7",
+          "text": "In Table 2, copy-number annotations for the same gene differ between assemblies (e.g., CPB1 shows '(12) (11)') but the text cites only '12 copies' without explaining the discrepancy or which assembly is authoritative."
+        }
+      ],
+      "questions": [
+        "Which 35 of the 37 proteins in Table 2 have conserved/partially conserved catalytic triads, and which two do not? (The footnote marks two as undetected, but the catalytic-status mapping is not shown.)",
+        "Should C4B63_10g142* and C4B63_25g255* be excluded from the '37 enriched' count and the 63% coverage calculation?",
+        "What are the exact probe concentrations, incubation times, and lysis conditions used for the whole-cell labelling? (Only 'optimisation of lysis conditions' is mentioned.)",
+        "In Figure 3a, what does each column represent — individual probes or probe classes? The heatmap has 7 columns but the text describes a 'panel' of probes; the mapping is not explicit."
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The core claim of 37 enriched SHs (35 with conserved catalytic sites) is derived from LFQ-MS using uncorrected p<0.05 thresholds across 7 probes and ~56 candidate SHs, yielding an uncontrolled family-wise error rate. The authors explicitly state they did not use Benjamini-Hochberg correction 'to avoid discarding genuine low-abundance hydrolases,' but then present the resulting list as a 'prioritized set of probe-accessible and catalytically competent targets' and a 'reference resource' without estimating the false discovery proportion. This overstates the reliability of individual hits; a reader cannot distinguish likely true positives from false positives in the final table. The 63% coverage claim (35/56 predicted SHs) inherits this uncertainty."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "The assertion that whole-cell labelling was 'the key enabling step' because lysate-based labelling 'performed poorly' is supported only by qualitative description ('no labelling was observed,' 'poorly resolved, aggregated material'). No quantitative comparison (e.g., number of proteins detected, signal-to-noise) or statistical test is provided. It remains possible that optimized lysate preparation (e.g., detergent screening, deglycosylation) would succeed, making the whole-cell advantage speculative rather than demonstrated."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The GO enrichment and PPI network analyses map Dm28c proteins to CL Brener homologs in STRING, introducing mapping uncertainty that is not quantified. The reported PPI enrichment p-value <1×10⁻¹⁶ is generated by STRING's internal algorithm (method unspecified) and may reflect network density artifacts rather than biological coherence. The conclusion that 'lipid metabolism is a dominant biological theme' is plausible but the statistical evidence is indirect."
+        }
+      ],
+      "questions": [
+        "What is the estimated false discovery rate among the 37 reported SHs given the uncorrected p<0.05 threshold across 7 probes? Could the authors provide a sensitivity analysis (e.g., using BH correction or permutation-based FDR) to contextualize the list reliability?",
+        "For the lysate vs whole-cell comparison: were any lysate conditions (e.g., with detergents, chaotropes, or deglycosylation) tested quantitatively? If not, can the authors clarify that the whole-cell advantage is inferred from a single failed lysate attempt rather than a systematic comparison?",
+        "In Figure 3a, the heatmap shows log2 fold-changes but no measure of replicate variability. Can the authors confirm that the limma moderated t-statistics (which borrow information across proteins) were used for the p-values, and that the heatmap values are the corresponding log2FC estimates?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "Reference 69 (Richter et al., Nat Commun 2026) carries a future publication year; this must be corrected to the actual year or replaced with a preprint DOI to maintain citation hygiene."
+        },
+        {
+          "id": "literature-2",
+          "text": "The claim 'To our knowledge, the active serine hydrolases of T. cruzi have not previously been profiled directly' is not explicitly verified with a negative literature search statement; adding a brief note (e.g., 'no prior FP-ABPP studies in T. cruzi were found in PubMed as of [date]') would strengthen the novelty assertion."
+        },
+        {
+          "id": "literature-3",
+          "text": "Citation 17 is used both for probe development and for the statement 'applying the probes to profile the active serinome of T. cruzi' — the latter describes the current work, not ref 17; the sentence structure should be clarified to avoid ambiguity."
+        }
+      ],
+      "questions": [
+        "Please confirm the correct publication year for reference 69 (Richter et al.) and provide a DOI if it is a preprint.",
+        "Can the authors add a brief statement in the introduction confirming the literature search date/terms used to support the 'first direct profiling' claim?"
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "No competition ABPP experiment (e.g., pre-treatment with broad-spectrum FP inhibitor) was performed to demonstrate that probe enrichment reflects active-site labelling rather than non-specific binding; with probe specificity of only 10–43%, this omission undermines the central claim of activity-based profiling."
+        },
+        {
+          "id": "methodology-2",
+          "text": "The experimental T. cruzi strain used for ABPP is never stated, while in silico predictions used the Dm28c 2018 genome; if strains differ, the reported 63% capture rate (35/56 predicted SHs) is an invalid comparison, and even if identical, the 21 missing SHs are explained only by unsupported speculation."
+        },
+        {
+          "id": "methodology-3",
+          "text": "GO enrichment and PPI analyses used the CL Brener proteome as background because it is the only T. cruzi assembly in STRING, but the experimental data derive from Dm28c; extensive strain-specific gene family expansions (e.g., 17 copies of lipase C4B63_104g97) likely do not map 1:1 to CL Brener, biasing enrichment statistics and the conclusion that lipid metabolism is the dominant theme."
+        },
+        {
+          "id": "methodology-4",
+          "text": "Cell permeability of the FP-alkyne probes was assumed from Leishmania studies but not validated in T. cruzi, yet whole-cell labelling is the key enabling step."
+        },
+        {
+          "id": "methodology-5",
+          "text": "Lysate-based labelling failure is described without showing any data (no figure, no quantification), preventing assessment of whether whole-cell labelling was truly necessary or if lysis conditions were suboptimal."
+        },
+        {
+          "id": "methodology-6",
+          "text": "Figure 2 does not annotate which probe number (1–7) corresponds to which chemical structure, making it impossible to interpret probe-specific enrichment patterns in Figure 3a."
+        },
+        {
+          "id": "methodology-7",
+          "text": "Statistical thresholds (p < 0.05 unadjusted, log2FC > 1) were applied without multiple testing correction across seven probes and ~37 proteins; the authors acknowledge this but do not report how many proteins survive adjusted thresholds."
+        },
+        {
+          "id": "methodology-8",
+          "text": "Subcellular localization inferences rely on TrypTagDB data from T. brucei orthologues, not T. cruzi, and this cross-species extrapolation is not validated."
+        },
+        {
+          "id": "methodology-9",
+          "text": "Copy number variation in expanded families (e.g., 17 copies of C4B63_104g97) means LFQ-MS quantification likely represents summed abundance of multiple gene products, complicating interpretation of individual enzyme activity."
+        }
+      ],
+      "questions": [
+        "What T. cruzi strain was used for the ABPP experiments, and is it the same as the Dm28c strain used for in silico prediction?",
+        "Can the authors provide competition ABPP data (e.g., pre-treatment with FP-biotin or PMSF) to confirm active-site dependent labelling for a subset of enriched proteins?",
+        "Which specific probe structure corresponds to \"probe 7\" in Figure 3a, and what are the structural features distinguishing the seven probes tested?",
+        "How many of the 37 enriched proteins pass a Benjamini–Hochberg adjusted p-value < 0.05 threshold across the probe panel?",
+        "What are the non-SH proteins enriched by the probes (57–90% of enriched proteins), and do they represent known FP off-targets or non-specific binders?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The manuscript frames the 63% capture rate as 'substantial coverage' without clarifying whether the missing 37% reflects stage-specific expression (epimastigote vs. amastigote/trypomastigote), zymogen latency, or probe inaccessibility — a distinction that directly affects target prioritization for the clinically relevant intracellular stages. The Discussion acknowledges this but does not propose a concrete strategy to resolve it, leaving the most therapeutically relevant question unaddressed."
+        },
+        {
+          "id": "novelty-2",
+          "text": "Probe selectivity is assessed only by the number of SHs enriched per probe; no competitive ABPP or dose-response data are shown to confirm on-target engagement or to differentiate probe-specific vs. pan-FP reactivity, which weakens the chemical-biology utility of the probe panel for future structure-guided ligand discovery."
+        },
+        {
+          "id": "novelty-3",
+          "text": "The GO/PPI analyses map Dm28c hits to the CL Brener reference proteome in STRING; the manuscript does not quantify how many enriched proteins lack CL Brener orthologues or how mapping ambiguity might bias the lipid-metabolism enrichment conclusion."
+        }
+      ],
+      "questions": [
+        "Can the authors provide a table or supplementary list explicitly mapping each of the 37 enriched Dm28c proteins to its CL Brener orthologue (or noting absence), so readers can assess the STRING mapping fidelity?",
+        "Are there plans or existing data for competitive ABPP (e.g., FP-alkyne vs. broad-spectrum FP-biotin competition) to validate on-target labelling for the highest-priority hits (OPB, Tc80, CPB1, PLA1, rhomboid)?",
+        "Will the authors deposit the AlphaFold-predicted structures with catalytic-distance measurements (pLDDT, interatomic distances) for all 56 curated candidates in a public repository to enable community re-use?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "LC-MS/MS acquisition parameters absent: instrument model, column, gradient, MS1/MS2 settings, and acquisition mode (DDA/DIA) are not reported, making proteomics data acquisition irreproducible. The manuscript states only \"LC-MS/MS analysis\" without any instrumental parameters."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "Click chemistry and streptavidin enrichment protocol incomplete: probe concentration, incubation time, CuAAC reagent concentrations, streptavidin bead amount, wash buffers, and elution conditions are not specified, preventing replication of the enrichment step that defines the dataset."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "Lysis buffer composition and conditions not disclosed: the text mentions \"optimisation of the lysis conditions\" but provides no final recipe (detergents, salts, pH, temperature, duration), yet lysis efficiency directly affects which proteins are accessible for labelling and enrichment."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "Protein inference and LFQ processing pipeline not fully described: software (MaxQuant? FragPipe? Spectronaut?), search engine, FDR thresholds, match-between-runs, imputation method, and normalization strategy are omitted; the R scripts may contain this but the manuscript does not summarize it."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "Supplementary Data files 1–5 and Supplementary Figures S1–S3 are cited throughout but their availability is not confirmed in the data availability statement."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "No random seed reported for any stochastic step in the analysis pipeline."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "No computational environment capture (conda/container) provided for the R workflow, only scripts."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "AlphaFold model versions cited (v6) but no confirmation that the exact models are permanently archived."
+        },
+        {
+          "id": "reproducibility-9",
+          "text": "Genome assembly accession numbers for Dm28c 2014/2017/2018 not provided, only citations."
+        },
+        {
+          "id": "reproducibility-10",
+          "text": "Probe identities in Figure 2 lack chemical names or catalog numbers, relying on color coding only."
+        }
+      ],
+      "questions": [
+        "What are the exact LC-MS/MS instrument parameters (instrument, column, gradient, MS settings)?",
+        "What is the complete click chemistry and streptavidin enrichment protocol (concentrations, times, buffers)?",
+        "What is the final optimized lysis buffer composition and procedure?",
+        "Which software and parameters were used for peptide/protein identification and LFQ quantification?",
+        "Are Supplementary Data 1–5 and Supplementary Figures S1–S3 deposited in a public repository?",
+        "Can the R scripts at Zenodo be run end-to-end from raw MS files to final figures without manual intervention?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "The claim that the uncaptured 37% of predicted SHs is \"biologically informative in itself\" (Discussion) overinterprets negative data; alternative explanations like probe inaccessibility, low expression, or technical false negatives are not experimentally excluded, and the authors present no direct evidence for stage-specific expression or zymogen status in this study."
+        },
+        {
+          "id": "rigor-2",
+          "text": "The conservation analysis across trypanosomatids (Discussion) references Figure 4 for the two T. cruzi-specific proteins, but Figure 4 shows only Pfam domain architectures, not conservation data; this mismatch makes the claim unverifiable from the presented figures."
+        },
+        {
+          "id": "rigor-3",
+          "text": "The \"first activity-based chemoproteomic map\" claim (Title, Abstract, Conclusions) relies on \"to our knowledge\" without a systematic literature search citation; while likely true, absolute novelty claims should be hedged or supported by a database search statement."
+        },
+        {
+          "id": "rigor-4",
+          "text": "Probe 1 (alkyl-FP) showed poor enrichment (only 3 SHs) but is included in the probe panel description without explanation of its distinct behavior."
+        },
+        {
+          "id": "rigor-5",
+          "text": "The GO and PPI analyses use the CL Brener strain proteome as background due to STRING database limitations, introducing potential strain-specific bias that is acknowledged but not quantified."
+        },
+        {
+          "id": "rigor-6",
+          "text": "The lysate-based labelling failure is described in text but not shown in any figure, making it difficult to assess the severity of the agglutination issue."
+        },
+        {
+          "id": "rigor-7",
+          "text": "The manuscript states that \"Benjamini–Hochberg-adjusted values were computed but not used for thresholding, to avoid discarding genuine low-abundance hydrolases\", which increases false discovery risk; this choice should be justified with a sensitivity analysis."
+        },
+        {
+          "id": "rigor-8",
+          "text": "The rhomboid protease C4B63_34g300 is highlighted as notable, but its activity and substrate specificity are not experimentally validated beyond probe labelling."
+        }
+      ],
+      "questions": [
+        "Can the authors provide the conservation data (presence/absence across T. brucei and Leishmania) in a supplementary table or figure to support the claims in the Discussion?",
+        "Was the lysate agglutination issue tested with different lysis buffers or conditions, or was whole-cell labelling adopted after a single failed attempt?",
+        "For the two proteins absent from both T. brucei and Leishmania (C4B63_57g112 and C4B63_25g256), are there any functional data or expression evidence in T. cruzi life stages?"
+      ]
+    }
+  ],
+  "prior_job_id": "",
+  "desk_rejected": false
+}

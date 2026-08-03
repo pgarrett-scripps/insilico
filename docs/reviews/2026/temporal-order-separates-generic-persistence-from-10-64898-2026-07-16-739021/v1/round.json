@@ -1,0 +1,333 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260803-132745-temporal-order-separates-generic-persistence-from",
+  "manuscript_title": "Temporal order separates generic persistence from",
+  "manuscript_cache_key": "f5f2b3cba9841d5193df4b6fb6b3c98c84ff1a712bcbdbda15982dbe33fc6af5",
+  "decision": "major",
+  "weighted_score": 4.0294,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Rewrite Abstract and main-text claims to match replication level: change 'reproducible MYO10–collagen interaction' to 'repeat-consistent MYO10–collagen interaction in this dataset'; change 'PFKL-N702T produced fewer up-gradient steps...' to 'In this track-level analysis, PFKL-N702T tracks showed fewer up-gradient steps...'.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Add explicit stationarity caveat for the analytical order-null in Results (MYO10–collagen section) and Methods (Analytical temporal-order null subsection): state that the null assumes step exchangeability; non-stationary trends would be destroyed by uniform permutation and inflate sequence-excess; the early-vs-late test (Appendix 1–Fig. 5) checks interaction strengthening, not stationarity. Qualify the ~70% sequence-excess fraction as conditional on exchangeability. Add a sentence in the Discussion Limitations paragraph.",
+      "source_reviewer": "clarity",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Justify the non-inferiority margin (0.10 SD) in Results (PFKL section) and Methods (PFKL chemotaxis dataset subsection): explain it corresponds to ~1/10 of observed track-level SD of cue-axis FMI in WT (SD ≈ 0.28), smaller than minimal biologically relevant effect size in prior literature (e.g., Hansen & Webb 2025, Fig. 3), and was fixed before final Stage 3 execution.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Add Fraley et al. (Nat. Commun. 2015) and Paul et al. (PNAS 2016) citations in Introduction and Discussion with clear distinction: the analytical order-null provides exact expectation, algebraic decomposition closure (Eqs. 10–12), exact speed–direction separation (Eq. 15), and exact pair-separation bridge (Eqs. 13–14) — not just Monte Carlo shuffling.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Add Bohil et al. (PNAS 2006) citation in Introduction (MYO10 paragraph) and Tinevez et al. (Methods 2017) citation in Methods (Cross-system TrackMate validation subsection).",
+      "source_reviewer": "literature",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Harmonize terminology: standardize on 'sequence-dependent persistence' as primary biological term and 'sequence excess' as mathematical label (Eq. 9); update Abstract, Introduction, Results, Figure legends, and Table 1 footnote. Change Abstract 'stationary angular hidden-state model' to 'nonlinear angular hidden-state model'. Replace 'positive factorial interaction' with 'buffering interaction' throughout main text after definition.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Add one-sentence summary of generative model target 'passing' criteria in Results (Stationary local models section): ≥80% lag-point coverage by 95% predictive interval, observed frozen-window mean within interval, sign probability ≥0.90.",
+      "source_reviewer": "clarity",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Define 'lag-invariant cohort' at first use in Results (Corrected trajectory identities section).",
+      "source_reviewer": "clarity",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "List all five PFKL perturbation series in Results (PFKL section): acute depletion (siPFKL), stable depletion (shPFKL), catalytic inactivation (PFKL-H199Y), pharmacological inhibition (PFK15), filament disruption (N702T).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "Strengthen cross-system validation framing in Results and Abstract: add 'descriptive transportability' qualifier; add to Figure 6 legend that comparisons are descriptive because species, substrate, acquisition, and laboratory differ; identical axes facilitate visual comparison of curve shapes, not quantitative equivalence.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "Add haptotaxis block details in Methods (Single-cell haptotaxis dataset): 131 complete trajectories across five geometry conditions, block labels = independent microfluidic devices (n=5 blocks, one per geometry, separate imaging sessions); hierarchical bootstrap resampled blocks with replacement. In Results, state hierarchical bootstrap used 5 independent blocks.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "Add prominent Limitations paragraph in Discussion covering: MYO10–collagen n=3 repeats (R3 anomalous), PFKL track-level inference (zero replicate labels), stationarity assumption, and descriptive nature of cross-system comparisons.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-13",
+      "text": "Deposit versioned computational workflow (Python/SLURM scripts, conda environment.yml, Dockerfile, conda-lock.yml) to Zenodo with DOI before revision submission. Include explicit mapping from every figure panel and table to generating script, input files, and key parameters (README / Figure–Table reproduction guide). Include generative model fitting scripts (linear active-memory and angular hidden-state) with documentation. Reference Zenodo DOI in revised manuscript Data Availability and Methods (Software, computation, and reproducibility). Clarify in Methods (FOV-aware trajectory reconstruction) that Unique_ID column is present in Zenodo deposit (doi:10.5281/zenodo.11282716) as provided by CellTracksColab compilation.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Consider adding a brief note in Methods (Generative modelling) specifying the optimizer (e.g., Adam), learning rate, number of epochs, and early-stopping criteria used for the 16 FOV-bootstrap models, even though the Zenodo deposit will contain the full code.",
+    "In the haptotaxis reversal analysis, the matched pseudo-event control is appropriate; consider a brief comment in Results that this controls for selection bias by comparing true reversals to time-matched non-reversal windows from the same tracks."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "Claim 1 (MYO10–collagen interaction carried by temporal order): The analytical order-null assumes that uniform permutation of steps is the appropriate reference for \"no temporal order,\" which implicitly assumes step exchangeability. If trajectories exhibit non-stationary trends (e.g., systematic speed changes), the permutation destroys those trends and the sequence-excess will capture them as \"temporal order,\" potentially conflating true serial correlation with non-stationarity. The manuscript tests early vs. late windows in an appendix but does not discuss this assumption in the main text, leaving the reader unaware of this interpretive caveat. A brief statement in Results or Methods clarifying that the null model assumes exchangeability and that the early-vs-late test addresses non-stationarity would resolve this ambiguity."
+        },
+        {
+          "id": "clarity-2",
+          "text": "Claim 3 (PFKL-N702T spares generic serial order): The non-inferiority margin of 0.10 SD for generic serial-order measures is described as \"locked\" but its justification is absent from the main text (only appearing in Methods as \"the smallest meaningful loss\\)). Without a stated rationale, the reader cannot judge whether this threshold is biologically appropriate or arbitrary. Additionally, the conclusion is explicitly at the track level because biological-replicate labels were missing; the manuscript notes this but does not emphasize that track-level non-inferiority may not imply replicate-level preservation. Adding a sentence in Results explaining the margin's origin and the inference level would improve clarity."
+        },
+        {
+          "id": "clarity-3",
+          "text": "Claim 2 (Haptotaxis geometry redistributes order): The distinction between \"axis contribution\" (activity-weighted) and \"intrinsic axis order\" (activity-normalized) is central to the interpretation but is only defined in Table 1. A reader who does not consult the table may miss that the lateral-axis contribution increase could simply reflect more lateral steps, whereas the intrinsic lateral order increase confirms those steps are more temporally correlated. The Results paragraph mentions this distinction once but would benefit from a parenthetical reminder of the definitions."
+        },
+        {
+          "id": "clarity-4",
+          "text": "The terms \"sequence excess\" and \"sequence-dependent persistence\" are used interchangeably; picking one as the primary term would reduce cognitive load."
+        },
+        {
+          "id": "clarity-5",
+          "text": "The non-stationary linear active-memory model and angular hidden-state model are described in detail, but the criteria for a target \"passing\" (80% coverage, observed mean within interval, sign probability ≥0.90) are only in Methods; a one-sentence summary in Results would help."
+        },
+        {
+          "id": "clarity-6",
+          "text": "\"Lag-invariant cohort\" is used in Results before its definition in Methods; define at first use."
+        },
+        {
+          "id": "clarity-7",
+          "text": "In the abstract, \"stationary angular hidden-state model\" differs from the main text's \"nonlinear angular hidden-state model\\); harmonize terminology."
+        },
+        {
+          "id": "clarity-8",
+          "text": "The cross-system validation (Figure 6) compares disparate experimental conditions; the caption notes this, but the figure panels (A–D) use identical axes, which may invite inappropriate quantitative comparison. A visual cue or a note in the legend would help."
+        },
+        {
+          "id": "clarity-9",
+          "text": "The PFKL analysis uses five perturbation series as \"concordant mechanistic comparisons\" but the main text does not list them all in the Results paragraph (only in Methods); a brief enumeration in Results would aid flow."
+        },
+        {
+          "id": "clarity-10",
+          "text": "The term \"buffering interaction\" is well-defined in Table 1 but the main text uses \"positive factorial interaction\" and \"buffering\" interchangeably; consistent use of \"buffering\" after definition would be smoother."
+        }
+      ],
+      "questions": [
+        "For the MYO10–collagen analysis, does the analytical order-null formula (Eq. 8) assume step exchangeability, and if so, is the early-vs-late window test sufficient to rule out non-stationarity as a driver of the sequence-excess interaction?",
+        "What was the biological or statistical rationale for choosing 0.10 SD as the non-inferiority margin in the PFKL analysis?",
+        "In the haptotaxis dataset, were the 131 trajectories from independent biological replicates, and if so, how many? The Methods mention \"deposited block labels\" but the Results do not state the replicate number."
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The MYO10–collagen discovery claim relies on only three biological repeats (R1–R3), with R3 noted as disproportionately large and phenotypically distinct. Hierarchical bootstrapping at the repeat level with n=3 produces a discrete bootstrap distribution (≤27 unique resamples) that cannot support reliable simultaneous confidence bands or generalizable inference; the sign-consistency and leave-one-FOV-out criteria mitigate but do not resolve this fundamental design limitation. The manuscript acknowledges this but presents the buffering interaction as a supported finding rather than a hypothesis-generating observation."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "The PFKL chemotaxis conclusion (cue-aligned commitment lost, generic serial order preserved) is based entirely on track-level inference (150 tracks per group) because biological-replicate identity was lost in the public data. Tracks from the same replicate are not independent, so the reported HC3, propensity-matched, and non-inferiority intervals underestimate true uncertainty and cannot support population-level claims. The five perturbation series come from a single study, not independent replications."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The haptotaxis analysis cites 'deposited block labels' for hierarchical bootstrap but never states the number of blocks, their size, or the experimental unit. With only 131 total tracks across five widths, if blocks are few (e.g., one experiment per width), the same low-replication problem recurs. The early-minus-late and 6h-vs-3h contrasts are also underpowered for interaction testing."
+        }
+      ],
+      "questions": [
+        "For the MYO10–collagen data: were the three biological repeats (R1–R3) performed on different passages, different days, or fully independent cell preparations? The manuscript says 'operational independence of R1–R3 could not be verified beyond the public metadata.'",
+        "For the PFKL data: can the original authors provide biological-replicate labels for the 1,691 tracks, or is the track-level structure the only level available?",
+        "For the haptotaxis data: how many independent experimental blocks (e.g., separate microfluidic devices, imaging sessions, or cell passages) underlie the 131 tracks, and how many tracks per block?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The manuscript states its framework 'separates three biological questions' (motility, generic persistence, cue-aligned commitment) as a novel contribution, but does not cite two directly relevant prior methods that perform analogous decompositions: (1) Fraley et al., Nat. Commun. 2015 (DOI:10.1038/ncomms9782) which separates persistent random motility from directed migration using a shuffled-step null, and (2) Maiuri et al., Cell 2015 (already cited) which explicitly decouples speed-persistence coupling from directional sensing — the authors should acknowledge these precedents or clarify the distinction."
+        },
+        {
+          "id": "literature-2",
+          "text": "The claim that 'temporal order separates generic persistence from cue-directed commitment' is framed as a first (Abstract, Introduction), yet the analytical order-null (shuffled-step reference) is mathematically equivalent to the 'directional persistence vs. motility' decomposition in Fraley et al. 2015 and the 'intrinsic vs. cue-driven persistence' analysis in Paul et al., PNAS 2016 (DOI:10.1073/pnas.1604770113); omitting these makes the novelty claim unsupported."
+        },
+        {
+          "id": "literature-3",
+          "text": "Citation of SenGupta et al., Nat. Rev. Mol. Cell Biol. 2021 for 'directed cell migration requires cells to detect environmental information...' is appropriate as a review, but the specific mechanistic claims about MYO10 (integrin activation, lamellipodin recruitment) are attributed to primary sources (Miihkinen et al. 2021; Popović et al. 2023) which is correct — however, the manuscript does not cite the original MYO10-filopodia discovery (Bohil et al., PNAS 2006, already in refs) in the Introduction where MYO10 is first discussed, only in the Discussion; this is a minor completeness gap."
+        },
+        {
+          "id": "literature-4",
+          "text": "The cross-system validation uses TrackMate data from LaChance et al. 2021/2022 but does not cite the original TrackMate method paper (Tinevez et al., Methods 2017, DOI:10.1016/j.ymeth.2016.09.016) which is standard practice when reanalyzing public tracking data."
+        }
+      ],
+      "questions": [
+        "Please confirm whether the analytical order-null (uniform permutation of step vectors preserving step lengths, directions, and static polarity) is mathematically distinct from the shuffled-step null in Fraley et al. 2015 (which also preserves step lengths and directions but randomizes temporal order to isolate directional persistence). If they are equivalent, the manuscript should cite Fraley et al. and clarify the incremental contribution.",
+        "Please clarify how the 'generic serial order' measure differs conceptually from the 'intrinsic persistence' in Paul et al. 2016 (which also uses a shuffled reference to separate cue-independent from cue-dependent persistence).",
+        "The manuscript states 'biological-replicate labels are absent from the deposited tracking tables' for the PFKL dataset — can you confirm this was checked against the Dryad metadata (DOI:10.5061/dryad.6m905qgfp) and not just the CSV filenames?",
+        "For the MYO10-collagen discovery dataset, the manuscript says 'the original manuscript identified a reproducible MYO10–collagen interaction but did not make sufficiently clear what the order-sensitive analysis added biologically' — please provide the specific figure or claim in Peuhu et al. 2022 that the current work corrects or extends."
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "The PFKL chemotaxis conclusion that \"PFKL filamentation supports cue-aligned commitment without reducing generic serial order\" rests on track-level non-inferiority testing because biological-replicate identity was lost in the public trajectory labels. Track-level intervals cannot substitute for biological replication; the design therefore does not support the biological generalization at the replicate level, only the track-level statistical statement. The manuscript acknowledges this boundary but still draws the biological conclusion."
+        },
+        {
+          "id": "methodology-2",
+          "text": "The MYO10-collagen discovery experiment has only three biological repeats (R1-R3), with R3 identified as disproportionately large and phenotypically distinct. While equal-repeat weighting and leave-one-repeat-out analyses are performed, three repeats provide minimal basis for estimating between-repeat variance and the simultaneous confidence bands' coverage properties. The claim of a \"reproducible\" interaction across repeats is supported by sign consistency in all three, but the precision of the interaction estimate is fundamentally limited by n=3 at the highest level."
+        },
+        {
+          "id": "methodology-3",
+          "text": "The analytical order-null assumes uniform permutation of steps is the appropriate null for \"no temporal order beyond static polarity.\" However, if migration exhibits non-stationarities (e.g., systematic speed or direction changes over the 14-hour movies), uniform permutation destroys not only serial correlations but also temporal trends, making the order-null expectation potentially mismatched to a null of \"no serial order but preserved non-stationarity.\" The manuscript does not test or discuss stationarity of step statistics within tracks, which could inflate sequence-excess estimates if trends exist."
+        },
+        {
+          "id": "methodology-4",
+          "text": "The haptotaxis analysis relies on deposited block labels for hierarchical bootstrap but the number and nature of biological replicates are not clearly specified."
+        },
+        {
+          "id": "methodology-5",
+          "text": "The cross-system validation compares different cell types, species, substrates, and imaging conditions simultaneously, so descriptive transportability is the only warranted inference."
+        },
+        {
+          "id": "methodology-6",
+          "text": "The non-inferiority margin of 0.10 SD for generic serial-order measures in PFKL analysis is arbitrary though pre-specified; no justification for this specific threshold is provided."
+        },
+        {
+          "id": "methodology-7",
+          "text": "The generative modeling section fits models only to local (1-2 step) transitions, so failure on long-lag targets is expected and does not strongly discriminate between model classes."
+        },
+        {
+          "id": "methodology-8",
+          "text": "The factorial interaction interpretation as \"buffering\" rather than \"synergy\" depends on the choice of scale (log for MSD, linear for VACF); the manuscript does not justify why these scales are biologically privileged."
+        }
+      ],
+      "questions": [
+        "For the MYO10-collagen data, were step statistics (mean speed, direction distribution) stationary within tracks over the 14-hour movies, and if not, how might non-stationarity affect the analytical order-null expectation?",
+        "In the PFKL dataset, what was the original biological replicate structure reported by Hansen and Webb (2025), and is there any way to recover or approximate replicate-level inference from the deposited data?",
+        "For the haptotaxis data, how many independent biological replicates (e.g., separate experiments/dishes) underlie the 131 trajectories across the five geometry conditions?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 5.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The discovery MYO10–collagen experiment has only three biological repeats (R1–R3), with R3 noted as disproportionately large and phenotypically distinct; while hierarchical bootstrap and leave-one-FOV-out analyses mitigate this, the highest-level replication remains minimal and the operational independence of repeats could not be verified beyond public metadata."
+        },
+        {
+          "id": "novelty-2",
+          "text": "The PFKL chemotaxis reanalysis lacks biological-replicate labels in the deposited tracking tables, forcing track-level inference; the five perturbation series come from a single source study and are correctly framed as concordant mechanistic comparisons rather than independent replications, but this limits generalizability."
+        },
+        {
+          "id": "novelty-3",
+          "text": "Cross-system comparisons (HUVEC, MDA-MB-231, MDCK) confound cell type, species, substrate, imaging, and tracking differences; the authors correctly treat these as descriptive demonstrations of transportability rather than controlled comparisons, but the framing occasionally blurs this distinction."
+        }
+      ],
+      "questions": [
+        "For the MYO10–collagen analysis: could the trajectory reconstruction using Unique_ID be independently validated against a subset of raw images to confirm that the corrected identities correspond to biologically distinct cells?",
+        "For the PFKL non-inferiority test: was the 0.10-SD margin justified a priori (e.g., by a minimal biologically relevant effect size from prior literature), or was it chosen post hoc based on the observed variability?",
+        "In the generative model falsification: the linear active-memory model was fitted only to one- and two-step transitions; would fitting to the full lag-resolved VACF or sequence-excess curve (even if overparameterized) change the conclusion that stationary local models cannot reproduce the long-lag hierarchy?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "No custom analysis code is available at a resolvable, versioned location (GitHub commit, Zenodo DOI, or similar). The 'peer-review package' is described as accompanying the appeal but not publicly deposited; the software repository is promised 'before publication' — both are unavailable now, making the workflow non-rerunnable. [HARD]"
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "No computational environment is captured: no conda environment file, Docker/Singularity container, requirements.txt, or pinned Python/package versions. The manuscript notes SLURM on Hummel-2 with H100 GPU but provides no environment specification. [HARD]"
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "No explicit mapping from figures/tables to the scripts and intermediate outputs that produce them. The 'figure-rendering code' is claimed in the peer-review package but that package is not publicly accessible. [HARD]"
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "The generative model fitting (linear active-memory and angular hidden-state) uses custom optimization objectives, parameter transforms, and simulation procedures that are described in prose but not embodied in inspectable, runnable code. [HARD]"
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "Track reconstruction depends on a 'Unique_ID' column in the MYO10-collagen data; the manuscript does not state whether this column is present in the public Zenodo deposit or was constructed by the authors, creating ambiguity about the exact input to the workflow. [SOFT]"
+        }
+      ],
+      "questions": [
+        "Is the 'peer-review package' (workflow, tests, rendering code) currently deposited in a public archive with a DOI? If not, when and where will it be deposited?",
+        "Can the authors provide a conda lockfile, Dockerfile, or equivalent environment capture for the Python/SLURM workflow?",
+        "Will the command-line workflow be released at a versioned public URL (GitHub + Zenodo) with a commit hash referenced in the final manuscript?",
+        "For the MYO10-collagen data: is the 'Unique_ID' column present in the Zenodo deposit (doi:10.5281/zenodo.11282716), or was it constructed during reanalysis? If constructed, what is the exact rule?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 5.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "The MYO10–collagen discovery rests on only three biological repeats (R1–R3), with R3 noted as disproportionately large and phenotypically distinct; while hierarchical weighting and leave-one-FOV-out checks mitigate this, the inference remains limited to this specific experimental batch and cannot support broad generalizations about MYO10–collagen biology."
+        },
+        {
+          "id": "rigor-2",
+          "text": "PFKL track-level non-inferiority testing (0.10-SD margin) is explicitly not replicate-level inference because biological-replicate labels were lost in the public deposit; the paper honestly states this boundary, but readers may still overinterpret the 'preservation of generic serial order' as a biological conclusion rather than a track-level statistical statement."
+        },
+        {
+          "id": "rigor-3",
+          "text": "Cross-system comparison (HUVEC, MDA-MB-231, MDCK) confounds cell type, species, substrate, imaging interval, and tracking pipeline; the authors correctly treat this as descriptive transportability evidence, but the framing 'distinguished sustained, short-lived, and sign-reversing regimes' could be read as a biological taxonomy rather than a methodological demonstration."
+        }
+      ],
+      "questions": [
+        "For the MYO10–collagen experiment: could the 70% sequence-excess fraction be inflated by the drift-correction or FOV-level median-velocity subtraction, which might remove shared-flow contributions that also carry temporal order?",
+        "In the haptotaxis reversal analysis, the 'transient reorganization of step order beyond the pseudo-event reference' is compared to matched pseudo-events from the same tracks — does this control for the fact that reversal detection itself selects for order changes, potentially biasing the contrast?"
+      ]
+    }
+  ],
+  "prior_job_id": "",
+  "desk_rejected": false
+}
