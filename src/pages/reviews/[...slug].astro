@@ -156,6 +156,10 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
               <tbody>
                 {paper.bundles.map((b) => {
                   const corrected = (b.revision || {}).kind === "correction";
+                  // Both are round 1 of the same draft, so without a label the
+                  // history table shows two identical rows and looks like a
+                  // duplicate rather than a deliberate second read.
+                  const rerun = (b.revision || {}).kind === "rerun";
                   const unverified =
                     b.round > 1 && !((b.revision || {}).baseline || {}).restored;
                   return (
@@ -168,6 +172,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                       <td class="mono">
                         {b.round}
                         {corrected && <span class="dim"> (corrected)</span>}
+                        {rerun && <span class="dim"> (re-review)</span>}
                         {unverified && (
                           <span class="history__flag" title="ran without a verified draft comparison">
                             {" "}⚠

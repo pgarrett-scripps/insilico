@@ -902,6 +902,77 @@ def check_pdf_download_retries_a_flaky_server() -> None:
         fp._get_once, fp.time.sleep = real_once, real_sleep
 
 
+def check_rerun_refuses_a_moved_draft() -> None:
+    """A rerun holds the manuscript fixed and varies the pipeline.
+
+    So the guard is the whole feature. If the draft moved underneath, the
+    comparison silently measures a manuscript change and a pipeline change at
+    once, and produces a bundle that looks exactly like evidence about the
+    pipeline. That is worse than failing, because someone would read it.
+
+    It compares the converted TEXT, not the PDF. Measured on the first real
+    rerun: three downloads of one pinned bioRxiv URL over ten hours gave three
+    different file checksums at an identical 1,689,095 bytes, while the
+    converted text was byte-identical every time. A file-hash guard refuses
+    every bioRxiv rerun, including the correct ones. This one did.
+    """
+    from run_review import draft_matches
+
+    same, other = "c" * 64, "d" * 64
+
+    ok, _ = draft_matches({"text_sha256": same}, {"text_sha256": same})
+    assert ok, "identical converted text must rerun"
+
+    ok, msg = draft_matches({"text_sha256": same}, {"text_sha256": other})
+    assert not ok, "changed text must stop the run"
+    assert "not the manuscript" in msg
+
+    # The case that matters: a repackaged PDF whose text is unchanged. This is
+    # the common case for bioRxiv, not an edge case.
+    ok, _ = draft_matches(
+        {"text_sha256": same, "chars": 86988},
+        {"text_sha256": same, "chars": 86988},
+    )
+    assert ok, "a restamped PDF with identical text must rerun"
+
+    # Bundles predating the fingerprint fall back to length, and still run.
+    ok, msg = draft_matches({"chars": 86988}, {"chars": 86988, "text_sha256": same})
+    assert ok and "not proof" in msg, "a length match must not claim to be proof"
+    ok, _ = draft_matches({"chars": 86988}, {"chars": 12, "text_sha256": same})
+    assert not ok, "a different length must stop the run"
+
+    ok, msg = draft_matches({}, {"text_sha256": same})
+    assert ok and "cannot show" in msg, \
+        "a bundle recording nothing must rerun, and must say it cannot check"
+
+
+def check_rerun_does_not_inherit_the_prior_round() -> None:
+    """A rerun must not be wired as a revision.
+
+    Two properties, both load-bearing. It stays round 1, because nothing was
+    revised. And `revision_of` never reaches the pipeline config, because that
+    is what hands each reviewer its own earlier report to rule on — a rerun
+    that inherits the verdict it exists to test is not a test.
+    """
+    import inspect
+
+    import run_review
+
+    src = inspect.getsource(run_review._run)
+    rerun_block = src[src.index("if rerun_prov is not None:"):]
+    rerun_block = rerun_block[: rerun_block.index("if args.revise:")]
+    # Comments stripped, or this matches the comment explaining the absence
+    # rather than the absence. It did, the first time it ran.
+    code = "\n".join(
+        line for line in rerun_block.splitlines()
+        if not line.lstrip().startswith("#")
+    )
+    assert '"round": 1' in code, "a rerun is round 1"
+    assert '"kind": "rerun"' in code, "the page needs to know what this is"
+    assert "revision_of" not in code, \
+        "a rerun must not anchor the panel to the round it is testing"
+
+
 def check_bare_doi_picks_the_right_server() -> None:
     """bioRxiv and medRxiv share both DOI prefixes, so a bare DOI names neither.
 
@@ -987,6 +1058,10 @@ def main() -> int:
     print("ok  a throttled metadata lookup is retried, a missing one is not")
     check_pdf_download_retries_a_flaky_server()
     print("ok  a flaky PDF download is retried too")
+    check_rerun_refuses_a_moved_draft()
+    print("ok  a rerun refuses a draft that moved")
+    check_rerun_does_not_inherit_the_prior_round()
+    print("ok  a rerun does not inherit the round it tests")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

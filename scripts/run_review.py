@@ -189,6 +189,114 @@ def find_prior_bundle(preprint: Preprint, title: str) -> Path | None:
     return best[1] if best else None
 
 
+def _rerun_provenance(bundle: str) -> dict | None:
+    """The provenance of the bundle being re-reviewed, or None with a message.
+
+    Only provenance is needed, not a round record: a rerun is a fresh round 1
+    that rules on nothing from before, so reviews published before round
+    records existed can still be rerun. That is deliberate — the oldest
+    reviews are the ones most likely to predate a pipeline worth re-running.
+    """
+    path = Path(bundle).resolve()
+    prov_path = path / "provenance.json"
+    if not prov_path.is_file():
+        print(
+            f"--rerun-of {bundle}: no provenance.json there. Point this at a "
+            "published bundle directory, e.g. docs/reviews/2026/<slug>/v1.",
+            file=sys.stderr,
+        )
+        return None
+    try:
+        prov = json.loads(prov_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"--rerun-of {bundle}: unreadable provenance.json ({exc}).", file=sys.stderr)
+        return None
+    if not (prov.get("preprint") or {}).get("url"):
+        print(
+            f"--rerun-of {bundle}: provenance records no preprint URL, so the "
+            "draft it reviewed cannot be fetched again.",
+            file=sys.stderr,
+        )
+        return None
+    prov["_bundle"] = path
+    return prov
+
+
+def _same_draft(pdf: Path, prior: dict, config: dict) -> bool:
+    """Whether the manuscript just fetched is the one the prior round read.
+
+    A rerun exists to hold the manuscript fixed and vary the pipeline, so this
+    guard is the whole feature: without it a comparison silently measures a
+    manuscript change and a pipeline change at once, and produces a bundle
+    that looks exactly like evidence about the pipeline.
+
+    It compares the *converted text*, not the PDF. Those are different
+    questions and the file hash answers the wrong one. Measured on this very
+    paper: three downloads of the same pinned bioRxiv URL over ten hours gave
+    three different file checksums at an identical 1,689,095 bytes — the
+    server stamps something fixed-width into the container — while the
+    converted text came back byte-identical all three times. Checking the file
+    hash refuses every bioRxiv rerun, including the correct ones.
+
+    Older bundles predate the text fingerprint. Those fall back to the
+    character count, which is weak but real, and say so — refusing to rerun
+    the oldest reviews would defeat the purpose, since they are the ones most
+    likely to predate a pipeline worth re-running.
+    """
+    from peerreviewagents.ingest.loader import load_manuscript_record
+
+    ok, message = draft_matches(
+        prior.get("ingest") or {}, load_manuscript_record(str(pdf), config).ingest
+    )
+    print(message if ok else f"{message}\n{_REVISE_HINT}", file=sys.stderr)
+    return ok
+
+
+_REVISE_HINT = (
+    "A rerun holds the manuscript fixed and varies the pipeline, so a "
+    "comparison here would measure both at once. If the authors posted a new "
+    "version, that is a revision — use --revise."
+)
+
+
+def draft_matches(prior: dict, current: dict) -> tuple[bool, str]:
+    """Compare two ingest records. Pure, so it can be tested without a PDF.
+
+    Three tiers, strongest first. The text fingerprint is proof. The character
+    count is evidence, and is all that older bundles carry. A bundle recording
+    neither cannot be checked, and says so rather than claiming a match.
+    """
+    want = str(prior.get("text_sha256") or "")
+    if want:
+        got = str(current.get("text_sha256") or "")
+        if want == got:
+            return True, f"rerun     same draft confirmed (text {got[:16]}…)"
+        return False, (
+            "This is not the manuscript that bundle reviewed.\n"
+            f"  recorded text {want}\n"
+            f"  converted     {got}"
+        )
+
+    want_chars, got_chars = prior.get("chars"), current.get("chars")
+    if isinstance(want_chars, int) and isinstance(got_chars, int):
+        if want_chars == got_chars:
+            return True, (
+                f"rerun     same draft, probably: {got_chars:,} characters, "
+                "matching the prior round. That bundle predates the text "
+                "fingerprint, so this is a length match, not proof."
+            )
+        return False, (
+            "This is not the manuscript that bundle reviewed.\n"
+            f"  recorded  {want_chars:,} characters\n"
+            f"  converted {got_chars:,}"
+        )
+
+    return True, (
+        "warning: the prior bundle recorded nothing about the text it read, so "
+        "this rerun cannot show it read the same draft."
+    )
+
+
 def next_version(paper_dir: Path) -> int:
     """The version number this review should be written as.
 
@@ -206,8 +314,23 @@ def next_version(paper_dir: Path) -> int:
 
 
 def pipeline_version() -> dict[str, str]:
-    """Identify exactly which referee panel produced a review."""
+    """Identify exactly which referee panel produced a review.
+
+    The workflow sets ``PEERREVIEW_PIPELINE_SHA`` from the commit it pinned.
+    A local run has no such pin, and used to record an empty sha — which is
+    the wrong answer for the one thing reruns exist to do. Comparing two
+    reviews of the same draft is only informative if the record says which
+    two pipelines were compared, and "unrecorded" makes the comparison
+    unciteable.
+
+    So fall back to asking the installed package where it came from. That
+    works for an editable install off a checkout, which is how local runs are
+    set up, and returns nothing when the package came from a wheel — in which
+    case the empty string is the honest answer it always was.
+    """
     info = {"sha": os.environ.get("PEERREVIEW_PIPELINE_SHA", "")}
+    if not info["sha"]:
+        info["sha"] = _installed_pipeline_sha()
     try:
         from importlib.metadata import version
 
@@ -215,6 +338,31 @@ def pipeline_version() -> dict[str, str]:
     except Exception:  # noqa: BLE001 - metadata is best-effort
         info["version"] = "unknown"
     return info
+
+
+def _installed_pipeline_sha() -> str:
+    """HEAD of the checkout the installed pipeline is imported from, or ''.
+
+    Marked ``+dirty`` when that checkout has uncommitted changes, because a
+    rerun against a working tree is exactly when the sha alone would lie: two
+    reviews would name the same commit while running different code.
+    """
+    try:
+        import subprocess  # noqa: PLC0415 - only needed on this path
+
+        import peerreviewagents
+
+        repo = Path(peerreviewagents.__file__).resolve().parent.parent
+        if not (repo / ".git").exists():
+            return ""
+        run = lambda *a: subprocess.run(  # noqa: E731
+            a, cwd=repo, capture_output=True, text=True, timeout=5, check=True
+        ).stdout.strip()
+        sha = run("git", "rev-parse", "HEAD")
+        dirty = run("git", "status", "--porcelain")
+        return f"{sha}+dirty" if dirty else sha
+    except Exception:  # noqa: BLE001 - identification is best-effort
+        return ""
 
 
 def panel_scores(state: dict) -> list[dict]:
@@ -464,9 +612,22 @@ def _prior_cache_key(prior_bundle: Path) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
+    # Where the manuscript comes from. Exactly one, and --rerun-of belongs
+    # here rather than beside --revision-of: it names the preprint as much as
+    # it names a prior round, because the whole point is to review the
+    # identical draft rather than whatever the URL resolves to today.
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--url", help="preprint URL")
     src.add_argument("--issue-body", help="free text to scrape a URL out of")
+    src.add_argument(
+        "--rerun-of",
+        metavar="BUNDLE",
+        help="path to a bundle to re-review under the current pipeline. The "
+             "SAME draft is reviewed again from scratch, with no knowledge of "
+             "the earlier round, and the new bundle sits beside it. Use this "
+             "after changing prompts, models or config, to see what the change "
+             "did. Not a revision: the manuscript has not moved.",
+    )
     ap.add_argument("--submission-id", default="", help="submission issue number")
     ap.add_argument("--submitter", default="", help="GitHub login of the submitter")
     ap.add_argument(
@@ -509,6 +670,12 @@ def main() -> int:
 
     if args.revise and args.revision_of:
         ap.error("--revise and --revision-of do the same job; pass one.")
+    if args.rerun_of and (args.revise or args.revision_of):
+        ap.error(
+            "--rerun-of re-reviews the SAME draft under a new pipeline; "
+            "--revise/--revision-of review a NEW draft against the old round. "
+            "They answer different questions; pass one."
+        )
 
     workdir = Path(tempfile.mkdtemp(prefix="insilico-"))
     try:
@@ -531,7 +698,20 @@ def main() -> int:
 
 def _run(args, workdir: Path) -> int:
     """The review itself. Split out so the temp directory is always cleaned."""
-    url = args.url or extract_url(args.issue_body)
+    rerun_prov: dict | None = None
+    if args.rerun_of:
+        rerun_prov = _rerun_provenance(args.rerun_of)
+        if rerun_prov is None:
+            return 1
+        url = str((rerun_prov.get("preprint") or {}).get("url") or "")
+        # Carried forward, because they describe the submission and the
+        # submission has not changed. Only the pipeline has.
+        args.submitter = args.submitter or str(rerun_prov.get("submitter") or "")
+        args.submitter_is_author = (
+            args.submitter_is_author or str(rerun_prov.get("submitter_is_author") or "")
+        )
+    else:
+        url = args.url or extract_url(args.issue_body)
     # The form asks directly; a `/review` on a plain issue has no field to
     # read, and the page then says so rather than assuming either way.
     if not args.submitter_is_author and args.issue_body:
@@ -540,6 +720,16 @@ def _run(args, workdir: Path) -> int:
     print(f"resolved  {preprint.source}: {preprint.identifier or preprint.url}", file=sys.stderr)
     if preprint.title:
         print(f"title     {preprint.title}", file=sys.stderr)
+
+    if rerun_prov is not None:
+        # resolve() follows the URL to whatever the server serves now, which
+        # for a bare bioRxiv link is the LATEST version. A rerun that silently
+        # picked up v2 would report a pipeline change while actually measuring
+        # a manuscript change, which is the one thing this flag exists to
+        # prevent. Pin the recorded PDF URL and check the bytes below.
+        pinned = str((rerun_prov.get("preprint") or {}).get("pdf_url") or "")
+        if pinned:
+            preprint.pdf_url = pinned
 
     pdf = download(preprint, workdir)
     print(f"pdf       {pdf} ({pdf.stat().st_size // 1024} KiB)", file=sys.stderr)
@@ -581,6 +771,28 @@ def _run(args, workdir: Path) -> int:
         overrides["max_debate_rounds"] = args.debate_rounds
 
     revision: dict = {"round": 1}
+    if rerun_prov is not None:
+        # Round 1, and no `revision_of` in the config. Both are the point: the
+        # panel must not be shown the earlier round's findings, or it would
+        # rule on them instead of reading the paper, and a rerun that inherits
+        # the verdict it is supposed to be testing tests nothing.
+        prior_pipeline = (rerun_prov.get("pipeline") or {}).get("sha") or ""
+        revision = {
+            "round": 1,
+            "kind": "rerun",
+            "rerun_of": rerun_prov["_bundle"].name,
+            "prior_decision": str(rerun_prov.get("decision") or ""),
+            "prior_mean_score": rerun_prov.get("mean_score"),
+            "prior_pipeline_sha": prior_pipeline,
+            "prior_reviewed_at": str(rerun_prov.get("generated_at") or "")[:10],
+        }
+        print(
+            f"rerun     of {revision['rerun_of']} "
+            f"({revision['prior_decision'] or 'no decision'}, "
+            f"mean {revision['prior_mean_score']}, "
+            f"pipeline {prior_pipeline[:8] or 'unrecorded'})",
+            file=sys.stderr,
+        )
     if args.revise:
         found = find_prior_bundle(
             preprint, preprint.title or preprint.identifier
@@ -610,6 +822,13 @@ def _run(args, workdir: Path) -> int:
         overrides["revision_of"] = str(prior_bundle)
 
     config = get_config(**overrides)
+
+    # After config, because answering "same draft?" means converting the PDF
+    # the way this run will convert it, and the conversion depends on config
+    # (compression above all). The parse is cached, so the graph reuses it
+    # rather than paying for it twice.
+    if rerun_prov is not None and not _same_draft(pdf, rerun_prov, config):
+        return 1
 
     if args.revision_of:
         prior = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
@@ -710,12 +929,17 @@ def _run(args, workdir: Path) -> int:
     year = (preprint.published or dt.date.today().isoformat())[:4]
     slug = paper_slug(preprint, title)
     paper_dir = REVIEWS / year / slug
-    if args.revision_of:
+    if args.revision_of or rerun_prov is not None:
         # Stay in the paper's existing directory. The slug embeds the title,
         # so a revision that renamed the manuscript would otherwise open a
         # second directory for the same paper and split its review history in
         # two — with each half claiming to be the whole record.
-        paper_dir = Path(args.revision_of).resolve().parent
+        #
+        # A rerun needs it for a plainer reason: the two reviews are of the
+        # same draft, and the whole value of the exercise is being able to
+        # read them side by side on one page.
+        anchor = args.revision_of or str(rerun_prov["_bundle"])
+        paper_dir = Path(anchor).resolve().parent
         slug = paper_dir.name
     # Always a fresh vN. A re-review of a revised manuscript sits beside the
     # earlier one instead of overwriting it, which the policy promises and
