@@ -92,6 +92,12 @@ REPO_URL = (
 # still get a reply published beside the review; it simply never reaches an
 # agent, because an interested party's prose is not evidence and this system
 # demonstrably cannot treat it as anything else.
+#
+# manuscript_stats.md is counts, not opinion: how the PDF converted, how long
+# the paper is, how its prose is shaped. It travels because this is an overlay
+# journal — the reader has the PDF and the panel had a conversion of it, and
+# without these numbers there is no way to check that those were the same
+# document. Nothing in it reaches an agent; see the pipeline's ingest/prose.py.
 BUNDLE_FILES = [
     "summary.md",
     "decision_letter.md",
@@ -101,6 +107,7 @@ BUNDLE_FILES = [
     "author_rebuttal.md",
     "debate_transcript.md",
     "journal_recommendations.md",
+    "manuscript_stats.md",
 ]
 
 VERDICT_LABEL = {
@@ -560,6 +567,7 @@ def _run(args, workdir: Path) -> int:
     from peerreviewagents.agents.editor.desk_screen import screen_mode
     from peerreviewagents.default_config import get_config
     from peerreviewagents.graph.review_graph import PeerReviewGraph
+    from peerreviewagents.ingest.loader import ManuscriptUnreadable
     from peerreviewagents.reports import write_reports
 
     # Only pass what was explicitly asked for. Anything omitted falls through
@@ -666,13 +674,30 @@ def _run(args, workdir: Path) -> int:
     # through the observability bus; drain it so cost decisions can be made
     # from a breakdown instead of an inference.
     graph = PeerReviewGraph(config)
-    with _cost_recorder(graph.run_id) as cost_by_node:
-        # The PDF, not a conversion of it. The pipeline converts it to
-        # markdown internally; handing it a .md instead would route the
-        # integrity screen to its markup scanner, which cannot see text
-        # concealed in a content stream, and would change the manuscript
-        # cache key that the next round re-derives to recover this draft.
-        state = graph.review(str(pdf))
+    try:
+        with _cost_recorder(graph.run_id) as cost_by_node:
+            # The PDF, not a conversion of it. The pipeline converts it to
+            # markdown internally; handing it a .md instead would route the
+            # integrity screen to its markup scanner, which cannot see text
+            # concealed in a content stream, and would change the manuscript
+            # cache key that the next round re-derives to recover this draft.
+            state = graph.review(str(pdf))
+    except ManuscriptUnreadable as exc:
+        # No bundle, no verdict, nothing published. A scanned or image-only
+        # PDF is the usual cause, and docs/submit.md already tells authors we
+        # cannot read one — this is that promise being kept at the point it
+        # can be checked, instead of a panel reviewing the converter's output
+        # and a reader discovering it by comparing a quotation to the PDF.
+        print(f"unreadable: {exc}", file=sys.stderr)
+        if out := os.environ.get("GITHUB_OUTPUT"):
+            # Flattened: a newline in a `key=value` output line silently
+            # truncates the value and leaves the remainder parsed as another
+            # key. The message is one line today; this keeps it one.
+            reason = " ".join(str(exc).split())
+            with open(out, "a", encoding="utf-8") as fh:
+                fh.write("unreadable=true\n")
+                fh.write(f"unreadable_reason={reason}\n")
+        return 3
 
     decision = state.get("decision")
     if decision not in VERDICT_LABEL:

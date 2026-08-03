@@ -41,6 +41,10 @@ const DOCUMENT_ORDER = [
   ["author_rebuttal.md", "Simulated author rebuttal", "The authors' side, argued for the editor to weigh."],
   ["debate_transcript.md", "Advocate / skeptic debate", "The case for and against, in full."],
   ["journal_recommendations.md", "Venue suggestions", "Where this might be submitted."],
+  // Last, and deliberately so: it is the only document with no opinion in it,
+  // and it is here for the reader who wants to check that the text the panel
+  // read is the text in the PDF.
+  ["manuscript_stats.md", "Manuscript statistics", "Deterministic counts over the text the panel read."],
 ];
 
 const readJSON = (file) => {

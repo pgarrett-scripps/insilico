@@ -51,6 +51,16 @@ const ingestNote = ingest.format === "markdown"
   : ingest.tool
     ? `Read by ${ingest.tool}.`
     : "Not recorded. This review predates the ingest record.";
+
+// How well that conversion went, measured at ingest with no model involved.
+// Shown only when it went imperfectly: a badge reading "clean" on every review
+// teaches a reader to stop looking at the place the warning would appear.
+// A conversion worse than this never reaches the panel, so nothing published
+// here was reviewed as gibberish.
+const health = (ingest.prose || {}).health || {};
+const conversion = health.verdict && health.verdict !== "clean"
+  ? { verdict: health.verdict, notes: health.notes || [] }
+  : null;
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 ---
 
@@ -96,6 +106,13 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
         {ingest.caveman ? ` · ${ingest.caveman}` : ""}
       </p>
       <p class="prov__hash">{ingestNote}</p>
+      {conversion && (
+        <p class="prov__warn">
+          Conversion {conversion.verdict}: {conversion.notes.join("; ")}. The
+          panel read damaged text, and the damage is the converter's, not the
+          authors'.
+        </p>
+      )}
     </div>
 
     <div class="prov__cell">
@@ -183,6 +200,17 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
     font-size: var(--t--2);
     color: var(--muted);
     word-break: break-all;
+  }
+
+  /* Rare by construction — only a review whose manuscript converted badly
+     carries one, and the accent rule is there to stop it reading as another
+     line of provenance boilerplate. */
+  .prov__warn {
+    margin-top: 0.5rem;
+    padding-left: 0.6rem;
+    border-left: 2px solid var(--accent);
+    font-size: var(--t--2);
+    color: var(--ink-dim);
   }
 
   .prov__more {

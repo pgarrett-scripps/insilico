@@ -226,6 +226,11 @@ jobs:
             /revise*) args+=(--revise) ;;
           esac
 
+          # Exit 3 is not a failure. It means the PDF converted too badly to
+          # review — a scanned or image-only file, almost always — and the
+          # panel was never started. That is a fact about the file, so it gets
+          # a plain note on the issue rather than a red run and a stack trace.
+          set +e
           if [ -n "$INPUT_URL" ]; then
             python scripts/run_review.py "${args[@]}" \
               --url "$INPUT_URL" \
@@ -237,9 +242,32 @@ jobs:
               --submission-id "$SUBMISSION_ID" \
               --submitter "$SUBMITTER"
           fi
+          rc=$?
+          set -e
+          [ "$rc" = "3" ] && exit 0
+          exit "$rc"
+
+      - name: Report an unreadable submission
+        if: steps.run.outputs.unreadable == 'true' && github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ steps.run.outputs.unreadable_reason }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" --body \
+            "**No review was run.** This preprint's PDF could not be converted
+          into text the panel could read, so nothing was sent to a referee and
+          nothing is published. This is not an assessment of the work.
+
+          > $REASON
+
+          The usual cause is a scanned or image-only PDF: the pages are
+          pictures of text, and we have no OCR. If you are an author, posting a
+          version exported from your writing software rather than scanned will
+          fix it. Say so here and an editor will re-run the panel."
 
       - name: Open the review pull request
         id: pr
+        if: steps.run.outputs.unreadable != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}
@@ -329,7 +357,9 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Report back on the submission
-        if: github.event_name == 'issue_comment'
+        if: >-
+          github.event_name == 'issue_comment'
+          && steps.run.outputs.unreadable != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}

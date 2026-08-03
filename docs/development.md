@@ -27,6 +27,7 @@ docs/                     # the record, written by the pipeline
     ├── author_rebuttal.md
     ├── debate_transcript.md
     ├── journal_recommendations.md
+    ├── manuscript_stats.md   # deterministic counts over the text the panel read
     ├── review_*.md       # 8 specialist reports
     └── audit_*.md        # 2 audits, 3 in a revision round
 
@@ -136,6 +137,27 @@ uv pip install rustypaper
 The workflow pins an exact version rather than letting it float, because a
 converter that changed how it reads a two-column page between two rounds of the
 same paper would look like the authors having rewritten it.
+
+Every conversion is measured, deterministically and with no model, and the
+result decides three things:
+
+| verdict | what happens |
+|---|---|
+| clean | nothing. No warning appears anywhere. |
+| degraded | the run proceeds, the panel is told what the converter mangled, and the review page carries a note |
+| broken | the run stops at the desk before a referee is paid, and nothing is published |
+
+A stop raises `ManuscriptUnreadable` rather than desk-rejecting, and the
+difference matters: a desk rejection is a verdict on a manuscript and gets a
+published bundle, while this is a fact about a file and gets none. The workflow
+exits 3, posts a note on the issue, and opens no pull request. Set
+`conversion_gate = "off"` in `peerreview.toml` to review a file anyway.
+
+The measurements go to `manuscript_stats.md` and into `provenance.json` under
+`ingest.prose`. The counts and prose statistics reach no prompt, on purpose:
+they measure style, the reviewers already carry more checklist than they can
+attend to, and an agent handed "8.4 boosters per 1000 words" writes a finding
+about it. They are published for the reader, not fed to the panel.
 
 `PEERREVIEW_CAVEMAN` controls telegraphic compression and defaults to `off`. It
 saves under a cent a review, and it is not free: under `light` the clarity

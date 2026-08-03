@@ -28,8 +28,20 @@ and gets you a citable DOI whatever we say about the paper.
 - Postings so new the server has not indexed them. bioRxiv and medRxiv take about
   a day to serve a PDF. Wait and resubmit.
 
-Editors check the first two before starting a run. A scanned file gets past that
-check and fails later.
+Editors check the middle one before starting a run. A scanned file gets past that
+check, and the pipeline catches it: every PDF is measured on conversion, and one
+that arrives as run-together letters stops the run before a referee sees it. You
+get a note on your issue saying so.
+
+That note is not a rejection and no review is published. It is a statement about
+a file, and we keep the two apart on purpose: a verdict attached to work no model
+ever read would follow the paper around as though it meant something. Post a
+version exported from your writing software rather than scanned, and ask for
+another run.
+
+Damage short of that is passed through, and the panel is told about it: reviewers
+are shown what the converter mangled so nobody writes you up for spacing you
+never wrote. The measurements are published with the review.
 
 ## The process
 
@@ -124,6 +136,13 @@ than sit on it.
 Everything the panel produced: all eight specialist reports, the debate, the
 synthesis, the rebuttal, the decision letter, and a `provenance.json` recording
 the models, config, pipeline commit and cost.
+
+Alongside it, `manuscript_stats.md`: counts over the text the panel actually
+read, measured with no model involved. How well your PDF converted, how long the
+paper is, how its sentences and citations are distributed. It carries no opinion
+and no agent is shown it. It is there so a reader holding your PDF can confirm
+the panel read the same document, which is the one thing an overlay journal
+cannot otherwise prove.
 
 We publish unflattering reviews too, as long as the paper is in scope and the
 review holds together. If you would rather that not happen, do not submit. We

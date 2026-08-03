@@ -93,6 +93,10 @@ the audits, the debate, and a `provenance.json` recording the verdict, the panel
 scores, which models ran, and what it cost. Anyone can check out the commit a
 review names and see exactly what the panel was told to do.
 
+There is also a `manuscript_stats.md` with no opinion in it at all: counts over
+the text the panel read, so a reader holding the PDF can check the panel read
+the same document.
+
 ## Documentation
 
 | | |
