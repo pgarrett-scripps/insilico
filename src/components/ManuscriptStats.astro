@@ -97,9 +97,8 @@ const damaged = health.verdict && health.verdict !== "clean";
 
     <div class="panel__body">
       <p class="mstats__lede">
-        Measured mechanically at ingest, with no model involved. These describe
-        the <em>converted</em> text the referees were given, not the PDF, so a
-        reader holding the paper can check that both are the same document.
+        Counted at ingest, no model involved. These describe the
+        <em>converted</em> text the referees read, not the PDF.
         {damaged && (
           <>
             {" "}
@@ -158,11 +157,9 @@ const damaged = health.verdict && health.verdict !== "clean";
         <div class="mstats__rhetoric">
           <h3 class="label mstats__title">Hedging against amplifying</h3>
           <p class="mstats__note mstats__note--wide">
-            Words per 1000 that soften a claim ("may", "suggests", "consistent
-            with") against words that strengthen one ("clearly",
-            "demonstrates", "unprecedented"). Shown because the balance is
-            visible at a glance and a pair of numbers is not. No referee was
-            given these, and there is no level that is correct.
+            Per 1000 words. Softening ("may", "suggests") against strengthening
+            ("clearly", "demonstrates"). No referee saw these, and no level is
+            correct.
           </p>
           <div class="mstats__bars">
             <div class="mstats__bar">
@@ -185,9 +182,8 @@ const damaged = health.verdict && health.verdict !== "clean";
 
       {!density && (
         <p class="mstats__note mstats__note--wide">
-          Sentence and rhetoric figures are withheld for this review: the run
-          compressed the manuscript before the panel read it, so they would
-          describe the compressor rather than the authors.
+          Withheld: this run compressed the manuscript, so these would describe
+          the compressor rather than the authors.
         </p>
       )}
     </div>
@@ -197,7 +193,6 @@ const damaged = health.verdict && health.verdict !== "clean";
 <style>
   .mstats__lede {
     margin: 0 0 1.15rem;
-    max-width: 62ch;
     color: var(--ink-dim);
     font-size: var(--t--1);
     line-height: 1.6;
@@ -248,7 +243,6 @@ const damaged = health.verdict && health.verdict !== "clean";
   }
 
   .mstats__note--wide {
-    max-width: 62ch;
     margin-top: 1.15rem;
   }
 

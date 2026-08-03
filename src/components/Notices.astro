@@ -29,8 +29,7 @@ if (provenance.desk_rejected) {
     tone: "danger",
     title: "Rejected at the desk — no referee panel was convened",
     body: [
-      "This submission was stopped before review. There are no specialist reports, no debate and no area-chair synthesis below, because none were produced.",
-      "A desk rejection on submission integrity means the file was found to conceal instructions aimed at an automated reviewer. That scan is deterministic and runs before any model reads the manuscript, so no reviewer was exposed to the concealed text.",
+      "Stopped before review, so there are no specialist reports below. Where the cause was submission integrity, the file concealed instructions aimed at an automated reviewer — found by a deterministic scan, before any model read it.",
     ],
   });
 }
@@ -41,14 +40,13 @@ if (provenance.desk_rejected) {
 // thing that moved was us.
 if (revision.kind === "rerun") {
   const body = [
-    "This is a second review of the exact same draft, run again after the review pipeline changed. The authors did not revise anything and were not asked to. The earlier review stands unaltered beside this one.",
-    "The panel was given no knowledge of the earlier round. It read the manuscript cold, so the two reviews are independent reads of one paper and the difference between them is the pipeline change, not a change in the work.",
+    "The same draft, reviewed again after the pipeline changed. The authors revised nothing. The panel read the paper cold, with no knowledge of the earlier round, so the difference between the two reviews is us, not the work.",
   ];
   if (revision.prior_decision) {
     body.push(
-      `The earlier review recommended ${VERDICT[revision.prior_decision] || revision.prior_decision}` +
+      `Earlier review: ${VERDICT[revision.prior_decision] || revision.prior_decision}` +
         (typeof revision.prior_mean_score === "number"
-          ? ` on a panel mean of ${revision.prior_mean_score}.`
+          ? `, mean ${revision.prior_mean_score}.`
           : "."),
     );
   }
@@ -57,7 +55,7 @@ if (revision.kind === "rerun") {
 
 if (round > 1) {
   const body = [
-    "The authors revised the manuscript after a previous review, and this round rules on what changed: each referee revisits the points it raised, and an auditor checks the previous decision letter's required revisions against the new draft.",
+    "The authors revised the paper. Each referee revisits the points it raised, and an auditor checks the previous letter's required revisions against the new draft.",
   ];
   if (revision.prior_decision) {
     body.push(
@@ -71,8 +69,7 @@ if (round > 1) {
       tone: "warning",
       title: "No draft comparison in this round",
       body: [
-        "The previously reviewed PDF could not be recovered, so this round has no section-by-section comparison of the old and new drafts. The referees still hold their earlier points and rule on them, but nothing here rests on a verified diff of what actually changed.",
-        `Reason: ${baseline.reason || "unknown"}.`,
+        `The previously reviewed PDF could not be recovered (${baseline.reason || "reason unknown"}), so nothing here rests on a verified diff of what changed. The referees still rule on their earlier points.`,
       ],
     });
   }
@@ -83,8 +80,7 @@ if (claim === "no") {
     tone: "warning",
     title: "The authors did not request this review",
     body: [
-      "It was submitted by someone who states they are not an author. The authors were not consulted, have not seen it, and have not replied to it. Weigh it accordingly.",
-      "Authors: if this misreads your paper, open an issue. We will publish your reply beside the review, and an editor can correct or withdraw it.",
+      "Submitted by someone who says they are not an author. The authors were not consulted and have not replied. Authors: if this misreads your paper, open an issue and we will publish your reply beside it.",
     ],
   });
 } else if (claim === "yes") {
@@ -98,7 +94,7 @@ if (claim === "no") {
     tone: "note",
     title: "Solicitation unrecorded",
     body: [
-      "This review predates our recording of whether the submitter was an author, so we cannot say whether the authors asked for it.",
+      "This review predates our recording of who submitted it.",
     ],
   });
 }
@@ -153,9 +149,8 @@ if (claim === "no") {
   }
 
   .notice__body {
-    font-size: var(--t--1);
+    font-size: var(--t-0);
     line-height: 1.6;
     color: var(--ink-dim);
-    max-width: 68ch;
   }
 </style>

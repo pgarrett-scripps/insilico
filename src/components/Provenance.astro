@@ -136,13 +136,10 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 
   {singleModel && (
     <p class="prov__warn prov__warn--block">
-      <strong>One model wrote this entire review.</strong> Every agent — the
-      desk screen, all eight referees, both audits, the debate, the area chair
-      and the editor — ran on <span class="mono">{singleModel}</span>. Most
-      reviews here use a graded panel where the agents that decide the verdict
-      run on a stronger model than the ones that sweep the checklist. This one
-      did not, so nothing checked the referees that was any better than the
-      referees. Weigh it against other reviews accordingly.
+      <strong>One model wrote this entire review.</strong> Every agent ran on
+      <span class="mono">{singleModel}</span>. Most reviews here use a graded
+      panel where a stronger model decides the verdict; this one did not, so
+      nothing checked the referees that was any better than them.
     </p>
   )}
 
@@ -165,9 +162,8 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
         </table>
       </div>
       <p class="prov__note">
-        Not every stage runs on the same model. The widest fan-out and the most
-        checklist-like stages run on the cheapest model; only the agents that
-        actually decide the verdict run on the most capable one.
+        The widest fan-out runs on the cheapest model; only the agents that
+        decide the verdict run on the most capable one.
       </p>
     </details>
   )}
@@ -314,6 +310,5 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
     padding: 0.7rem 1.15rem 0.9rem;
     font-size: var(--t--1);
     color: var(--muted);
-    max-width: 64ch;
   }
 </style>

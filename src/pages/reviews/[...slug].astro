@@ -336,8 +336,8 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
             <>
               <h3 class="section__sub">Editorial audits</h3>
               <p class="docs__note">
-                Factual checklists rather than opinions — these bypass the debate
-                and go straight to the editor.
+                Factual checklists, not opinions. They skip the debate and go
+                straight to the editor.
               </p>
               <ul class="docs__grid">
                 {bundle.documents.audits.map((d) => (
@@ -554,14 +554,12 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
     border-top: 1px solid var(--rule);
     font-size: var(--t--1);
     color: var(--muted);
-    max-width: 68ch;
   }
 
   .abstract__text {
-    font-size: var(--t--1);
+    font-size: var(--t-0);
     line-height: 1.7;
     color: var(--ink-dim);
-    max-width: var(--measure);
   }
 
   .docs {
@@ -625,7 +623,6 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
   .docs__note {
     font-size: var(--t--1);
     color: var(--muted);
-    max-width: 62ch;
   }
 
   .chip {

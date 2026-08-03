@@ -40,9 +40,13 @@
   --t-4: 2.074rem;
   --t-5: 2.488rem;
 
+  /* One reading measure, and a column sized so a panel's inner width IS that
+     measure. These used to disagree: the column was set in rem and the text
+     capped in ch, which left a third of every panel empty and made the site
+     look broken rather than spacious. Change one and check the other. */
   --measure: 68ch;
   --page: 74rem;
-  --column: 42rem;
+  --column: 38rem;
 
   --r-sm: 3px;
   --r-md: 6px;
