@@ -1,0 +1,350 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260803-050842-coevolutionary-dynamics-of-viruses-and-their-defec",
+  "manuscript_title": "Coevolutionary dynamics of viruses and their defective interfering particles",
+  "manuscript_cache_key": "509a9de2b4df394e8dcd6fa364e6b8fe4a4fb079004378de7d4b475aa78fd089",
+  "decision": "major",
+  "weighted_score": 3.6667,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Rescope the DePolo et al. comparison. Replace 'reproduces'/'matches' in the Abstract, Introduction, Results and Fig 6 caption with language stating that the model qualitatively reproduces the cyclical/transient structure of resistance but substantially underestimates its magnitude. Add an explicit quantitative statement in Results giving the modeled peak-to-baseline resistance fold-change alongside the experimentally reported fold-change, so readers can size the discrepancy without inferring it from prose. Retain and make prominent the Discussion statement that a higher-dimensional extension is required to close this gap; the extension itself is not required for this revision.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Run and report the null-model comparison for the necessity claim. Add a supplementary simulation at matched parameters of (a) a discrete-substitution variant with μ driven toward zero and/or (b) a fixed-phenotype virus/DIP predator–prey ODE lacking the diffusion term, and report whether oscillatory/chase behaviour is attenuated or absent. Change all 'requires' framing in the Introduction and Discussion to 'sufficient to generate', with the null-model result cited as the evidence for whatever necessity-adjacent claim survives. If the null model unexpectedly reproduces the chase, report that outcome and revise the mechanistic claim accordingly.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Close the two HARD methods-reproducibility gaps flagged by the compliance audit. In Methods, state: the PDE solution method (finite difference/element/spectral), spatial grid spacing and time step, convergence criteria/tolerance, and how the 10^2 extinction threshold is enforced numerically; and the programming language, PDE solver and core library names with versions, plus the hardware used and an approximate compute budget for the 10,000-sample LHS.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Strengthen the LHS sensitivity analysis as conceded in the rebuttal: report bootstrap confidence intervals on the regime proportions in Fig 5a–f; state the LHS implementation (library, version, stratification/maximin option) and the random seed(s); add a convergence plot showing regime proportions at n = 2,000/5,000/10,000; and add a supplementary check varying the chase (centroid-distance variation) and extinction thresholds by an order of magnitude to show the four-regime classification is not an artefact of the chosen cutoffs.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Disambiguate the Fig 7 evolutionary-conflict result. Add the control simulation the authors propose, holding DIP density fixed and nonzero independently of α, and report the resulting virus–DIP phenotypic distance in a supplementary figure, so that 'trapping' at high α is shown to reflect a genuine fitness constraint rather than DIP suppression/extinction. Also make explicit in the Discussion the non-tautological content of the α–κ threshold result (that the threshold location and its κ-dependence are simulation outputs), since this was contested in review and the authors' reply is persuasive but is not currently stated in the manuscript.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Delineate novelty relative to Alfaro et al. [39]. Add a short paragraph or table in Methods stating precisely which components are adapted (diffusion term, centering α and aggregation β fitness terms) and which are introduced here (Gaussian convolution interference terms Eqs 1–3, de novo DIP generation term η, zero-sum resource-transfer identity Eq 4).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Test the untested structural assumptions. Add a supplementary LHS sweep varying (a) a resource-transfer efficiency multiplier on Eq (2) spanning negative- through positive-sum regimes and (b) a per-particle carrying-capacity weight favouring DIPs, and report in a supplementary figure and a Discussion paragraph whether the Fig 5 regime boundaries shift materially.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Specify the initial-condition and simulation setup completely enough to rerun without reading the code: exact functional form and normalisation of the initial Gaussian distributions, total simulation time, output sampling interval, and the criterion used to decide a run has reached steady state versus sustained oscillation.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Apply the conceded citation-hygiene corrections: add the journal name (J Virol) to the DePolo et al. (1987) reference; paraphrase the Giachetti & Holland (1988) finding in-text (polymerase mutations reducing DIP-template affinity while preserving genome replication) at the point ref 32 is cited; and specify in-text that Pelz et al. used semi-continuous bioreactor propagation of influenza A virus and its DIPs. Note that ref [31] (Gaba & Ebert 2009) is a methods/review source, not the original experimental report of transient resistance — cite it as such.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Deposit an environment specification (requirements.txt, environment.yml or Dockerfile) in the GitHub repository and reference it in the Data/Code Availability statement; add a README mapping each script to the figure it produces. Reviewers could not inspect the repository, so the manuscript should make its completeness self-evident.",
+    "For Fig 6c, state in the caption how the DePolo et al. data were extracted (digitised from which panel, or tabulated from the original text), since the replot cannot otherwise be checked against the source.",
+    "Consider promoting the nonmonotonic γ and η results to the Abstract or a short 'non-obvious findings' paragraph. Two reviewers read the sensitivity analysis as confirming intuition; the authors' rebuttal makes a fair case that these two sweeps are not intuitive, and the manuscript would benefit from saying so directly.",
+    "The μ-insensitivity caveat is already stated in Results; consider carrying it into the Discussion limitations as well, and stating explicitly what wider μ range would be needed to test whether the effect is genuinely weak or bound-limited.",
+    "Map at least one or two of the abstract phenotype axes to a measurable biological quantity (even hypothetically, e.g. polymerase binding affinity or genome length), or state plainly in the Discussion that the axes are abstract and that therapeutic implications are therefore directional rather than quantitative. Two reviewers found the therapeutic framing outran the model's interpretability."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "The load-bearing claim is that the model 'captures strong-mutation regimes' (line 49) where continuous mutation allows coevolution of both virus and DIP. However, the distinction from classical adaptive dynamics is asserted rather than demonstrated: the manuscript never shows that a discrete-mutation model would fail to produce chase dynamics, or that the diffusion-based approach is necessary rather than convenient. The claim rests on the assumption that 'mutations occur frequently and generate broad polymorphism' (lines 55–56), but no evidence is provided that the baseline parameters (μ = 10⁻³, η = 10⁻³) actually satisfy this regime in real virus-DIP systems. Without a quantitative comparison to experimental mutation rates or a sensitivity analysis showing that discrete mutations fail to produce the observed outcomes, the necessity of the strong-mutation framework remains unsubstantiated."
+        },
+        {
+          "id": "clarity-2",
+          "text": "The second load-bearing claim is that the model reproduces 'transient resistance' observed in DePolo et al. (1987) time-shift experiments (lines 31–38, Fig 6). The model does produce cyclical resistance patterns, but the quantitative match is acknowledged as poor: 'modeled resistance changes are on a linear scale, not the orders-of-magnitude changes experimentally observed' (lines 444–445). The authors attribute this to 2D phenotype space being too constrained (lines 448–449), but this is a post-hoc explanation, not a validation. The figure caption for Fig 6c states the pattern 'matched' the experimental data, yet the text admits the match is qualitative only. This overstates the evidence: a cyclical pattern is not the same as the specific transient resistance signature, and the orders-of-magnitude discrepancy is substantial enough that a reader cannot determine whether the model captures the mechanism or merely produces superficially similar oscillations."
+        },
+        {
+          "id": "clarity-3",
+          "text": "The third load-bearing claim is that 'evolutionary conflict' (high α) can trap viruses at the fitness optimum and prevent escape (Fig 7b). The model shows that when α > 0.5, phenotypic distance remains constant regardless of κ. However, the biological interpretation conflates two distinct mechanisms: (1) the virus cannot escape because the fitness cost is prohibitive, and (2) the virus does not escape because the DIP population is too weak to drive selection. The model does not isolate these—when α is high, both the virus and DIP populations are suppressed (Fig 7a), so the lack of escape could reflect DIP extinction rather than evolutionary constraint. A comparison of virus-DIP phenotypic distance in the 'trapped' regime to a control where DIPs are absent would clarify whether the virus is genuinely constrained by fitness costs or simply not under selective pressure."
+        }
+      ],
+      "questions": [
+        "Lines 162–166 state that newly generated DIPs 'inherit the exact phenotype of its parent virus' because major phenotypic changes would render them non-viable; what evidence supports that viable DIPs must remain phenotypically similar to their parent, and how sensitive are the results to relaxing this assumption?",
+        "The zero-sum resource transfer (Eq. 4) is justified as a 'neutral baseline' (line 122), but the authors note DIPs could be more or less efficient than viruses (lines 123–125); does the choice of zero-sum versus positive/negative-sum substantially alter the regimes identified in Fig. 5, or is it truly neutral?",
+        "Figure 5 shows mutation rate μ has 'negligible effect' (line 329), but the baseline μ = 10⁻³ is not justified against experimental RNA virus mutation rates; is this parameter biologically plausible, and would results change under higher mutation rates typical of RNA viruses?",
+        "The aggregation penalty β (Eq. 10) is motivated by quasispecies cohesion (lines 144–151), but this is an assumption about viral population structure, not a derived consequence; how does the model behave if β = 0, and does the choice of β value affect the qualitative regimes?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The model's core claim—that Chase Red Queen dynamics emerge from the interplay of mutation, interference, and fitness costs—rests entirely on the choice of mathematical form (Gaussian kernel, quadratic fitness penalties). While the authors test alternative kernels (Fig S5) and show qualitative robustness, they do not prove that the chase dynamic is a necessary consequence of the underlying biology rather than an artifact of these specific functional forms. The two-dimensional phenotype space is acknowledged as a simplification, but the authors do not demonstrate that the observed cyclical pursuit would persist in higher dimensions under the same parameter regime; Fig S4 shows only that perturbations in a third dimension expand rather than collapse, not that the chase mechanism itself scales. This leaves open whether the core finding is robust to the model's structural assumptions or contingent on them."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "The sensitivity analysis uses Latin Hypercube sampling to classify outcomes into four categories (Chase, Coexistence, DIP Extinction, Coextinction) but does not apply multiple-comparison correction or pre-register outcome definitions. With 10,000 samples and six parameters, the probability of spurious classification boundaries is non-negligible. The authors report proportions (e.g., 'nearly 50%' for chase at low γ) without confidence intervals, making it impossible to assess whether observed differences between parameter regimes are robust or noise-driven. The choice of extinction threshold (10^-6 particles) and chase criterion (centroid distance variation >0.1) are stated but not justified or sensitivity-tested."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The connection between abstract model parameters and experimentally measurable quantities is acknowledged as incomplete but remains vague. The authors state that κ (interference strength) 'would require more sophisticated experimental designs' to measure, and μ (mutation rate) can be 'often measured directly or manipulated,' but provide no worked example of how to translate a measured quantity (e.g., fold-reduction in viral titer due to DIP coinfection) into a model parameter value. Without this mapping, the model's predictions cannot be falsified experimentally, and the claim that it 'provides a theoretical basis for engineering TIPs' (Abstract) is aspirational rather than actionable. The authors acknowledge this limitation (lines 430–441) but do not resolve it."
+        }
+      ],
+      "questions": [
+        "Figure 6 shows that modeled resistance changes occur on a linear scale while experimental data (DePolo et al.) show orders-of-magnitude changes; the authors attribute this to two-dimensional phenotype space constraining trajectories (lines 448–450) but do not quantify how much additional dimensionality would be needed to recover the observed magnitude or test whether a 'corkscrew' trajectory through higher-dimensional space actually produces the observed pattern.",
+        "In the sensitivity analysis, how were the four outcome categories assigned when simulations exhibited intermediate behavior (e.g., weak oscillations near the Chase/Coexistence boundary)? Was there a hard threshold, or were borderline cases assigned probabilistically?",
+        "The model assumes virus and DIP populations contribute equally to carrying capacity K (line 135), but DIPs with shorter genomes may be less resource-intensive per particle; how sensitive are the coexistence and chase regimes to this assumption, and does relaxing it change the parameter ranges where each regime occurs?",
+        "The de novo DIP generation term (η) assumes newly generated DIPs inherit the exact phenotype of their parent virus (lines 162–166); how does the model behave if this assumption is relaxed to allow small random phenotypic shifts in newly generated DIPs, and would this increase or decrease the prevalence of chase dynamics?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The model's quantitative match to the DePolo et al. (1987) time-shift experiments is overstated. The manuscript claims to 'reproduce' transient resistance patterns (abstract, introduction, Fig. 6 caption) but then admits (lines 442–445) that 'modeled resistance changes are on a linear scale, not the orders-of-magnitude changes experimentally observed.' This is a material discrepancy: the model captures the cyclical structure but not the magnitude of viral escape, which is the quantity most relevant to therapeutic design."
+        },
+        {
+          "id": "literature-2",
+          "text": "The delineation between novel contributions and adaptations from Alfaro et al. (2024) is unclear. The manuscript states it 'modifies' and 'builds on' Alfaro et al. but does not specify which equations are inherited versus novel. Specifically: (i) Do Alfaro et al. use Gaussian convolution kernels for interaction strength (Eqs. 1–3)? (ii) Do they model de novo DIP generation (η term)? (iii) Is the zero-sum resource transfer (Eq. 4) novel?"
+        },
+        {
+          "id": "literature-3",
+          "text": "The historical foundation (von Magnus, early oscillatory dynamics) cannot be verified through modern indexing. The manuscript attributes the discovery of oscillatory dynamics to 'landmark' experiments by von Magnus (refs 1–3) and subsequent work on VSV and influenza (refs 5–10), but searches for these papers return no results in PubMed or arXiv, meaning the specific experimental claims rest on citations that cannot be inspected."
+        },
+        {
+          "id": "literature-4",
+          "text": "Giachetti & Holland (1988, ref 32) is cited for the VSV polymerase mechanism but the specific finding is not quoted, making it difficult to verify the claim matches the source."
+        },
+        {
+          "id": "literature-5",
+          "text": "Pelz et al. (2021, ref 61) is cited for selection of potent DIPs in long-term culture but the experimental context (bioreactor vs. serial passage) is not specified, affecting the comparison to the model's assumptions."
+        },
+        {
+          "id": "literature-6",
+          "text": "The 'strong-mutation regime' concept is attributed to 'new theoretical work' (lines 57–59, refs 35–36) but the specific authors and papers are not named in the text, hindering quick identification."
+        },
+        {
+          "id": "literature-7",
+          "text": "Convolution-based spatial interaction models are attributed to Britton (1989) but it is unclear whether Britton introduced the formalism or whether it is standard in spatial ecology."
+        },
+        {
+          "id": "literature-8",
+          "text": "Recent comprehensive reviews on defective viral genomes (e.g., Brennan & Sun 2024) are in the reference list but not cited in the text, missing an opportunity to contextualize the therapeutic potential."
+        },
+        {
+          "id": "literature-9",
+          "text": "The reference list entry for DePolo et al. (1987, ref 31) lacks a journal name, making it difficult for readers to locate the original data used in Fig. 6c."
+        }
+      ],
+      "questions": [
+        "Can you confirm that refs 1–10 (von Magnus and early oscillatory dynamics papers) are accurately cited and that the specific experimental claims (e.g., 'progressive enrichment' and 'drop in infectious virus output') are directly stated in those sources?",
+        "In the Methods section, which equations or model components are direct adaptations from Alfaro et al. (2024) versus novel to this work? Specifically, do Alfaro et al. use convolution kernels for interaction, and do they model de novo generation?",
+        "Figure 6c compares model predictions to DePolo et al. data: what is the quantitative fold-difference in resistance magnitude between the model and experiment, and does the model capture the timing of resistance cycles?",
+        "For Giachetti & Holland (1988, ref 32), can you quote or paraphrase the specific finding about VSV polymerase mutations and DIP binding specificity?",
+        "For Pelz et al. (2021, ref 61), what was the experimental system (bioreactor, serial passage, or other) in which DIPs were selected, and how does this map to the model's assumptions about population structure?"
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "**Mechanism not established as necessary.** The paper shows that a continuous phenotype-space diffusion model with Gaussian interference reproduces von Magnus oscillations and transient resistance cycles. However, these phenomena are well-documented consequences of simple predator-prey dynamics and do not require the specific machinery of continuous phenotype diffusion. A discrete-genotype model with rare mutations and discrete trait substitutions (classical adaptive dynamics) could produce the same population oscillations if DIPs are generated at sufficient rates. The paper does not compare its predictions against a simpler null model (e.g., fixed-phenotype virus and DIP populations, or discrete-trait alternatives) to show that the continuous diffusion framework is necessary rather than merely sufficient. Without this comparison, the design cannot establish that the proposed mechanism is the right explanation for the observed phenomena, only that it is *a* consistent explanation."
+        },
+        {
+          "id": "methodology-2",
+          "text": "**Phenotype-to-biology mapping absent, leaving predictions untestable.** The paper claims the model provides 'a general framework for virus-DIP coevolution' and offers 'testable hypotheses' (line 491), but the abstract two-dimensional phenotype space is never connected to measurable biological traits. The authors acknowledge this (lines 430–441) and defer it to future work, but this is a design flaw, not a limitation: without specifying what x₁ and x₂ represent (replicase binding affinity? genome length? packaging efficiency?), the model cannot generate falsifiable predictions about real virus-DIP systems. The comparison to DePolo et al. (Fig 6) is qualitative only—the modeled resistance changes are linear while experimental data show orders-of-magnitude shifts (lines 443–445)—and the authors attribute this to model simplifications rather than testing whether a higher-dimensional or differently parameterized model could match the quantitative pattern. This leaves the central claim (that the model explains real coevolutionary dynamics) unvalidated."
+        },
+        {
+          "id": "methodology-3",
+          "text": "**Evolutionary conflict analysis conflates parameter sensitivity with mechanism validation.** The analysis of 'evolutionary conflict' (Fig 7, lines 362–401) shows that high α (fitness cost of escape) suppresses viral escape while low α permits it. This is a parameter sensitivity result, not a validation that the α term correctly captures the biological trade-offs in real systems. The paper cites HIV and VSV as examples where escape mutations incur fitness costs, but does not measure α for either system or test whether the predicted threshold behavior (Fig 7b) matches experimental escape dynamics in those viruses. Without quantitative mapping of α to measurable viral fitness landscapes, the claim that the model 'provides a theoretical basis for engineering TIPs' (line 79) is not supported by the design."
+        },
+        {
+          "id": "methodology-4",
+          "text": "The zero-sum resource transfer assumption (Eq. 4) is justified as a 'neutral baseline' (line 122) but is never tested against positive- or negative-sum alternatives; the sensitivity analysis does not vary this assumption, so its impact on the four regimes (Fig 5) is unknown."
+        },
+        {
+          "id": "methodology-5",
+          "text": "The aggregation penalty term (β, Eq. 10) is motivated by viral quasispecies cohesion but is not derived from or validated against quasispecies models; it functions as a mathematical device to prevent fragmentation without biological grounding."
+        },
+        {
+          "id": "methodology-6",
+          "text": "The assumption that newly generated DIPs inherit the exact phenotype of their parent virus (lines 161–166) is justified by requiring 'significant functional similarity' but is not tested against a model allowing small phenotypic shifts in de novo DIPs, which could alter the chase dynamics."
+        },
+        {
+          "id": "methodology-7",
+          "text": "Initial conditions (Gaussian distributions centered at (1, 1) and (1.4, 0), line 214) are not justified; sensitivity to initial phenotypic separation is not systematically explored, though Fig 3d–f suggests it is critical to chase dynamics."
+        },
+        {
+          "id": "methodology-8",
+          "text": "The paper does not validate the Gaussian kernel choice against the biological mechanisms of interference; while Fig S5 shows robustness to kernel shape, no experiment or prior work is cited showing that interference actually decays as a Gaussian in any real virus-DIP system."
+        }
+      ],
+      "questions": [
+        "What would a discrete-genotype model with classical adaptive dynamics predict for the same parameter ranges, and how would its predictions differ from the continuous diffusion model?",
+        "Can the authors specify what biological traits x₁ and x₂ would represent in a concrete virus-DIP system (e.g., VSV-DIP), and what experimental measurements would determine their values?",
+        "For the VSV and HIV examples cited in the evolutionary conflict section, what are the measured fitness costs (α values) of escape mutations, and do the predicted thresholds in Fig 7b match observed escape dynamics?",
+        "How sensitive are the four regimes (Fig 5) to the zero-sum resource transfer assumption, and would positive- or negative-sum models shift the boundaries between Chase, Coexistence, and Extinction?",
+        "The transient resistance pattern (Fig 6) is qualitatively similar to DePolo et al. but quantitatively different (linear vs. orders-of-magnitude); does expanding to 3D or higher phenotype space, or allowing drift in the fitness optimum, produce the observed magnitude of resistance changes?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "Methodological novelty is incremental: the manuscript builds directly on Alfaro et al. [39] (2024), which already develops the phenotype-space PDE framework with convolution kernels and quadratic fitness penalties for host-pathogen coevolution in strong-mutation regimes; the authors acknowledge this but do not clearly specify what is methodologically novel beyond applying Alfaro's framework to a new system with two new terms (de novo DIP generation and zero-sum interference kernel), which are domain-specific extensions rather than methodological innovations."
+        },
+        {
+          "id": "novelty-2",
+          "text": "Mechanistic explanation of transient resistance is not uniquely supported: the model reproduces the qualitative pattern but the authors acknowledge that quantitative fit is poor (modeled resistance varies linearly while experimental data show orders-of-magnitude changes), and the model cannot capture the directional drift in high-dimensional space that the authors identify as necessary; a simpler alternative explanation (directional drift with occasional phenotypic returns) would produce the same qualitative pattern and may be more parsimonious."
+        },
+        {
+          "id": "novelty-3",
+          "text": "Sensitivity analysis yields intuitive rather than novel insights: the finding that intermediate interference promotes chase while high interference drives extinction is mechanistically obvious, and the finding that low decay rates promote chase follows directly from the model's structure; the paper does not compare these predictions to prior theoretical work or experiments to establish whether they are novel or merely confirmatory."
+        },
+        {
+          "id": "novelty-4",
+          "text": "The zero-sum interference assumption is justified as a 'neutral baseline' because true efficiency is ambiguous, but this sidesteps rather than resolves the question; positive-sum and negative-sum scenarios could yield qualitatively different outcomes and deserve exploratory analysis."
+        },
+        {
+          "id": "novelty-5",
+          "text": "Mutation rate (μ) has negligible effect on outcomes (Fig. 5f), yet it is a core parameter in the strong-mutation regime; this suggests either the parameter range is too narrow or the model is insensitive to a key biological variable, neither of which is discussed."
+        },
+        {
+          "id": "novelty-6",
+          "text": "The assumption that virus and DIP contribute equally to carrying capacity is acknowledged as a simplification but not tested; DIPs with shorter genomes likely consume fewer resources per particle, potentially biasing population ratio predictions."
+        },
+        {
+          "id": "novelty-7",
+          "text": "Therapeutic implications are aspirational; the model makes no predictions about real TIP candidates and does not connect abstract phenotype axes to measurable viral traits, limiting practical relevance."
+        },
+        {
+          "id": "novelty-8",
+          "text": "The 2023 preprint 'No two without three' on virus-DIP-satellite coevolution is not cited or compared, despite using similar PDE machinery; this omission weakens positioning within recent literature."
+        }
+      ],
+      "questions": [
+        "Can the authors specify which mathematical components (beyond the biological parameterization) are novel relative to Alfaro et al. [39], or is the contribution primarily in application and interpretation?",
+        "What would distinguish the Chase Red Queen mechanism from a simpler directional-drift-with-occasional-returns model, given that both produce the observed transient resistance pattern and the model underfits the experimental data quantitatively?",
+        "Have the authors tested whether the sensitivity analysis results (Fig. 5) hold under alternative interference kernels and fitness landscapes, or are they specific to the Gaussian and quadratic choices?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The sensitivity analysis (Latin Hypercube Sampling, n=10,000) lacks stated random seeds, convergence criteria, or confirmation that 10,000 samples sufficed for stable regime classification—essential for reproducibility of Figs 5a–5f, which are load-bearing evidence for parameter-outcome relationships. The authors state 'simulations were initialized' but do not specify whether each LHS sample was run once or multiple times, or how stochasticity (if any) was handled."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "The comparison to experimental data (Fig. 6c, DePolo et al. 1987) is qualitative only: the authors acknowledge 'quantitative differences' and note their model produces linear-scale resistance changes while experiments show orders-of-magnitude shifts, yet do not provide numerical metrics (e.g., correlation, RMSE) that would allow a reader to assess whether the match is sufficient to validate the model's predictive claim about cyclical escape dynamics."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "Intermediate outputs and simulation logs are not mentioned as deposited; while the code is available, a reader cannot verify that the specific trajectories shown in Figs 3–4 and 6 were produced by the stated parameters without re-running the full simulation, which is computationally expensive and introduces a soft barrier to spot-checking."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "The paper does not state the computational hardware, runtime, or solver tolerances (e.g., ODE/PDE solver error thresholds, time-step size) used for the main simulations, making it unclear whether numerical artifacts could affect the reported oscillation periods or phenotypic distances in Figs 4a–4b."
+        }
+      ],
+      "questions": [
+        "What random seed(s) were used for the Latin Hypercube Sampling in the sensitivity analysis, and were simulations deterministic or stochastic (and if stochastic, how many replicates per sample)?",
+        "What PDE solver was used (e.g., method of lines, finite-difference scheme, software package), and what were the spatial grid resolution, time-step size, and absolute/relative tolerances?",
+        "Can the authors provide numerical goodness-of-fit metrics (e.g., correlation coefficient, Euclidean distance in phase space) comparing Fig. 6b model predictions to the DePolo et al. data, to quantify whether the qualitative match supports the cyclical-escape claim?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "**Load-bearing claim 1: Chase Red Queen dynamics.** The abstract states the model 'reveals…coevolutionary chases in which viruses temporarily escape and new DIPs emerge to follow, as observed in serial-passage evolution studies.' The evidence is Figs 3d–f and 4, which show sustained oscillations in phenotypic distance and population size under one set of initial conditions (virus and DIP phenotypically separated). However, the same model with different initial conditions (Fig 2d–f, or DIPs emerging de novo in Fig 3a–c) produces convergence to the origin with no sustained chase. The claim that chase dynamics are 'observed in serial-passage evolution studies' is supported only qualitatively by Fig 6c, which reproduces the *pattern* of transient resistance from DePolo et al. (1987) but not the *magnitude*—the authors themselves note the model produces linear-scale changes while experiments show orders-of-magnitude shifts (lines 443–447). The alternative explanation is that chase dynamics are a transient artifact of the specific initial condition (phenotypic separation) rather than a robust attractor of the system. The sensitivity analysis (Fig 5) shows chase occurs in only ~20% of parameter space at intermediate κ, and the authors acknowledge (line 338) that 'coexistence and extinction represent more robust attractors.' This undermines the framing that chase is a central predicted outcome. The claim should be reworded to specify the initial conditions required and the parameter ranges where chase is favored, or downgraded to 'can exhibit' rather than 'reveals.'"
+        },
+        {
+          "id": "rigor-2",
+          "text": "**Load-bearing claim 2: Evolutionary conflict and viral escape thresholds.** The abstract claims the model 'predicts thresholds where viral escape is either constrained by intrinsic fitness penalties or enabled through phenotypic separation from DIPs.' Fig 7 shows that high α (fitness penalty) prevents escape and low α permits it, but this is a direct consequence of the model's design: the α term is defined as a penalty for deviation from the origin (line 139), so of course high α prevents escape. This is not a prediction; it is a tautology built into the model structure. The biological claim—that escape mutations incur fitness costs—is well-established (cited: refs 27, 32, 51) and the model formalizes it rather than predicting it. What the model does predict is the *quantitative relationship* between α and escape distance (Fig 7b), but the authors do not validate whether the α values they use match real biological systems. They note (lines 431–441) that applying the model to a specific virus requires 'translating its abstract phenotype space into one defined by concrete, measurable biological traits,' but provide no worked example or parameter-fitting procedure. The claim that the model 'predicts thresholds' should be qualified: it shows that *if* escape mutations incur costs proportional to α, *then* high α prevents escape—a conditional prediction, not a discovery."
+        },
+        {
+          "id": "rigor-3",
+          "text": "**Load-bearing claim 3: Implications for DIP-based therapeutics.** The abstract states findings have 'implications for designing DIP-based therapeutics that better resist viral escape.' The sensitivity analysis (Fig 5, lines 476–485) identifies parameter ranges favoring viral extinction or stable coexistence, but does not test whether these regimes are achievable in practice. The authors recommend 'high interference and high costs to evolutionary escape' (line 478), but acknowledge (lines 484–485) that 'TIP failure is most likely to occur through low costs to escape (e.g., targeting non-conserved viral functions in high-mutation environments).' This is a restatement of the problem, not a solution. The model does not predict *how* to engineer a TIP to achieve high α (fitness cost to escape) or high κ (interference strength) in a real virus; it only shows that if you achieve them, viral control improves. The therapeutic implication is therefore speculative. The claim should be downgraded to 'suggests design principles' or paired with explicit acknowledgment that the model does not address how to implement them."
+        },
+        {
+          "id": "rigor-4",
+          "text": "The model assumes de novo DIPs inherit the exact phenotype of their parent virus (lines 161–166), justified by the requirement for 'significant functional similarity.' This is not validated: real defective genomes arise from deletions and mutations, which could produce phenotypic shifts. If DIPs frequently emerge with phenotypes offset from the virus, the coevolutionary dynamics could differ substantially. This assumption should be tested by relaxing it (e.g., allowing small random phenotypic shifts in newly generated DIPs) and comparing outcomes."
+        },
+        {
+          "id": "rigor-5",
+          "text": "The interference kernel (Eq. 3) is a Gaussian with a single scale parameter σ, but the biological basis for this choice is stated only as an analogy to spatial ecology (line 98–100). The authors test alternative kernels (Fig S5) and find 'qualitatively similar chase dynamics,' but do not quantify how much the parameter estimates or regime boundaries change. For a model whose predictions depend on κ and σ, robustness to kernel choice should be reported numerically, not visually."
+        },
+        {
+          "id": "rigor-6",
+          "text": "The model assumes virus and DIP populations contribute equally to the carrying capacity K (line 135), though DIPs have shorter genomes and may be less resource-intensive. The authors acknowledge this (lines 135–136) but do not test sensitivity to unequal contributions. If DIPs are more efficient, the logistic factor L could favor DIP growth, potentially shifting the regime boundaries shown in Fig 5."
+        },
+        {
+          "id": "rigor-7",
+          "text": "The claim that the model 'captures strong-mutation regimes' (abstract, line 49) is not formally validated: the authors do not show that the diffusion approximation is valid for their parameter choices, nor do they compare predictions to a stochastic individual-based model across the parameter ranges explored."
+        },
+        {
+          "id": "rigor-8",
+          "text": "The abstract states the model shows 'how both population dynamics and trait evolution shape outcomes,' but the two are not decoupled: the oscillations in Fig 4a are driven by the phenotypic chase in Fig 4b. The claim should specify that population dynamics and trait evolution are coupled, not independent drivers."
+        },
+        {
+          "id": "rigor-9",
+          "text": "Figure 6c reproduces the DePolo et al. (1987) resistance pattern qualitatively, but the caption does not state whether the model was fit to that data or whether the match is post-hoc. If post-hoc, this is a consistency check, not a validation; if fit, the fitting procedure should be described."
+        }
+      ],
+      "questions": [
+        "What happens to the regime boundaries (Fig 5) if DIPs are modeled as requiring fewer resources per particle than viruses (e.g., logistic factor weighted by genome length)?",
+        "Can you provide a worked example showing how to map the abstract phenotype space (x₁, x₂) to a real biological system (e.g., VSV replicase binding affinity and packaging signal strength) and estimate α, κ, and σ from experimental data?",
+        "How sensitive are the chase dynamics to the assumption that newly generated DIPs inherit the exact phenotype of their parent virus? What if DIPs emerge with phenotypic shifts drawn from a distribution?",
+        "The model neglects stochasticity; how do results change if you compare the deterministic predictions to a stochastic individual-based model at the parameter values used in Figs 3–4?"
+      ]
+    }
+  ],
+  "prior_job_id": "",
+  "desk_rejected": false
+}

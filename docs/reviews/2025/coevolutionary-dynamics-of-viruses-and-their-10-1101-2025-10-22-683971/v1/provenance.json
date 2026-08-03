@@ -1,0 +1,137 @@
+{
+  "generated_at": "2026-08-03T05:08:42+00:00",
+  "pipeline": {
+    "sha": "6c1f7138787271a63562bcfb6bbf7cf7428d3b37",
+    "version": "0.1.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "author_rebuttal": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    },
+    "meta_reviewer": {
+      "model": "claude-sonnet-5"
+    }
+  },
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.1.1",
+    "caveman": null,
+    "chars": 70215
+  },
+  "screens": {
+    "desk_screen_mode": "gate",
+    "injection_screen": true,
+    "injection_screen_action": "reject"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.62,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 1.2447679500000002,
+  "cost_by_node": {
+    "audit_citation_integrity": 0.066715,
+    "audit_methods_completeness": 0.036845,
+    "author_rebuttal": 0.289338,
+    "debate_advocate": 0.160499,
+    "debate_skeptic": 0.080973,
+    "desk_screen": 0.027208,
+    "editor": 0.152326,
+    "journal_recommender": 0.037225,
+    "meta_reviewer": 0.084866,
+    "reviewer_clarity": 0.034,
+    "reviewer_data_analysis": 0.033952,
+    "reviewer_ethics": 0.010361,
+    "reviewer_literature": 0.104581,
+    "reviewer_methodology": 0.011426,
+    "reviewer_novelty": 0.092576,
+    "reviewer_reproducibility": 0.007909,
+    "reviewer_rigor": 0.013967
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2025.10.22.683971v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2025.10.22.683971v1.full.pdf",
+    "identifier": "10.1101/2025.10.22.683971",
+    "doi": "10.1101/2025.10.22.683971",
+    "title": "Coevolutionary dynamics of viruses and their defective interfering particles",
+    "authors": [
+      "Muthupandiyan, S.",
+      "Yin, J."
+    ],
+    "abstract": "Defective interfering particles (DIPs) are viral mutants that arise naturally during infection. Because they lack one or more essential functions, DIPs cannot replicate on their own, but they can parasitize intact viruses during co-infection by competing for growth resources, thereby interfering with viral replication. The evolutionary interplay between viruses and their DIPs involves growth, mutation, interference, and resource trade-offs, but the mechanisms shaping population-level outcomes remain poorly understood. To address this, we developed a continuous phenotype-space model using coupled partial differential equations that incorporate mutation, phenotype-dependent interference, intrinsic fitness costs, and de novo DIP generation. Unlike traditional strong-selection models, this framework captures strong-mutation regimes in which both virus and DIP populations diffuse through trait space and interact based on phenotypic similarity. Our analysis reveals two levels of dynamics. At the population level, viruses and DIPs undergo oscillations, consistent with predator-prey-like cycles (the von Magnus effect) observed experimentally. At the trait level, evolution drives shifts in resistance and interference, producing coevolutionary chases in which viruses temporarily escape and new DIPs emerge to follow, as observed in serial-passage evolution studies. Systematic variation of parameters reveals four qualitative regimes: viral-DIP coexistence, sustained coevolutionary (Red Queen) chase dynamics, DIP extinction, and mutual extinction. Chase dynamics are most strongly promoted by intermediate interference strength and low decay rates, while higher levels drive collapse of one or both populations. The model further predicts thresholds where viral escape is either constrained by intrinsic fitness penalties or enabled through phenotypic separation from DIPs. These findings establish a general framework for virus-DIP coevolution, showing how both population dynamics and trait evolution shape outcomes, with implications for designing DIP-based therapeutics that better resist viral escape. Author summaryMost viruses produce defective versions of themselves, known as defective interfering particles (DIPs). DIPs cannot multiply on their own, but when they infect the same cell as an intact virus, they steal resources and limit the viruss growth. This makes them a promising antiviral therapy. But viruses may evolve to reduce the ability of DIPs to steal resources. We built a mathematical model that lets both viruses and DIPs vary in traits--such as how quickly they grow or how strongly they interfere--and evolve such traits over time. Our results reveal two layers of dynamics. At the population level, viruses and DIPs can rise and fall in repeating cycles that resemble predator-prey interactions, even when traits stay fixed. With evolution, however, the contest gains another dimension: viruses may shift traits to escape interference, while new DIPs can arise and adapt to follow them. This co-evolutionary chase is a novel feature that sets DIPs apart from conventional therapies, which cannot adjust to viral change. By exploring many conditions, we identified when viruses and DIPs coexist, when one eliminates the other, and when they remain locked in long-term pursuit. These insights suggest principles for designing therapeutic DIPs that might better resist viral escape.",
+    "published": "2025-10-23",
+    "version": "1",
+    "pdf_sha256": "4d1a0db55aa50769c7fb0a26844858a4efea2863df1200465e62ebf3d6cd5822",
+    "pdf_bytes": 1472773
+  }
+}
