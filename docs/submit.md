@@ -160,5 +160,3 @@ review was already public and quietly deleting it is worse than annotating it.
 Encouraged. You can run the panel locally before submitting anywhere. See
 [`development.md`](development.md#running-a-review-locally). Nothing is submitted
 or published by running it yourself.
-
-PeerReviewAgents is currently private, so this needs an account with access.

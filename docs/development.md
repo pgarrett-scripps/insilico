@@ -84,9 +84,6 @@ export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 ```
 
-PeerReviewAgents is private and not on PyPI, so that second install needs an
-account with read access.
-
 The bundle lands under `docs/reviews/<year>/<slug>/v<N>/` and the site picks it up
 on the next build.
 
@@ -208,10 +205,6 @@ run before the other 18 calls.
 ## First-time setup
 
 - [ ] Add `ANTHROPIC_API_KEY` to repository secrets
-- [ ] Add `PRA_READ_TOKEN`, a fine-grained token with **Contents: Read** on
-      PeerReviewAgents, needed while that repo is private. Without it the workflow
-      fails at the pin step, and GitHub reports a missing permission the same way
-      it reports a typo.
 - [ ] Settings, Pages, Source: **GitHub Actions**
 - [ ] Settings, Actions, Workflow permissions: **Read and write**, and allow PR
       creation
