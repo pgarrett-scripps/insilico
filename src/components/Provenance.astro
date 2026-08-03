@@ -77,7 +77,8 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
   <div class="panel__head">
     <h2 id="prov-heading" class="prov__title">Provenance</h2>
     <p class="label">
-      PeerReviewAgents {pipeline.version || "unknown"}
+      <a href="https://doi.org/10.5281/zenodo.21781895">PeerReviewAgents</a>
+      {" "}{pipeline.version || "unknown"}
       {sha && <span> · {sha}</span>}
     </p>
   </div>

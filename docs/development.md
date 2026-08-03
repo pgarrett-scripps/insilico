@@ -132,6 +132,12 @@ The command is parsed in `run_review.py` (`parse_command`), never in the
 workflow: an issue comment is untrusted text, and the parser accepts only known
 provider names and model slugs matching a strict pattern.
 
+PeerReviewAgents is MIT licensed, public, and archived at
+[10.5281/zenodo.21781895](https://doi.org/10.5281/zenodo.21781895), the
+concept DOI, which always resolves to its newest release. Each review records
+the exact pipeline commit that produced it in `provenance.json`, so the DOI
+identifies the software and the sha identifies the run.
+
 The panel is held to In Silico's own profile in
 [`journals/insilico.toml`](../journals/insilico.toml), version-controlled next to
 the reviews it produced.

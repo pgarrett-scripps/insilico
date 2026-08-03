@@ -36,12 +36,21 @@ const LATEX = {
 };
 const esc = (s) => String(s).split("").map((c) => LATEX[c] ?? c).join("");
 
+// The pipeline's Zenodo *concept* DOI, which always resolves to its newest
+// release. Named in every review's citation because "machine-generated" is
+// not a method: a reader who wants to know what generated it should not have
+// to leave the citation to find out. The exact commit is in provenance.json;
+// this identifies the software itself, which is separately citable.
+const PIPELINE_DOI = "10.5281/zenodo.21781895";
+
 let head = "Machine-generated peer review";
 if (reviewedDoi) {
   head += ` of doi:${reviewedDoi}`;
   if (reviewedVersion) head += ` v${reviewedVersion}`;
 }
-const note = [head, noteExtra].filter(Boolean).join(". ") + ".";
+const note = [head, noteExtra, `Produced by PeerReviewAgents, doi:${PIPELINE_DOI}`]
+  .filter(Boolean)
+  .join(". ") + ".";
 const plain = `In Silico (${year}). Review of "${title}". In Silico. ${url}`;
 const bibtex = [
   `@misc{${key},`,
