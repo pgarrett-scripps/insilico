@@ -1,0 +1,21 @@
+# Clarity & Presentation Reviewer
+
+## Summary
+This manuscript is clearly written and well-organized overall, with strong narrative flow from motivation through methods to results and interpretation. The central claims are explicit, technical terms are defined, and figures are generally well-captioned. A few specific ambiguities in quantitative statements and figure references require clarification, but none block understanding of the core contribution.
+
+## Strengths
+- The manuscript clearly states its central contribution upfront (polymorphic IGLV6-57 fibrils with shared folding motifs) and maintains a coherent through-line from biological question to structural findings.
+- Methods are presented in logical order with sufficient procedural detail to follow the workflow from tissue extraction through cryo-EM reconstruction and atomic modeling.
+- Figures are well-integrated with text, each panel is referenced, and legends define symbols and abbreviations; the structural comparisons in Figure 5 and Figure 6 effectively support the shared folding pathway hypothesis.
+
+## Weaknesses
+- The claim that the double protofilament morphology has 'rare rotational symmetry' (stated as 'the first cardiac amyloid fibril with 2-fold rotational symmetry perpendicular to the fibril axis') is presented as novel, but the manuscript then notes that 9 of 615 amyloid structures in the Amyloid Atlas share this symmetry, with 4 being ex vivo fibrils from brain tissue. The distinction being claimed—that this is the first *cardiac* example—is not clearly separated from the broader claim of rarity, creating ambiguity about what the novelty actually is.
+- Figure 3b shows molecular docking of the single protofilament model into the double protofilament map, but the text states 'the map quality was insufficient to directly model the structure' (3.78 Å resolution). The manuscript does not explicitly state the resolution threshold at which direct modeling becomes feasible or justify why docking is appropriate when direct modeling failed, leaving unclear how confident the proposed interface (Asn 72, Ser 73) is.
+- The hypothesis of a 'shared folding pathway' (Figure 6b) is presented as speculation based on three structures with 80–84% sequence identity and similar C-shaped turns. The manuscript acknowledges 'our data are not sufficient to support or eliminate' alternative assembly models, yet the pathway diagram is presented as a positive finding rather than a working hypothesis, potentially overstating the evidence.
+- The statement that the single protofilament morphology 'is stabilized by multiple interactions' (page 6) lists the disulfide bond, interlocking monomers, and side-chain interactions, but then notes that 'none of the mutations located in the structure core contribute strongly to the estimated solvation energy' (Supplementary Fig. 6b), creating tension between the claim of stabilization and the energetic analysis that is not resolved.
+- The proteinase K digestion experiment (Figure 1f) is described as enriching 'LC sequence regions involved in the fibril core' by comparing spectral counts before and after digestion, but the manuscript does not quantify the fold-change in spectral counts or define what 'reduced' and 'vice versa' mean numerically, making it difficult to assess the strength of this validation.
+
+## Questions
+- What is the precise resolution threshold at which the authors consider direct atomic modeling feasible versus requiring docking, and how does the 3.78 Å resolution of the double protofilament map compare to published standards for this decision?
+- In Figure 1f, what are the actual spectral count ratios for residues predicted inside versus outside the fibril core before and after proteinase K digestion, and what fold-change was considered evidence of enrichment?
+- The manuscript states that Arg 24 'forms close interactions with many negatively charged and polar residues' in the 9ELS structure but is 'incompatible' with the 6HUD fold—what structural metric (e.g., atomic clash distance, energy penalty) defines this incompatibility across the three structures?
