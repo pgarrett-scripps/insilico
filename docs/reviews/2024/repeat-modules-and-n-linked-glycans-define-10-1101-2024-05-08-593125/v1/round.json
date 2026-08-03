@@ -1,0 +1,441 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260803-061305-authors",
+  "manuscript_title": "Authors",
+  "manuscript_cache_key": "641eb84c85a9f18300bdf94c988f246b54f6c053b7e8c7a56fa12535d3590aef",
+  "decision": "major",
+  "weighted_score": 3.7297,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Deposit the cryo-EM maps and refined atomic models for both the 1C08- and 1G05-bound complexes in EMDB and PDB, and replace the 'EMDB-xxxx'/'PDB xxxx' placeholders in Supplemental Table 3 and the Data Availability statement with actual accession numbers. If accessions are on hold, state this explicitly and supply reviewer-access codes so the maps can be inspected during re-review; a forward-looking promise ('will be submitted prior to publication') is not sufficient for a paper whose central evidence is the maps themselves.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Add to Methods (Plasmablast isolation section) an explicit, self-contained human-subjects statement for the primary ETEC H10407 challenge study: the Naval Medical Research Command IRB protocol number, the approval statement, and confirmation that written informed consent was obtained from all volunteers. Currently only the secondary-use WUSTL protocol (201110126) for archived de-identified specimens is given, so a reader cannot confirm oversight of the study that generated 1F09 without retrieving reference 88.",
+      "source_reviewer": "ethics",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Revise the Conflicts of Interest section as conceded: remove the blanket 'no financial competing interests related to the work' and state plainly that US patent 8,323,668, held by J.M. Fleckenstein, covers use of EtpA-related antigens in vaccine development and is therefore directly related to the findings reported here.",
+      "source_reviewer": "ethics",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Add biophysical fold verification for rEtpA1-1086 (SEC elution profile and/or DSF thermal-shift compared side-by-side with full-length rEtpA) as a new supplemental figure, and soften the Results text to state that efficient TPS-pathway secretion is consistent with, but not proof of, native folding. Absent this, loss of bgA binding cannot be attributed to the repeat modules rather than to global misfolding.",
+      "source_reviewer": "clarity",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Revise the Discussion paragraph (~lines 390-401) so that immune evasion via glycan heterogeneity and affinity maturation toward stable, high-occupancy glycosylated epitopes are presented as two co-equal, currently untested hypotheses, matching the hedged language already used in Results. Remove assertions that evasion is 'exploited as a mechanism.'",
+      "source_reviewer": "rigor",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Add a Methods paragraph stating the quantitative criteria used to call EMPEM epitopes distinct (minimum angular/spatial separation of Fab density relative to cryo-EM-defined domain boundaries; minimum particle count per 2D class), and change 'confidently identify' to 'estimate' for the 5-6 NTS / 3-4 CTR counts throughout Results and the Figure 5 legend.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "For all functional-assay figures, state biological replicates (independent experiments) and technical replicates (fields/wells) separately in each legend, define error bars explicitly (SD, SEM or CI) for every panel including Figures 1 and 3 and the supplemental figures, and re-run statistics treating biological replicate as the unit of analysis where fields were previously pooled (Fig. 1B, 'n=20 replicate fields from two independent experiments'). Report both the original and re-analysed results if conclusions change.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Report the measured KD values for 1C08 and 1G05 in the main Results text and Figure 1 legend, state n and replication for the biolayer interferometry runs, and state how antibody concentrations in the inhibition assays were chosen relative to those affinities.",
+      "source_reviewer": "data_analysis",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Deposit the mass-spectrometry raw files and search results in PRIDE or MassIVE and cite the accession; state the number of MS replicates summed by GlycoMSQuant; and give versions for ProLuCID, Census2, ColabFold/AlphaFold2, ROSETTA, Relion and the MS acquisition software (CryoSPARC v2.95, Chimera/ChimeraX versions are already given).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "Provide the full flow-cytometry gating hierarchy for both the mouse plasmablast sort and the human rEtpA-binding plasmablast sort, as a supplemental figure with representative plots, rather than only the terminal marker phenotype.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "Add the human-subject cohort description currently absent: number of volunteers from whom PBMCs were obtained, and available demographics (age range, sex, health status, blood group where known), plus inclusion/exclusion criteria or a pointer to where these are specified in the challenge-study protocol.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "Soften the Abstract and Results claim that mAbs 'directly engage' glycan-containing epitopes to the wording the authors propose: epitopes encompass N-linked glycosylation sites, with monohexose density directly visualised and glycan contribution to affinity established by N-to-A mutagenesis. Dihexose density is not resolved and should not be implied.",
+      "source_reviewer": "rigor",
+      "blocking": false
+    },
+    {
+      "id": "R1-13",
+      "text": "Replace 'low-fidelity' with 'promiscuous' or 'relaxed sequence specificity' when describing EtpC, and add the clarifying sentence in Results acknowledging the canonical N-X-S/T occupancy bias shown in Supplemental Figure 5, so the terminology no longer contradicts the manuscript's own occupancy data.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-14",
+      "text": "Carry the existing Results hedge on EMPEM epitopes into the Abstract: the Abstract currently states that vaccination 'generates responses against neutralizing and decoy regions,' which should be marked as an inference by analogy to the monoclonal data, since the polyclonal sera were not functionally assayed.",
+      "source_reviewer": "methodology",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "State HT-29 provenance more fully: add RRID:CVCL_0320, and note whether the line was authenticated (STR) and mycoplasma-tested, or state plainly that it was not.",
+    "Add confocal acquisition parameters (objective, NA, detector, laser power, pinhole, gain) and the image-analysis software used for the adhesion imaging in Figure 1.",
+    "Give mouse age at immunization and the number of CD-1 mice contributing to the pooled polyclonal sera used for EMPEM.",
+    "Note whether AlphaFold2/ColabFold and ROSETTA runs used fixed seeds or seed averaging, and record the hardware; this is not load-bearing but helps anyone attempting to regenerate the starting models.",
+    "The citation audit flagged ten references it could not resolve by automated search (refs 3, 9, 17, 19, 23, 24, 41, 46, 65, 95). None appeared misattributed and several are well-known (Kotloff GEMS, Punjani cryoSPARC), but a pass to confirm DOIs/PMIDs for these entries would remove any doubt.",
+    "Consider stating the IgG subclass of the mouse mAbs 1G05 and 1C08 alongside the human IgG1 expression construct already described.",
+    "The CaBLAM outlier rate of 15.05% for the 1G05 model is high relative to the 1C08 model (2.8%); a sentence acknowledging this and the lower 3.97 A resolution would preempt reader concern about backbone geometry in that map."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "The central claim that 'the C-terminal repeat region of EtpA is essential to ETEC virulence' (line 177) rests on the observation that truncated EtpA (residues 1–1086) fails to bind blood-group-A glycans and that mAbs targeting the CTR inhibit this binding. However, the manuscript does not exclude the alternative that the truncation causes global misfolding rather than specifically removing a functional domain: no biophysical characterization (circular dichroism, thermal stability, size-exclusion chromatography) is provided to confirm that rEtpA1-1086 is folded. The immunoblot in Figure 1A shows the truncated protein is secreted, but secretion does not guarantee native fold. If the truncation is misfolded, the loss of binding reflects structural collapse, not loss of a discrete binding module. This would not invalidate the repeat region's importance, but it would leave the mechanism unresolved. Resolving this requires either (i) biophysical evidence that rEtpA1-1086 is folded, or (ii) a more granular truncation series to map the minimal functional unit."
+        },
+        {
+          "id": "clarity-2",
+          "text": "The claim that glycosylation 'contributes to overall EtpA stability' (line 287) is inferred from the observation of glycan–glycan and glycan–amino-acid interactions (556 Å buried surface area, 13 hydrogen bonds, 47 contacts) and the statement that 'EtpC is required for efficient secretion' (line 242). However, the manuscript provides no direct measurement of stability (melting temperature, aggregation kinetics, or proteolytic resistance) for wild-type versus glycosylation-deficient EtpA. The poor expression of EtpA without EtpC (line 242) could reflect impaired secretion, misfolding, or aggregation—these are not distinguished. The N→A mutations at positions 849, 1077, and 1305 (Supplemental Figure 9) reduce mAb 1G05 avidity but do not test global stability. A thermal shift assay or limited proteolysis comparing wild-type and glycosylation-null EtpA would directly test the stabilization claim."
+        }
+      ],
+      "questions": [
+        "Figure 3D states 'we were able to model hexose residues at 39' sites, but the text earlier claims 'confirmed N-linked glycosylation sites (NGS) on EtpA are asymmetrically distributed' (line 264)—is the asymmetry based on the 39 modeled sites or on the full MS occupancy map of 133 sites?",
+        "The EMPEM analysis (Figure 5, lines 349–356) identifies '5–6 and 3–4 unique epitopes' on NTS and CTR domains respectively, but the confidence in this count and the method for distinguishing unique epitopes from overlapping Fab densities in 2D class averages is not explained—how were epitopes delineated?",
+        "Supplemental Figure 7 shows native EtpA glycosylation from H10407 with 'much lower peptide counts' than rEtpA; does this lower coverage bias the comparison, and were the same occupancy thresholds (≥25%) applied to both datasets?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The central claim that 'C-terminal repeat regions direct blood group A binding' rests on comparing full-length EtpA to a truncated variant (EtpA1-1086) lacking repeats. Figure 1B–D show the truncation binds poorly to blood group A, but the manuscript does not exclude the alternative that truncation causes misfolding or instability rather than loss of a specific binding function. The immunoblot (Fig. 1A inset) confirms secretion but does not assess whether the truncated protein is properly folded in solution. Circular dichroism, size-exclusion chromatography, or thermal stability data would distinguish a folding defect from loss of a functional domain."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "Monoclonal antibody inhibition experiments (Fig. 1E–I) show that mAb 1G05 (CTR-binding) inhibits blood group A interactions while mAb 1C08 (NTS-binding) does not, supporting the repeat-domain hypothesis. However, the manuscript does not report the affinity (KD) of these mAbs for EtpA or the concentration used in inhibition assays. Without this, it is unclear whether 1C08's lack of inhibition reflects weak binding, steric inaccessibility, or genuine functional irrelevance. Supplemental Figure 1A shows Octet kinetics (KD values stated as 'high affinity' without numbers), but the main text does not cite these values or explain how antibody concentration was chosen for inhibition studies."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The polyclonal epitope mapping (Fig. 5, EMPEM) identifies '5–6 and 3–4 unique epitopes' on NTS and CTR domains respectively, but the method for counting epitopes from 2D class averages is not quantified. No inter-rater reliability, no definition of what constitutes a 'unique' epitope (spatial separation threshold?), and no statement of how many particles or micrographs were analyzed. The claim that this represents 'a large immunogenic surface with multiple potential epitopes' is qualitative and cannot be verified from the methods provided."
+        }
+      ],
+      "questions": [
+        "Figure 1B reports geometric mean fluorescence intensity (GMFI) with p-values from Kruskal-Wallis testing but no n per group, no error bars, and no statement of how many independent experiments were performed—was this n=2 replicates or n=20? The figure legend says 'n=20 replicate fields from two independent experiments,' which suggests pseudo-replication (20 fields from 2 biological replicates); please clarify the independent unit.",
+        "Supplemental Figure 1A (Octet kinetics) shows binding curves but the main text never cites KD values—what are the actual affinities of 1C08 and 1G05 for rEtpA, and were these used to normalize antibody concentrations in inhibition assays (Fig. 1E–I)?",
+        "In the glycosylation analysis, 30 of 196 asparagine residues yielded no detected peptides (line 243). Were these sites excluded from the occupancy calculation, or does the 61 glycans-per-molecule average (line 244) assume 0% occupancy for undetected sites? If the latter, this underestimates true occupancy at detectable sites.",
+        "Figure 3E–F claim 'glycan-glycan hydrogen bonds' and 'glycan-amino acid hydrogen bonds' but provide no distance cutoffs, no validation that these are energetically significant (e.g., bond length, angle), and no comparison to a null model of random glycan placement—how were these contacts defined and are they enriched beyond chance?",
+        "The N-to-A mutations (Supplemental Fig. 9A) show 1G05 avidity decreases significantly (p=0.0003) while 1C08 binding is unimpaired, but avidity is measured by kinetic ELISA with 8 M urea as a chaotropic agent. Was this assay validated for measuring avidity in this context, and does the urea concentration and incubation time match published protocols?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 2.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "**Primary ethical gap: The human experimental challenge study (ETEC H10407 strain, line 88) from which plasmablasts were isolated is described as conducted by \"human volunteers challenged with ETEC strain H10407\" (line 503) but carries no IRB approval statement, protocol number, or informed-consent disclosure in the main text or methods.** The manuscript cites only a secondary IRB approval (Protocol 201110126, line 514) for use of archived de-identified specimens, not approval of the original challenge study itself. Line 88 references \"Guerrez et al. 2024\" for challenge details, but the primary manuscript must stand alone: a reader cannot verify that the challenge study itself received prospective ethical oversight, that informed consent was obtained, or that adverse-event monitoring was in place. This is a HARD deficiency under the dual-use and human-subjects mandate—experimental infection studies are high-risk and require explicit disclosure of ethics approval and consent. The paper must either cite the original challenge-study protocol number and IRB approval, or state that it was conducted under a named prior study with full reference."
+        },
+        {
+          "id": "ethics-2",
+          "text": "**Dual-use and biosafety disclosure is absent.** The manuscript works with ETEC H10407, a pathogenic strain that produces heat-labile and heat-stable enterotoxins (lines 95–96, 1072–1082). No biosafety level, institutional biosafety committee approval, or containment statement is provided. Although the work is primarily structural and does not involve gain-of-function or enhanced pathogenicity, the handling of a toxin-producing pathogen in culture and the creation of recombinant EtpA glycoprotein require biosafety disclosure. This is a SOFT gap if the work was conducted under standard BSL-2 protocols, but the absence of any statement leaves it unclear."
+        },
+        {
+          "id": "ethics-3",
+          "text": "**Data-availability statement is missing.** Line 450 promises that \"Cryo-EM maps and refined atomic models will be submitted to the Electron Microscopy Databank (EMDB) and Protein Data Bank (PDB) prior to publication,\" but the manuscript provides no EMDB or PDB accession numbers, no timeline, and no statement of whether these have been deposited or are available to reviewers. For a structural paper, this is a HARD compliance issue—readers cannot verify the structures without access to the maps and models."
+        },
+        {
+          "id": "ethics-4",
+          "text": "**Authorship and contribution transparency is incomplete.** The author-contributions statement (lines 421–423) lists 24 authors but does not specify roles (e.g., who designed the study, who conducted cryo-EM, who performed mass spectrometry, who wrote the manuscript). The statement \"Z. Berndsen, J. Fleckenstein, A. Ellebedy, and A. Ward analyzed data and wrote the manuscript\" is vague about who wrote which sections and who is responsible for which claims."
+        },
+        {
+          "id": "ethics-5",
+          "text": "**Competing-interests disclosure is narrow.** Line 439 states \"The authors have no financial competing interests related to the work,\" but then discloses that J.M. Fleckenstein holds a patent (U.S. 8323668) on EtpA-related vaccine antigens assigned to the University of Tennessee Research Foundation. This is a material conflict: the patent directly covers the vaccine application of the protein studied here. The disclosure should explicitly state that Fleckenstein's patent may benefit from positive findings on EtpA immunogenicity and protective efficacy."
+        },
+        {
+          "id": "ethics-6",
+          "text": "**Informed-consent scope for antibody use is not stated.** Plasmablasts from human volunteers (lines 503–543) were used to generate monoclonal antibodies; the manuscript does not disclose whether the original informed consent covered this secondary use (antibody generation and structural characterization) or whether a separate consent or waiver was obtained."
+        },
+        {
+          "id": "ethics-7",
+          "text": "**Vulnerable-population safeguards are absent.** The clinical motivation emphasizes disease burden in young children in low-income regions (lines 98–104, 1015–1022), and the challenge study involved adult volunteers, but the manuscript does not address whether any pediatric or vulnerable populations were enrolled in the challenge study or whether special protections were in place."
+        }
+      ],
+      "questions": [
+        "What is the IRB protocol number and approval date for the primary ETEC H10407 challenge study from which plasmablasts were isolated (line 503)?",
+        "Have cryo-EM maps and atomic models been deposited in EMDB and PDB, and if so, what are the accession numbers?",
+        "Under what biosafety level and institutional biosafety committee approval was ETEC H10407 culture and recombinant EtpA production conducted?",
+        "Did the original informed consent for the challenge study explicitly authorize use of plasmablasts for monoclonal-antibody generation and structural studies, or was a separate consent or waiver obtained?",
+        "Please clarify the role of each author in study design, data analysis, and manuscript preparation, particularly for the four listed as having written the manuscript."
+      ]
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The \"low-fidelity\" characterization of EtpC is overstated: The manuscript's own MS data (Fig. 3A, Supplemental Fig. 5) show that canonical N-X-S/T sequons are glycosylated with significantly higher fidelity than non-canonical sites, contradicting the \"low-fidelity\" framing and the claim that EtpC lacks \"apparent selection for modification of distinct sequons.\""
+        },
+        {
+          "id": "literature-2",
+          "text": "The immune evasion hypothesis is speculative and not directly supported: The data show that mAbs 1G05 and 1C08 target glycosylated epitopes (N849, N349), not that glycosylation prevents antibody binding. The alternative—that glycosylation is required for proper folding or stability—is equally consistent with the data and mentioned only briefly (line 287–294)."
+        },
+        {
+          "id": "literature-3",
+          "text": "The sufficiency of the CTR domain for blood group A binding is not directly tested: The truncation experiment shows that EtpA1-1086 does not bind blood group A efficiently, but the manuscript does not test whether the CTR domain alone is sufficient for bgA binding or measure the affinity of isolated CTR for blood group A glycans."
+        },
+        {
+          "id": "literature-4",
+          "text": "Weaker individual Fab affinity (KD ~1 µM) raises questions about avidity: The cryo-EM structure shows that 1G05 can bind with up to 3 Fabs per molecule, but it is unclear whether the CTR repeats achieve high-avidity binding through multivalent interactions with clustered bgA glycans or whether additional N-terminal regions contribute."
+        },
+        {
+          "id": "literature-5",
+          "text": "Not all CTR-targeting antibodies are established as protective: The polyclonal EMPEM data identify 3–4 epitopes on the CTR, but the manuscript does not establish that all CTR-targeting antibodies are protective or that some are decoys, which is important for vaccine design."
+        },
+        {
+          "id": "literature-6",
+          "text": "Direct glycan engagement by antibodies is not substantiated by structural data: The statement \"mAbs directly engage these unique glycan containing epitopes\" (line 61) is not supported by the cryo-EM maps, which do not display clear density for the glycan moieties themselves at N349 and N849 (acknowledged in line 265: \"We did not observe clear map density for dihexose modifications at any NGS\")."
+        },
+        {
+          "id": "literature-7",
+          "text": "The reduction in avidity upon Asn-to-Ala mutation could reflect loss of a stabilizing glycan-protein interaction rather than direct antibody-glycan contact, leaving the mechanism unclear."
+        },
+        {
+          "id": "literature-8",
+          "text": "Missing recent structural precedent: Piniello et al. (2023, Nature Communications) solved the structure of a soluble HMW1C-like N-glycosyltransferase and should be cited to contextualize the EtpC glycosylation findings and discuss whether EtpC's promiscuity is typical of this enzyme family."
+        },
+        {
+          "id": "literature-9",
+          "text": "Incomplete comparison to prior EtpA structure: The manuscript cites the recent crystal structure of the EtpA NTS domain (PDB 8CPK, ref. 57) but does not discuss how the cryo-EM structure compares to or extends that work."
+        },
+        {
+          "id": "literature-10",
+          "text": "Carbohydrate binding module (CBM) literature underexplored: The manuscript invokes \"tandem repeats of carbohydrate binding modules\" as a precedent but cites only three references and does not discuss whether the EtpA repeats are structurally or functionally analogous to characterized CBM families."
+        },
+        {
+          "id": "literature-11",
+          "text": "Glycan-protein interaction analysis lacks statistical rigor: The identification of glycan-glycan and glycan-protein hydrogen bonds (Fig. 3E–F) is based on visual inspection and manual modeling without distance cutoffs, occupancy thresholds, or comparison to a null model."
+        },
+        {
+          "id": "literature-12",
+          "text": "Human monoclonal antibody source and selection bias not discussed: The three mAbs from ETEC-challenged volunteers were isolated from a single challenge study; the manuscript does not discuss whether these represent the full repertoire of anti-EtpA responses or are enriched for particular specificities."
+        },
+        {
+          "id": "literature-13",
+          "text": "Polyclonal epitope mapping resolution limited: The EMPEM analysis identifies \"5–6 and 3–4 unique epitopes\" with resolution of ~20 Å and reliance on manual feature identification, meaning these counts are approximate and may not capture the full complexity of the polyclonal response."
+        },
+        {
+          "id": "literature-14",
+          "text": "Glycosylation occupancy interpretation conflates occupancy with functional importance: Sites with ≥75% occupancy are treated as \"high-fidelity,\" but occupancy reflects the population average; individual EtpA molecules likely carry heterogeneous glycosylation, and the functional consequences are not experimentally tested."
+        },
+        {
+          "id": "literature-15",
+          "text": "Citation of unpublished work: The manuscript cites \"Cryo-EM maps and refined atomic models will be submitted to the EMDB and PDB prior to publication\" and promises custom Python scripts at GitHub URLs, but their availability at submission is not confirmed."
+        }
+      ],
+      "questions": [
+        "Can the authors clarify whether the cryo-EM map density directly contacts the modeled glucose residues at N349 and N849, or whether the glycans are inferred from MS data and positioned based on the Asn location? If the latter, the claim of \"direct engagement\" should be softened.",
+        "The statement that \"it would be difficult for antibodies to target an entirely glycan-free epitope on the CTR domain\" is based on local glycan density analysis with a 20 Å probe radius. What is the sensitivity of this conclusion to the probe radius, and have the authors tested whether any CTR-targeting antibodies in the polyclonal response avoid glycosylated regions?",
+        "The agreement between rEtpA and native EtpA glycosylation profiles is noted as \"close\" (line 301), but the native sample has much lower peptide counts (Supplemental Fig. 7B). Can the authors quantify the agreement (e.g., Pearson correlation, number of sites with concordant occupancy bins) and discuss whether the recombinant system fully recapitulates native glycosylation heterogeneity?",
+        "The manuscript states that 1G05's \"weaker binding is compensated for by avidity effects\" but does not measure the avidity directly (e.g., by surface plasmon resonance with immobilized EtpA). Is the avidity advantage inferred only from the ability to bind multiple Fabs per molecule, or has it been quantified?"
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "**Glycan-mediated antibody recognition (load-bearing claim).** The authors conclude that mAbs directly engage N-linked glycan epitopes (Abstract, Results, Discussion). Evidence: (1) cryo-EM maps show glycan density at N349 and N849 within the 1C08 and 1G05 epitopes; (2) mutation of N849, N1077, N1305 to alanine reduces 1G05 avidity (Supplemental Fig. 9A). However, the mutation experiment is limited: only three sites were mutated, all within one epitope region; the mutations reduce but do not abolish binding (avidity indices remain ~50–70% of wild-type); and critically, the authors do not test whether the glycans themselves are necessary by expressing EtpA without EtpC (the glycosyltransferase). The cryo-EM density is consistent with glycan contact but does not prove the glycan is the binding determinant rather than a structural scaffold that positions protein residues. An alternative explanation: the mutations disrupt local protein structure or electrostatics, and the glycans are passengers. To distinguish: express EtpA in the absence of functional EtpC, purify it, and test 1G05 binding by ELISA or surface plasmon resonance. If binding is abolished, glycans are necessary; if binding persists, they are not sufficient."
+        },
+        {
+          "id": "methodology-2",
+          "text": "**Protective epitope identification (load-bearing claim).** The authors claim that mAbs targeting the C-terminal repeat (CTR) domain are protective because they inhibit blood group A binding, while N-terminal secretion (NTS) domain mAbs are non-protective (Results, Discussion). Evidence: 1G05 (CTR-binding) inhibits EtpA–bgA interactions and ETEC adhesion; 1C08 (NTS-binding) does not. However, this design conflates two variables: epitope location (CTR vs. NTS) and functional consequence (inhibition of adhesion). The authors do not test whether other CTR-binding mAbs that do not inhibit adhesion exist, nor do they test whether NTS-binding mAbs could inhibit adhesion through a different mechanism (e.g., steric hindrance, conformational change). The negative stain EMPEM (Fig. 5) identifies 5–6 epitopes on the NTS and 3–4 on the CTR, but does not functionally characterize them. To strengthen: isolate and test all 7+ mAbs from vaccinated mice for both adhesion inhibition and epitope mapping, establishing whether CTR-binding is sufficient or merely correlated with protection."
+        },
+        {
+          "id": "methodology-3",
+          "text": "**Polyclonal epitope mapping by EMPEM (load-bearing claim).** The authors conclude that rEtpA vaccination generates responses against 'numerous distinct epitopes' on both NTS and CTR domains, with both 'neutralizing and decoy' epitopes (Abstract, Discussion). Evidence: negative-stain EM class averages showing Fabs bound at different positions (Fig. 5B). However, the method relies on visual identification of Fab positions in 2D class averages, which is inherently subjective and difficult to validate. The authors state they 'confidently identified' epitopes but provide no inter-rater reliability, no quantitative distance metrics between epitope clusters, and no independent corroboration (e.g., peptide scanning, alanine scanning, or competition assays). The claim that some epitopes are 'decoy' is speculative—no functional assay demonstrates that antibodies to those epitopes fail to protect. To validate: perform epitope binning by competition ELISA or surface plasmon resonance with the polyclonal sera, or use peptide-array or phage-display screening to map epitopes orthogonally."
+        },
+        {
+          "id": "methodology-4",
+          "text": "The truncation experiment (Fig. 1A–D) uses a single truncated construct (EtpA1-1086) to test repeat function; testing multiple truncation points would strengthen the claim that repeats are necessary and sufficient."
+        },
+        {
+          "id": "methodology-5",
+          "text": "Glycosylation occupancy is heterogeneous (ranging from 0% to >95% at different sites), but the functional consequence of this heterogeneity is not tested—e.g., do sites with low occupancy contribute less to antibody binding or immune evasion?"
+        },
+        {
+          "id": "methodology-6",
+          "text": "The cryo-EM model includes 39 modeled glucose residues (through CTR2) but map resolution diminishes beyond that; the extent to which unmodeled glycans in CTR3–4 affect the conclusions is not discussed."
+        },
+        {
+          "id": "methodology-7",
+          "text": "Native EtpA glycosylation (Supplemental Fig. 7) is validated at only 48 of 166 potential sites due to low peptide detection, leaving ~70% of the glycosylation profile unconfirmed in the native protein."
+        },
+        {
+          "id": "methodology-8",
+          "text": "The study uses only one ETEC strain (H10407) for native EtpA validation; cross-strain glycosylation heterogeneity is not explored despite the authors' emphasis on EtpA conservation across geographically diverse ETEC isolates."
+        }
+      ],
+      "questions": [
+        "For the N849A/N1077A/N1305A triple mutant (Supplemental Fig. 9), were individual alanine substitutions tested to determine which glycosylation site(s) drive the avidity loss, or only the triple mutant?",
+        "In the negative-stain EMPEM analysis, how were the 5–6 NTS and 3–4 CTR epitopes distinguished and counted—what distance threshold or visual criterion separated one epitope from another?",
+        "Were the two mAbs (1C08, 1G05) tested for cross-competition to confirm they recognize truly distinct epitopes, or is non-competition assumed from the cryo-EM structures alone?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The immune evasion claim (lines 390–401) rests on three observations—sequence conservation, glycans at epitopes, and heterogeneous occupancy—but does not establish that glycosylation heterogeneity causes immune evasion; the data show glycans contribute to antibody binding affinity but not that heterogeneity shields conserved regions or impairs polyclonal responses."
+        },
+        {
+          "id": "novelty-2",
+          "text": "The alternative explanation that glycans stabilize protein fold and are retained for functional reasons (secretion, folding) rather than immune evasion is equally consistent with the data, yet the manuscript does not demonstrate that glycosylation heterogeneity reduces breadth or potency of polyclonal responses or that variants with altered glycosylation escape antibody recognition."
+        },
+        {
+          "id": "novelty-3",
+          "text": "The truncation experiment (EtpA1-1086) does not isolate the CTR's contribution: failure to bind blood group A could result from global misfolding, loss of avidity from missing repeat modules, or combination thereof; the manuscript does not quantify whether the CTR alone binds bgA in isolation."
+        },
+        {
+          "id": "novelty-4",
+          "text": "The structural basis for blood group A recognition is not explicitly identified—the manuscript states bgA \"must interact directly with the β-helix\" (line 220) but provides no direct evidence such as docking, mutagenesis of putative binding residues, or structural visualization of bgA bound to EtpA."
+        },
+        {
+          "id": "novelty-5",
+          "text": "Glycosylation's requirement for proper folding and secretion is inferred from structural data (glycan–glycan interactions) and cited from prior work but not experimentally tested in this manuscript; no glycosylation-deficient mutants (N-to-Q mutations or EtpC knockout) are expressed and analyzed for yield, solubility, or secondary structure."
+        },
+        {
+          "id": "novelty-6",
+          "text": "Polyclonal epitope mapping by negative-stain EM identifies 5–6 epitopes on NTS and 3–4 on CTR (line 343) based on visual inspection of 2D class averages without quantitative clustering analysis or statistical validation of epitope distinctness."
+        },
+        {
+          "id": "novelty-7",
+          "text": "Native EtpA glycosylation validation (Supplemental Fig. 7) shows substantially lower peptide coverage (48 of 166 PNGS) than recombinant protein, limiting confidence in the comparison."
+        },
+        {
+          "id": "novelty-8",
+          "text": "Enrichment analysis for aromatic residues around PNGS (Supplemental Fig. 6A–C) shows no statistical enrichment, contradicting the common mechanism of glycan stabilization; the manuscript does not discuss why EtpA may differ from other glycoproteins."
+        },
+        {
+          "id": "novelty-9",
+          "text": "The work focuses on a single ETEC strain (H10407) and does not address whether glycosylation profile, epitope landscape, or protective antibody responses vary across geographically diverse ETEC strains important for vaccine development."
+        }
+      ],
+      "questions": [
+        "Does the CTR domain alone, in the absence of the NTS, bind blood group A glycans, or is the NTS required structurally for CTR function?",
+        "What is the molecular basis for blood group A recognition by the CTR—are specific residues or the glycan coat itself responsible for GalNAc binding?",
+        "Have glycosylation-deficient EtpA mutants (e.g., N-to-Q at multiple sites or etpC knockout) been expressed and tested for yield, folding, and secretion to directly test the stabilization hypothesis?",
+        "Does the heterogeneity in glycosylation occupancy across sites correlate with escape from polyclonal antibody recognition, or is it simply a consequence of the low-fidelity glycosyltransferase?",
+        "How does glycosylation and epitope distribution vary across ETEC strains from different geographic origins, and does this affect vaccine efficacy predictions?",
+        "The cryo-EM structure shows that 1G05 can bind up to 3 Fabs per EtpA molecule (line 310)—does this reflect multivalent avidity effects, and how does this influence the interpretation of the CTR as the primary functional domain?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "Native EtpA glycosylation (Supplemental Figure 7, the only direct evidence that recombinant glycosylation recapitulates the native state) rests on purification from H10407 described only as 'flagellin null mutant (jf3099) grown in 4 L LB media' with ammonium sulfate precipitation and gel filtration; no yields, purity assessment, or troubleshooting guidance is provided, and the authors note 'low peptide detection in MS', making independent replication of this critical validation step infeasible without author contact."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "Negative-stain electron microscopy polyclonal epitope mapping (Figure 5, EMPEM) identifies 5–6 and 3–4 unique epitopes on NTS and CTR domains respectively by visual inspection of 2D class averages with 'false-coloring applied for clarity'; the procedure for distinguishing genuine epitopes from noise or artifacts is not specified, no quantitative criteria for epitope assignment are given, and no raw micrographs or class averages are deposited, making the epitope count non-reproducible without access to the original image dataset."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "Cryo-EM data processing is described with software versions (CryoSparc v2, Topaz neural network, non-uniform refinement) and particle counts at each stage (Supplemental Table 3), but the focused 3D refinement masks around Fab epitopes are not deposited or parameterized, and the decision criteria for subset selection during 2D and 3D classification are not specified, limiting independent replication of the final reconstruction."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "AlphaFold2 model generation for full-length EtpA required manual fragmentation (~700 residue chunks with 100-residue overlaps) and assembly in Chimera; no script or protocol for this procedure is provided, and the 'top combined score' model selection from ~300 ROSETTA models lacks specification of the scoring function, making this critical step non-reproducible."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "Biolayer interferometry binding kinetics (Supplemental Figure 1A, 1G05 and 1C08 Fabs) are described with instrument (Octet Red 96), biosensor type (Ni-NTA), and assay steps, but no raw sensorgrams, reference subtraction details, or curve-fitting software version are provided, and the 'global fit' procedure is not detailed."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "Erythrocyte pull-down and ELISA assays (Figures 1C–F) lack specification of replicate structure (technical vs. biological), plate blocking conditions beyond '1% BSA', and the exact HRP substrate incubation time and stop conditions, creating ambiguity in protocol reproducibility."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "Confocal microscopy (line 587–605) specifies antibodies and stains but does not state microscope settings (pinhole diameter, laser power, gain, offset, frame averaging), image processing (deconvolution, background subtraction), or quantification thresholds for adhesion quantification."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "Somatic hypermutation analysis uses ARMADiLLO (reference 70) but does not specify the tool version, input parameters, or confidence thresholds for mutation probability scoring shown in Supplemental Figure 8."
+        }
+      ],
+      "questions": [
+        "Will the raw cryo-EM micrographs and 2D/3D class averages be deposited alongside the final maps and models, or are they available only from the authors?",
+        "For the native EtpA glycosylation profile (Supplemental Figure 7), can the authors provide the purification yield, SDS-PAGE purity assessment, and MS peptide count statistics to enable independent troubleshooting of the low-recovery protocol?",
+        "What are the quantitative criteria (e.g., cross-correlation threshold, particle count per epitope class) used to assign distinct epitopes in the EMPEM analysis, and will the raw negative-stain micrographs be deposited?",
+        "Can the authors provide the ROSETTA scoring function definition and the script used to assemble AlphaFold2 fragments in Chimera, or deposit a consolidated protocol on protocols.io?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "\n**Load-bearing claim 1: \"EtpC is a promiscuous low-fidelity N-linked glycosyltransferase\" and glycosylation heterogeneity reflects immune evasion.** The MS data show extensive and heterogeneous glycosylation (61 glycans per molecule on average, with occupancy ranging from 0–100% across 133 sites), and the authors characterize EtpC by structural homology to HMW1C and note the lack of apparent sequon selectivity. However, 'low-fidelity' is inferred from the heterogeneity itself, not from direct biochemical assays of EtpC specificity, kinetics, or substrate preference. The claim that this heterogeneity is \"exploited as a mechanism of immune evasion\" (line 393–397) is speculative: the data show that mAbs 1C08 and 1G05 target epitopes containing single glycans with high occupancy (N349 ~96%, N849 in top 17%), which is consistent with either affinity maturation toward conserved sites *or* immune evasion through glycan shielding. The authors acknowledge this ambiguity (\"could be taken as evidence that antibodies targeting PNGS with higher occupancy are enriched during affinity maturation, or conversely, that heterogeneity in glycosylation is being exploited as a mechanism of immune evasion\") but then assert the evasion hypothesis in the discussion without additional evidence. A direct test—e.g., comparing antibody responses to wild-type vs. glycosylation-deficient EtpA, or measuring whether glycan heterogeneity reduces neutralization breadth—would be needed to support the evasion claim. As written, the discussion overstates the mechanistic conclusion.\n\n**Load-bearing claim 2: \"Antibodies targeting the C-terminal repeat region can effectively inhibit interactions with the host\" and this region is \"crucial for ETEC pathogen-host interaction.\"** The evidence is strong for the first part: mAbs 1G05 (CTR-binding) and 1F09 (from human volunteers, CTR-binding) both inhibit EtpA-bgA binding and ETEC adhesion (Fig. 1E–G, 1I), while NTS-binding mAbs (1C08, human mAbs) do not. The truncation experiment (EtpA1-1086 lacking full repeats) shows loss of bgA binding. However, the claim that the CTR is \"crucial for ETEC pathogen-host interaction\" is broader than the evidence supports: the experiments show the CTR is necessary for *blood group A binding specifically*, but EtpA also binds mucins (MUC2) and other glycans (line 101–102). The manuscript does not test whether the CTR is required for mucin binding or whether NTS-binding antibodies might block other EtpA functions (e.g., flagella interaction, mentioned in line 48). The claim should be narrowed to \"crucial for blood group A glycan recognition\" or the mucin-binding data should be included in the functional assays.\n\n**Load-bearing claim 3: \"Polyclonal antibodies target a variety of epitopes on both the CTR and NTS domains\" with \"5–6 and 3–4 unique epitopes\" respectively, suggesting \"both neutralizing and decoy epitopes.\"** The EMPEM analysis (Fig. 5, Supplemental Fig. 10) identifies distinct Fab-binding positions by visual inspection of 2D class averages. The authors state they \"confidently identify antibodies bound at either the N- or C-terminal domains and estimate the total number of unique epitopes on each.\" However, the resolution and specificity of negative-stain EM are substantially lower than cryo-EM, and the epitope count is an estimate based on visual clustering of Fab density in 2D classes, not a rigorous quantification. The claim that some epitopes are \"neutralizing\" and others \"decoy\" is not directly tested: the polyclonal sera were not functionally assayed for their ability to inhibit bgA binding or bacterial adhesion. The authors infer the neutralizing/decoy distinction from the location of epitopes (CTR vs. NTS) based on the mAb data, but this is indirect. The statement should be hedged to \"suggests the presence of multiple epitopes, some of which may correspond to neutralizing sites based on the CTR-binding mAbs\" or functional assays of the polyclonal sera should be added.\n"
+        },
+        {
+          "id": "rigor-2",
+          "text": "The abstract states that \"mAbs directly engage these unique glycan containing epitopes\" (line 62–63), but only 2 of the 7 mAbs isolated are structurally characterized (1C08 and 1G05), and only these two are shown to contact glycans; the other 5 mAbs are mentioned only in the context of human volunteer-derived antibodies (line 1H–I) without structural data, so the claim overgeneralizes from the two characterized mAbs to the broader set."
+        },
+        {
+          "id": "rigor-3",
+          "text": "The title claims EtpA \"repeat modules and N-linked glycans define structure and antigenicity,\" but \"define\" is too strong: the repeats define the overall elongated β-helix fold (shared with other TpsA proteins), and glycans are a surface feature that modulates antibody binding; neither \"defines\" the structure in the sense of determining the core architecture, which is conserved across the TpsA family."
+        },
+        {
+          "id": "rigor-4",
+          "text": "The claim that \"EtpA vaccination generates responses against neutralizing and decoy regions\" (line 68–69) is presented as a conclusion from the EMPEM data, but EMPEM alone cannot distinguish neutralizing from decoy epitopes without functional validation of the polyclonal sera."
+        },
+        {
+          "id": "rigor-5",
+          "text": "The discussion states that \"the EtpA adhesin may have evolved with its own low-fidelity glycosyltransferase under selective pressure to shield important and highly conserved functional regions\" (line 393–397), but this is evolutionary speculation not supported by comparative genomics, phylogenetic analysis, or functional data showing that glycosylation shields functional sites from antibodies more effectively than alternative mechanisms."
+        },
+        {
+          "id": "rigor-6",
+          "text": "The claim that \"native full-length EtpA from ETEC strain H10407\" exhibits \"close agreement\" with rEtpA glycosylation (line 305–307) is based on mapping only 48 of 166 potential N-glycosylation sites due to \"low peptide detection,\" which limits the strength of the validation; the authors should quantify the agreement more precisely or acknowledge the limitation more prominently in the main text."
+        }
+      ],
+      "questions": []
+    }
+  ],
+  "prior_job_id": "",
+  "desk_rejected": false
+}
