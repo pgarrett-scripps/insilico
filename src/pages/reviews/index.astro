@@ -75,7 +75,10 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
       ) : (
         years.map((year) => (
           <section class="year" data-year={year}>
-            <h2 class="year__label mono">{year}</h2>
+            <h2 class="year__label mono">
+              {year}
+              <span class="year__note">preprint posted</span>
+            </h2>
             <ul class="cards" data-grid>
               {papers
                 .filter((p) => p.year === year)
@@ -114,7 +117,7 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
 
                       <span class="card__foot">
                         <span class="mono">{paper.latest.preprint.source}</span>
-                        <span class="mono">{paper.latest.reviewedAt}</span>
+                        <span class="mono">reviewed {paper.latest.reviewedAt}</span>
                         {paper.reviewCount > 1 && (
                           <span class="card__badge mono">{paper.reviewCount} reviews</span>
                         )}
@@ -320,6 +323,19 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
     color: var(--muted);
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+  }
+
+  /* Papers are grouped by the year the preprint was posted, not the year we
+     reviewed it — that is what keeps v1 and v2 of the same paper in one place
+     when a revision arrives in a later year. Without this the heading reads as
+     a contradiction: a card dated 2026 sitting under "2025". */
+  .year__note {
+    letter-spacing: 0.08em;
+    text-transform: none;
+    opacity: 0.65;
   }
 
   .cards {
