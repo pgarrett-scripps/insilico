@@ -861,6 +861,47 @@ def check_metadata_fetch_retries_throttling() -> None:
         fp._get_once, fp.time.sleep = real_once, real_sleep
 
 
+def check_pdf_download_retries_a_flaky_server() -> None:
+    """The PDF fetch is retried on the same terms as the metadata lookup.
+
+    bioRxiv intermittently answers 500 on `.full.pdf` for a posting it served
+    a minute earlier. Observed live: a dry run resolved and downloaded the same
+    DOI that 500ed on the real run seconds later. Without a retry the whole
+    review stops on a hiccup that clears by itself, and an editor re-runs the
+    command by hand for no reason.
+
+    The 500 case is what this pins. A 404 still fails on the first attempt,
+    because bioRxiv answers 404 for a posting that is not yet indexed and no
+    amount of asking again will index it.
+    """
+    import fetch_preprint as fp
+
+    calls = {"n": 0}
+    real_once, real_sleep = fp._get_once, fp.time.sleep
+    fp.time.sleep = lambda s: None
+    pdf = b"%PDF-1.7\n" + b"x" * 4096
+
+    def flaky(url, max_bytes=None, opener=None):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            raise urllib.error.HTTPError(url, 500, "Internal Server Error", {}, None)
+        return pdf
+
+    fp._get_once = flaky
+    try:
+        pre = fp.Preprint(
+            source="biorxiv", identifier="10.64898/2026.07.24.740542",
+            url="https://www.biorxiv.org/content/10.64898/2026.07.24.740542v1",
+            pdf_url="https://www.biorxiv.org/content/10.64898/2026.07.24.740542v1.full.pdf",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = fp.download(pre, Path(tmp))
+            assert dest.read_bytes().startswith(b"%PDF"), "should have written the PDF"
+        assert calls["n"] == 2, f"expected one retry, made {calls['n']} attempts"
+    finally:
+        fp._get_once, fp.time.sleep = real_once, real_sleep
+
+
 def check_bare_doi_picks_the_right_server() -> None:
     """bioRxiv and medRxiv share both DOI prefixes, so a bare DOI names neither.
 
@@ -944,6 +985,8 @@ def main() -> int:
     print("ok  a bare DOI resolves to the server that actually holds it")
     check_metadata_fetch_retries_throttling()
     print("ok  a throttled metadata lookup is retried, a missing one is not")
+    check_pdf_download_retries_a_flaky_server()
+    print("ok  a flaky PDF download is retried too")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

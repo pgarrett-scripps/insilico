@@ -401,7 +401,12 @@ def download(preprint: Preprint, dest_dir: Path) -> Path:
     dest = dest_dir / f"{stem or 'preprint'}.pdf"
 
     try:
-        data = _get(preprint.pdf_url)
+        # Retried on the same terms as the metadata lookups above. bioRxiv
+        # intermittently 500s on `.full.pdf` for a posting it served a minute
+        # earlier, and without this the whole review stops on a hiccup that
+        # clears by itself. `_get` already retries only 5xx and 429, so a
+        # genuinely absent PDF still fails on the first try.
+        data = _get(preprint.pdf_url, retries=METADATA_RETRIES)
     except urllib.error.HTTPError as exc:
         if exc.code in (403, 404) and preprint.source in ("biorxiv", "medrxiv"):
             # bioRxiv serves a PDF only once a posting is fully indexed; before
