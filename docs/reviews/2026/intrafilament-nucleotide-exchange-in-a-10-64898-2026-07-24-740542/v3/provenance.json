@@ -1,0 +1,152 @@
+{
+  "generated_at": "2026-08-03T19:18:45+00:00",
+  "pipeline": {
+    "sha": "ca1cc423c46d54a0f1c3e7ac52dba51fe20b59fc",
+    "version": "0.1.0"
+  },
+  "provider": "openrouter",
+  "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 2,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1,
+    "kind": "rerun",
+    "rerun_of": "v1",
+    "prior_decision": "major",
+    "prior_mean_score": 3.75,
+    "prior_pipeline_sha": "",
+    "prior_reviewed_at": "2026-08-03"
+  },
+  "submitter": "",
+  "submitter_is_author": "no",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.1.1",
+    "caveman": null,
+    "chars": 86988,
+    "text_sha256": "b2ef02d556404030494886c465eb9c7c108aad9f4185ae7f75a4a2f3d8d0a619",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 31,
+        "preamble_share": 0.0156,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 86988,
+        "words": 11884,
+        "sentences": 624,
+        "blocks": 246,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 1293,
+        "references_separable": true,
+        "main_text_words": 10591
+      },
+      "density": {
+        "sentence_len_mean": 19.08,
+        "sentence_len_median": 17.0,
+        "sentence_len_p90": 37.0,
+        "long_sentence_share": 0.0722,
+        "numbers_per_1k": 169.3,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 3.95,
+        "boosters_per_1k": 0.34,
+        "mattr": 0.4728,
+        "passive_per_sentence_approx": 0.3478,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "caveman": null
+    }
+  },
+  "screens": {
+    "desk_screen_mode": "gate",
+    "injection_screen": true,
+    "injection_screen_action": "reject"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.62,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.0,
+  "cost_by_node": {},
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.07.24.740542v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.07.24.740542v1.full.pdf",
+    "identifier": "10.64898/2026.07.24.740542",
+    "doi": "10.64898/2026.07.24.740542",
+    "title": "Intrafilament nucleotide exchange in a prokaryotic actin homolog",
+    "authors": [
+      "Adriaans, I. E.",
+      "Billaudeau, C.",
+      "Cornilleau, C.",
+      "Lim, K. S.",
+      "Dinet, C.",
+      "Renner, L. D.",
+      "Peron-Cane, C.",
+      "Jegou, A.",
+      "Wong, R. W.",
+      "Chastanet, A.",
+      "Michelot, A.",
+      "Carballido-Lopez, R."
+    ],
+    "abstract": "Polymerisation and disassembly govern the cellular functions of cytoskeletal proteins. In canonical nucleotide-dependent polymers such as actin and tubulin, nucleotide exchange occurs in soluble subunits but not within intact protofilaments. By contrast, the assembly dynamics and nucleotide dependency of the prokaryotic actin homolog MreB, whose polymerization into membrane-associated filaments is essential for bacterial cell morphogenesis, remain poorly understood. We used total internal reflection fluorescence microscopy and high-speed atomic force microscopy to monitor the assembly of MreB on supported lipid bilayers in real time. ATP binding triggers MreB polymerization into symmetrically elongating pairs of filaments on cardiolipin-containing membranes. While ATP hydrolysis occurs within filaments and contributes to endwise disassembly, continuous nucleotide exchange within filaments tunes their stability on the membrane. Nucleotide cycling within MreB filaments defines a new class of biological polymer behavior and highlights the evolutionary divergence of mechanisms governing actin homologs assembly dynamics.",
+    "published": "2026-07-25",
+    "version": "1",
+    "pdf_sha256": "522420a9df2a883ff047afcf725028146f480be0e9e383beb42560aa3c86413a",
+    "pdf_bytes": 1689095
+  }
+}
