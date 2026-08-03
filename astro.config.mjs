@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
+import remarkDemoteHeadings from "./src/lib/remark-demote-headings.mjs";
 import remarkMdLinks from "./src/lib/remark-md-links.mjs";
 
 const BASE = "/insilico";
@@ -17,7 +18,9 @@ export default defineConfig({
     // The editorial pages link to each other as `policy.md#anchor`, which is
     // what works when reading them on GitHub. This turns those into real site
     // URLs on the way out; without it they ship as-is and 404.
-    remarkPlugins: [[remarkMdLinks, { base: BASE }]],
+    // Every markdown file here renders inside a page that already has an
+    // <h1>, so the document's own `#` made a second one. See the plugin.
+    remarkPlugins: [[remarkMdLinks, { base: BASE }], remarkDemoteHeadings],
     // The panel writes plain markdown. Smartypants turns its quotes and dashes
     // into typographic ones, which matters when the output is set in a serif
     // reading column rather than a docs theme.

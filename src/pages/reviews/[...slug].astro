@@ -79,8 +79,13 @@ if (kind === "paper") {
     bundle.meanScore !== null ? ` · mean panel score ${bundle.meanScore}/5` : ""
   }. AI referee panel — advisory, not a certification.`;
 } else {
-  pageTitle = `${doc.label} — ${paper.title}`;
-  pageDescription = `${doc.label} from the In Silico referee panel's review of "${paper.title}".`;
+  // The version belongs in the title. Without it every document of a revised
+  // paper shares a title with its round-1 counterpart — 52 pages on the
+  // current corpus — so a search result, a bookmark, or a second browser tab
+  // cannot tell round 1 from round 2. Distinguishing the rounds is the entire
+  // point of running one.
+  pageTitle = `${doc.label} (${bundle.version}) — ${paper.title}`;
+  pageDescription = `${doc.label} from the In Silico referee panel's review of "${paper.title}" (${bundle.version}).`;
 }
 
 const { Content } = kind === "document" ? await render(entry) : { Content: null };
