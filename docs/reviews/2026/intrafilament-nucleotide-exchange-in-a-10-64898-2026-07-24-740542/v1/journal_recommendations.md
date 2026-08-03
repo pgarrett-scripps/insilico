@@ -1,0 +1,29 @@
+# Journal Recommendations
+
+## As-is (current quality)
+_No headline venue is realistic at the current quality — see Alternative._
+
+## After required revisions
+- **eLife**
+  - Fit: eLife publishes high-quality empirical work in cell and molecular biology with rigorous peer review. The manuscript's solid finding on ATP-hydrolysis-independent polymerization, supported by multiple converging methods (TIRF, HS-AFM, anisotropy, QCM-D, in vivo), aligns well with eLife's scope. After addressing the major revisions—particularly depositing the Monte Carlo code, quantifying timescale comparisons, and rescaling the intrafilament-exchange claim to match the evidence—this becomes a strong fit.
+  - Realism: Realistic after major revisions. The core hydrolysis-independent result is solid and novel; the exchange mechanism, once reframed as an interpretation with named alternatives rather than a proven mechanism, sits within eLife's tolerance for mechanistic nuance in cell biology.
+- **Molecular Microbiology**
+  - Fit: This journal specializes in bacterial cell biology and cytoskeletal dynamics. The work directly addresses MreB polymerization, membrane interactions, and nucleotide-dependent regulation in B. subtilis—core topics for the journal. The in vivo imaging and cell-morphology data strengthen fit. After revisions, the paper's focus on bacterial actin homologs and their assembly mechanics is a natural match.
+  - Realism: Realistic after major revisions. The hydrolysis-independent polymerization finding is publishable; the exchange claim, once properly qualified and with code deposited, meets the journal's standards for mechanistic work in bacterial cell biology.
+- **Biophysical Journal**
+  - Fit: The manuscript combines quantitative biophysics (HS-AFM, TIRF, fluorescence anisotropy, QCM-D, Monte Carlo modeling) with biochemistry and cell biology. Biophysical Journal values rigorous kinetic and structural analysis of protein assemblies. The detailed rate-constant measurements, FRAP experiments, and stochastic modeling are well-suited to the journal's audience.
+  - Realism: Realistic after major revisions. The biophysical rigor is strong; the main barrier is the undeposited model code and the need to quantify timescale comparisons. Once these are addressed and the exchange claim is properly scoped, this becomes a solid fit for the journal's standards on computational reproducibility and mechanistic clarity.
+
+## Alternative outlets
+- **bioRxiv**
+  - Fit: As a preprint server, bioRxiv accepts work at any stage of peer review and editorial refinement. The manuscript is already substantial and well-executed; posting to bioRxiv allows the authors to establish priority and gather community feedback while addressing the major revisions required by the target journals.
+  - Realism: Immediate posting is appropriate. bioRxiv serves as a venue for dissemination and feedback during the revision cycle, and the work's solid core result (ATP-hydrolysis independence) is citable and defensible even before the exchange mechanism is fully resolved.
+- **PLOS ONE**
+  - Fit: PLOS ONE publishes rigorous empirical work across disciplines with lower selectivity on novelty than top-tier journals. The manuscript's comprehensive experimental characterization of MreB polymerization dynamics, supported by multiple independent methods and quantitative analysis, meets PLOS ONE's standards for methodological rigor and data quality.
+  - Realism: Realistic as a fallback if higher-tier venues decline after revision. The hydrolysis-independent polymerization result is solid and citable; the exchange claim, once properly qualified, is acceptable for PLOS ONE's broader audience. Acceptance odds improve significantly after the required code deposition and timescale quantification.
+- **Frontiers in Microbiology**
+  - Fit: This open-access journal covers bacterial cell biology, cytoskeletal dynamics, and biophysics of microorganisms. The work's focus on MreB assembly, membrane interactions, and nucleotide-dependent regulation fits the journal's scope. Frontiers is receptive to detailed mechanistic work with comprehensive experimental support.
+  - Realism: Realistic as a fallback. The manuscript's rigor and breadth of methods are well-suited to Frontiers' standards. The exchange mechanism, once reframed as an interpretation with alternatives named, is acceptable. Acceptance odds are good after addressing the major revisions, particularly code deposition and timescale quantification.
+
+## Notes
+The manuscript's core finding—that ATP hydrolysis is mechanistically dispensable for MreB polymerization—is solid, well-supported, and citable across all venues. The contested headline claim (intrafilament nucleotide exchange as a 'new class of biological polymer behavior') requires the major revisions specified in the decision letter: immediate code deposition with sensitivity analysis, quantitative timescale comparison against hydrolysis and subunit residence times, explicit naming of alternative interpretations (lateral diffusion, end-restricted exchange, static ADP-end/nucleotide-free interior) with evidence against each, and rescaling of causal language in the abstract and title. The Pande et al. 2022 citation gap must be resolved. After these revisions, the paper becomes realistic for eLife, Molecular Microbiology, or Biophysical Journal. If those venues decline, PLOS ONE and Frontiers in Microbiology are solid fallbacks. The work is not suitable for In Silico as currently framed, because the load-bearing Monte Carlo model code is undeposited and the central mechanistic claim outpaces the discriminative power of the evidence presented; In Silico's emphasis on checkability makes the code deposition a hard requirement before submission there.
