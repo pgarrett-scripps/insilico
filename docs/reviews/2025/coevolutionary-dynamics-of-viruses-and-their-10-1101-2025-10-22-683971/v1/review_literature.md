@@ -1,0 +1,27 @@
+# Related-Work & Citations Reviewer
+
+## Summary
+The manuscript makes a solid theoretical contribution by extending Alfaro et al.'s host–pathogen coevolution model to include phenotype-dependent interference and de novo DIP generation, and it correctly positions this work as addressing coevolution under strong mutation. However, three issues require major revision: (1) the quantitative mismatch to the DePolo et al. experiments must be clearly stated in the abstract and introduction, not buried in the discussion; (2) the specific novel contributions versus adaptations from Alfaro et al. must be delineated in the Methods; and (3) the historical foundation (von Magnus, early oscillatory dynamics) must be verified or flagged as unverifiable. The sensitivity analysis and parameter regime classification are valuable, but they rest on a model that does not quantitatively match the key experimental benchmark it claims to reproduce. With these revisions, the work would be suitable for publication as a qualitative theoretical framework with clear limitations.
+
+## Strengths
+- The manuscript accurately cites and integrates recent therapeutic DIP work (Xiao 2021, Chaturvedi 2022, Pitchai 2024) and correctly positions the model as addressing a gap in understanding coevolution under strong mutation, not discrete escape mutations.
+- The foundational Alfaro et al. (2024) reference is appropriate and the extension to include phenotype-dependent interference and de novo generation is a clear conceptual advance over prior host–pathogen models.
+- The authors transparently acknowledge limitations (2D phenotype space, quantitative mismatch to DePolo data, deterministic framework) and discuss how these could be addressed, rather than claiming perfect empirical agreement.
+
+## Weaknesses
+- The model's quantitative match to the DePolo et al. (1987) time-shift experiments is overstated. The manuscript claims to 'reproduce' transient resistance patterns (abstract, introduction, Fig. 6 caption) but then admits (lines 442–445) that 'modeled resistance changes are on a linear scale, not the orders-of-magnitude changes experimentally observed.' This is a material discrepancy: the model captures the cyclical structure but not the magnitude of viral escape, which is the quantity most relevant to therapeutic design.
+- The delineation between novel contributions and adaptations from Alfaro et al. (2024) is unclear. The manuscript states it 'modifies' and 'builds on' Alfaro et al. but does not specify which equations are inherited versus novel. Specifically: (i) Do Alfaro et al. use Gaussian convolution kernels for interaction strength (Eqs. 1–3)? (ii) Do they model de novo DIP generation (η term)? (iii) Is the zero-sum resource transfer (Eq. 4) novel?
+- The historical foundation (von Magnus, early oscillatory dynamics) cannot be verified through modern indexing. The manuscript attributes the discovery of oscillatory dynamics to 'landmark' experiments by von Magnus (refs 1–3) and subsequent work on VSV and influenza (refs 5–10), but searches for these papers return no results in PubMed or arXiv, meaning the specific experimental claims rest on citations that cannot be inspected.
+- Giachetti & Holland (1988, ref 32) is cited for the VSV polymerase mechanism but the specific finding is not quoted, making it difficult to verify the claim matches the source.
+- Pelz et al. (2021, ref 61) is cited for selection of potent DIPs in long-term culture but the experimental context (bioreactor vs. serial passage) is not specified, affecting the comparison to the model's assumptions.
+- The 'strong-mutation regime' concept is attributed to 'new theoretical work' (lines 57–59, refs 35–36) but the specific authors and papers are not named in the text, hindering quick identification.
+- Convolution-based spatial interaction models are attributed to Britton (1989) but it is unclear whether Britton introduced the formalism or whether it is standard in spatial ecology.
+- Recent comprehensive reviews on defective viral genomes (e.g., Brennan & Sun 2024) are in the reference list but not cited in the text, missing an opportunity to contextualize the therapeutic potential.
+- The reference list entry for DePolo et al. (1987, ref 31) lacks a journal name, making it difficult for readers to locate the original data used in Fig. 6c.
+
+## Questions
+- Can you confirm that refs 1–10 (von Magnus and early oscillatory dynamics papers) are accurately cited and that the specific experimental claims (e.g., 'progressive enrichment' and 'drop in infectious virus output') are directly stated in those sources?
+- In the Methods section, which equations or model components are direct adaptations from Alfaro et al. (2024) versus novel to this work? Specifically, do Alfaro et al. use convolution kernels for interaction, and do they model de novo generation?
+- Figure 6c compares model predictions to DePolo et al. data: what is the quantitative fold-difference in resistance magnitude between the model and experiment, and does the model capture the timing of resistance cycles?
+- For Giachetti & Holland (1988, ref 32), can you quote or paraphrase the specific finding about VSV polymerase mutations and DIP binding specificity?
+- For Pelz et al. (2021, ref 61), what was the experimental system (bioreactor, serial passage, or other) in which DIPs were selected, and how does this map to the model's assumptions about population structure?
