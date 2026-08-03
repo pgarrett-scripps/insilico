@@ -167,17 +167,21 @@ writing.
 
 ## Cost
 
-A full round is 17 agents reading the manuscript. On a frontier model that is
+A full round is 19 agents reading the manuscript. On a frontier model that is
 dollars per paper, not cents.
 
 The main lever is the per-tag model split in `peerreview.toml`. The widest
 fan-out runs on the cheapest tier, the debate on a middle tier, and only the
-agent that decides the verdict on the most expensive one. `debate_rounds` is 1,
-since a second round re-sends the whole of the first.
+agent that decides the verdict on the most expensive one.
+
+`debate_rounds` is 2. The second round is the more expensive of the pair, since
+it re-sends the whole of the first, and it is kept because one round only gives
+the skeptic an unanswered swing. A second lets the advocate answer and the
+skeptic judge whether the answer held.
 
 Every review records its own per-agent spend in `provenance.json`, so cost
 decisions come from a breakdown rather than a guess. A desk rejection ends the
-run before the other 16 calls.
+run before the other 18 calls.
 
 ## First-time setup
 

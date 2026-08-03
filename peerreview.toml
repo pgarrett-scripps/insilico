@@ -32,11 +32,18 @@ provider = "anthropic"
 # Fallback for any agent whose tag isn't defined below.
 reasoning_model = "claude-sonnet-5"
 
-# One round, not two. Round 2 re-sends the whole of round 1 as context, so it
-# is the more expensive of the pair, and on the runs so far the second round
-# restates positions rather than moving them. Raise this if the debate starts
-# looking truncated.
-debate_rounds = 1
+# Two rounds. Round 2 re-sends the whole of round 1 as context, so it is the
+# more expensive of the pair — expect roughly 30 to 50 cents on top of a run
+# that costs about $1.75 with one round.
+#
+# It was set to 1 on the reasoning that the second round restated positions
+# rather than moving them. That is worth paying for anyway: the panel's
+# standing problem is that it does not press hard enough on whether a stated
+# conclusion is actually earned, and one round gives the skeptic a single
+# unanswered swing. A second lets the advocate answer and the skeptic decide
+# whether the answer held, which is the part that resembles what a referee
+# does. Drop back to 1 if cost bites.
+debate_rounds = 2
 
 # ---------------------------------------------------------------------------
 # Review posture
@@ -110,8 +117,8 @@ visible_injection_action = "judge"
 #    screen deliberately shares the reviewers' model and manuscript prefix, so
 #    its call warms the prompt cache that all 8 specialists then read on their
 #    parallel fan-out — which would otherwise race and largely miss. And a
-#    desk reject short-circuits the run before 16 further calls (8 reviewers,
-#    2 auditors, one debate round of 2, area chair, rebuttal, editor, scout).
+#    desk reject short-circuits the run before 18 further calls (8 reviewers,
+#    2 auditors, two debate rounds of 2, area chair, rebuttal, editor, scout).
 #
 #    "gate" enforces the verdict; "warm" runs it for the cache but ignores the
 #    verdict; "off" skips the call. The upstream prompt is explicitly
