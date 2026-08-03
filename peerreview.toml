@@ -146,10 +146,14 @@ model = "claude-sonnet-5"
 [models.synthesis]
 model = "claude-opus-5"
 
-# NOTE: `effort` is deliberately absent here. The synthesis agents pass
-# reasoning_effort="medium" at their call sites, and an explicit argument wins
-# over the tag — so an `effort` key in this file would be silently inert.
-# Raising it means editing those call sites in PeerReviewAgents, not this file.
+# `effort` controls adaptive thinking, and thinking tokens are billed at
+# OUTPUT rates and then discarded — they never appear in a report. Measured on
+# one paper: 74% of the output tokens billed produced no text in any file.
+#
+# It is now settable here and wins over the pipeline's call-site default (it
+# used to be the other way round, which made this key silently inert). Only
+# the area chair and the editor still think by default; the rebuttal and the
+# scout had it removed upstream because neither decides anything.
 
 # ---------------------------------------------------------------------------
 # Per-agent overrides
