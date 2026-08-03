@@ -1,283 +1,113 @@
 # In Silico
 
-**An open, AI-refereed overlay journal. Any field; the whole review published.**
+**An open, AI-refereed overlay journal. Any field, and the whole review is published.**
 
-In Silico does not host manuscripts. You submit a link to a preprint that already
-exists — arXiv, bioRxiv or medRxiv — and we run it through a multi-agent referee
-panel ([PeerReviewAgents][pra]) and publish the **full review** alongside a
-pointer to your paper.
+In Silico does not host papers. You send us a link to a preprint that already
+exists on arXiv, bioRxiv or medRxiv. We run it through a panel of AI referees and
+publish the entire review next to a pointer to your paper.
 
-The review is the artifact. Eight specialist reviewers, two editorial audits, an
-advocate/skeptic debate, an area chair, a simulated author rebuttal, and an
-editor-in-chief verdict — all of it published, all of it reproducible down to the
-model id.
+The review is the point. Eight specialist reviewers, two audits, a debate, an
+area chair and an editor, all published in full.
 
-> **This is an experiment.** The referee panel is advisory. A human editor makes
-> every accept/decline call, and no automated verdict is ever final. Treat these
-> reviews as a machine-generated second opinion, not as certification.
+> **This is an experiment.** The AI panel only advises. A human editor makes
+> every decision, and no automated verdict is final. Read these reviews as a
+> machine-generated second opinion, not as a stamp of approval.
 
-## How it works
+**[Read the reviews →](https://pgarrett-scripps.github.io/insilico/reviews/)**
+
+## Submitting a paper
+
+You do not need to know how to code. You do need a free GitHub account.
+
+1. [Open a submission issue](../../issues/new?template=submit.yml) and paste your
+   preprint link.
+2. An editor starts the panel. This usually takes under an hour once started.
+3. The review appears as a pull request. Read it, and reply in the thread if you
+   disagree. A human editor reads your reply. No AI does.
+
+Anyone can submit any public preprint, including one they did not write. The form
+asks whether you are an author, and every review says which it was, so a review
+nobody asked for cannot be mistaken for one the authors requested.
+
+Full details for authors: [`docs/submit.md`](docs/submit.md).
+
+## What we review
+
+Original research in any field. What matters is whether the evidence can be
+checked, not what the paper is about. An unsupported claim in a lab paper is as
+findable as one in a simulation. The name describes how we review, not what we
+review.
+
+We do not review work where a wrong machine-generated review could affect
+patient care. See [`docs/policy.md`](docs/policy.md#scope).
+
+Links must be to arXiv, bioRxiv or medRxiv. Those give us a DOI and a version
+number, so a review names an exact draft. A bare PDF link can change or go dead,
+so we reject those.
+
+## How a review happens
 
 ```
   anyone opens a submission issue
-             │
-             ▼
-  editor comments  /review
-             │
-             ▼
-  GitHub Action: fetch preprint → run the 17-agent panel
-             │
-             ▼
-  bot opens a PR containing the full review bundle
-             │
-             ├── editor merges  → published and listed
-             └── editor closes  → declined, review not published
+             ↓
+  an editor comments  /review
+             ↓
+  a GitHub Action fetches the preprint and runs the panel
+             ↓
+  a bot opens a pull request with the full review
+             ↓
+  editor merges  → published
+  editor closes  → declined, nothing published
 ```
 
-Merging the review pull request is what publishes it. There is no other step —
-and it means the review is public, not that the panel's recommendation has been
-endorsed.
+Merging is what publishes a review. It means the review is now public, not that
+anyone endorses what the panel recommended.
 
-Two commands exist, and only these two:
+Editors have two commands, both written as a comment on the submission issue:
 
-| Command | Means | Effect |
+| Command | Use it when | What happens |
 |---|---|---|
-| `/review` | review the preprint linked in this issue | a fresh round 1 |
-| `/revise` | the **manuscript** changed | next round; referees rule on the delta, an auditor checks the previous letter's required revisions |
+| `/review` | first look at a preprint | a fresh round 1 |
+| `/revise` | the authors changed the paper | referees rule on what changed |
 
-Both are comments on the submission issue, and the workflow ignores them unless
-the commenter is an owner, member or collaborator. Neither takes an argument —
-the URL is read out of the issue body. To review a URL that is not on an issue,
-run the workflow by hand from the Actions tab, which takes one.
+Only owners, members and collaborators can trigger either.
 
-`/revise` needs the previous round to have left a `round.json` in its bundle,
-which is what a later round is pointed at. Reviews published before round records
-existed cannot be revised — re-review the current draft as a fresh round instead.
+## What authors cannot do
 
-Nothing an author writes enters a review. There is no appeal command and no
-response letter: a review the authors can argue with in prose is one they can
-move without changing the paper, and we measured that happening. Recourse is a
-published right of reply, editor withdrawal, or a re-review with no author input
-— see [`docs/policy.md`](docs/policy.md#contesting-a-review).
+Nothing an author writes reaches the panel. There is no appeal command and no
+response letter. A review that authors can talk their way out of is one they can
+change without changing the paper, and we watched that happen when we tried it.
 
-## Submitting
+If you think a review is wrong, you can get a published right of reply, ask an
+editor to withdraw it, or ask for a fresh review of a new draft.
+See [`docs/policy.md`](docs/policy.md#contesting-a-review).
 
-1. Open a [submission issue](../../issues/new?template=submit.yml) with your
-   preprint URL.
-2. Wait for an editor to trigger the panel.
-3. Read the review on the PR. Respond in the thread if you disagree — a human
-   editor reads what you write before deciding. No agent does.
+## Reading a review
 
-Anyone may submit any public preprint, including one they did not write. The form
-asks whether you are an author and every published review states the answer, so a
-review the authors never asked for cannot be mistaken for one they did.
+Every review is one folder per version of a paper, published under
+`docs/reviews/`. A later review sits **beside** the one before it rather than
+replacing it, so `v1` stays exactly as it was and the paper's page lists both.
 
-Full policy: [`docs/policy.md`](docs/policy.md).
+Each folder holds the editor's decision letter, the eight specialist reports,
+the audits, the debate, and a `provenance.json` recording the verdict, the panel
+scores, which models ran, and what it cost. Anyone can check out the commit a
+review names and see exactly what the panel was told to do.
 
-## What we consider
+## Documentation
 
-Any original research manuscript, in any discipline. What decides whether a paper
-belongs here is not its field but whether its evidence can be inspected — an
-unsupported inference in a wet-lab paper is exactly as findable as one in a
-simulation. The name describes how the reviewing is done, not what may be
-reviewed.
-
-The one hard exclusion is work where a wrong machine-generated review could
-affect patient care. See [`docs/policy.md`](docs/policy.md#scope).
-
-Submissions must come from arXiv, bioRxiv or medRxiv. Those give a DOI and a
-version number to anchor a review to; a loose PDF link names no particular
-revision, carries no metadata, and can go dead — so direct PDF URLs are rejected.
-
-## Repository layout
-
-There is one seam in this repo, and it is worth understanding: **Python writes
-the record, Astro renders it.** The pipeline emits documents and one JSON file
-per review; the site reads `docs/reviews/` in place and builds every page from
-it. Nothing is copied, and changing how a review *looks* never means editing the
-program that produces reviews.
-
-```
-docs/                     # the record — written by the pipeline, read by the site
-├── policy.md             # editorial policy + limitations
-├── criteria.md           # what the panel looks for
-├── submit.md             # author guide
-└── reviews/<year>/<slug>/v<N>/     # one immutable review of one revision
-    ├── provenance.json   # verdict, panel scores, models, cost, PDF fingerprint
-    ├── round.json        # machine-readable record a later round rules on
-    ├── summary.md
-    ├── decision_letter.md
-    ├── desk_screen.md         # the triage verdict, pass or reject
-    ├── integrity.md           # only when the concealed-text scan found something
-    ├── meta_review.md
-    ├── author_rebuttal.md
-    ├── debate_transcript.md
-    ├── journal_recommendations.md
-    ├── review_*.md       # 8 specialist reports
-    └── audit_*.md        # 2 editorial audits; 3 in a revision round
-
-src/                      # the site — Astro, no CMS, no content duplication
-├── lib/corpus.js         # walks docs/reviews/ into the shape pages render from
-├── layouts/Base.astro    # shell, theme toggle, header, footer
-├── components/           # PanelReadout, Notices, Provenance, Citation
-├── pages/                # home, the ledger, and one route for every review page
-└── styles/global.css     # the whole visual system, as tokens
-
-scripts/
-├── fetch_preprint.py     # URL → PDF + metadata (arXiv / bioRxiv / medRxiv)
-├── run_review.py         # fetch → review → write bundle
-├── check_updates.py      # find reviews whose preprint has since changed
-├── smoke_test.py         # the pipeline↔site data contract; no network, no key
-└── _pinned_review.py     # test helper: review a named arXiv version, not the latest
-
-.github/workflows/
-├── review.yml            # /review, /revise → opens a review PR
-├── ci.yml                # PR check: data contract holds, site builds, no bundle unrendered
-├── publish.yml           # build + deploy the site on merge
-└── check-updates.yml     # monthly staleness sweep → files a tracking issue
-```
-
-Pages are generated from `provenance.json`, so a review bundle is the single
-source of truth and there is no index to keep in step. A re-review is published
-**beside** the review it supersedes, never on top of it: `v1` stays exactly as it
-was, and the paper page lists both.
-
-## Configuration
-
-Model selection lives in [`peerreview.toml`](peerreview.toml), not in the
-workflow. The action deliberately passes no model flags, because anything on the
-command line would override that file and collapse every stage back onto a single
-model. Read the comments there before changing it — the file's layout is
-load-bearing, since a top-level key written below a `[table]` header silently
-becomes part of that table.
-
-The panel is held to In Silico's own review profile in
-[`journals/insilico.toml`](journals/insilico.toml), version-controlled next to
-the reviews it produced, so anyone reading a review can check out the commit it
-names and see what the panel was told to weigh.
-
-## Working on the site
-
-```bash
-npm install
-npm run dev      # http://localhost:4321/insilico/
-```
-
-The dev server reads `docs/reviews/` directly, so the whole published corpus is
-there to design against — no fixtures, no seeding. `npm run build` writes to
-`dist/`.
-
-Everything visual lives in `src/styles/global.css` as tokens: one set of names,
-redefined for light and dark. Change a token and it moves everywhere it is used.
-
-## Running a review locally
-
-`requirements.txt` covers the scripts, but deliberately does **not** pin the
-referee panel — the workflow pins that per-run to an exact SHA so each review
-records which code produced it. Install it separately:
-
-```bash
-uv venv && source .venv/bin/activate
-uv pip install -r requirements.txt
-uv pip install "peerreviewagents[research] @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
-
-export ANTHROPIC_API_KEY=...
-python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
-```
-
-PeerReviewAgents is a private repository, so that second install only works from
-an account with read access to it. It is not on PyPI.
-
-The bundle appears under `docs/reviews/<year>/<slug>/v<N>/`, and the site picks
-it up on the next build. There is no index to regenerate.
-
-`run_review.py` hands the pipeline the **PDF**, never a conversion of it. The
-submission integrity screen dispatches on file type, and only its PDF path can
-find text hidden in a content stream — hand it a `.md` and the screen reports as
-having run while looking for nothing it can find. Conversion belongs behind the
-loader, where the screen has already seen the real bytes.
-
-Behind that loader the PDF becomes markdown, and that rendering is what the
-referees read. The converter is
-[rustypaper](https://github.com/pgarrett-scripps/rustypaper). It is required and
-has no fallback: one that will not install fails the run instead of degrading
-it. The reader it replaced fused 2% of all words together on a real submission
-(`comparableefficacyatlowerdoseusingonlycausallyavailableinformation`), lost
-about a sixth of the content, and flattened every heading, table and equation,
-where rustypaper reads the same file with 3 fused tokens instead of 235. The
-pipeline depends on it, so it normally arrives with peerreviewagents; it ships
-as a per-platform wheel, so there is no Rust toolchain to install:
-
-```bash
-uv pip install rustypaper
-```
-
-The workflow pins it to `rustypaper==0.1.1` rather than letting it float. The
-panel reads whatever the converter produces, so one that changed how it reads a
-two-column page between two rounds of the same paper would show up as the
-authors having rewritten it.
-
-`PEERREVIEW_CAVEMAN` controls telegraphic compression and defaults to `off`.
-The saving would be under a cent a review — the manuscript is a cached prefix
-read only by the cheapest model tier, about 3% of a review's cost — and it is
-not free: under `light`, which drops only articles and copulas, the clarity
-reviewer reported "grammatical errors that obscure the main claims" three
-times on a paper where the uncompressed run reported none. It read what the
-compressor did as the authors' writing. `light` and `hard` remain available
-for paths that never publish a referee's prose.
-
-`--dry-run` resolves the URL and downloads the PDF without calling a model, so
-you can check a link is reviewable before spending anything. It does not check
-that the PDF has extractable text; a scanned manuscript passes `--dry-run` and
-fails later during ingestion.
-
-For iterating on prompts, override the provider per run rather than editing
-`peerreview.toml`. That routes through a cheap model on a personal key instead
-of spending the lab's Anthropic budget on prompt tuning:
-
-```bash
-python scripts/run_review.py --url ... --provider openrouter --model <cheap-model>
-```
-
-`python scripts/smoke_test.py` checks the data contract between the pipeline and
-the site. It is hermetic — no network, no API key — and CI runs it alongside a
-site build that fails if any published bundle goes unrendered.
-
-## Setup checklist
-
-Before the first real submission:
-
-- [ ] Add `ANTHROPIC_API_KEY` to repository secrets
-- [ ] Add `PRA_READ_TOKEN` — a fine-grained PAT with **Contents: Read** on
-      PeerReviewAgents, needed while that repo is private. Without it the
-      workflow fails at the pin step, and GitHub reports a missing permission
-      identically to a typo.
-- [ ] Settings → Pages → Source: **GitHub Actions**
-- [ ] Settings → Actions → Workflow permissions: **Read and write** + allow PR creation
-- [ ] Edit `site` / `base` in [`astro.config.mjs`](astro.config.mjs) to match where
-      the site is actually served from
-- [ ] Review the model split in [`peerreview.toml`](peerreview.toml) (cost note below)
-
-## Cost
-
-A full round is 17 agents — 8 specialist reviewers, 2 auditors, a desk screen, an
-advocate/skeptic pair, an area chair, a rebuttal, an editor, and a venue scout —
-over the manuscript text. On a frontier model that is dollars, not cents, per
-paper.
-
-The main lever is the per-tag model split in `peerreview.toml`: the widest
-fan-out and the most checklist-like stages run on Haiku, the debate on Sonnet,
-and only the two agents that actually decide the verdict on Opus. `debate_rounds`
-is already 1, since a second round re-sends the whole of the first. Every review
-records its own per-agent spend in `provenance.json`, so cost decisions can be
-made from a breakdown rather than a guess.
-
-A desk rejection short-circuits the run before the other 16 calls.
+| | |
+|---|---|
+| [`docs/submit.md`](docs/submit.md) | how to submit, and what to expect |
+| [`docs/criteria.md`](docs/criteria.md) | what the panel looks for |
+| [`docs/policy.md`](docs/policy.md) | editorial policy, limitations, how to contest a review |
+| [`docs/development.md`](docs/development.md) | running the site or the pipeline yourself |
 
 ## License
 
-Reviews and site content are CC BY 4.0; scripts and workflows are MIT. See
-[`LICENSE`](LICENSE). Submitted preprints remain under whatever license their
-authors chose — we host none of them.
+Reviews and site content are CC BY 4.0. Scripts and workflows are MIT. See
+[`LICENSE`](LICENSE). Preprints stay under whatever license their authors chose,
+since we host none of them.
+
+The referee panel is [PeerReviewAgents][pra].
 
 [pra]: https://github.com/pgarrett-scripps/PeerReviewAgents

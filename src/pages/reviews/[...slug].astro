@@ -72,12 +72,12 @@ let pageDescription = "";
 if (kind === "paper") {
   pageDescription = `${verdictOf(paper.latest)}${
     paper.latest.meanScore !== null ? ` · mean panel score ${paper.latest.meanScore}/5` : ""
-  }. ${paper.reviewCount > 1 ? `${paper.reviewCount} reviews on record. ` : ""}AI referee panel — advisory, not a certification.`;
+  }. ${paper.reviewCount > 1 ? `${paper.reviewCount} reviews on record. ` : ""}AI referee panel. Advisory, not a certification.`;
 } else if (kind === "review") {
   pageTitle = `${paper.title} — ${bundle.version}`;
   pageDescription = `${verdictOf(bundle)}${
     bundle.meanScore !== null ? ` · mean panel score ${bundle.meanScore}/5` : ""
-  }. AI referee panel — advisory, not a certification.`;
+  }. AI referee panel. Advisory, not a certification.`;
 } else {
   // The version belongs in the title. Without it every document of a revised
   // paper shares a title with its round-1 counterpart — 52 pages on the

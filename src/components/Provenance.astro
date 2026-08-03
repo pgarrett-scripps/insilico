@@ -46,11 +46,11 @@ const screens = provenance.screens || {};
 const ingest = provenance.ingest || {};
 const ingestNote = ingest.format === "markdown"
   ? (ingest.caveman
-      ? `Converted by ${ingest.tool}, then compressed — quotations are shortened and will not match the PDF word for word.`
+      ? `Converted by ${ingest.tool}, then compressed. Quotations are shortened and will not match the PDF word for word.`
       : `Converted by ${ingest.tool}. Quotations match the manuscript text.`)
   : ingest.tool
     ? `Read by ${ingest.tool}.`
-    : "Not recorded — this review predates the ingest record.";
+    : "Not recorded. This review predates the ingest record.";
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 ---
 

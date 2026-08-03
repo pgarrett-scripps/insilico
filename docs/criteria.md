@@ -7,19 +7,19 @@ which is the file the pipeline actually reads.
 
 That file is version-controlled next to the reviews it produced. Every review
 records the commit it ran at, so you can check out that commit and read exactly
-what the panel was told — not what we say here, but the real instruction.
+what the panel was told. Not what we say here, but the real instruction.
 
 ## The venue profile
 
 The engine, [PeerReviewAgents](https://github.com/pgarrett-scripps/PeerReviewAgents),
-carries profiles for around forty journals — *Nature*, *PLOS ONE*, JMLR,
+carries profiles for around forty journals: *Nature*, *PLOS ONE*, JMLR,
 *Bioinformatics* and so on. A profile states a venue's scope, its bar, its
 limits and its house guidance, and those get injected into the reviewer,
 synthesis and editor prompts. Reviewing "for *Nature Methods*" genuinely reads
 differently from reviewing "for *PLOS ONE*", because the standards differ.
 
 In Silico has its own profile. We are the venue, so we state our own criteria
-and the panel is held to them — rather than to a generic stand-in for whatever
+and the panel is held to them, rather than to a generic stand-in for whatever
 journal a paper might otherwise have gone to.
 
 ## The five things, in order
@@ -31,7 +31,7 @@ from outscoring a plainly-written one that is right.
 **1. Are the conclusions supported by the evidence?**
 The central question. A modest claim that is fully supported is better work than
 an important claim that is not. Reports are asked to name which claim outruns
-its evidence and which piece of evidence is missing — not to gesture at
+its evidence and which piece of evidence is missing, rather than gesturing at
 "overreach".
 
 **2. Is the method sound for the question asked?**
@@ -40,7 +40,7 @@ unusual, referees are told to say so rather than mark it wrong.
 
 **3. Can the work be checked and built on?**
 Data, code, materials, parameters, procedural detail. Scored on what the
-manuscript actually provides — not on what a referee assumes exists somewhere.
+manuscript actually provides, not on what a referee assumes exists somewhere.
 
 **4. What does it add?**
 Positioned against the existing literature. **Incremental is not a criticism.**
@@ -74,7 +74,7 @@ things we assumed.
 
 **Score the paper, not your memory of it.** Run on *Attention Is All You Need*,
 the panel returned a mean of 4.88. On an obscure TB preprint, 2.5. Some of that
-gap is real quality difference — and some is very likely recognition. A model
+gap is real quality difference, and some is very likely recognition. A model
 that has seen a famous paper thousands of times in training is not evaluating it
 so much as recalling its reputation. Referees are told that familiarity is a
 reason to re-check their reasoning against the text, not a reason to score high.
@@ -88,7 +88,7 @@ referees compress everything into 4s and 5s, which makes a score meaningless.
 
 A referee may return **not applicable** rather than a score. Every manuscript
 gets all eight, and some manuscripts contain nothing in a given referee's
-dimension — a qualitative interview study has no statistical analysis to judge.
+dimension. A qualitative interview study has no statistical analysis to judge.
 
 An n/a is excluded from the panel mean entirely, rather than counted as a good
 score, and the review page says how many referees the mean is over ("mean over
@@ -98,7 +98,7 @@ it had no statistical claims to evaluate and gave it 5 out of 5, the highest
 data-analysis score in the corpus.
 
 n/a is not for work judged harshly. Thin, unclear or missing evidence is a low
-score — the referee had something to weigh and found it wanting. n/a is only for
+score, since the referee had something to weigh and found it wanting. n/a is only for
 a dimension the manuscript contains nothing of.
 
 ## What the panel cannot do
@@ -124,7 +124,7 @@ Round 2 evaluates the *delta*:
 
 - **Each referee gets its own prior report back**, with every weakness it raised
   addressable by a stable id, and rules on each one. Referees never see each
-  other's reports — the panel's independence is not quietly abandoned in later
+  other's reports, so the panel's independence is not quietly abandoned in later
   rounds.
 - **A compliance auditor** takes the previous decision letter's numbered
   required revisions and checks each against the new draft.
@@ -136,19 +136,19 @@ cycled.
 
 Two things make this checkable rather than asserted.
 
-**The round record.** Every round writes `round.json` next to its markdown —
+**The round record.** Every round writes `round.json` next to its markdown,
 required revisions with stable ids (`R1-03` names the third ask of round 1 for
 the life of the manuscript), per-referee weaknesses, scores. Round 2 reports
 against those ids rather than string-matching prose, and the record is published
 in the bundle so you can verify what was carried forward. The record is also
 what makes a later round possible at all: a revision round reports against the
 previous round's `round.json`, so a review published before round records
-existed cannot be revised — it needs a fresh review instead.
+existed cannot be revised and need a fresh review instead.
 
 **The draft comparison.** A revision round diffs the old and new manuscripts.
 Because the reviewed PDF is fingerprinted, that baseline is rebuilt by
 re-fetching the exact version reviewed and confirming it still hashes to what
-the panel saw. If it doesn't — or if it can't be fetched — **the round says so
+the panel saw. If it does not, or if it cannot be fetched, **the round says so
 on its own page and in the paper's history**, because a round that ruled without
 a verified comparison is weaker evidence than one that did, and the two would
 otherwise look identical.
@@ -192,7 +192,7 @@ which report, and what it cost.
 
 If the panel misread your paper, say so on the review's pull request or open an
 issue. Factual errors about what your manuscript says get corrected. A
-recommendation you dislike does not — see
+recommendation you dislike does not. See
 [contesting a review](policy.md#contesting-a-review).
 
 If you think this page describes the wrong criteria, that is a more interesting
