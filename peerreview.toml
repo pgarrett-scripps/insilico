@@ -159,17 +159,30 @@ model = "claude-opus-5"
 # Per-agent overrides
 # ---------------------------------------------------------------------------
 #
-# The `synthesis` tag covers four agents, but only two of them decide anything:
-# the area chair (meta_reviewer) weighs ten reports into one assessment, and
-# the editor issues the verdict. Those keep Opus. The other two do not need it:
+# The `synthesis` tag covers four agents, and exactly one of them decides
+# anything: the editor, which sees the panel, the debate, the meta-review, the
+# audits and the rebuttal, and issues the verdict. It is the only agent left on
+# Opus, and the only one that still thinks.
 #
+#   meta_reviewer        synthesises ten reports into one assessment. Real
+#                        work, but the editor re-reads everything it saw, so
+#                        deliberating at both stages pays for the same
+#                        judgement twice.
 #   author_rebuttal      argues the authors' side for the editor to weigh. It
 #                        informs the verdict but does not set it.
 #   journal_recommender  suggests venues to submit to. A courtesy, not a
 #                        judgment, and nothing downstream reads it.
 #
-# This halves the Opus calls per review without touching the two that matter.
+# One Opus call per review instead of four.
 
 [agent_models]
+# The area chair synthesises ten reports into one assessment; the editor then
+# reads that assessment, plus the panel, the debate, the audits and the
+# rebuttal, and issues the verdict. Only one of those two decides anything,
+# and the editor re-reads everything the area chair saw — so paying Opus with
+# thinking at both stages buys the same deliberation twice, at the most
+# expensive rate in the run. The area chair drops to Sonnet without thinking.
+meta_reviewer = { model = "claude-sonnet-5" }
+
 author_rebuttal = { model = "claude-sonnet-5" }
 journal_recommender = { model = "claude-haiku-4-5" }
