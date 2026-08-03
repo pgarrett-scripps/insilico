@@ -203,6 +203,10 @@ jobs:
         id: run
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Only used when an editor writes `/review openrouter <model>`.
+          # Absent, that command fails with an authentication error rather
+          # than silently falling back to a paid Anthropic run.
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           PEERREVIEW_PIPELINE_SHA: ${{ steps.pipeline.outputs.sha }}
           # Untrusted input reaches the script through the environment, never
           # through shell interpolation.
@@ -221,31 +225,46 @@ jobs:
           # the diff between drafts; an author's account of what they changed
           # is not evidence, and when it was accepted the compliance auditor
           # confirmed claims that the manuscript did not support.
-          args=()
-          case "$COMMENT_BODY" in
-            /revise*) args+=(--revise) ;;
-          esac
-
+          # The comment is passed through, never interpreted here. `/revise`
+          # and the provider options are parsed in Python (see parse_command),
+          # which is the one place this untrusted text is read and which
+          # refuses anything that is not a known constant or a validated model
+          # slug. Bash only ever handles it as an environment variable.
+          #
           # Exit 3 is not a failure. It means the PDF converted too badly to
           # review — a scanned or image-only file, almost always — and the
           # panel was never started. That is a fact about the file, so it gets
           # a plain note on the issue rather than a red run and a stack trace.
+          # Exit 2 is a command nobody could act on; same treatment.
           set +e
           if [ -n "$INPUT_URL" ]; then
-            python scripts/run_review.py "${args[@]}" \
+            python scripts/run_review.py \
+              --command "$COMMENT_BODY" \
               --url "$INPUT_URL" \
               --submission-id "${SUBMISSION_ID:-}" \
               --submitter "${SUBMITTER:-}"
           else
-            python scripts/run_review.py "${args[@]}" \
+            python scripts/run_review.py \
+              --command "$COMMENT_BODY" \
               --issue-body "$ISSUE_BODY" \
               --submission-id "$SUBMISSION_ID" \
               --submitter "$SUBMITTER"
           fi
           rc=$?
           set -e
-          [ "$rc" = "3" ] && exit 0
+          case "$rc" in 2|3) exit 0 ;; esac
           exit "$rc"
+
+      - name: Report a command nobody could act on
+        if: steps.run.outputs.bad_command == 'true' && github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ steps.run.outputs.bad_command_reason }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" --body \
+            "$REASON
+
+          No review was run."
 
       - name: Report an unreadable submission
         if: steps.run.outputs.unreadable == 'true' && github.event_name == 'issue_comment'
@@ -267,7 +286,9 @@ jobs:
 
       - name: Open the review pull request
         id: pr
-        if: steps.run.outputs.unreadable != 'true'
+        if: >-
+          steps.run.outputs.unreadable != 'true'
+          && steps.run.outputs.bad_command != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}
@@ -360,6 +381,7 @@ jobs:
         if: >-
           github.event_name == 'issue_comment'
           && steps.run.outputs.unreadable != 'true'
+          && steps.run.outputs.bad_command != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}

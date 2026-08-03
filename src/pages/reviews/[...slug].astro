@@ -13,6 +13,7 @@ import { getCollection, render } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import PanelReadout from "../../components/PanelReadout.astro";
 import Notices from "../../components/Notices.astro";
+import ManuscriptStats from "../../components/ManuscriptStats.astro";
 import Provenance from "../../components/Provenance.astro";
 import Citation from "../../components/Citation.astro";
 import { corpus, VERDICT, titleFromFilename } from "../../lib/corpus.js";
@@ -350,6 +351,8 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
             </>
           )}
         </section>
+
+        <ManuscriptStats provenance={bundle.provenance} />
 
         <Provenance provenance={bundle.provenance} />
 

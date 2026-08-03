@@ -1,0 +1,317 @@
+---
+/**
+ * What the panel actually read, counted.
+ *
+ * This is the one thing on the page with no opinion in it, and it exists
+ * because of what an overlay journal is. The paper lives somewhere else. A
+ * reader has the authors' PDF; the referees had a machine conversion of it.
+ * Nothing else published here can show those were the same document, and
+ * without that a quoted sentence that does not match the paper is
+ * indistinguishable from a referee having misread it.
+ *
+ * Every figure is deterministic — counted at ingest with no model involved —
+ * and none of it reached a referee except four rough numbers given to the
+ * clarity reviewer under heavy caveat. So this is evidence about the text,
+ * not a second opinion about the paper, and it is written to read that way:
+ * no adjectives, no thresholds, no "good" or "poor".
+ *
+ * Renders nothing at all for bundles that predate the measurement.
+ */
+const { provenance } = Astro.props;
+
+const stats = ((provenance.ingest || {}).prose) || {};
+const counts = stats.counts || {};
+const density = stats.density || null;
+const health = stats.health || {};
+
+const has = (v) => typeof v === "number" && Number.isFinite(v);
+const show = Boolean(counts.words);
+
+const int = (n) => (has(n) ? n.toLocaleString("en-US") : "—");
+const pct = (n) => (has(n) ? `${Math.round(n * 100)}%` : "—");
+
+// Size first: it is the number a reader is most likely to want and the one
+// least likely to be wrong.
+const size = [
+  { label: "Words", value: int(counts.words) },
+  {
+    label: "Main text",
+    value: has(counts.main_text_words) ? int(counts.main_text_words) : "not separable",
+    note: has(counts.main_text_words)
+      ? "excluding references"
+      : "the reference list could not be located",
+  },
+  { label: "Sentences", value: int(counts.sentences) },
+  { label: "Display equations", value: int(counts.display_math) },
+];
+
+// Sentence shape. Median rather than mean leads, because one un-split
+// sentence full of equations drags a mean and leaves a median alone.
+const shape = density
+  ? [
+      { label: "Median sentence", value: has(density.sentence_len_median) ? `${density.sentence_len_median} words` : "—" },
+      { label: "Longest tenth", value: has(density.sentence_len_p90) ? `${density.sentence_len_p90} words` : "—" },
+      { label: "Over 40 words", value: pct(density.long_sentence_share) },
+      { label: "Passive", value: has(density.passive_per_sentence_approx) ? `~${density.passive_per_sentence_approx}/sentence` : "—", note: "regex approximation" },
+    ]
+  : [];
+
+// Hedges against boosters is the only pair here worth drawing rather than
+// listing: the ratio is the interesting quantity and two numbers in a table
+// do not show a ratio. It is drawn without a verdict attached — no band, no
+// threshold — because what counts as too many boosters is a judgment and this
+// component does not make judgments.
+const hedges = has(density?.hedges_per_1k) ? density.hedges_per_1k : null;
+const boosters = has(density?.boosters_per_1k) ? density.boosters_per_1k : null;
+const rhetoricMax = Math.max(hedges ?? 0, boosters ?? 0, 1);
+
+const citationsUndetected = density && density.citation_style === "undetected";
+const evidence = density
+  ? [
+      {
+        label: "Citations",
+        value: citationsUndetected ? "not countable" : int(density.citations),
+        note: citationsUndetected
+          ? "this venue most likely sets them as superscript numerals, which convert to bare digits"
+          : `${density.citations_per_1k} per 1000 words, ${density.citation_style.replace("_", "–")} style`,
+      },
+      { label: "Numbers", value: has(density.numbers_per_1k) ? `${density.numbers_per_1k}` : "—", note: "per 1000 words" },
+      {
+        label: "p-values",
+        value: has(density.p_values_exact) || has(density.p_values_threshold)
+          ? `${density.p_values_exact} exact, ${density.p_values_threshold} threshold`
+          : "—",
+      },
+    ]
+  : [];
+
+const damaged = health.verdict && health.verdict !== "clean";
+---
+
+{show && (
+  <section class="mstats panel" aria-labelledby="mstats-heading">
+    <div class="panel__head">
+      <h2 id="mstats-heading" class="section__title">The text the panel read</h2>
+      <p class="label">counted, not judged</p>
+    </div>
+
+    <div class="panel__body">
+      <p class="mstats__lede">
+        Measured mechanically at ingest, with no model involved. These describe
+        the <em>converted</em> text the referees were given, not the PDF, so a
+        reader holding the paper can check that both are the same document.
+        {damaged && (
+          <>
+            {" "}
+            This conversion was flagged <strong>{health.verdict}</strong>, so
+            the figures below are less reliable than usual.
+          </>
+        )}
+      </p>
+
+      <div class="mstats__groups">
+        <div class="mstats__group">
+          <h3 class="label mstats__title">Size</h3>
+          <dl class="mstats__grid">
+            {size.map((s) => (
+              <div class="mstats__item">
+                <dt>{s.label}</dt>
+                <dd class="mono">{s.value}</dd>
+                {s.note && <p class="mstats__note">{s.note}</p>}
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        {shape.length > 0 && (
+          <div class="mstats__group">
+            <h3 class="label mstats__title">Sentences</h3>
+            <dl class="mstats__grid">
+              {shape.map((s) => (
+                <div class="mstats__item">
+                  <dt>{s.label}</dt>
+                  <dd class="mono">{s.value}</dd>
+                  {s.note && <p class="mstats__note">{s.note}</p>}
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+
+        {evidence.length > 0 && (
+          <div class="mstats__group">
+            <h3 class="label mstats__title">Evidence on the page</h3>
+            <dl class="mstats__grid">
+              {evidence.map((s) => (
+                <div class="mstats__item">
+                  <dt>{s.label}</dt>
+                  <dd class="mono">{s.value}</dd>
+                  {s.note && <p class="mstats__note">{s.note}</p>}
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+      </div>
+
+      {hedges !== null && boosters !== null && (
+        <div class="mstats__rhetoric">
+          <h3 class="label mstats__title">Hedging against amplifying</h3>
+          <p class="mstats__note mstats__note--wide">
+            Words per 1000 that soften a claim ("may", "suggests", "consistent
+            with") against words that strengthen one ("clearly",
+            "demonstrates", "unprecedented"). Shown because the balance is
+            visible at a glance and a pair of numbers is not. No referee was
+            given these, and there is no level that is correct.
+          </p>
+          <div class="mstats__bars">
+            <div class="mstats__bar">
+              <span class="mstats__barlabel">Hedging</span>
+              <span class="mstats__track">
+                <span class="mstats__fill mstats__fill--hedge" style={`width:${(hedges / rhetoricMax) * 100}%`} />
+              </span>
+              <span class="mono mstats__barvalue">{hedges}</span>
+            </div>
+            <div class="mstats__bar">
+              <span class="mstats__barlabel">Amplifying</span>
+              <span class="mstats__track">
+                <span class="mstats__fill mstats__fill--boost" style={`width:${(boosters / rhetoricMax) * 100}%`} />
+              </span>
+              <span class="mono mstats__barvalue">{boosters}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!density && (
+        <p class="mstats__note mstats__note--wide">
+          Sentence and rhetoric figures are withheld for this review: the run
+          compressed the manuscript before the panel read it, so they would
+          describe the compressor rather than the authors.
+        </p>
+      )}
+    </div>
+  </section>
+)}
+
+<style>
+  .mstats__lede {
+    margin: 0 0 1.15rem;
+    max-width: 62ch;
+    color: var(--ink-dim);
+    font-size: var(--t--1);
+    line-height: 1.6;
+  }
+
+  .mstats__groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1.5rem;
+  }
+
+  .mstats__title {
+    margin: 0 0 0.6rem;
+  }
+
+  .mstats__grid {
+    margin: 0;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .mstats__item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0.5rem 0.75rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .mstats__item dt {
+    color: var(--ink-dim);
+    font-size: var(--t--1);
+  }
+
+  .mstats__item dd {
+    margin: 0;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mstats__note {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--t--2);
+    line-height: 1.45;
+  }
+
+  .mstats__note--wide {
+    max-width: 62ch;
+    margin-top: 1.15rem;
+  }
+
+  .mstats__rhetoric {
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .mstats__bars {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+    max-width: 34rem;
+  }
+
+  .mstats__bar {
+    display: grid;
+    grid-template-columns: 6rem 1fr 3rem;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .mstats__barlabel {
+    color: var(--ink-dim);
+    font-size: var(--t--1);
+  }
+
+  .mstats__track {
+    height: 0.6rem;
+    border-radius: 999px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+
+  .mstats__fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+  }
+
+  /* Two neutral weights of the same accent rather than a green and a red.
+     Colouring one "good" and the other "bad" would be the judgment this
+     component exists not to make. */
+  .mstats__fill--hedge {
+    background: var(--accent-dim);
+  }
+
+  .mstats__fill--boost {
+    background: var(--accent);
+  }
+
+  .mstats__barvalue {
+    text-align: right;
+    font-size: var(--t--1);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-dim);
+  }
+
+  @media (max-width: 32rem) {
+    .mstats__bar {
+      grid-template-columns: 5rem 1fr 2.5rem;
+      gap: 0.5rem;
+    }
+  }
+</style>

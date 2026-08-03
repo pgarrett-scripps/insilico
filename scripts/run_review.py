@@ -313,6 +313,97 @@ def next_version(paper_dir: Path) -> int:
     return max(existing, default=0) + 1
 
 
+# A model slug an editor may name in a comment. Deliberately strict: the
+# comment body is untrusted text that ends up in a config value and in a
+# published record, so anything outside this alphabet is refused rather than
+# sanitised. Covers every real OpenRouter slug — `vendor/model`, optionally
+# `:free`, `:nitro`, `@preset` — and nothing that looks like a shell or a path.
+_MODEL_SLUG_RE = re.compile(r"^[a-z0-9]([a-z0-9._-]*)?/[a-z0-9][a-z0-9._-]*(:[a-z0-9-]+)?$", re.I)
+
+# Providers an editor may select by name. Not the full set the pipeline
+# supports — `openai` is omitted because there is no key for it here, and a
+# command that silently does nothing is worse than one that is refused.
+_SELECTABLE_PROVIDERS = ("anthropic", "openrouter")
+
+
+class CommandError(ValueError):
+    """An editor's command could not be understood. The message is shown to
+    them on the issue, so it says what to type instead."""
+
+
+def parse_command(body: str) -> dict:
+    """Read `/review`, `/revise` and their provider options out of a comment.
+
+    Grammar, deliberately tiny:
+
+        /review                          the configured panel (peerreview.toml)
+        /review anthropic                the same, said out loud
+        /review openrouter <model>       one model for every agent
+        /revise ...                      any of the above, as a revision round
+
+    Parsed here rather than in the workflow because the comment is untrusted
+    input. Bash sees it only as an environment variable; this is the one place
+    it is interpreted, and everything it can produce is either a known constant
+    or a string that matched :data:`_MODEL_SLUG_RE`.
+
+    OpenRouter requires an explicit model and always will. Its free tier is a
+    rotating set of specific slugs, not a stable "free" alias, so guessing one
+    would silently review a paper on whatever happened to be cheapest that
+    week and publish the result without anyone having chosen it.
+    """
+    first = (body or "").strip().splitlines()[0] if (body or "").strip() else ""
+    parts = first.split()
+    out: dict = {"revise": False, "provider": None, "model": None}
+    if not parts or not parts[0].startswith("/"):
+        return out
+
+    command = parts[0].lower()
+    if command not in ("/review", "/revise"):
+        return out
+    out["revise"] = command == "/revise"
+
+    rest = parts[1:]
+    if not rest:
+        return out
+
+    provider = rest[0].lower()
+    if provider not in _SELECTABLE_PROVIDERS:
+        raise CommandError(
+            f"`{rest[0]}` is not a provider I know. Use "
+            f"`{command}`, `{command} anthropic`, or "
+            f"`{command} openrouter <model>`."
+        )
+    out["provider"] = provider
+
+    if provider == "anthropic":
+        if len(rest) > 1:
+            raise CommandError(
+                f"`{command} anthropic` takes no model: the Anthropic runs use "
+                "the per-stage split in `peerreview.toml`, which is the whole "
+                "point of that file. To force one model, use "
+                f"`{command} openrouter <model>`."
+            )
+        return out
+
+    if len(rest) < 2:
+        raise CommandError(
+            "OpenRouter needs an explicit model, e.g. "
+            f"`{command} openrouter nvidia/nemotron-3-ultra:free`. There is no "
+            "stable alias for the free tier — the free models are a rotating "
+            "set of specific slugs, so naming one is the only way to know what "
+            "reviewed the paper."
+        )
+    model = rest[1]
+    if not _MODEL_SLUG_RE.match(model):
+        raise CommandError(
+            f"`{model}` does not look like an OpenRouter model. They are "
+            "`vendor/model`, optionally with a `:tag` — for example "
+            "`nvidia/nemotron-3-ultra:free`."
+        )
+    out["model"] = model
+    return out
+
+
 def pipeline_version() -> dict[str, str]:
     """Identify exactly which referee panel produced a review.
 
@@ -665,8 +756,30 @@ def main() -> int:
         help="continue this preprint's most recent round automatically, "
              "instead of naming the previous bundle with --revision-of.",
     )
+    ap.add_argument(
+        "--command",
+        default="",
+        help="the editor's comment body, e.g. '/review openrouter "
+             "vendor/model'. Parsed here rather than in the workflow because "
+             "it is untrusted text; see parse_command.",
+    )
     ap.add_argument("--dry-run", action="store_true", help="resolve + download only")
     args = ap.parse_args()
+
+    if args.command:
+        try:
+            selected = parse_command(args.command)
+        except CommandError as exc:
+            # Written to be read by the editor who typed it, on the issue.
+            print(f"{exc}", file=sys.stderr)
+            if out := os.environ.get("GITHUB_OUTPUT"):
+                with open(out, "a", encoding="utf-8") as fh:
+                    fh.write("bad_command=true\n")
+                    fh.write(f"bad_command_reason={' '.join(str(exc).split())}\n")
+            return 2
+        args.revise = args.revise or selected["revise"]
+        args.provider = args.provider or selected["provider"]
+        args.model = args.model or selected["model"]
 
     if args.revise and args.revision_of:
         ap.error("--revise and --revision-of do the same job; pass one.")
@@ -767,6 +880,20 @@ def _run(args, workdir: Path) -> int:
         overrides["provider"] = args.provider
     if args.model:
         overrides["reasoning_model"] = args.model
+        # Clearing these is what makes "one model for everything" true, and
+        # leaving them set is a trap rather than a partial success. The tag
+        # tables win over `reasoning_model` — resolve_model reads
+        # `raw.get("model") or config.get("reasoning_model")` — so with
+        # peerreview.toml's split intact, `--provider openrouter --model X`
+        # sends every agent to OpenRouter asking for `claude-haiku-4-5` and
+        # `claude-opus-5`. X reviews nothing, the slugs are not valid there,
+        # and the run either fails oddly or bills someone for Claude.
+        #
+        # So a named model means exactly one model. That is also the honest
+        # reading of the request: an editor naming a free model wants the free
+        # model, not a panel that quietly kept four paid ones.
+        overrides["models"] = {}
+        overrides["agent_models"] = {}
     if args.debate_rounds is not None:
         overrides["max_debate_rounds"] = args.debate_rounds
 

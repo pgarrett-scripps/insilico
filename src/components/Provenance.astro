@@ -31,6 +31,15 @@ const modelRows = [
   })),
 ];
 
+// An empty model table means no per-stage split ran: every agent, from the
+// desk screen to the editor, used one model. That is a different artifact
+// from the graded panel the rest of the corpus records — the verdict was
+// decided by whatever reviewed the paper, with no stronger model checking it —
+// and a reader comparing two reviews needs to see that before comparing them.
+const singleModel = modelRows.length === 0 && provenance.model
+  ? provenance.model
+  : null;
+
 const costs = Object.entries(provenance.cost_by_node || {})
   .map(([node, usd]) => ({ node: node.replace(/_/g, " "), usd: Number(usd) }))
   .sort((a, b) => b.usd - a.usd);
@@ -124,6 +133,18 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
     </div>
   </div>
 
+  {singleModel && (
+    <p class="prov__warn prov__warn--block">
+      <strong>One model wrote this entire review.</strong> Every agent — the
+      desk screen, all eight referees, both audits, the debate, the area chair
+      and the editor — ran on <span class="mono">{singleModel}</span>. Most
+      reviews here use a graded panel where the agents that decide the verdict
+      run on a stronger model than the ones that sweep the checklist. This one
+      did not, so nothing checked the referees that was any better than the
+      referees. Weigh it against other reviews accordingly.
+    </p>
+  )}
+
   {modelRows.length > 0 && (
     <details class="prov__more">
       <summary>Which model wrote which report</summary>
@@ -211,6 +232,17 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
     border-left: 2px solid var(--accent);
     font-size: var(--t--2);
     color: var(--ink-dim);
+  }
+
+  /* The same rule, promoted out of a grid cell to span the panel. A
+     single-model run changes how every other number here should be read, so
+     it sits above the tables rather than inside one of them. */
+  .prov__warn--block {
+    margin: 1rem 0 0;
+    padding: 0.7rem 0.9rem;
+    border-left-width: 3px;
+    background: var(--accent-glow);
+    line-height: 1.5;
   }
 
   .prov__more {

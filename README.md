@@ -72,6 +72,19 @@ Editors have two commands, both written as a comment on the submission issue:
 
 Only owners, members and collaborators can trigger either.
 
+Either command can name which models to use:
+
+| Command | What runs |
+|---|---|
+| `/review` | the graded panel: cheap models for the wide fan-out, the best one only for the verdict |
+| `/review openrouter vendor/model` | that one model, for every agent |
+
+The second form exists so a review can be run on a free model when the paid
+budget is spent. It needs an exact model name, because free tiers are a
+rotating set of specific models rather than a stable "free" option. A review
+run that way says so on its page, in those words: one model wrote all of it,
+and nothing checked the referees that was any better than the referees.
+
 ## What authors cannot do
 
 Nothing an author writes reaches the panel. There is no appeal command and no

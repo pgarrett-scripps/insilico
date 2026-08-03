@@ -902,6 +902,72 @@ def check_pdf_download_retries_a_flaky_server() -> None:
         fp._get_once, fp.time.sleep = real_once, real_sleep
 
 
+def check_command_parsing_is_strict() -> None:
+    """`/review openrouter <model>` is parsed here, from untrusted text.
+
+    An issue comment is the least trustworthy input this repo takes, and the
+    model name it can carry ends up in a config value and in a published
+    record. So the parser accepts known provider names and slugs matching a
+    strict pattern, and refuses everything else with a message written for the
+    editor who typed it. Nothing is sanitised into working.
+    """
+    from run_review import CommandError, parse_command
+
+    ok = parse_command("/review openrouter nvidia/nemotron-3-ultra:free")
+    assert ok == {"revise": False, "provider": "openrouter",
+                  "model": "nvidia/nemotron-3-ultra:free"}, ok
+    assert parse_command("/revise")["revise"] is True
+    assert parse_command("/review")["provider"] is None, \
+        "a bare /review must leave peerreview.toml in charge"
+    assert parse_command("/review anthropic")["model"] is None
+
+    # Only the first line is a command; a comment may say more below it.
+    assert parse_command("/review\nplease be thorough")["provider"] is None
+    assert parse_command("just chatting")["revise"] is False
+
+    for bad in (
+        "/review openrouter",                    # free tier has no stable alias
+        "/review groq foo/bar",                  # unknown provider
+        "/review anthropic claude-opus-5",       # the split is the point
+        "/review openrouter ../../etc/passwd",   # path
+        "/review openrouter $(rm -rf /)",        # shell
+        "/review openrouter no-vendor",          # not vendor/model
+    ):
+        try:
+            parse_command(bad)
+        except CommandError:
+            pass
+        else:
+            raise AssertionError(f"{bad!r} should have been refused")
+
+
+def check_one_model_means_one_model() -> None:
+    """Naming a model must clear the per-stage tables.
+
+    resolve_model reads `raw.get("model") or config.get("reasoning_model")`, so
+    the tag tables in peerreview.toml BEAT the global model. Setting only
+    reasoning_model leaves every agent pointed at claude-haiku-4-5 and
+    claude-opus-5 while claiming to run on the named model: it would review
+    nothing, those slugs are not valid on OpenRouter, and the run bills someone
+    for Claude or fails oddly. Verified against resolve_model directly before
+    this was written.
+    """
+    import inspect
+
+    import run_review
+
+    src = inspect.getsource(run_review._run)
+    block = src[src.index("if args.model:"):]
+    block = block[: block.index("if args.debate_rounds")]
+    code = "\n".join(
+        line for line in block.splitlines() if not line.lstrip().startswith("#")
+    )
+    assert 'overrides["models"] = {}' in code, \
+        "a named model must clear the tag table, or it reviews nothing"
+    assert 'overrides["agent_models"] = {}' in code, \
+        "a named model must clear the per-agent overrides too"
+
+
 def check_rerun_refuses_a_moved_draft() -> None:
     """A rerun holds the manuscript fixed and varies the pipeline.
 
@@ -1058,6 +1124,10 @@ def main() -> int:
     print("ok  a throttled metadata lookup is retried, a missing one is not")
     check_pdf_download_retries_a_flaky_server()
     print("ok  a flaky PDF download is retried too")
+    check_command_parsing_is_strict()
+    print("ok  editor commands are parsed strictly")
+    check_one_model_means_one_model()
+    print("ok  one named model means one model")
     check_rerun_refuses_a_moved_draft()
     print("ok  a rerun refuses a draft that moved")
     check_rerun_does_not_inherit_the_prior_round()

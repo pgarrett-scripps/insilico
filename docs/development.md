@@ -113,6 +113,28 @@ Read the comments in that file before changing it. Its layout matters: a
 top-level key written below a `[table]` header silently becomes part of that
 table.
 
+### Running on one model instead of the split
+
+`/review openrouter vendor/model` on the issue, or `--provider openrouter
+--model vendor/model` locally, runs every agent on that one model. Needs
+`OPENROUTER_API_KEY` in repository secrets.
+
+Naming a model **clears the `[models]` and `[agent_models]` tables**, and that
+is not a detail. Those tables beat `reasoning_model`, so leaving them in place
+would send every agent to OpenRouter asking for `claude-haiku-4-5` and
+`claude-opus-5`. The model you named would review nothing, those slugs are not
+valid on OpenRouter, and the run would either fail strangely or bill someone
+for Claude. One named model means exactly one model.
+
+The model name is required and always will be. OpenRouter's free tier is a
+rotating set of specific models, not a stable alias, so guessing would review a
+paper on whatever happened to be free that week and publish the result without
+anyone having chosen it.
+
+The command is parsed in `run_review.py` (`parse_command`), never in the
+workflow: an issue comment is untrusted text, and the parser accepts only known
+provider names and model slugs matching a strict pattern.
+
 The panel is held to In Silico's own profile in
 [`journals/insilico.toml`](../journals/insilico.toml), version-controlled next to
 the reviews it produced.

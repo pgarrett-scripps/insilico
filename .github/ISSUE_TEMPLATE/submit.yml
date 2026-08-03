@@ -6,21 +6,18 @@ body:
   - type: markdown
     attributes:
       value: |
-        One preprint per issue. We fetch the PDF ourselves — you only need the link.
+        One preprint per issue. Paste the link; we fetch the PDF and pull the
+        title, authors and version ourselves.
 
-        Reviews are triggered manually by an editor, so expect a wait. Read the
-        [policy](https://github.com/pgarrett-scripps/insilico/blob/main/docs/policy.md)
-        first: recommendations are advisory, and reviews are published whatever
-        the verdict.
+        An editor starts each run by hand, so expect a wait. Reviews are
+        published whatever the verdict, and the panel only advises.
+        [Read the policy](https://pgarrett-scripps.github.io/insilico/policy/)
 
   - type: input
     id: url
     attributes:
-      label: Preprint URL
-      description: |
-        arXiv, bioRxiv or medRxiv only. Direct PDF links aren't accepted — a
-        review has to name a specific revision, and only a preprint server
-        gives us a DOI and a version number to name it with.
+      label: Preprint link
+      description: arXiv, bioRxiv or medRxiv. Not a direct PDF link.
       placeholder: https://arxiv.org/abs/2401.12345
     validations:
       required: true
@@ -29,50 +26,27 @@ body:
     id: scope
     attributes:
       label: What is the paper about?
-      description: |
-        Two or three sentences. Enough for an editor to judge whether it's in
-        scope — any field, as long as the claims can be evaluated from the
-        manuscript and the materials it cites or deposits. See the review
-        criteria: https://pgarrett-scripps.github.io/insilico/criteria/
+      description: Two or three sentences, so an editor can check it is in scope.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: relationship
+    attributes:
+      label: Are you an author of this paper?
+      description: Shown on the published review. Anyone may submit any public preprint.
+      options:
+        - "Yes"
+        - "No"
     validations:
       required: true
 
   - type: textarea
     id: focus
     attributes:
-      label: Anything the editor should know before running it?
+      label: Anything else the editor should know?
       description: |
-        Optional, and read by a person rather than by the panel — nothing
-        written here reaches a referee, and the panel is given the manuscript
-        and nothing else. Use it for what an editor needs to decide whether to
-        run the panel at all: a paper that quotes prompt-injection payloads as
-        its subject matter, say, or a preprint posted so recently the server
-        may not serve a PDF yet.
-    validations:
-      required: false
-
-  - type: dropdown
-    id: relationship
-    attributes:
-      label: Are you an author of this paper?
-      description: |
-        Recorded on the published review. Anyone may submit any public
-        preprint, but a review the authors did not ask for is a different
-        thing from one they did, and a reader deserves to see which this is.
-      options:
-        - "Yes — I am an author"
-        - "No — I am not an author"
-    validations:
-      required: true
-
-  - type: textarea
-    id: why
-    attributes:
-      label: If you're not an author, why are you submitting it?
-      description: |
-        Leave blank if you are an author. An editor reads this before running
-        anything — submitting someone else's work to attach a public criticism
-        to it is not a use we support.
+        Optional, and read by a person. Nothing here reaches a referee.
     validations:
       required: false
 
@@ -81,7 +55,7 @@ body:
     attributes:
       label: Before you submit
       options:
-        - label: The preprint is publicly accessible and the PDF is text (not scanned).
+        - label: The preprint is public and its PDF is real text, not a scan.
           required: true
-        - label: I understand the review is machine-generated, advisory, and published regardless of the verdict.
+        - label: I understand the review is machine-generated and gets published either way.
           required: true
