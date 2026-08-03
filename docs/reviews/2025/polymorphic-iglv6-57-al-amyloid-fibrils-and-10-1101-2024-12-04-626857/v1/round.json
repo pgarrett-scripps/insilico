@@ -1,0 +1,346 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260803-061338-polymorphic-iglv6-57-al-amyloid-fibrils-and-featur",
+  "manuscript_title": "Polymorphic IGLV6-57 AL amyloid fibrils and features of a shared folding pathway",
+  "manuscript_cache_key": "9a67042042fda0e63fac3ad024e09edeae3dbe538d3589506b307905f194bc54",
+  "decision": "major",
+  "weighted_score": 3.6471,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Deposit the complete raw MS/MS dataset (.raw and converted .mgf files for the trypsin, chymotrypsin, elastase and proteinase-K digests) to MassIVE/ProteomeXchange with public release, and replace 'available to reviewers upon request' in the Data Availability statement with the live accession number. This is the single blocking item: the de novo sequence is the input to every atomic model and must be independently checkable. Also state in Methods the ambiguity at D134/D175/D176 and whether it was resolved or left open in the deposited data.",
+      "source_reviewer": "reproducibility",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Reframe the folding-pathway claim as an explicit hypothesis, as committed in the rebuttal: (a) remove 'shared folding pathway' from the title; (b) relabel Fig. 6b and its legend as a proposed, untested folding hypothesis; (c) add a sentence in the Discussion stating that convergent sampling of a common conformational landscape is an equally plausible alternative not excluded by the data. The revised title and figure must not assert a mechanism the Results cannot support.",
+      "source_reviewer": "methodology",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Add quantitative structural comparison metrics for the three-structure comparison: pairwise Cα RMSD after core-region superposition (with the superposed residue ranges stated) and TM-scores where feasible, between 9ELS and each of 6HUD and 9OKA. Report these in Figure 5 and the corresponding Results text, replacing the current visual-similarity argument.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Resolve the solvation-energy contradiction in the text accompanying Supplementary Fig. 6: define the sign convention explicitly, state that the metric captures only the burial contribution to stability, and state directly that the compensatory electrostatic/hydrophobic/interlocking interactions are proposed (not demonstrated) to offset the unfavourable burial term.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Pre-specify the APR threshold in Methods (consensus score ≥7/10 methods, per the rebuttal), apply it uniformly in the Results text and Figure 4, and label any sub-threshold regions discussed as exploratory.",
+      "source_reviewer": "data_analysis",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Add the IRB protocol number and approving committee to Methods, together with a statement that patient data were de-identified under institutional HIPAA-compliant procedures (methods audit HARD gap). State inclusion criteria for the tissue donor, even if n=1.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Report a quantitative score for the rigid-body docking of the single-protofilament model into the double-protofilament map (cross-correlation coefficient and/or clash score) in place of 'visually reasonable', and add one sentence noting how the 3.78 Å resolution limits confidence in the Asn72/Ser73 interface assignment.",
+      "source_reviewer": "reproducibility",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "State whether random seeds were fixed or results checked for seed-independence for the stochastic processing steps (Topaz picking, RELION 3D classification), or explicitly note that seeds were not recorded and what this implies for exact reproduction (methods audit HARD gap). A brief statement suffices; re-running is not required.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Add the spectral-count and fold-change supplementary table for the proteinase K enrichment argument (Fig. 1f), as proposed in the rebuttal.",
+    "Cite Morgan et al. 2025 (Amyloid 32:129-138) alongside refs 11-13 in the Introduction discussion of germline gene-organ tropism, rather than only in the Acknowledgements.",
+    "Add the clarifying sentence separating the 'first cardiac amyloid fibril with 2-fold rotational symmetry' claim from the Atlas-wide 9/615 rarity statistic, and include the Amyloid Atlas access date and query parameters so the count is reproducible. The panel's 'conflation' reading is not required by the current text, but the added sentence removes the ambiguity at no cost.",
+    "Provide the MSConvert version and the full CTFFIND version string (e.g. 4.1.13) alongside the already-reported command lines.",
+    "Give the size of the hand-picked Topaz training set and the Topaz model version, since the manuscript already candidly notes that picking bias may not capture the full morphology ensemble.",
+    "Confirm the publication status of the Hicks et al. 2025 bioRxiv preprint (DOI 10.1101/2025.06.25.661559) at revision, and update if it has since appeared in a journal.",
+    "Ensure Supplementary Table 1 (cryo-EM collection/refinement statistics) and Supplementary Fig. 3 (reconstruction scheme, FSC curves) are included in the deposited preprint package; several load-bearing parameters are delegated to them and reviewers could not inspect them."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "The claim that the double protofilament morphology has 'rare rotational symmetry' (stated as 'the first cardiac amyloid fibril with 2-fold rotational symmetry perpendicular to the fibril axis') is presented as novel, but the manuscript then notes that 9 of 615 amyloid structures in the Amyloid Atlas share this symmetry, with 4 being ex vivo fibrils from brain tissue. The distinction being claimed—that this is the first *cardiac* example—is not clearly separated from the broader claim of rarity, creating ambiguity about what the novelty actually is."
+        },
+        {
+          "id": "clarity-2",
+          "text": "Figure 3b shows molecular docking of the single protofilament model into the double protofilament map, but the text states 'the map quality was insufficient to directly model the structure' (3.78 Å resolution). The manuscript does not explicitly state the resolution threshold at which direct modeling becomes feasible or justify why docking is appropriate when direct modeling failed, leaving unclear how confident the proposed interface (Asn 72, Ser 73) is."
+        },
+        {
+          "id": "clarity-3",
+          "text": "The hypothesis of a 'shared folding pathway' (Figure 6b) is presented as speculation based on three structures with 80–84% sequence identity and similar C-shaped turns. The manuscript acknowledges 'our data are not sufficient to support or eliminate' alternative assembly models, yet the pathway diagram is presented as a positive finding rather than a working hypothesis, potentially overstating the evidence."
+        },
+        {
+          "id": "clarity-4",
+          "text": "The statement that the single protofilament morphology 'is stabilized by multiple interactions' (page 6) lists the disulfide bond, interlocking monomers, and side-chain interactions, but then notes that 'none of the mutations located in the structure core contribute strongly to the estimated solvation energy' (Supplementary Fig. 6b), creating tension between the claim of stabilization and the energetic analysis that is not resolved."
+        },
+        {
+          "id": "clarity-5",
+          "text": "The proteinase K digestion experiment (Figure 1f) is described as enriching 'LC sequence regions involved in the fibril core' by comparing spectral counts before and after digestion, but the manuscript does not quantify the fold-change in spectral counts or define what 'reduced' and 'vice versa' mean numerically, making it difficult to assess the strength of this validation."
+        }
+      ],
+      "questions": [
+        "What is the precise resolution threshold at which the authors consider direct atomic modeling feasible versus requiring docking, and how does the 3.78 Å resolution of the double protofilament map compare to published standards for this decision?",
+        "In Figure 1f, what are the actual spectral count ratios for residues predicted inside versus outside the fibril core before and after proteinase K digestion, and what fold-change was considered evidence of enrichment?",
+        "The manuscript states that Arg 24 'forms close interactions with many negatively charged and polar residues' in the 9ELS structure but is 'incompatible' with the 6HUD fold—what structural metric (e.g., atomic clash distance, energy penalty) defines this incompatibility across the three structures?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "Solvation energy comparison lacks confidence intervals and statistical testing. The authors state their IGLV6 fibrils have 'the lowest' solvation energy of all ex-vivo AL fibril structures (Supplementary Fig. 6b,c) and claim this is notable despite 'low predicted fibril stability,' but no error bounds, replicates, or formal test distinguishes this from the other structures. The claim rests on a single point estimate per structure with no disclosure of sensitivity to buried surface area calculation method or coordinate uncertainty. What would resolve this: report the range of solvation energies across the ensemble of conformations sampled during refinement, or provide a sensitivity analysis showing how the ranking changes with ±10% variation in buried surface area."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "Sequence identity percentages (80.4%, 83.9%) are reported without confidence intervals or alignment uncertainty. The Needleman-Wunsch algorithm is deterministic, but the choice of gap penalties and the presence of insertions/deletions of different lengths between the three IGLV6 structures mean the alignment is not unique. The claim that 'all three sequences have untemplated insertions' and that specific residues like Tyr 100 'explain differential folding' rests on the alignment being correct, but no alternative alignments are shown or their impact on the conclusions assessed. What would resolve this: report the top 3–5 alternative alignments ranked by score, and show that the mechanistic conclusions (e.g., π–π interactions with Tyr 100) hold across all plausible alignments."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "APR prediction scores (0–10, based on how many of ten methods agree) are presented without a threshold or decision rule. Figure 4 and Supplementary Data 2 show raw scores for each residue, but the text does not state what score constitutes 'strongly predicted' or how many methods must agree to call a region an APR. The authors note that 'strongly predicted APRs' are at residues 33–38, 74–79, and 98–104, but these appear to be selected post-hoc by visual inspection of the heatmap rather than by a pre-specified threshold. This matters because the claim that CDR 2 APRs 'play a role' in aggregation is speculative and depends on which residues are counted as APRs. What would resolve this: state the threshold score used to define an APR, apply it consistently, and report how many residues meet it; alternatively, acknowledge that APR assignment is exploratory and not hypothesis-driven."
+        }
+      ],
+      "questions": [
+        "Figure 2e shows three 'disconnected densities unlikely to result from sidechain orientation' (asterisks): are these modeled as water molecules, and if so, how many independent water molecules are resolved in the final model and with what B-factor range?",
+        "The helical rise of 5.03 Å is described as 'atypical for amyloid fibrils' and attributed to 'imperfections in the calibration of the electron microscope'—was the microscope calibrated against a standard (e.g., catalase crystals) before or after data collection, and does the reported rise value affect the cross-β geometry or only the axial spacing?",
+        "For the double protofilament morphology (3.78 Å resolution), the authors state 'map quality was insufficient to directly model the structure' and used docking instead: what is the FSC value at the 0.5 threshold (half-map correlation), and does it fall below the 0.143 threshold at any resolution shell?",
+        "Supplementary Figure 6b,c compares solvation energy across AL fibril structures: are all structures refined against the same force field and with the same buried surface area calculation method, or do differences in refinement protocol contribute to the ranking?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "The IRB approval number and ethics committee name are not explicitly stated in the manuscript, only the institutional context is provided—a SOFT issue requiring the specific protocol identifier for full transparency and verification."
+        },
+        {
+          "id": "ethics-2",
+          "text": "No explicit statement of de-identification procedures or HIPAA safeguards for the patient data, though the manuscript contains minimal identifying information beyond organ type and clinical history—a SOFT transparency gap."
+        },
+        {
+          "id": "ethics-3",
+          "text": "The manuscript does not state whether the patient was informed of the specific research use (cryo-EM structural determination and publication) or given a blanket consent; specificity of consent scope would strengthen the disclosure."
+        }
+      ],
+      "questions": [
+        "What is the IRB protocol number and approving committee name for this tissue research?",
+        "Were specific consent forms signed for cryo-EM structural analysis and publication, or was this covered under general tissue-donation consent for research?",
+        "What de-identification or data-protection measures are in place given that organ type, clinical phenotype, and treatment history are reported?"
+      ]
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The manuscript states that IGLV6-57 is 'predominantly associated with kidney, and to a lesser degree, heart involvement' citing references 11–13, but does not cite the more recent Morgan et al. (2025, Amyloid 32:129–138), which the authors themselves reference in the acknowledgments section as 'an updated AL-base' with 'ranked enrichment of immunoglobulin light chain variable genes,' despite this paper appearing directly relevant to germline-phenotype associations and should be cited in the Introduction to support the organ-tropism claim."
+        },
+        {
+          "id": "literature-2",
+          "text": "The manuscript claims the double protofilament morphology exhibits 'a rare rotational symmetry' and states 'across the 615 publicly available amyloid fibril structures in the Amyloid Atlas, there are only 9 fibril structures with a similar rotational symmetry perpendicular to the fibril axis, of which only 4 are ex vivo fibrils,' but this specific quantitative claim about database contents is presented as fact and is not independently verifiable from the manuscript or its citations, with no explicit statement of when the Amyloid Atlas was accessed or what query parameters were used."
+        },
+        {
+          "id": "literature-3",
+          "text": "The manuscript proposes a speculative folding mechanism (Fig. 6b) based on three structures that share a 'C-shaped turn' and a 'sharp bend at Pro 14' but then diverge in N-terminal positioning, and while the authors acknowledge this is a hypothesis, the evidence presented does not exclude alternative explanations: the C-shaped turn and Pro 14 bend may be forced by disulfide bond geometry rather than a shared aggregation pathway, the N-terminal divergence could reflect different proteolytic cleavage events or tissue environments, and no kinetic or thermodynamic data are presented to distinguish a shared pathway from convergent folding."
+        },
+        {
+          "id": "literature-4",
+          "text": "Reference 11 (del Pozo-Yauner et al. 2008) addresses thermodynamic stability and fibrillogenicity but does not directly establish organ tropism, and the full content of reference 13 (Kourelis et al. 2017) is not verified, making the current citation set insufficient to fully establish the claimed predominance of kidney involvement for IGLV6-57."
+        }
+      ],
+      "questions": [
+        "Can the authors confirm whether the Amyloid Atlas count of 615 structures and 9 with perpendicular rotational symmetry is current as of submission, and specify the query parameters used?",
+        "For the claim that IGLV6-57 is 'predominantly associated with kidney, and to a lesser degree, heart involvement,' should the recently published Morgan et al. (2025) AL-base update be cited in the Introduction rather than only in acknowledgments?",
+        "Does reference 37 (Ruiz-Zamora et al. 2019) specifically establish that cysteine residues are hotspots for amyloid aggregation in light chains, or does it focus more broadly on CDR regions?",
+        "Should the manuscript verify that the claim 'All AL fibril structures have an intact disulfide bond' holds for all cited structures (refs. 14–21) or qualify it as 'all published ex-vivo AL fibril structures to date'?",
+        "Is the observation of coexistence of polymorphs on single fibrils (Fig. 3c) the first report in AL amyloidosis, or has this been observed before, and should prior work on fibril polymorph coexistence in other amyloidoses be cited?",
+        "Do references 59–60 (Olsen et al. 1998, Buxbaum 1992) actually address constant domain fragments in AL fibrils, or should more recent data on this point be cited?",
+        "Has the Hicks et al. preprint (ref. 21, cited as '2025.06.25.661559') since been published, and should the citation format be updated?",
+        "Should Schulte et al. (2022, Anal Chem 94:10391–10399), which appears in the acknowledgments as the primary Stitch reference, be cited in the Methods section rather than only in acknowledgments?"
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "The 'shared folding pathway' claim (Figure 6, Discussion) is the paper's central mechanistic contribution, yet it rests entirely on visual comparison of three structures without quantitative support. The authors identify a conserved C-shaped turn and note that the N-terminus adopts different positions, then propose a branching pathway where structures 'diverge' based on residue differences (Tyr 100, position 32, position 24). However, this is post-hoc pattern recognition: the three sequences differ at 8–11 residues in the core, and the paper provides no calculation showing which differences are necessary or sufficient to produce the observed conformational variants. A mutation-scanning experiment, energy landscape analysis, or even a systematic enumeration of which residue combinations predict which N-terminus position would be needed to establish causation. As written, the pathway is a narrative fit to existing data, not a testable mechanism. An alternative explanation—that the observed structures represent a continuum of conformations sampled during fibril growth, with the three examples being arbitrary snapshots—fits the data equally well and is not ruled out."
+        },
+        {
+          "id": "methodology-2",
+          "text": "The double protofilament morphology is described as having 'rare rotational symmetry' and raising 'new questions about fibril formation,' but the design does not establish whether this is a genuine distinct assembly pathway or a transient intermediate. The authors observe both morphologies on the same fibrils and propose three speculative assembly mechanisms (secondary nucleation, independent nucleation with wrapping, or simultaneous elongation at different rates) but provide no evidence to distinguish them. The particle tracing shows a minor population with both morphologies coexisting, but does not establish directionality, kinetics, or whether one converts to the other. The claim that 'each of the protofilaments in the double protofilament morphology are oriented in an antipolar fashion' (Supplementary Fig. 8) is stated without showing the figure or explaining what this implies mechanistically. Without time-resolved data, kinetic measurements, or a structural mechanism linking the two forms, the morphology observation is descriptive, not mechanistic."
+        },
+        {
+          "id": "methodology-3",
+          "text": "The solvation energy calculation (Supplementary Fig. 6) reports that IGLV6 fibrils have 'the lowest solvation energy of all ex-vivo AL fibril structures,' yet the authors then argue that 'multiple interactions' stabilize the structure despite this apparent thermodynamic disadvantage. This is internally inconsistent: if the solvation energy is lowest (most favorable), the structure should be more stable, not less. The resolution of this contradiction—whether the calculation is relative to unfolded monomer, whether it accounts for entropy, or whether it is simply a per-layer metric that does not capture the full fibril—is not explained. This undermines the claim that the structure is stabilized by specific electrostatic and hydrophobic interactions rather than by favorable solvation."
+        },
+        {
+          "id": "methodology-4",
+          "text": "The comparison of three IGLV6-57 structures (9ELS, 6HUD, 9OKA) is presented as evidence for a shared fold, but no quantitative structural alignment, RMSD calculation, or overlay is provided; the claim rests on visual inspection of Figure 5 and text description of the C-shaped turn. Without metrics, it is unclear whether the structures are truly similar or whether the authors are emphasizing superficial resemblances (both have a turn, both have an N-terminus) while downplaying differences in backbone geometry, side-chain orientation, or packing density."
+        },
+        {
+          "id": "methodology-5",
+          "text": "The APR analysis (Figure 4, AmylPred2) identifies multiple aggregation-prone regions across the sequence, including in CDR 2, which is absent from the fibril core in all three IGLV6 structures but present in IGLV1 and IGLV3 structures. The authors note this discrepancy but do not explain it mechanistically or test whether CDR 2 is genuinely non-aggregating in IGLV6 or whether it is excluded by a different mechanism (e.g., proteolytic cleavage, steric occlusion). This leaves a key observation unresolved."
+        },
+        {
+          "id": "methodology-6",
+          "text": "The paper does not report whether the two morphologies differ in stability, growth rate, or propensity to seed further fibrils, which would be necessary to understand their biological relevance or assembly hierarchy."
+        },
+        {
+          "id": "methodology-7",
+          "text": "No analysis is provided of whether the observed structures are artifacts of the extraction, grid preparation, or cryo-freezing conditions, which the authors themselves acknowledge as potential sources of bias in the Discussion but do not experimentally address."
+        },
+        {
+          "id": "methodology-8",
+          "text": "The claim that Arg 24 'stabilizes electrostatic forces' (Discussion) by interacting with Asp 85, Asp 88, and Tyr 90 is not quantified; no energy decomposition, hydrogen-bonding analysis, or comparison to the 6HUD Gly 24 variant is provided to show that this interaction is stabilizing rather than neutral or destabilizing."
+        }
+      ],
+      "questions": [
+        "Figure 6b proposes a branching point where the N-terminus adopts an interior or exterior position based on 'specific residue differences' or 'interactions with cofactors'; what experimental or computational evidence would distinguish these two mechanisms, and have the authors tested whether the observed structures can interconvert under different conditions?",
+        "The double protofilament morphology is resolved at 3.78 Å but the authors state 'the map quality was insufficient to directly model the structure' and instead use docking of the single protofilament model; how confident is the docking fit, and does the resolution limit permit reliable identification of the protofilament interface residues (Asn 72, Ser 73)?",
+        "Supplementary Figure 8 is cited to support the claim that antipolar protofilaments expose both 'plus' and 'minus' elongation sites, but this figure is not shown in the main text; what is the structural basis for this polarity assignment, and how does it differ from the single protofilament morphology?",
+        "The authors note that 'it remains unclear why so many particles fail to align into the final density maps' (Discussion), with only ~80,000 particles from 1.4 million contributing to the two final maps; could this reflect a broader ensemble of morphologies not captured by the two reported structures, and how would this affect the claim of a shared folding pathway?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "Concurrent work not clearly positioned as such. The manuscript cites Hicks et al. (2025, reference 21) as showing single and double protofilament morphologies in λ6 light chains, yet the abstract and introduction frame the polymorphic finding as a novel contribution without explicitly stating that concurrent work already reported this observation. The distinction—that the authors characterize both morphologies structurally while Hicks et al. focused on the dominant single morphology—is real but narrow and should be foregrounded in the abstract rather than buried in the Discussion."
+        },
+        {
+          "id": "novelty-2",
+          "text": "Shared folding pathway hypothesis lacks mechanistic evidence. The proposed shared folding pathway rests entirely on identifying conserved structural motifs across three structures with 80–84% sequence identity. The authors provide no experimental evidence—kinetics, intermediate trapping, mutagenesis, or molecular dynamics—that these motifs represent obligatory steps in folding rather than convergent solutions to packing constraints imposed by the disulfide bond and hydrophobic core."
+        },
+        {
+          "id": "novelty-3",
+          "text": "Double protofilament structure modeled by docking into lower-resolution map (3.78 Å) rather than de novo modeling. The authors state the map quality was insufficient to directly model the structure, which limits confidence in the protofilament interface assignment and the three proposed assembly mechanisms."
+        },
+        {
+          "id": "novelty-4",
+          "text": "Solvation energy analysis does not explain fibril stability. The authors note their IGLV6 fibrils have the lowest estimated solvation energy of all ex-vivo AL fibril structures, yet they are stable. They then invoke interlocking monomers and specific interactions to explain stability, which is post-hoc rationalization rather than predictive explanation."
+        },
+        {
+          "id": "novelty-5",
+          "text": "Particle tracing analysis of mixed polymorphs is descriptive, not quantitative. The claim that a minor population of fibrils were observed with both polymorphs co-existing on the same total fibril is based on visual inspection of micrographs with no quantitative estimate of frequency, no statistical test of whether co-occurrence is random, and no analysis of whether mixed fibrils represent true coexistence or artifacts of 2D projection."
+        },
+        {
+          "id": "novelty-6",
+          "text": "De novo MS sequencing validation is indirect. The authors validate their predicted sequence by showing that proteinase K-resistant regions match predicted fibril core residues, but proteinase K resistance only confirms that the core region is proteolytically protected; it does not uniquely identify the sequence. Three residues in the constant domain were flagged as uncommon substitutions and left as picked by Stitch, introducing uncertainty into the full-length sequence."
+        },
+        {
+          "id": "novelty-7",
+          "text": "Structural comparison with 6HUD and 9OKA is qualitative, not quantitative. The authors compare three IGLV6-57 structures visually but do not perform quantitative structural superposition, RMSD calculations, or statistical measures of fold similarity. The claim of shared structural motifs relies on manual annotation and visual inspection rather than objective metrics."
+        },
+        {
+          "id": "novelty-8",
+          "text": "Generalizability not addressed. The manuscript presents one patient sample. Whether the polymorphism, the 2-fold rotational symmetry, and the shared folding pathway are general features of IGLV6-57 fibrils or specific to this patient's sequence variants and tissue environment is not discussed."
+        }
+      ],
+      "questions": [
+        "How does the frequency of mixed single/double protofilament fibrils compare to the frequency expected if morphologies assembled independently? Is the co-occurrence statistically significant?",
+        "Can the authors provide quantitative structural superposition (RMSD, TM-score) between the three IGLV6-57 structures to support the claim of a shared fold, or does visual inspection alone suffice for the hypothesis?",
+        "Why does the solvation energy metric predict low stability for IGLV6 fibrils when they are experimentally stable, and does this invalidate the use of solvation energy as a predictor of fibril stability across different germline genes?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "**De novo MS sequence determination cannot be independently verified.** The sequence that enabled atomic model building was determined by Casanovo v4.2.0 and Stitch v1.5.0 applied to tryptic, chymotryptic, and elastase digests. The authors state \"The mass spectrometry proteomics data have been deposited to MassIVE (ProteomeXchange). MassIVE accession number: (available to reviewers upon request).\" This is a hard flag: the accession is not provided in the manuscript, and 'available on request' means the raw spectra are gated behind author discretion. Without the raw .mgf files or the original Orbitrap .raw files, an independent group cannot re-run Casanovo, validate the de novo peptide assignments, or verify that the sequence inferred is the only or most likely solution. The GitHub repository (https://github.com/pgarrett-scripps/LSPB_AL2_Antibody) contains analysis code and custom Stitch templates but not the spectra themselves. This is the critical input to the entire structural interpretation: if the sequence is wrong, the model is wrong. The authors note that three residues in the constant domain (D134, D175, D176) \"were picked by Stitch but are uncommon substitutions\" and \"may also be asparagines,\" indicating uncertainty in the de novo call that cannot be resolved without the spectra. Until the raw MS data are deposited with a public accession, this claim is not reproducible."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "**Cryo-EM raw micrographs are not deposited.** The authors collected data at Stanford-SLAC and state that \"Images were collected using a 300keV Titan Krios microscope... at the Stanford-SLAC Cryo-EM Center (S2C2).\" The density maps (EMDB EMD-48160, EMD-48161) are deposited, but the raw movie frames are not mentioned as deposited anywhere. Without the raw micrographs, an independent group cannot re-run motion correction, CTF estimation, particle picking, or 2D/3D classification to verify the reconstruction or explore whether other morphologies or classes exist. The authors acknowledge in their Discussion that \"Particle picking in RELION using Topaz is influenced by the hand-picked training set, which may not capture the full ensemble of fibril morphologies\" and that \"It remains unclear why so many particles fail to align into the final density maps—possibly reflecting a broader polymorphism than can be resolved.\" This uncertainty is honest but underscores that reproducibility of the reconstruction requires the raw data."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "**Proteinase K digestion and subsequent MS analysis lack sufficient detail for replication.** The authors used proteinase K digestion to enrich for fibril-core peptides (Fig. 1f), but the digestion protocol is sparse: \"27.25 µg of extracted fibrils were digested for 45 minutes at 37° C while shaking at 400 rpm with 5.45 µg of proteinase K.\" No buffer composition, pH, or stopping conditions beyond \"2 µL of phenylmethylsulfonyl fluoride (PMSF)\" are given. The resulting peptides were then subjected to tryptic or chymotryptic digestion, but the exact workflow (whether the same sample was split or separate aliquots used, whether desalting occurred between steps) is not specified. This multi-step protocol is presented as supporting evidence for the fibril core boundaries (Fig. 1f, Supplementary Fig. 5) but cannot be independently executed without contacting the authors."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "**Solvation energy calculations are not reproducible without the code.** The authors state: \"The stabilization energy per residue was calculated by the sum of the products of the area buried for each atom and the corresponding atomic solvation parameters.\" They cite a previous publication for the method but do not provide the code, parameters, or intermediate outputs (buried surface areas per residue). Supplementary Fig. 6b,c shows the results, but the calculation cannot be verified or extended without the implementation."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "**APR prediction methodology uses a consensus of ten methods with no threshold specified.** The authors state: \"We present the data without a consensus threshold to better showcase the breadth of APRs in the 9ELS fibrils. The score for each residue was calculated as the total number of prediction methods that positively predicted a residue as part of an APR.\" This is a soft issue (the choice is defensible and disclosed), but the lack of a threshold and the reliance on a consensus score without validation against experimental data means the APR predictions are exploratory and not load-bearing for any claim about aggregation mechanism."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "**Rigid body docking of the single protofilament into the double protofilament map is not quantitatively validated.** The authors state: \"The docking resulted in a visually reasonable fit and indicated that Asn 72 and Ser 73 are the residues involved in the protofilament interface.\" No docking score, RMSD, or cross-correlation metric is provided; the fit is assessed qualitatively. This is a soft issue because the double protofilament structure is not the main claim, but the interface assignment is speculative without quantitative support."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "**Gel electrophoresis densitometry and band assignment (Supplementary Fig. 5) lack quantification.** The authors observe \"two species with a molecular weight of ~12 kDa and ~10 kDa\" after proteinase K digestion and heat denaturation, and assign these to residues 1–120 with or without residues 41–60. No densitometry, band intensity ratios, or molecular weight standards are reported, so the assignment cannot be verified from the figure alone."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "**Sequence alignment parameters and identity/similarity calculations are not fully specified.** The authors used the Needleman-Wunsch algorithm via EMBOSS Needle but do not state the gap opening/extension penalties or the substitution matrix used (BLOSUM62, PAM, etc.), which affect the reported identity and similarity percentages."
+        }
+      ],
+      "questions": [
+        "What is the MassIVE accession number for the raw MS data, and when will it be made public (not 'on request')? If the accession is not yet assigned, provide the timeline for deposition.",
+        "Are the raw cryo-EM micrographs deposited in EMPIAR or another public repository, and if so, what is the accession? If not, will they be deposited, and on what timeline?",
+        "For the proteinase K digestion (Fig. 1f), what was the buffer pH and composition, and was the digestion quenched by heating, pH change, or PMSF alone?",
+        "What is the docking score or cross-correlation coefficient for the rigid body fit of the single protofilament model into the double protofilament density map (Fig. 3b)?",
+        "For the solvation energy calculations (Supplementary Fig. 6), what atomic solvation parameters were used, and is the code available?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "**Shared folding pathway claim (title, abstract, Fig. 6).** The authors propose a unified folding mechanism based on three IGLV6-57 structures with 80–84% sequence identity and 8–11 residue differences in the core. The evidence is purely structural comparison: all three share a C-shaped turn and a disulfide bond reversal. However, this is consistent with multiple alternative explanations: (1) the C-shaped turn may be a local energetic minimum accessible from multiple unfolded states without implying a single pathway; (2) the disulfide reversal is observed in all published AL fibrils regardless of germline origin, suggesting it is a generic consequence of fibril formation rather than evidence of a shared pathway; (3) the N-terminal positioning differences (interior vs. exterior) are attributed to specific residues (e.g., Tyr 100) but no mutagenesis or kinetic data test whether these residues actually control the divergence. The paper presents a plausible story but does not distinguish it from the null hypothesis that sequence variation simply samples different local minima of a broader conformational landscape. The claim should be reframed as 'consistent with a shared pathway' or supported by experimental perturbation."
+        },
+        {
+          "id": "rigor-2",
+          "text": "**Assembly mechanism of double protofilament morphology.** The authors state 'This is supported by the particle tracing data, in which we observe the presence of single protofilaments extended from double protofilament morphologies' (Discussion). However, the tracing data show coexistence of morphologies on the same fibril, not directionality of assembly. A single protofilament extending from a double protofilament is equally consistent with secondary nucleation, lateral association, or dissociation. The three assembly models proposed (secondary nucleation, independent nucleation followed by wrapping, simultaneous elongation at different rates) are all speculative and the data do not distinguish among them. The statement that particle tracing 'supports' a specific mechanism overstates what coexistence demonstrates."
+        },
+        {
+          "id": "rigor-3",
+          "text": "**Sequence-driven aggregation and APR analysis.** The paper identifies aggregation-prone regions (APRs) computationally and notes that CDR2 is absent from the fibril core in IGLV6-derived structures but present in IGLV1 and IGLV3 structures. The authors state 'What role APRs near CDR 2 play in the aggregation of AL fibrils is yet to be determined' but do not test this experimentally. The claim that specific residues (e.g., Arg 24, Tyr 100) 'drive aggregation' or 'contribute to fibril stability' is inferred from structural proximity and energetic calculations, not from kinetic assays, mutagenesis, or stability measurements. The solvation energy calculation (Supplementary Fig. 6) shows IGLV6 fibrils have the lowest predicted energy, but this is a post-hoc observation on three structures and does not establish that sequence differences drive the observed morphologies or that the pathway is sequence-dependent as claimed in the abstract."
+        }
+      ],
+      "questions": [
+        "Figure 5 shows 8–11 amino acid substitutions between the three IGLV6-57 structures in the fibril core; which of these are necessary or sufficient to produce the observed structural differences, and has mutagenesis been performed to test this?",
+        "The paper states the double protofilament morphology has 'rare rotational symmetry' (180° perpendicular to the fibril axis) and cites only 9 of 615 amyloid structures in the Amyloid Atlas with similar symmetry—is this frequency sufficient to call it rare, or is it a known feature of certain fibril classes?",
+        "Proteinase K digestion shows reduced spectral counts for residues predicted outside the fibril core (Fig. 1f), but the authors do not quantify the fold-enrichment or statistical significance of this difference; what is the magnitude of proteolytic protection?",
+        "The paper proposes that the N-terminus adopts interior or exterior positions based on 'specific residue differences' and 'interactions with cofactors found within the tissue environment'—were any cofactors identified in the mass spectrometry analysis of the fibril extract, and do they correlate with morphology?"
+      ]
+    }
+  ],
+  "prior_job_id": "",
+  "desk_rejected": false
+}
