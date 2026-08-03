@@ -1,0 +1,157 @@
+{
+  "generated_at": "2026-08-03T06:13:05+00:00",
+  "pipeline": {
+    "sha": "6c1f7138787271a63562bcfb6bbf7cf7428d3b37",
+    "version": "0.1.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "author_rebuttal": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    },
+    "meta_reviewer": {
+      "model": "claude-sonnet-5"
+    }
+  },
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.1.1",
+    "caveman": null,
+    "chars": 118586
+  },
+  "screens": {
+    "desk_screen_mode": "gate",
+    "injection_screen": true,
+    "injection_screen_action": "reject"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 2.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.75,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 1.93150025,
+  "cost_by_node": {
+    "audit_citation_integrity": 0.133886,
+    "audit_methods_completeness": 0.096865,
+    "author_rebuttal": 0.374231,
+    "debate_advocate": 0.257293,
+    "debate_skeptic": 0.09248,
+    "desk_screen": 0.054601,
+    "editor": 0.200891,
+    "journal_recommender": 0.065439,
+    "meta_reviewer": 0.115607,
+    "reviewer_clarity": 0.061675,
+    "reviewer_data_analysis": 0.062373,
+    "reviewer_ethics": 0.074809,
+    "reviewer_literature": 0.141581,
+    "reviewer_methodology": 0.014574,
+    "reviewer_novelty": 0.156946,
+    "reviewer_reproducibility": 0.013062,
+    "reviewer_rigor": 0.01519
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2024.05.08.593125v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2024.05.08.593125v1.full.pdf",
+    "identifier": "10.1101/2024.05.08.593125",
+    "doi": "10.1101/2024.05.08.593125",
+    "title": "Repeat modules and N-linked glycans define structure and antigenicity of a critical enterotoxigenic E. coli adhesin",
+    "authors": [
+      "Berndsen, Z. T.",
+      "Akhtar, M.",
+      "Thapa, M.",
+      "Vickers, T. J.",
+      "Schmitz, A.",
+      "Torres, J.",
+      "Kumar, P.",
+      "Khatoon, N.",
+      "Sheikh, A.",
+      "Hamrick, M.",
+      "Diedrich, J.",
+      "Martinez-Bartolome, S.",
+      "Garrett, P.",
+      "Yates, J.",
+      "Turner, J.",
+      "Laird, R. M.",
+      "Porter, C. K.",
+      "Poly, F.",
+      "Copps, J.",
+      "Ellebedy, A.",
+      "Ward, A.",
+      "Fleckenstein, J. M."
+    ],
+    "abstract": "Enterotoxigenic Escherichia coli (ETEC) cause hundreds of millions of cases of infectious diarrhea annually, predominantly in children from low-middle income regions. Notably, in children, as well as human volunteers challenged with ETEC, diarrheal severity is significantly increased severity in blood group A (bgA) individuals. EtpA, is a secreted glycoprotein adhesin that functions as a blood group A lectin to promote critical interactions between ETEC and blood group A glycans on intestinal epithelia for effective bacterial adhesion and toxin delivery. EtpA is highly immunogenic resulting in robust antibody responses following natural infection and experimental challenge of human volunteers with ETEC. To understand how EtpA directs ETEC-blood group A interactions and stimulates adaptive immunity, we mutated EtpA, mapped its glycosylation by mass-spectrometry (MS), isolated polyclonal (pAbs) and monoclonal antibodies (mAbs) from vaccinated mice and ETEC-infected human volunteers, and determined structures of antibody-EtpA complexes by cryo-electron microscopy. Both bgA and mAbs that inhibited EtpA-bgA interactions and ETEC adhesion, bound to the C-terminal repeat domain highlighting this region as crucial for ETEC pathogen-host interaction. MS analysis uncovered extensive and heterogeneous N-linked glycosylation of EtpA and cryo-EM structures revealed that mAbs directly engage these unique glycan containing epitopes. Finally, electron microscopy-based polyclonal epitope mapping revealed antibodies targeting numerous distinct epitopes on N and C-terminal domains, suggesting that EtpA vaccination generates responses against neutralizing and decoy regions of the molecule. Collectively, we anticipate that these data will inform our general understanding of pathogen-host glycan interactions and adaptive immunity relevant to rational vaccine subunit design. Author summaryEnterotoxigenic E. coli (ETEC), a leading cause of diarrhea disproportionately affecting young children in low-income regions, are a priority for vaccine development. Individuals possessing A blood-type are more susceptible to severe cholera-like disease. EtpA, a secreted, immunogenic, blood group A binding protein, is a current vaccine target antigen. Here, we determined the atomic structure of EtpA in complex with protective as well as non-protective monoclonal antibodies targeting two different domains of the protein, allowing us to pinpoint key regions involved in blood-group A antigen recognition and uncover the mechanism of antibody-based protection. In addition, we show through mass-spectrometry that EtpA is extensively and heterogeneously glycosylated at surface-exposed asparagine residues by a promiscuous and low-fidelity glycosyltransferase, EtpC, and that this unique form of bacterial glycosylation is critical for to development of protective immune responses. Lastly, polyclonal antibodies from vaccinated mice as well as monoclonal antibodies obtained from ETEC-infected human volunteers revealed that the highly antigenic surface of EtpA exhibits both protective and non-protective epitopes. These results greatly expand our understanding of ETEC pathogenesis, and the immune responses elicited by these common infections, providing valuable information to aid in the rational design and testing of subunit vaccines.",
+    "published": "2024-05-08",
+    "version": "1",
+    "pdf_sha256": "a0f84e72372463d7c2a72fde6f1ce5d6075da78677fab86c52feda47a153b0fd",
+    "pdf_bytes": 14212072
+  }
+}
