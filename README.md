@@ -125,6 +125,7 @@ Reviews and site content are CC BY 4.0. Scripts and workflows are MIT. See
 [`LICENSE`](LICENSE). Preprints stay under whatever license their authors chose,
 since we host none of them.
 
-The referee panel is [PeerReviewAgents][pra].
+The referee panel is [PeerReviewAgents][pra], MIT licensed and archived at
+[10.5281/zenodo.21781895](https://doi.org/10.5281/zenodo.21781895).
 
 [pra]: https://github.com/pgarrett-scripps/PeerReviewAgents
