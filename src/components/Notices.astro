@@ -29,7 +29,7 @@ if (provenance.desk_rejected) {
     tone: "danger",
     title: "Rejected at the desk — no referee panel was convened",
     body: [
-      "Stopped before review, so there are no specialist reports below. Where the cause was submission integrity, the file concealed instructions aimed at an automated reviewer — found by a deterministic scan, before any model read it.",
+      "Stopped before review, so there are no specialist reports below. Where the cause was submission integrity, the file concealed instructions aimed at an automated reviewer, found by a deterministic scan before any model read it.",
     ],
   });
 }
@@ -40,7 +40,7 @@ if (provenance.desk_rejected) {
 // thing that moved was us.
 if (revision.kind === "rerun") {
   const body = [
-    "The same draft, reviewed again after the pipeline changed. The authors revised nothing. The panel read the paper cold, with no knowledge of the earlier round, so the difference between the two reviews is us, not the work.",
+    "The same draft, reviewed again after the pipeline changed. The authors revised nothing and the panel read the paper cold, so the difference between the two reviews is us, not the work.",
   ];
   if (revision.prior_decision) {
     body.push(
@@ -55,7 +55,7 @@ if (revision.kind === "rerun") {
 
 if (round > 1) {
   const body = [
-    "The authors revised the paper. Each referee revisits the points it raised, and an auditor checks the previous letter's required revisions against the new draft.",
+    "The authors revised the paper. Each referee rules on the points it raised, and an auditor checks the previous letter's required revisions against the new draft.",
   ];
   if (revision.prior_decision) {
     body.push(
@@ -80,7 +80,7 @@ if (claim === "no") {
     tone: "warning",
     title: "The authors did not request this review",
     body: [
-      "Submitted by someone who says they are not an author. The authors were not consulted and have not replied. Authors: if this misreads your paper, open an issue and we will publish your reply beside it.",
+      "Submitted by someone who says they are not an author. The authors were not consulted and have not replied. If this misreads your paper, open an issue and we will publish your reply beside it.",
     ],
   });
 } else if (claim === "yes") {

@@ -98,7 +98,7 @@ const damaged = health.verdict && health.verdict !== "clean";
     <div class="panel__body">
       <p class="mstats__lede">
         Counted at ingest, no model involved. These describe the
-        <em>converted</em> text the referees read, not the PDF.
+        <em>converted</em> text the referees read, not your PDF.
         {damaged && (
           <>
             {" "}
@@ -158,8 +158,7 @@ const damaged = health.verdict && health.verdict !== "clean";
           <h3 class="label mstats__title">Hedging against amplifying</h3>
           <p class="mstats__note mstats__note--wide">
             Per 1000 words. Softening ("may", "suggests") against strengthening
-            ("clearly", "demonstrates"). No referee saw these, and no level is
-            correct.
+            ("clearly", "demonstrates"). No referee saw these.
           </p>
           <div class="mstats__bars">
             <div class="mstats__bar">
