@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This is a substantial experimental study on MreB polymerization dynamics that presents novel findings about intrafilament nucleotide exchange in a prokaryotic actin homolog. The work combines multiple high-resolution imaging techniques (TIRF, HS-AFM), biochemical assays, and computational modeling to characterize assembly mechanisms. While the manuscript is lengthy and technically dense, it is complete, clearly structured, and makes specific, testable claims supported by extensive experimental data. The central finding—that MreB filaments undergo continuous nucleotide exchange within intact polymers, unlike eukaryotic actin—is novel and mechanistically interesting. The work is within scope for In Silico as original research with inspectable evidence, and the claims are appropriately scaled to the data presented. The manuscript warrants full peer review to assess the soundness of the methods, the completeness of the evidence, and the significance of the contribution.

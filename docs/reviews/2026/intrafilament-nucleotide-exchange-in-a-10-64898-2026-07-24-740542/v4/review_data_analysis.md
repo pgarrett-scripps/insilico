@@ -1,0 +1,21 @@
+# Statistics & Data-Analysis Reviewer
+
+## Summary
+This is a well-executed biophysical study with rigorous quantitative analysis of MreB filament dynamics. The core claims about ATP-driven polymerization, symmetric elongation, and intrafilament nucleotide exchange are supported by multiple complementary measurements (TIRF, HS-AFM, fluorescence anisotropy, ATPase assays) with appropriate replication and error reporting. The Monte Carlo model integrates experimental parameters coherently. Minor issues around sample sizes in some HS-AFM analyses and incomplete disclosure of statistical tests for a few comparisons do not undermine the main conclusions.
+
+## Strengths
+- Nucleotide binding kinetics are quantified with explicit rate constants and dissociation constants from fluorescence anisotropy, with n≥3 independent experiments and proper fitting methods disclosed.
+- Filament elongation rates are measured across multiple concentrations with large sample sizes (n=77–1142 filaments per condition in TIRF), yielding kinetic parameters with linear regression and plateau identification.
+- The Monte Carlo model is parameterized with experimentally determined values and validated against independent observations (buffer wash, ADP addition, mutant behavior), providing mechanistic coherence across disparate experiments.
+
+## Weaknesses
+- The HS-AFM elongation rate (14.4 ± 10.16 nm·s⁻¹, n=7) is stated as a 'first estimate' but is then compared directly to TIRF plateau rates to argue consistency; the small n and high variability (SD ~70% of mean) make this comparison weak evidence for the claim that the plateau is not an artifact. The authors acknowledge tracking difficulties but do not justify why 7 filaments suffice to validate the TIRF result, nor do they report whether the 7 were pre-selected or represent all trackable segments.
+- FRAP experiments (Fig. 3E, F) are presented as evidence that monomers do not turn over within filaments, but the interpretation conflates two different mechanisms: irreversible photochemical trapping of TFLime (preventing recovery) versus absence of nucleotide exchange. The authors state TFLime binding is 'reversible under normal imaging conditions' but becomes trapped under photobleaching; this does not directly measure monomer turnover and the conclusion that 'monomers do not turnover' overstates what the TFLime-FRAP result shows. The ATP*-FRAP recovery (Fig. 3F) does show nucleotide exchange, but the two experiments measure different things and should not be conflated as evidence for the same claim.
+- Statistical tests for key comparisons lack explicit naming or p-values: (1) the difference in elongation rates between WT and mutants (Fig. 3D) is shown graphically but no test statistic or p-value is reported; (2) the disassembly rates in Fig. 4B-C (WT vs E136A vs D158A under buffer wash and ADP conditions) are presented as bar plots with error bars but no statistical test is named; (3) the claim that D158A filaments 'depolymerize much faster' than WT (line 310) lacks a p-value or test name. For a paper centered on quantitative dynamics, unnamed comparisons weaken the rigor.
+
+## Questions
+- Figure 3D: what statistical test was used to compare elongation rates among WT, E136A, and D158A, and what are the p-values? The figure shows means and error bars but no test is named in the text.
+- Figure 4B-C: what test was applied to compare disassembly rates across the six conditions (WT, E136A, D158A × buffer wash, ADP wash)? Are these unpaired t-tests, ANOVA with post-hoc correction, or Mann-Whitney tests, and what is the multiple-comparison correction if any?
+- In the liposome binding assay (Fig. 1E-F), how many independent experiments (n) were performed? The figure legend states 'n, number of TEM fields' for TEM but does not clearly state the replication for the liposome assay quantified in panel F.
+- For the Monte Carlo model (Fig. 4D, S10), were the rate constants fixed at their point estimates or were they varied within their measured error ranges to assess sensitivity? If fixed, how does uncertainty in the input parameters propagate to the model predictions?
+- The critical concentration is reported as 0.003 µM (Table 1) derived from a linear fit at low concentrations; what is the R² of this fit and over what concentration range was it applied?

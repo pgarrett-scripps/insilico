@@ -209,7 +209,7 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
       <div class="table-scroll">
         <table class="prov__table">
           <thead>
-            <tr><th>Agent</th><th>Search</th><th>Hits</th></tr>
+            <tr><th>Agent</th><th>Search</th><th>Answered by</th><th>Hits</th></tr>
           </thead>
           <tbody>
             {research.flatMap((r) =>
@@ -220,6 +220,11 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
                     <span class="mono prov__tool">{c.tool.replace(/_/g, " ")}</span>
                     {c.query && <span class="prov__query">{c.query}</span>}
                   </td>
+                  {/* Which database actually answered. The router falls back on
+                      a rate limit, and a related-work query served by arXiv
+                      rather than Semantic Scholar has searched the wrong corpus
+                      for anything outside physics and computer science. */}
+                  <td class="mono prov__vendor">{c.vendor || "—"}</td>
                   <td class="mono">{Number(c.hits) || 0}</td>
                 </tr>
               )),
@@ -390,5 +395,11 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
   .prov__query {
     display: block;
     color: var(--ink-dim);
+  }
+
+  .prov__vendor {
+    font-size: var(--t--2);
+    color: var(--muted);
+    white-space: nowrap;
   }
 </style>
