@@ -6,11 +6,12 @@ body:
   - type: markdown
     attributes:
       value: |
-        One preprint per issue. Paste the link; we fetch the PDF and pull the
+        One preprint per issue. Paste the link — we fetch the PDF and pull the
         title, authors and version ourselves.
 
-        An editor starts each run by hand, so expect a wait. Reviews are
-        published whatever the verdict, and the panel only advises.
+        An editor starts each run by hand, so expect a wait. **The review is
+        published whatever it says**, and we will not take one down because you
+        dislike the recommendation.
         [Read the policy](https://pgarrett-scripps.github.io/insilico/policy/)
 
   - type: input
@@ -22,14 +23,10 @@ body:
     validations:
       required: true
 
-  - type: textarea
-    id: scope
-    attributes:
-      label: What is the paper about?
-      description: Two or three sentences, so an editor can check it is in scope.
-    validations:
-      required: true
-
+  # The label text is load-bearing: fetch_preprint.extract_authorship finds this
+  # answer by matching "are you an author" against the rendered issue body.
+  # Reword it and the published review silently reverts to saying the
+  # relationship is unrecorded.
   - type: dropdown
     id: relationship
     attributes:
@@ -40,22 +37,3 @@ body:
         - "No"
     validations:
       required: true
-
-  - type: textarea
-    id: focus
-    attributes:
-      label: Anything else the editor should know?
-      description: |
-        Optional, and read by a person. Nothing here reaches a referee.
-    validations:
-      required: false
-
-  - type: checkboxes
-    id: confirmations
-    attributes:
-      label: Before you submit
-      options:
-        - label: The preprint is public and its PDF is real text, not a scan.
-          required: true
-        - label: I understand the review is machine-generated and gets published either way.
-          required: true

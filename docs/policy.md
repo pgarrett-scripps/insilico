@@ -79,8 +79,9 @@ author, the review carries a notice that the authors did not request it and have
 not replied. Older reviews say "solicitation unrecorded" rather than passing for
 requested. We do not verify the claim, and we say we don't.
 
-The form asks non-authors why they are submitting. An editor reads that first,
-and declines submissions that read as score-settling.
+Submitting a rival's work to attach a public criticism to it is not a use we
+support. An editor reads every submission before starting a run, and declines
+any that reads as score-settling.
 
 If you find an unrequested review of your work, open an issue. If it misreads
 the paper we correct it. If you object to it existing at all we take it down —
