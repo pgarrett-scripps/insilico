@@ -16,6 +16,33 @@ the decision to publish. An editor may decline to publish a review that is
 incoherent, that misreads the paper badly enough to mislead, or that came from a
 mangled ingest.
 
+## What acceptance means
+
+**In Silico accepts a paper the panel returns at accept or minor revision, and
+declines the rest.**
+
+The editor is never told this rule. It recommends one of the four standard
+verdicts with nothing hanging on the answer, and the line is drawn afterwards.
+An editor told that "minor revision" means acceptance is an editor being asked
+to gatekeep, and it would grant more of them.
+
+So the line binarises the editor's judgement, not the panel's arithmetic — and
+those differ. Papers returned at minor revision score 3.88 to 4.12; papers
+returned at major revision score 2.50 to 4.00, and three of them score at or
+above the lowest minor. A threshold on the mean score would sort those three
+the other way.
+
+"Declined" rather than "rejected", because that is what happened: the editor
+declined to accept, and most declined papers carry a letter setting out what
+would fix them. Anyone can submit a preprint they did not write, so a permanent
+machine-generated "rejected" is not a label we will attach to a stranger's work
+on this evidence.
+
+Where a paper has been reviewed more than once, its status comes from the most
+recent review by the graded panel. A run on a single model is a published
+experiment rather than an editorial decision, and does not overturn a panel it
+was run to be compared against.
+
 ## Scope
 
 **In scope.** Any original research manuscript, in any discipline, whose claims

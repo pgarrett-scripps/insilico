@@ -60,6 +60,11 @@ Links must be to arXiv, bioRxiv or medRxiv, so a review names an exact draft.
 Merging is what publishes a review. It means the review is now public, not that
 anyone endorses what the panel recommended.
 
+In Silico **accepts** a paper the panel returns at accept or minor revision, and
+**declines** the rest. The editor is not told this rule — it recommends one of
+the four standard verdicts, and the line is drawn afterwards
+([why](docs/policy.md#what-acceptance-means)).
+
 Editors have three commands, written as a comment on the submission issue. Only
 owners, members and collaborators can trigger them.
 

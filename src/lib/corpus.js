@@ -31,6 +31,42 @@ export const VERDICT = {
   reject: "Reject",
 };
 
+/**
+ * In Silico accepts a paper the panel returns at accept or minor revision, and
+ * declines the rest.
+ *
+ * The editor is never told this rule. It returns one of the four standard
+ * verdicts with nothing hanging on it, and the mapping is applied here,
+ * afterwards — which is the only reason the split is worth trusting. An editor
+ * told that "minor" means acceptance is an editor being asked to gatekeep, and
+ * it would grant more minors.
+ *
+ * This binarises the editor's judgement, not the panel's arithmetic. The two
+ * are not the same: minor bundles score 3.88 to 4.12 and major bundles 2.50 to
+ * 4.00, and three majors sit at or above the lowest minor. A threshold on the
+ * mean would classify those three differently, which is exactly the judgement
+ * a score cannot see.
+ *
+ * "Declined", never "rejected". The editor declined to accept; it did not
+ * reject, and some of these papers were submitted by someone other than their
+ * authors.
+ */
+const ACCEPTED_VERDICTS = new Set(["accept", "minor"]);
+
+export function isAccepted(review) {
+  if (!review || review.deskRejected) return false;
+  return ACCEPTED_VERDICTS.has(review.decision);
+}
+
+/** What In Silico did, as opposed to what the editor recommended. */
+export const STATUS = { accepted: "Accepted", declined: "Declined", desk: "Desk reject" };
+
+export function statusOf(review) {
+  if (!review) return "declined";
+  if (review.deskRejected) return "desk";
+  return isAccepted(review) ? "accepted" : "declined";
+}
+
 /** Bundle documents, in the order a reader should meet them. */
 const DOCUMENT_ORDER = [
   ["summary.md", "Summary", "The panel's assessment in brief."],
@@ -137,6 +173,18 @@ function readBundle(paperDir, versionName) {
     round: Number(provenance.round || 1),
     decision: provenance.decision || "unknown",
     deskRejected: Boolean(provenance.desk_rejected),
+    // An empty model table means every agent ran on one model, with nothing
+    // stronger checking the referees. Provenance.astro warns about it on the
+    // page; readPaper uses it to decide which review speaks for the paper.
+    graded: Boolean(provenance.models && Object.keys(provenance.models).length),
+    // Derived here rather than at each call site so the rule has one home.
+    // `decision` stays exactly as the editor wrote it; this sits beside it.
+    get accepted() {
+      return isAccepted(this);
+    },
+    get status() {
+      return statusOf(this);
+    },
     meanScore: typeof provenance.mean_score === "number" ? provenance.mean_score : null,
     panel: Array.isArray(provenance.panel) ? provenance.panel : [],
     reviewedAt: String(provenance.generated_at || "").slice(0, 10),
@@ -163,12 +211,27 @@ function readPaper(year, slug) {
   if (!bundles.length) return null;
 
   const latest = bundles[0];
+  // Which review carries In Silico's answer on this paper.
+  //
+  // Not simply the newest. A single-model run is a published experiment, not
+  // an editorial decision — the review page says so in those words, that
+  // nothing checked the referees that was any better than the referees — and
+  // one of these sits on top of a graded panel that reached a different
+  // verdict. Letting it decide would hand a free model the casting vote over
+  // the panel it was run to compare against.
+  //
+  // Where every review of a paper is single-model there is nothing better to
+  // fall back to, and the newest stands.
+  const decisive = bundles.find((b) => b.graded) || latest;
   return {
     year,
     slug,
     dir: paperDir,
     bundles,
     latest,
+    decisive,
+    accepted: isAccepted(decisive),
+    status: statusOf(decisive),
     title: latest.preprint.title || "Untitled submission",
     authors: Array.isArray(latest.preprint.authors) ? latest.preprint.authors : [],
     reviewCount: bundles.length,
@@ -210,9 +273,14 @@ export function statistics() {
     const key = review.deskRejected ? "desk" : review.decision;
     byVerdict[key] = (byVerdict[key] || 0) + 1;
   }
+  // Counted over papers, not review bundles: a paper re-reviewed under a
+  // changed pipeline would otherwise be accepted or declined twice.
+  const accepted = papers.filter((p) => p.accepted).length;
   return {
     papers: papers.length,
     reviews: reviews.length,
+    accepted,
+    declined: papers.length - accepted,
     reports: reviews.reduce(
       (n, r) => n + r.documents.reviewers.length + r.documents.audits.length,
       0,

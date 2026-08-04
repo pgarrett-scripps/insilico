@@ -421,6 +421,13 @@ main {
 .verdict--reject { --v: var(--v-reject); }
 .verdict--desk { --v: var(--v-desk); }
 
+/* In Silico's own answer, as opposed to the verdict the editor recommended.
+   Declined borrows the major-revision amber rather than the reject red: the
+   editor declined to accept, it did not reject, and most declined papers were
+   returned for revision by a letter that reads constructively. */
+.verdict--accepted { --v: var(--v-accept); }
+.verdict--declined { --v: var(--v-major); }
+
 /* --- Panels -------------------------------------------------------------- */
 
 .panel {

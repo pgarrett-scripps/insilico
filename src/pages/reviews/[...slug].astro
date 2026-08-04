@@ -16,7 +16,7 @@ import Notices from "../../components/Notices.astro";
 import ManuscriptStats from "../../components/ManuscriptStats.astro";
 import Provenance from "../../components/Provenance.astro";
 import Citation from "../../components/Citation.astro";
-import { corpus, VERDICT, titleFromFilename } from "../../lib/corpus.js";
+import { corpus, VERDICT, STATUS, titleFromFilename } from "../../lib/corpus.js";
 
 export async function getStaticPaths() {
   const reports = await getCollection("reports");
@@ -111,10 +111,21 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           {paper.authors.length > 0 && (
             <p class="head__authors">{paper.authors.join(", ")}</p>
           )}
+          {/* Two facts, never collapsed into one. The chip is what In Silico
+              did; the line under it is what the editor recommended and which
+              review that came from. A reader who sees only "Declined" over a
+              constructive letter should be able to find the major-revision
+              recommendation it was derived from. */}
           <div class="head__chips">
-            <span class={`verdict verdict--${verdictClass(paper.latest)}`}>
-              {verdictOf(paper.latest)}
+            <span class={`verdict verdict--${paper.status}`}>
+              {STATUS[paper.status]}
             </span>
+            {!paper.decisive.deskRejected && (
+              <span class="label">
+                panel recommended {verdictOf(paper.decisive).toLowerCase()}
+                {paper.decisive !== paper.latest && ` · ${paper.decisive.version}`}
+              </span>
+            )}
             <span class="label">most recent · {paper.latest.reviewedAt}</span>
           </div>
           <dl class="meta">
