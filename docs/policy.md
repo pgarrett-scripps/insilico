@@ -26,11 +26,17 @@ verdicts with nothing hanging on the answer, and the line is drawn afterwards.
 An editor told that "minor revision" means acceptance is an editor being asked
 to gatekeep, and it would grant more of them.
 
-So the line binarises the editor's judgement, not the panel's arithmetic — and
-those differ. Papers returned at minor revision score 3.88 to 4.12; papers
-returned at major revision score 2.50 to 4.00, and three of them score at or
-above the lowest minor. A threshold on the mean score would sort those three
-the other way.
+The line is drawn on the editor's verdict rather than on the panel's mean
+score, but on the evidence so far the two barely differ. Across the 20 reviews
+by a graded panel, every paper scoring 3.75 or below was returned at major
+revision and every paper scoring 4.00 or above at minor; the only overlap is a
+single paper at 3.88 that went each way on different runs. A threshold at 3.9
+would reproduce the editor's verdict 19 times out of 20.
+
+We use the verdict anyway, because it is a judgement about the manuscript and
+the mean is an average of eight numbers that happens to track it. But nobody
+should read the current acceptance line as evidence that the editor is doing
+something the arithmetic could not.
 
 "Declined" rather than "rejected", because that is what happened: the editor
 declined to accept, and most declined papers carry a letter setting out what

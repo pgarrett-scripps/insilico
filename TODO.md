@@ -75,12 +75,22 @@ vocabulary that every other venue and user expects. The policy about what a
 verdict *means to this journal* lives in this journal. That is the same
 separation of concerns as the prompt-ownership audit above.
 
-**It is not a score threshold.** That was considered and rejected earlier: it
-would replace the editor's judgement with arithmetic. This does not, and the
-corpus proves it. Minor bundles score 3.88-4.12; major bundles score 2.50-4.00.
-Three majors sit at or above the lowest minor (one 4.00, two 3.88). The editor's
-verdict carries information the mean score does not, so binarising the verdict
-is a different operation from thresholding the score.
+**It is drawn on the verdict, not the score** — but the two barely differ, and
+an earlier version of this note overstated the gap. Corrected: across the 20
+graded bundles, everything at or below 3.75 is major and everything at or above
+4.00 is minor. The only interleaving is at 3.88, where one paper went each way
+on different runs. A threshold at 3.9 reproduces the editor 19 times in 20.
+
+The claim that "three majors sit at or above the lowest minor" came from
+counting single-model bundles, which we now exclude from deciding a paper's
+status; one of those three was the free Nemotron run. Among graded reviews it
+is one paper, not three.
+
+We still use the verdict rather than the mean, because it is a judgement about
+the manuscript rather than an average that happens to track it. But the current
+data does not show the editor adding signal the arithmetic lacks, and nothing
+should be built on the assumption that it does. This is the strongest argument
+for phase 2.
 
 **The rate is credible.** 6 of 24 = 25% acceptance.
 
