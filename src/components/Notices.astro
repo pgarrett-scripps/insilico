@@ -80,14 +80,14 @@ if (claim === "no") {
     tone: "warning",
     title: "The authors did not request this review",
     body: [
-      "Submitted by someone who says they are not an author. The authors were not consulted and have not replied. If this misreads your paper, open an issue and we will publish your reply beside it.",
+      "Submitted by someone with no connection to the paper. The authors were not consulted and have not replied. If this misreads your paper, open an issue and we will publish your reply beside it.",
     ],
   });
 } else if (claim === "yes") {
   notices.push({
     tone: "note",
-    title: "Requested by an author",
-    body: ["Submitted by someone who states they are an author of this paper. We do not verify that claim."],
+    title: "Requested by the authors' side",
+    body: ["Submitted by someone who states they are an author of this paper, or affiliated with it. We do not verify that claim."],
   });
 } else {
   notices.push({

@@ -74,10 +74,11 @@ Out-of-scope submissions are declined at the desk, without running the panel.
 
 Anyone may submit any public preprint, including one they did not write.
 
-**Every review says which it was.** Where the submitter says they are not an
-author, the review carries a notice that the authors did not request it and have
-not replied. Older reviews say "solicitation unrecorded" rather than passing for
-requested. We do not verify the claim, and we say we don't.
+**Every review says which it was.** The form asks one question: are you an
+author of, or affiliated with, this paper? Where the answer is no, the review
+carries a notice that the authors did not request it and have not replied.
+Older reviews say "solicitation unrecorded" rather than passing for requested.
+We do not verify the claim, and we say we don't.
 
 Submitting a rival's work to attach a public criticism to it is not a use we
 support. An editor reads every submission before starting a run, and declines

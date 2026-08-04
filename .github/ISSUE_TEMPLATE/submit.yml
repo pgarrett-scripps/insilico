@@ -23,14 +23,14 @@ body:
     validations:
       required: true
 
-  # The label text is load-bearing: fetch_preprint.extract_authorship finds this
-  # answer by matching "are you an author" against the rendered issue body.
-  # Reword it and the published review silently reverts to saying the
-  # relationship is unrecorded.
+  # Keep the words "are you an author" in the label: extract_authorship finds
+  # this answer by matching that string against the rendered issue body, and a
+  # reword makes the published review silently say the relationship is
+  # unrecorded instead.
   - type: dropdown
     id: relationship
     attributes:
-      label: Are you an author of this paper?
+      label: Are you an author of, or affiliated with, this paper?
       description: Shown on the published review. Anyone may submit any public preprint.
       options:
         - "Yes"
