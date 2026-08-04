@@ -113,27 +113,17 @@ That is acceptable. Journals decline papers with constructive letters
 constantly, and "Declined" does not contradict "here are six things to fix" the
 way "Rejected" would.
 
-### Phase 1 — derive and display (no prompt changes, no cost)
+### Phase 1 — derive and display — DONE
 
-Nothing about the pipeline changes, so the existing 24 reclassify with no
-re-runs and no edits to any published bundle. The rule is stated on the page so
-the derivation is visible rather than implied.
+Shipped. 4 of 19 accepted, 21%. `decision` is untouched everywhere and still
+reads exactly as the editor wrote it; the rule lives in `corpus.js` alone.
 
-- [ ] `src/lib/corpus.js` — derive an `accepted` boolean from `decision`
-      (`accept`/`minor` true, everything else false) beside the existing
-      `decision`, which stays as the editor wrote it. Add the counts to
-      `statistics()` alongside `byVerdict`.
-- [ ] `src/pages/index.astro` — stats become Papers / Accepted / Declined /
-      Mean panel score. The note under them states the rule.
-- [ ] `src/pages/reviews/index.astro` — the filter currently keys on raw
-      verdicts (`verdictKey`, line 10). Decide whether it filters on
-      accepted/declined, the four verdicts, or both.
-- [ ] `src/pages/reviews/[...slug].astro` — show the derived status and the
-      editor's verdict together, not one instead of the other. A reader must be
-      able to see both "Declined" and "major revision".
-- [ ] `docs/policy.md` — state the rule under Authority, next to the existing
-      "the panel decides the verdict, a human decides whether to publish it".
-- [ ] `README.md` — one line.
+One thing turned up while implementing it and is worth keeping in mind. Status
+comes from the most recent **graded** review, not simply the newest.
+`intrafilament` has three round-1 bundles — graded major, graded minor, then a
+free single-model rerun returning major — and taking the newest would have let
+a run the site itself warns about decide the paper. Where every review of a
+paper is single-model, the newest stands.
 
 ### Phase 2 — sharpen the boundary — NOT DOING, deliberately
 
@@ -168,3 +158,43 @@ the boundary is noise and defining it is worth the disruption.
 
 Only then re-run, and re-run the overlap band rather than the extremes: 2.50
 and 4.12 are unambiguous and would move under any definition worth writing.
+
+## Record what the research tools actually did
+
+The site claims, on the home page and in `criteria.md` and `README.md`:
+
+> Novelty and Literature query arXiv, Semantic Scholar, PubMed and bioRxiv
+> live, so claims about prior work rest on search results rather than recall.
+
+Nothing published can confirm that. `run_agent` emits no event when it executes
+a tool call, and `observability.py` has no notion of one, so no bundle records
+whether a search fired, what was queried, or what came back.
+
+Everything around it checks out. `research_enabled` defaults true with no
+override in `peerreview.toml`; three agents declare tools (`literature`,
+`novelty`, `citation_integrity`); the prompts tell them plainly to search
+("use them", "run a verification search"); all three tools return live results
+when called directly. And the two tool-using reviewers cost 3-8x more per run
+than any other reviewer on the same model, across 19 runs.
+
+But the cost gap is not proof. Tool-using agents take a two-call path
+(`invoke_structured_after_tools`) that doubles cost even when zero tools are
+called. And the one literature report read closely cites nothing that did not
+come from the manuscript's own reference list.
+
+So the claim is probably true and definitely unverifiable, which for a journal
+whose pitch is publishing the complete referee record is the wrong side of the
+line to be on.
+
+**Do (PRA, ~1 hour):**
+
+- [ ] Emit an `AgentEvent` per tool call in `run_agent` — tool name, query,
+      result count. The loop already has all three in hand.
+- [ ] Aggregate per node into `provenance.json`, next to `cost_by_node`.
+- [ ] Surface it on the review page: "literature reviewer ran 3 searches, 11
+      results". Absent on older bundles, like every other field added late.
+
+This also catches the silent-degradation case. When the tool loop fails,
+`structured.py` falls back to a tools-free pass and logs "reviewing without
+research tools" — a review that lost its grounding currently looks identical
+to one that had it.
