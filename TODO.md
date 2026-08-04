@@ -135,14 +135,36 @@ the derivation is visible rather than implied.
       "the panel decides the verdict, a human decides whether to publish it".
 - [ ] `README.md` — one line.
 
-### Phase 2 — sharpen the boundary (optional, later, costs money)
+### Phase 2 — sharpen the boundary — NOT DOING, deliberately
 
-Nothing currently defines what separates minor from major. Under this rule that
-boundary carries the entire decision, so it is worth stating in
-`journals/insilico.toml` and `docs/criteria.md`.
+Nothing defines what separates minor from major: not `insilico.toml`, not the
+editor prompt, not the area chair, and strictness sits at level 3, which
+injects no directive by design. The boundary is whatever the model's prior
+thinks "minor revision" means, and that unwritten standard is the publication
+line.
 
-Deliberately **not** part of phase 1: writing that definition changes the
-editor's behaviour, which would make new reviews incomparable with the 24 that
-produced this rule. Treat it as a measured experiment on its own — define the
-boundary, re-run three or four papers spanning 2.50 to 4.12, and check whether
-the distribution moved before adopting it.
+Decided against acting on it. Phase 1 works: 21% acceptance, a sensible spread,
+constructive letters. Writing the definition would change editor behaviour,
+move the rate by an unknown amount, and split the corpus into a pre- and
+post-definition era — real costs, against a problem that is currently
+theoretical.
+
+What would change the decision:
+
+- Someone asks what In Silico's acceptance standard *is* and "whatever the
+  editor thinks minor revision means" is not an answer we want to give.
+- The rate drifts. If acceptance climbs well above 21% or collapses toward
+  zero as papers accumulate, the boundary is moving and needs pinning down.
+- A verdict lands that plainly contradicts its own letter, which is the
+  signal that the implicit standard has broken rather than merely being
+  unwritten.
+
+If it is picked up, the first step is free and decides whether the rest is
+worth it: read the decision letters in the 3.75-4.12 band — `optimal-stimulation`
+(3.88 major), `intrafilament` v2 (3.88 minor), and the three 4.12 minors. If
+the editor is drawing a discernible line, the definition can be written to
+describe what it already does and there is no two-era problem. If it is not,
+the boundary is noise and defining it is worth the disruption.
+
+Only then re-run, and re-run the overlap band rather than the extremes: 2.50
+and 4.12 are unambiguous and would move under any definition worth writing.
