@@ -80,25 +80,22 @@ put it in the manuscript.
 
 This does not go back through the panel — the paper has not changed, so there is
 nothing new for a referee to read. Say what went wrong on your submission issue.
-None of the three routes asks an AI to weigh your account against the referees'.
+A person reads it. Neither route asks an AI to weigh your account against the
+referees'.
 
-**A right of reply.** Published next to the review, labelled as yours, not
-edited or summarised. It does not have to be about a factual error: if you think
-the panel was simply wrong, say so there, and anyone who reads the review reads
-your answer in the same place.
+**We take it down.** Where the panel clearly misread the paper — say, claiming
+you reported no effect sizes when they are in Table 2 — the review is removed
+from the site. Nothing is re-scored: the fix for a misreading is a correct
+reading, not another attempt.
 
-**Withdrawal or correction.** Where the panel clearly misread the paper — say,
-claiming you reported no effect sizes when they are in Table 2 — an editor can
-withdraw or annotate the review. Nothing is re-scored: the fix for a misreading
-is a correct reading, not another attempt.
+**We review it again.** A fresh review of the unchanged paper with no author
+input. It can land anywhere, including exactly where the first one did. There is
+no thumb on the scale, which is what makes the result worth anything. It is
+published alongside the original.
 
-**Re-review.** A fresh review of the unchanged paper with no author input. It
-can land anywhere, including exactly where the first one did. There is no thumb
-on the scale, which is what makes the result worth anything.
-
-A factual error about what your paper says gets corrected or withdrawn — the one
-failure we treat as disqualifying. A disagreement about judgement gets a right of
-reply and stands publicly next to the review.
+A factual error about what your paper says is the one failure we treat as
+disqualifying, and it gets the review pulled. A disagreement about judgement
+does not: we will not remove a recommendation because you dispute it.
 
 ### If your submission is stopped at the desk
 
@@ -127,7 +124,7 @@ one down if it is factually wrong about what your paper says.
 ## Withdrawing
 
 Comment on your issue before the review is merged and we close it, no questions
-asked. After merging we add a withdrawal notice but keep the record.
+asked. After merging, ask and we take it down.
 
 ## Reviewing your own work first
 

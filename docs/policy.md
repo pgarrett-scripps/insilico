@@ -147,8 +147,7 @@ preprint metadata. You can re-run the panel yourself. Output will not be
 identical — the models are not deterministic — but the configuration is fully
 disclosed.
 
-Reviews are never silently edited. Where one is wrong, an editor withdraws it or
-annotates the page, and the published bundle stays byte-for-byte as it was. A
+A published bundle is never edited. Where a review is wrong, it comes down. A
 fresh run is published beside the old one, never over it, and so is a
 [revision round](criteria.md#revision-rounds).
 
@@ -156,25 +155,22 @@ fresh run is published beside the old one, never over it, and so is a
 
 Comment on the review PR, or on your submission issue if it is already merged.
 Nothing you write is shown to the panel
-([why](submit.md#why-we-do-not-accept-a-response-letter)). Three routes exist
-instead, described in full under
-[if the review got something wrong](submit.md#if-the-review-got-something-wrong):
+([why](submit.md#why-we-do-not-accept-a-response-letter)). Two things can then
+happen, and both are decided by a person:
 
-- **A right of reply** — published beside the review, labelled as yours, read by
-  no AI, changing no score. This is the route for disagreeing with the
-  judgement, and your dissent sits next to it permanently.
-- **Withdrawal or correction** — where the panel clearly misread the paper. A
-  factually false statement about your paper is the one failure we treat as
-  disqualifying.
-- **Re-review** — a fresh review of the unchanged paper, published alongside the
-  original.
+- **We take it down.** Where the panel clearly misread the paper, the review is
+  removed from the site. A factually false statement about your paper is the one
+  failure we treat as disqualifying. We will not remove a review because you
+  disagree with the recommendation.
+- **We review it again.** A fresh review of the unchanged paper, with no author
+  input, published alongside the original. It can land anywhere, including
+  exactly where the first one did.
 
 ## Conflicts and cost
 
 The editor is one person running this out of pocket. Reviews are triggered
 manually because each one costs real money. No queue guarantee, no SLA, and no
-promise the project outlives the author's interest in it. If a submission is the
-editor's own work, the review says so on its page.
+promise the project outlives the author's interest in it.
 
 ## Data
 

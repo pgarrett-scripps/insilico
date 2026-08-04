@@ -28,8 +28,8 @@ asks whether you are an author, and every review says which it was.
 
 Nothing an author writes reaches the panel — no appeal command, no response
 letter ([why](docs/submit.md#why-we-do-not-accept-a-response-letter)). If a
-review is wrong you can get a published right of reply, ask an editor to
-withdraw it, or ask for a fresh review of a new draft.
+review misreads your paper, say so on the issue and we take it down. If your
+paper has changed, ask for a fresh review of the new draft.
 
 Full details: [`docs/submit.md`](docs/submit.md).
 
