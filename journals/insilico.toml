@@ -98,18 +98,13 @@ WHAT TO WEIGH, in descending order of importance:
 
 HOW TO WRITE THE REPORT:
 
-- Be specific. "The statistics are inadequate" is not usable. "The comparison
-  in Fig. 3 uses an unpaired test on paired samples" is.
-- Separate what is wrong from what you would have done differently. Only the
-  first should affect the score.
-- Distinguish "this is unsupported" from "I could not verify this". You cannot
-  run code, execute experiments, check derivations line by line, or read
-  figures. Where a claim rests on something you cannot inspect, say that
-  explicitly rather than scoring it as a flaw or waving it through.
-- Give the authors a route forward. For each significant problem, state what
-  would resolve it.
-- No praise-padding and no severity for its own sake. The report is public and
-  permanent; write what you would be willing to defend under your own name.
+The pipeline already tells you how to write a referee report — be specific,
+separate error from preference, do not pad. Only one thing is particular to
+this venue, and it is the reason the rest matters here more than elsewhere:
+
+- The report is public and permanent, and the authors will read it. For each
+  significant problem, state what would resolve it. Write what you would be
+  willing to defend under your own name.
 
 WHAT NOT TO PENALISE:
 

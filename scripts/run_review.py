@@ -20,6 +20,7 @@ import re
 import shutil
 import sys
 import tempfile
+from dataclasses import dataclass, field
 from pathlib import Path
 from queue import Empty, Queue
 
@@ -481,13 +482,29 @@ def panel_scores(state: dict) -> list[dict]:
     return out
 
 
-@contextlib.contextmanager
-def _cost_recorder(run_id: str):
-    """Aggregate per-agent spend off the pipeline's observability bus.
+@dataclass
+class RunTelemetry:
+    """What the bus said about a run, beyond the documents it produced."""
 
-    The pipeline emits a ``usage`` event per model call carrying the node name
-    and a cost, but only ever persists the run total. Registering a queue for
-    this run collects the breakdown without touching the pipeline.
+    # node -> USD spent
+    costs: dict[str, float] = field(default_factory=dict)
+    # node -> [{tool, query, hits, error?}], in the order the lookups happened
+    research: dict[str, list[dict]] = field(default_factory=dict)
+
+
+@contextlib.contextmanager
+def _telemetry_recorder(run_id: str):
+    """Collect per-agent spend and research lookups off the observability bus.
+
+    The pipeline emits a ``usage`` event per model call and a ``tool`` event
+    per research lookup, each carrying its node name, but only ever persists
+    the run's cost total. Registering a queue for this run collects both
+    breakdowns without touching the pipeline.
+
+    The research half is the one a reader needs. A referee that cites prior
+    work is making a different claim depending on whether it searched for that
+    work or recalled it, and no other published field separates those: the
+    tool-using agents cost more whether or not a tool was ever called.
 
     Drained after the graph finishes rather than concurrently: ``Queue`` is
     unbounded, the run is synchronous, and a drain thread would be one more
@@ -496,11 +513,11 @@ def _cost_recorder(run_id: str):
     """
     from peerreviewagents.observability import clear_observer, register_observer
 
-    costs: dict[str, float] = {}
+    telemetry = RunTelemetry()
     queue: Queue = Queue()
     register_observer(queue, run_id)
     try:
-        yield costs
+        yield telemetry
     finally:
         clear_observer(run_id)
         try:
@@ -509,12 +526,22 @@ def _cost_recorder(run_id: str):
                     event = queue.get_nowait()
                 except Empty:
                     break
-                if event.kind != "usage" or not event.cost_usd:
-                    continue
                 node = event.node or "unattributed"
-                costs[node] = round(costs.get(node, 0.0) + event.cost_usd, 6)
+                if event.kind == "usage" and event.cost_usd:
+                    telemetry.costs[node] = round(
+                        telemetry.costs.get(node, 0.0) + event.cost_usd, 6
+                    )
+                elif event.kind == "tool":
+                    call = {
+                        "tool": event.tool_name,
+                        "query": event.tool_query,
+                        "hits": event.tool_hits,
+                    }
+                    if event.tool_error:
+                        call["error"] = event.tool_error
+                    telemetry.research.setdefault(node, []).append(call)
         except Exception as exc:  # noqa: BLE001
-            print(f"warning: cost breakdown unavailable ({exc})", file=sys.stderr)
+            print(f"warning: run telemetry unavailable ({exc})", file=sys.stderr)
 
 
 def write_bundle(
@@ -530,10 +557,12 @@ def write_bundle(
     # several places, and a new parameter in the middle silently rebinds them.
     submitter_is_author: str = "",
     ingest: dict | None = None,
+    research: dict[str, list[dict]] | None = None,
 ) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     cost_by_node = cost_by_node or {}
     revision = revision or {}
+    research = research or {}
 
     # Every document is copied, including the ones a desk reject makes
     # byte-identical (it sets decision_letter, desk_screen and integrity to the
@@ -604,6 +633,12 @@ def write_bundle(
         "total_cost_usd": state.get("total_cost"),
         # Per-agent spend, so cost decisions are measured rather than guessed.
         "cost_by_node": dict(sorted(cost_by_node.items())) if cost_by_node else {},
+        # What the referees looked up, and what came back. The site claims
+        # novelty and literature search live rather than working from recall;
+        # this is the only thing published that can substantiate that. An
+        # entry carrying `error` and no tool name is a referee that fell back
+        # to reviewing without research tools.
+        "research_by_node": dict(sorted(research.items())) if research else {},
         "errors": state.get("errors", []),
         "preprint": preprint.to_dict(),
     }
@@ -1021,7 +1056,7 @@ def _run(args, workdir: Path) -> int:
     # from a breakdown instead of an inference.
     graph = PeerReviewGraph(config)
     try:
-        with _cost_recorder(graph.run_id) as cost_by_node:
+        with _telemetry_recorder(graph.run_id) as telemetry:
             # The PDF, not a conversion of it. The pipeline converts it to
             # markdown internally; handing it a .md instead would route the
             # integrity screen to its markup scanner, which cannot see text
@@ -1076,16 +1111,22 @@ def _run(args, workdir: Path) -> int:
 
     write_bundle(
         preprint, state, run_dir, dest,
-        args.submission_id, args.submitter, cost_by_node, revision,
+        args.submission_id, args.submitter, telemetry.costs, revision,
         submitter_is_author=args.submitter_is_author,
         ingest=state.get("ingest"),
+        research=telemetry.research,
     )
     rel = dest.relative_to(REPO)
     desk_rejected = bool(state.get("desk_rejected"))
     print(f"bundle    {rel}", file=sys.stderr)
     print(f"decision  {decision}{' (desk reject)' if desk_rejected else ''}", file=sys.stderr)
-    for node, spend in sorted(cost_by_node.items(), key=lambda kv: -kv[1]):
+    for node, spend in sorted(telemetry.costs.items(), key=lambda kv: -kv[1]):
         print(f"  cost    {node:<28} ${spend:.4f}", file=sys.stderr)
+    for node, calls in sorted(telemetry.research.items()):
+        lost = sum(1 for c in calls if c.get("error"))
+        hits = sum(c.get("hits", 0) for c in calls)
+        note = f" ({lost} failed)" if lost else ""
+        print(f"  search  {node:<28} {len(calls)} call(s), {hits} hit(s){note}", file=sys.stderr)
 
     if out := os.environ.get("GITHUB_OUTPUT"):
         with open(out, "a") as fh:

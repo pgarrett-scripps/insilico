@@ -40,6 +40,29 @@ const singleModel = modelRows.length === 0 && provenance.model
   ? provenance.model
   : null;
 
+// What the referees looked up. The site says elsewhere that novelty and
+// literature search live rather than working from recall; this is the only
+// thing published that shows it happened, and the only thing that can show a
+// referee fell back to reviewing without research tools. Absent on every
+// review that predates the measurement, and silent there rather than claiming
+// zero searches.
+const research = Object.entries(provenance.research_by_node || {})
+  .map(([node, calls]) => {
+    const list = Array.isArray(calls) ? calls : [];
+    return {
+      node: node.replace(/_/g, " "),
+      calls: list.filter((c) => c && c.tool),
+      // An entry with an error and no tool name is the tool loop failing over,
+      // not a search that returned nothing.
+      lost: list.filter((c) => c && c.error && !c.tool).length,
+      hits: list.reduce((n, c) => n + (Number(c?.hits) || 0), 0),
+    };
+  })
+  .filter((r) => r.calls.length || r.lost);
+
+const searchCount = research.reduce((n, r) => n + r.calls.length, 0);
+const degraded = research.filter((r) => r.lost);
+
 const costs = Object.entries(provenance.cost_by_node || {})
   .map(([node, usd]) => ({ node: node.replace(/_/g, " "), usd: Number(usd) }))
   .sort((a, b) => b.usd - a.usd);
@@ -164,6 +187,50 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
       <p class="prov__note">
         The widest fan-out runs on the cheapest model; only the agents that
         decide the verdict run on the most capable one.
+      </p>
+    </details>
+  )}
+
+  {degraded.length > 0 && (
+    <p class="prov__warn prov__warn--block">
+      <strong>A referee reviewed without its research tools.</strong>{" "}
+      {degraded.map((r) => r.node).join(", ")} lost the literature lookup and
+      judged prior work from the manuscript and recall alone. Read its claims
+      about what does and does not already exist with that in mind.
+    </p>
+  )}
+
+  {research.length > 0 && (
+    <details class="prov__more">
+      <summary>
+        What the referees looked up
+        {searchCount > 0 && ` — ${searchCount} search${searchCount === 1 ? "" : "es"}`}
+      </summary>
+      <div class="table-scroll">
+        <table class="prov__table">
+          <thead>
+            <tr><th>Agent</th><th>Search</th><th>Hits</th></tr>
+          </thead>
+          <tbody>
+            {research.flatMap((r) =>
+              r.calls.map((c, i) => (
+                <tr>
+                  <td>{i === 0 ? r.node : ""}</td>
+                  <td>
+                    <span class="mono prov__tool">{c.tool.replace(/_/g, " ")}</span>
+                    {c.query && <span class="prov__query">{c.query}</span>}
+                  </td>
+                  <td class="mono">{Number(c.hits) || 0}</td>
+                </tr>
+              )),
+            )}
+          </tbody>
+        </table>
+      </div>
+      <p class="prov__note">
+        Run against arXiv, Semantic Scholar, PubMed and bioRxiv while the review
+        was being written. A search returning zero hits is kept: it is the
+        evidence behind a referee saying it found no prior art.
       </p>
     </details>
   )}
@@ -310,5 +377,18 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
     padding: 0.7rem 1.15rem 0.9rem;
     font-size: var(--t--1);
     color: var(--muted);
+  }
+
+  /* The tool name and the query it was given, stacked: the query is the
+     interesting half and is often long enough to wrap. */
+  .prov__tool {
+    display: block;
+    font-size: var(--t--2);
+    color: var(--accent-dim);
+  }
+
+  .prov__query {
+    display: block;
+    color: var(--ink-dim);
   }
 </style>
