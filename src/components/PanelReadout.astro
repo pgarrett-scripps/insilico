@@ -12,6 +12,11 @@
  * Colouring the whole block one colour would average away exactly the
  * disagreement a reader should notice.
  *
+ * Nothing here decides anything. The verdict comes from the editor's decision
+ * letter and is not computed from these numbers — a 3.9 mean has been ruled a
+ * major revision more often than a minor one. The colours are a scale, not a
+ * prediction, and are named so they cannot be read as one.
+ *
  * Confidence is shown separately and never mixed into the score. A low score
  * held with low confidence is a weaker claim than the same score held firmly,
  * and folding them together would hide that.
@@ -20,13 +25,10 @@ const { panel = [], meanScore = null, decision = "", deskRejected = false } = As
 
 const SCALE = 5;
 
-/** Where a score sits on the same scale the verdicts use. */
-function bandFor(score) {
-  if (score === null || score === undefined) return "desk";
-  if (score >= 4.5) return "accept";
-  if (score >= 3.5) return "minor";
-  if (score >= 2.5) return "major";
-  return "reject";
+/** Which whole point on the 1–5 scale a score sits nearest. */
+function tierFor(score) {
+  if (score === null || score === undefined) return "none";
+  return `s${Math.min(SCALE, Math.max(1, Math.round(score)))}`;
 }
 
 const rows = panel
@@ -45,7 +47,7 @@ const rows = panel
       // colour, because it is not a point on the scale.
       notApplicable: score === null,
       reason: String(entry.not_applicable_reason || "").trim(),
-      band: bandFor(score),
+      tier: tierFor(score),
     };
   })
   // Unscored dimensions sort to the bottom rather than reading as a zero.
@@ -56,7 +58,7 @@ const naRows = rows.filter((r) => r.notApplicable);
 const low = scores.length ? Math.min(...scores) : null;
 const high = scores.length ? Math.max(...scores) : null;
 const spread = low !== null && high !== null ? +(high - low).toFixed(1) : null;
-const meanBand = bandFor(meanScore);
+const meanTier = tierFor(meanScore);
 ---
 
 {
@@ -75,7 +77,7 @@ const meanBand = bandFor(meanScore);
 
       <div class="readout__body">
         <div class="readout__aggregate">
-          <div class={`readout__mean readout__mean--${meanBand}`}>
+          <div class={`readout__mean readout__mean--${meanTier}`}>
             <span class="readout__meanValue mono">
               {meanScore !== null ? meanScore.toFixed(1) : "—"}
             </span>
@@ -110,7 +112,7 @@ const meanBand = bandFor(meanScore);
               <span class="readout__naTag mono">n/a</span>
             </li>
           ) : (
-            <li class={`readout__row readout__row--${row.band}`}>
+            <li class={`readout__row readout__row--${row.tier}`}>
               <span class="readout__name">{row.name}</span>
 
               <span
@@ -154,7 +156,9 @@ const meanBand = bandFor(meanScore);
       <p class="readout__foot">
         <span class="label">Score</span> is the referee's assessment of the work.
         <span class="label">Confidence</span> is how sure that referee was of its
-        own reading. They are recorded separately and never combined.
+        own reading. They are recorded separately and never combined. The
+        editor's verdict is its own judgment of the reports, not a threshold
+        applied to this mean, so a number here does not predict it.
         {naRows.length > 0 && (
           <>
             {" "}
@@ -204,10 +208,14 @@ const meanBand = bandFor(meanScore);
     color: var(--v);
   }
 
-  .readout__mean--accept { --v: var(--v-accept); }
-  .readout__mean--minor { --v: var(--v-minor); }
-  .readout__mean--major { --v: var(--v-major); }
-  .readout__mean--reject { --v: var(--v-reject); }
+  /* The site's verdict palette, reused as a five-step ramp because it is the
+     one warm-to-cool scale the design already has. A score tinted like an
+     accept is not an accept — see the tier comment above. */
+  .readout__mean--s5 { --v: var(--v-accept); }
+  .readout__mean--s4 { --v: var(--v-minor); }
+  .readout__mean--s3 { --v: var(--v-major); }
+  .readout__mean--s2,
+  .readout__mean--s1 { --v: var(--v-reject); }
 
   .readout__meanValue {
     font-family: var(--font-display);
@@ -247,10 +255,11 @@ const meanBand = bandFor(meanScore);
     border-top: 1px solid var(--rule);
   }
 
-  .readout__row--accept { --v: var(--v-accept); }
-  .readout__row--minor { --v: var(--v-minor); }
-  .readout__row--major { --v: var(--v-major); }
-  .readout__row--reject { --v: var(--v-reject); }
+  .readout__row--s5 { --v: var(--v-accept); }
+  .readout__row--s4 { --v: var(--v-minor); }
+  .readout__row--s3 { --v: var(--v-major); }
+  .readout__row--s2,
+  .readout__row--s1 { --v: var(--v-reject); }
 
   .readout__name {
     font-family: var(--font-mono);
