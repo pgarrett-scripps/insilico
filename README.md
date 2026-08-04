@@ -3,16 +3,13 @@
 **An open, AI-refereed overlay journal. Any field, and the whole review is published.**
 
 In Silico does not host papers. You send us a link to a preprint that already
-exists on arXiv, bioRxiv or medRxiv. We run it through a panel of AI referees and
-publish the entire review next to a pointer to your paper.
-
-The review is the point. Eight specialist reviewers, two audits, a debate, an
-area chair and an editor, all published in full.
+exists on arXiv, bioRxiv or medRxiv. We run it through a panel of AI referees —
+eight specialist reviewers, two audits, a debate, an area chair and an editor —
+and publish the entire review next to a pointer to your paper.
 
 > **This is an experiment.** The verdict on every paper here was produced by a
 > language model, not a person. A human decides only whether a review gets
-> published, never what it says. Read these as a machine-generated second
-> opinion, not as a stamp of approval.
+> published, never what it says.
 
 **[Read the reviews →](https://pgarrett-scripps.github.io/insilico/reviews/)**
 
@@ -22,29 +19,28 @@ You do not need to know how to code. You do need a free GitHub account.
 
 1. [Open a submission issue](../../issues/new?template=submit.yml) and paste your
    preprint link.
-2. An editor starts the panel. This usually takes under an hour once started.
-3. The review appears as a pull request. Read it, and reply in the thread if you
-   disagree. A human editor reads your reply. No AI does.
+2. An editor starts the panel.
+3. The review appears as a pull request. Reply in the thread if you disagree.
+   A human editor reads your reply; no AI does.
 
 Anyone can submit any public preprint, including one they did not write. The form
-asks whether you are an author, and every review says which it was, so a review
-nobody asked for cannot be mistaken for one the authors requested.
+asks whether you are an author, and every review says which it was.
 
-Full details for authors: [`docs/submit.md`](docs/submit.md).
+Nothing an author writes reaches the panel — no appeal command, no response
+letter ([why](docs/submit.md#why-we-do-not-accept-a-response-letter)). If a
+review is wrong you can get a published right of reply, ask an editor to
+withdraw it, or ask for a fresh review of a new draft.
+
+Full details: [`docs/submit.md`](docs/submit.md).
 
 ## What we review
 
 Original research in any field. What matters is whether the evidence can be
-checked, not what the paper is about. An unsupported claim in a lab paper is as
-findable as one in a simulation. The name describes how we review, not what we
-review.
+checked, not what the paper is about — the name describes how we review, not
+what we review. We do not review work where a wrong machine-generated review
+could affect patient care ([scope](docs/policy.md#scope)).
 
-We do not review work where a wrong machine-generated review could affect
-patient care. See [`docs/policy.md`](docs/policy.md#scope).
-
-Links must be to arXiv, bioRxiv or medRxiv. Those give us a DOI and a version
-number, so a review names an exact draft. A bare PDF link can change or go dead,
-so we reject those.
+Links must be to arXiv, bioRxiv or medRxiv, so a review names an exact draft.
 
 ## How a review happens
 
@@ -64,52 +60,28 @@ so we reject those.
 Merging is what publishes a review. It means the review is now public, not that
 anyone endorses what the panel recommended.
 
-Editors have two commands, both written as a comment on the submission issue:
+Editors have three commands, written as a comment on the submission issue. Only
+owners, members and collaborators can trigger them.
 
-| Command | Use it when | What happens |
-|---|---|---|
-| `/review` | first look at a preprint | a fresh round 1 |
-| `/revise` | the authors changed the paper | referees rule on what changed |
-
-Only owners, members and collaborators can trigger either.
-
-Either command can name which models to use:
-
-| Command | What runs |
+| Command | Use it when |
 |---|---|
-| `/review` | the graded panel: cheap models for the wide fan-out, the best one only for the verdict |
-| `/review openrouter vendor/model` | that one model, for every agent |
+| `/review` | first look at a preprint — the graded panel, cheap models for the wide fan-out and the best one only for the verdict |
+| `/revise` | the authors changed the paper — referees rule on what changed |
+| `/review openrouter vendor/model` | the paid budget is spent — that one named model, for every agent |
 
-The second form exists so a review can be run on a free model when the paid
-budget is spent. It needs an exact model name, because free tiers are a
-rotating set of specific models rather than a stable "free" option. A review
-run that way says so on its page, in those words: one model wrote all of it,
+A review run on a single model says so on its page: one model wrote all of it,
 and nothing checked the referees that was any better than the referees.
-
-## What authors cannot do
-
-Nothing an author writes reaches the panel. There is no appeal command and no
-response letter. A review that authors can talk their way out of is one they can
-change without changing the paper, and we watched that happen when we tried it.
-
-If you think a review is wrong, you can get a published right of reply, ask an
-editor to withdraw it, or ask for a fresh review of a new draft.
-See [`docs/policy.md`](docs/policy.md#contesting-a-review).
 
 ## Reading a review
 
-Every review is one folder per version of a paper, published under
-`docs/reviews/`. A later review sits **beside** the one before it rather than
-replacing it, so `v1` stays exactly as it was and the paper's page lists both.
-
-Each folder holds the editor's decision letter, the eight specialist reports,
-the audits, the debate, and a `provenance.json` recording the verdict, the panel
-scores, which models ran, and what it cost. Anyone can check out the commit a
-review names and see exactly what the panel was told to do.
+Each review is one folder per version of a paper under `docs/reviews/`, holding
+the editor's decision letter, the eight specialist reports, the audits, the
+debate, and a `provenance.json` recording the verdict, panel scores, models and
+cost. A later review sits **beside** the one before it rather than replacing it.
 
 There is also a `manuscript_stats.md` with no opinion in it at all: counts over
-the text the panel read, so a reader holding the PDF can check the panel read
-the same document.
+the text the panel read, so a reader holding the PDF can check the panel read the
+same document.
 
 ## Documentation
 
@@ -126,7 +98,7 @@ Reviews and site content are CC BY 4.0. Scripts and workflows are MIT. See
 [`LICENSE`](LICENSE). Preprints stay under whatever license their authors chose,
 since we host none of them.
 
-The referee panel is [PeerReviewAgents][pra], MIT licensed and archived at
+The referee panel is [PeerReviewAgents][pra], archived at
 [10.5281/zenodo.21781895](https://doi.org/10.5281/zenodo.21781895).
 
 [pra]: https://github.com/pgarrett-scripps/PeerReviewAgents
