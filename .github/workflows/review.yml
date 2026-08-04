@@ -216,16 +216,22 @@ jobs:
           SUBMISSION_ID: ${{ github.event.issue.number || github.event.inputs.submission_id }}
           SUBMITTER: ${{ github.event.issue.user.login }}
         run: |
-          # `/revise` continues this preprint's most recent round; `/review`
-          # always starts a fresh one. Kept as two commands rather than
-          # inferred, because re-reviewing the same draft under changed
-          # criteria and reviewing a revised draft are different acts.
+          # One verb. Whether this is a first look or a new round is read off
+          # which draft the archive serves — a draft we have not reviewed is a
+          # new round — rather than declared by the editor. `/revise` still
+          # works and does exactly what `/review` does.
           #
-          # Neither accepts author text. The panel judges the manuscript and
-          # the diff between drafts; an author's account of what they changed
-          # is not evidence, and when it was accepted the compliance auditor
-          # confirmed claims that the manuscript did not support.
-          # The comment is passed through, never interpreted here. `/revise`
+          # --publish is passed here and nowhere else. This is the editorial
+          # route: an editor typed a command on a submission issue, so the
+          # result belongs in docs/reviews/. A local run testing a prompt
+          # change is a question about the pipeline and lands in runs/.
+          #
+          # Neither form accepts author text. The panel judges the manuscript
+          # and the diff between drafts; an author's account of what they
+          # changed is not evidence, and when it was accepted the compliance
+          # auditor confirmed claims the manuscript did not support.
+          #
+          # The comment is passed through, never interpreted here. `replace`
           # and the provider options are parsed in Python (see parse_command),
           # which is the one place this untrusted text is read and which
           # refuses anything that is not a known constant or a validated model
@@ -235,24 +241,27 @@ jobs:
           # review — a scanned or image-only file, almost always — and the
           # panel was never started. That is a fact about the file, so it gets
           # a plain note on the issue rather than a red run and a stack trace.
-          # Exit 2 is a command nobody could act on; same treatment.
+          # Exit 2 is a command nobody could act on; exit 4 is a draft already
+          # reviewed. Same treatment: say so, do not fail the run.
           set +e
           if [ -n "$INPUT_URL" ]; then
             python scripts/run_review.py \
               --command "$COMMENT_BODY" \
+              --publish \
               --url "$INPUT_URL" \
               --submission-id "${SUBMISSION_ID:-}" \
               --submitter "${SUBMITTER:-}"
           else
             python scripts/run_review.py \
               --command "$COMMENT_BODY" \
+              --publish \
               --issue-body "$ISSUE_BODY" \
               --submission-id "$SUBMISSION_ID" \
               --submitter "$SUBMITTER"
           fi
           rc=$?
           set -e
-          case "$rc" in 2|3) exit 0 ;; esac
+          case "$rc" in 2|3|4) exit 0 ;; esac
           exit "$rc"
 
       - name: Report a command nobody could act on
@@ -265,6 +274,15 @@ jobs:
             "$REASON
 
           No review was run."
+
+      - name: Report a draft that has already been reviewed
+        if: steps.run.outputs.already_reviewed == 'true' && github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REASON: ${{ steps.run.outputs.already_reviewed_reason }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" --body \
+            "**No review was run.** $REASON"
 
       - name: Report an unreadable submission
         if: steps.run.outputs.unreadable == 'true' && github.event_name == 'issue_comment'

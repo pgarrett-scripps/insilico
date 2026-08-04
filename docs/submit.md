@@ -52,7 +52,8 @@ the review.
 ## Submitting a revised draft
 
 Post the new version to the same preprint server, then say so on your original
-issue. An editor runs `/revise`.
+issue. An editor runs `/review` again — the archive now serves your new draft,
+so it opens a new round by itself.
 
 A revision round is not a fresh review. Each referee gets back the points it
 raised, by number, and rules on each: addressed, partly addressed, or not. An

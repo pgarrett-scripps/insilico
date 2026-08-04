@@ -9,3 +9,7 @@ reports/
 node_modules/
 dist/
 .astro/
+
+# Review runs made to test a pipeline change rather than to publish.
+# --publish is what puts a bundle in docs/reviews/; everything else lands here.
+runs/

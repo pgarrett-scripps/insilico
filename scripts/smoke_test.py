@@ -31,8 +31,10 @@ REPO = Path(__file__).resolve().parent.parent
 from fetch_preprint import Preprint, resolve  # noqa: E402
 from run_review import (  # noqa: E402
     BUNDLE_FILES,
-    next_version,
+    CommandError,
+    draft_number,
     paper_slug,
+    plan_review,
     slugify,
     write_bundle,
 )
@@ -315,11 +317,17 @@ def check_desk_reject() -> None:
 
 
 def check_versioning() -> None:
-    """A re-review must never overwrite the review it supersedes.
+    """The bundle directory is named after the draft, and a new draft never
+    overwrites the review of the old one.
 
-    The flat layout silently replaced the earlier bundle *and* left its
-    specialist reports behind, so a reader saw v1 reports filed under v2's
-    verdict. Both halves are asserted here.
+    `v2` means "our review of the authors' second draft", not "our second
+    review". The number is a fact the archive gives us rather than a count of
+    our own activity, which is what lets a paper's history be read off the
+    directory listing.
+
+    The flat layout it replaced silently overwrote the earlier bundle *and*
+    left its specialist reports behind, so a reader saw v1 reports filed under
+    v2's verdict. Both halves are still asserted.
     """
     with tempfile.TemporaryDirectory() as tmp:
         paper = Path(tmp) / "2026" / "a-paper"
@@ -337,7 +345,7 @@ def check_versioning() -> None:
                 pdf_url="p", identifier="1706.03762", title="A paper",
                 version=mver, pdf_sha256=mver * 64,
             )
-            v = next_version(paper)
+            v = draft_number(preprint)
             write_bundle(
                 preprint,
                 {"decision": decision, "manuscript_title": "A paper",
@@ -347,7 +355,25 @@ def check_versioning() -> None:
             return v
 
         assert review("1", "reject", ("methodology", "novelty", "ethics")) == 1
-        assert review("2", "accept", ("methodology",)) == 2, "re-review did not bump"
+        assert review("2", "accept", ("methodology",)) == 2, \
+            "the folder must be named after the draft the archive served"
+
+        # A draft we have not seen lands beside the others; one we have needs
+        # asking for. v1 and v2 both exist by now.
+        assert plan_review(paper, 3, replace=False).dest.name == "v3"
+        for seen in (1, 2):
+            try:
+                plan_review(paper, seen, replace=False)
+                raise AssertionError(
+                    f"re-reviewing reviewed draft v{seen} must refuse"
+                )
+            except CommandError:
+                pass
+        again = plan_review(paper, 1, replace=True)
+        assert again.replacing and again.dest.name == "v1", \
+            "--replace must overwrite the review of that same draft"
+        assert again.prior is None, \
+            "a replacement is round 1: it must not inherit the round it tests"
 
         v1 = provenance_of(paper / "v1")
         v2 = provenance_of(paper / "v2")
@@ -914,16 +940,27 @@ def check_command_parsing_is_strict() -> None:
     from run_review import CommandError, parse_command
 
     ok = parse_command("/review openrouter nvidia/nemotron-3-ultra:free")
-    assert ok == {"revise": False, "provider": "openrouter",
+    assert ok == {"replace": False, "provider": "openrouter",
                   "model": "nvidia/nemotron-3-ultra:free"}, ok
-    assert parse_command("/revise")["revise"] is True
     assert parse_command("/review")["provider"] is None, \
         "a bare /review must leave peerreview.toml in charge"
     assert parse_command("/review anthropic")["model"] is None
 
+    # There is one verb. Whether a run is a first look or a new round is read
+    # off which draft the archive serves, not declared by the editor, so
+    # /revise survives only as muscle memory and does nothing extra.
+    assert parse_command("/revise") == parse_command("/review")
+
+    # Overwriting a published review is the one destructive thing an editor
+    # can ask for, so it has to be said out loud and never inferred.
+    assert parse_command("/review replace")["replace"] is True
+    assert parse_command("/review")["replace"] is False
+    assert parse_command("/review replace openrouter x/y:free") == {
+        "replace": True, "provider": "openrouter", "model": "x/y:free"}
+
     # Only the first line is a command; a comment may say more below it.
     assert parse_command("/review\nplease be thorough")["provider"] is None
-    assert parse_command("just chatting")["revise"] is False
+    assert parse_command("just chatting")["replace"] is False
 
     for bad in (
         "/review openrouter",                    # free tier has no stable alias
@@ -1013,30 +1050,34 @@ def check_rerun_refuses_a_moved_draft() -> None:
 
 
 def check_rerun_does_not_inherit_the_prior_round() -> None:
-    """A rerun must not be wired as a revision.
+    """A replacement must not be wired as a revision.
 
     Two properties, both load-bearing. It stays round 1, because nothing was
     revised. And `revision_of` never reaches the pipeline config, because that
-    is what hands each reviewer its own earlier report to rule on — a rerun
-    that inherits the verdict it exists to test is not a test.
+    is what hands each reviewer its own earlier report to rule on — a
+    re-review that inherits the verdict it exists to test is not a test.
+
+    `plan_review` enforces the second structurally: a replacement carries no
+    prior, and only a prior sets `revision_of`. Asserted there as well as
+    here, because the two could drift apart.
     """
     import inspect
 
     import run_review
 
     src = inspect.getsource(run_review._run)
-    rerun_block = src[src.index("if rerun_prov is not None:"):]
-    rerun_block = rerun_block[: rerun_block.index("if args.revise:")]
+    block = src[src.index("if plan.replacing:"):]
+    block = block[: block.index("if prior_bundle is not None:")]
     # Comments stripped, or this matches the comment explaining the absence
     # rather than the absence. It did, the first time it ran.
     code = "\n".join(
-        line for line in rerun_block.splitlines()
+        line for line in block.splitlines()
         if not line.lstrip().startswith("#")
     )
-    assert '"round": 1' in code, "a rerun is round 1"
+    assert '"round": 1' in code, "a replacement is round 1"
     assert '"kind": "rerun"' in code, "the page needs to know what this is"
     assert "revision_of" not in code, \
-        "a rerun must not anchor the panel to the round it is testing"
+        "a replacement must not anchor the panel to the round it is testing"
 
 
 def check_bare_doi_picks_the_right_server() -> None:

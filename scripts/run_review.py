@@ -43,6 +43,10 @@ ROUND_RECORD = "round.json"
 
 REPO = Path(__file__).resolve().parent.parent
 REVIEWS = REPO / "docs" / "reviews"
+# Where an unpublished run lands. Outside docs/, so the site's content globs
+# never see it: a run made to test a pipeline change is a question about the
+# pipeline, not a review of anybody's paper. Git-ignored.
+RUNS = REPO / "runs"
 
 
 def _load_dotenv() -> None:
@@ -145,6 +149,29 @@ def paper_slug(preprint: Preprint, title: str) -> str:
     id_part = slugify(preprint.identifier or preprint.doi or preprint.url, limit=40)
     slug = "-".join(p for p in (title_part, id_part) if p)
     return slug or "submission"
+
+
+def find_paper_dir(preprint: Preprint) -> Path | None:
+    """The directory already holding this paper's reviews, if any.
+
+    Matched on the preprint's identifier rather than the slug, for the reason
+    :func:`find_prior_bundle` gives: the slug embeds the title and authors
+    retitle between drafts, so a slug lookup misses its own earlier rounds for
+    exactly the papers most likely to have them.
+    """
+    wanted = (preprint.identifier or preprint.doi or "").strip().lower()
+    if not wanted:
+        return None
+    for prov_path in sorted(REVIEWS.glob("*/*/v*/provenance.json")):
+        try:
+            prov = json.loads(prov_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        pp = prov.get("preprint") or {}
+        got = str(pp.get("identifier") or pp.get("doi") or "").strip().lower()
+        if got and got == wanted:
+            return prov_path.parent.parent
+    return None
 
 
 def find_prior_bundle(preprint: Preprint, title: str) -> Path | None:
@@ -298,20 +325,92 @@ def draft_matches(prior: dict, current: dict) -> tuple[bool, str]:
     )
 
 
-def next_version(paper_dir: Path) -> int:
-    """The version number this review should be written as.
+def draft_number(preprint: Preprint) -> int:
+    """Which draft of the paper this is, per the archive.
 
-    Never returns an existing one: re-reviewing a revised manuscript adds
-    `v2` beside `v1` rather than replacing it. Overwriting would both lose
-    the earlier review and leave its orphaned specialist reports sitting in
-    the new bundle, so a reader would see v1 reports presented as part of v2.
+    The bundle directory is named after this, not after how many times we have
+    run. `v3` means "our review of the authors' third draft" — a fact about
+    the paper rather than a count of our activity.
+
+    It is a fact we are given, not one we choose: `resolve()` always reports
+    whatever the archive serves now, and refuses to go backwards. So the
+    number only ever increases, and folder order can never disagree with the
+    order the drafts were written in.
     """
-    existing = [
-        int(p.name[1:])
-        for p in paper_dir.glob("v*")
-        if p.is_dir() and p.name[1:].isdigit()
-    ]
-    return max(existing, default=0) + 1
+    try:
+        return max(1, int(str(preprint.version or "1").strip()))
+    except (TypeError, ValueError):
+        return 1
+
+
+def existing_bundles(paper_dir: Path) -> dict[int, Path]:
+    """Draft number -> bundle, for every review already published of a paper."""
+    out: dict[int, Path] = {}
+    for p in sorted(paper_dir.glob("v*")):
+        if p.is_dir() and p.name[1:].isdigit():
+            out[int(p.name[1:])] = p
+    return out
+
+
+@dataclass
+class Plan:
+    """Where this review goes, and what kind of run it therefore is."""
+
+    dest: Path
+    draft: int
+    # The bundle this round rules against, or None for a first look. Set only
+    # when an earlier draft was reviewed AND left a round record.
+    prior: Path | None = None
+    # True when we are overwriting our own earlier review of this same draft.
+    replacing: bool = False
+
+    @property
+    def kind(self) -> str:
+        if self.replacing:
+            return "replacement"
+        return "revision round" if self.prior else "first review"
+
+
+def plan_review(paper_dir: Path, draft: int, replace: bool) -> Plan:
+    """Decide where a review of ``draft`` belongs, or refuse.
+
+    Three cases, and the caller declares none of them:
+
+    - no review of this draft, none of any earlier draft  -> first look
+    - no review of this draft, an earlier one exists      -> revision round
+    - a review of this draft already exists              -> needs ``replace``
+
+    The last case is the only one that can destroy anything, and it is
+    deliberately narrow: it can only ever overwrite a review of the *same*
+    draft. If the authors have posted a new version since, the draft number
+    differs, so ``--replace`` silently becomes a new round rather than
+    clobbering the record of a draft nobody can read any more.
+    """
+    published = existing_bundles(paper_dir)
+    dest = paper_dir / f"v{draft}"
+
+    if draft in published:
+        if not replace:
+            raise CommandError(
+                f"Draft v{draft} of this paper has already been reviewed "
+                f"({dest.relative_to(REPO) if dest.is_relative_to(REPO) else dest}). "
+                "The archive still serves that draft, so there is nothing new "
+                "to read. Pass --replace (or `/review replace`) to review it "
+                "again and overwrite, or wait for the authors to post a new "
+                "version."
+            )
+        return Plan(dest=dest, draft=draft, replacing=True)
+
+    # A revision round rules against the newest earlier draft that left a
+    # round record. Reviews published before round records existed cannot be
+    # ruled against — there is nothing in them for a referee to check off — so
+    # those fall through to a fresh look rather than a broken second round.
+    prior = None
+    for n in sorted((v for v in published if v < draft), reverse=True):
+        if (published[n] / ROUND_RECORD).is_file():
+            prior = published[n]
+            break
+    return Plan(dest=dest, draft=draft, prior=prior)
 
 
 # A model slug an editor may name in a comment. Deliberately strict: the
@@ -333,14 +432,20 @@ class CommandError(ValueError):
 
 
 def parse_command(body: str) -> dict:
-    """Read `/review`, `/revise` and their provider options out of a comment.
+    """Read `/review` and its options out of a comment.
 
     Grammar, deliberately tiny:
 
         /review                          the configured panel (peerreview.toml)
         /review anthropic                the same, said out loud
         /review openrouter <model>       one model for every agent
-        /revise ...                      any of the above, as a revision round
+        /review replace ...              redo a draft already reviewed
+
+    There is one verb. Whether a run is a first look or a new round is not
+    something an editor should have to declare: the archive says which draft
+    exists, and a draft we have not reviewed is a new round. `/revise` is
+    still accepted because editors have muscle memory for it, and does exactly
+    what `/review` does.
 
     Parsed here rather than in the workflow because the comment is untrusted
     input. Bash sees it only as an environment variable; this is the one place
@@ -354,16 +459,18 @@ def parse_command(body: str) -> dict:
     """
     first = (body or "").strip().splitlines()[0] if (body or "").strip() else ""
     parts = first.split()
-    out: dict = {"revise": False, "provider": None, "model": None}
+    out: dict = {"replace": False, "provider": None, "model": None}
     if not parts or not parts[0].startswith("/"):
         return out
 
     command = parts[0].lower()
     if command not in ("/review", "/revise"):
         return out
-    out["revise"] = command == "/revise"
 
     rest = parts[1:]
+    if rest and rest[0].lower() == "replace":
+        out["replace"] = True
+        rest = rest[1:]
     if not rest:
         return out
 
@@ -745,15 +852,6 @@ def main() -> int:
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument("--url", help="preprint URL")
     src.add_argument("--issue-body", help="free text to scrape a URL out of")
-    src.add_argument(
-        "--rerun-of",
-        metavar="BUNDLE",
-        help="path to a bundle to re-review under the current pipeline. The "
-             "SAME draft is reviewed again from scratch, with no knowledge of "
-             "the earlier round, and the new bundle sits beside it. Use this "
-             "after changing prompts, models or config, to see what the change "
-             "did. Not a revision: the manuscript has not moved.",
-    )
     ap.add_argument("--submission-id", default="", help="submission issue number")
     ap.add_argument("--submitter", default="", help="GitHub login of the submitter")
     ap.add_argument(
@@ -776,20 +874,25 @@ def main() -> int:
         if os.environ.get("REVIEW_DEBATE_ROUNDS")
         else None,
     )
+    # What kind of run this is used to be three flags. It is now a consequence
+    # of which draft the archive serves: a draft we have not reviewed is a new
+    # round, and one we have is a re-review that has to say so.
     ap.add_argument(
-        "--revision-of",
-        metavar="BUNDLE",
-        help="path to the previous round's bundle directory (e.g. "
-             "docs/reviews/2026/<slug>/v1). Turns this into a revision round: "
-             "reviewers rule on the points they raised, a compliance auditor "
-             "checks the previous letter's required revisions against the new "
-             "draft, and the editor decides on the delta.",
+        "--replace",
+        action="store_true",
+        help="re-review a draft that already has a review, overwriting it. "
+             "Use after changing prompts, models or config. Cannot touch a "
+             "review of a different draft: if the authors have posted a new "
+             "version since, this writes a new round instead.",
     )
     ap.add_argument(
-        "--revise",
+        "--publish",
         action="store_true",
-        help="continue this preprint's most recent round automatically, "
-             "instead of naming the previous bundle with --revision-of.",
+        help="write into docs/reviews/, where the site publishes it. Off by "
+             "default so a run made to test a pipeline change does not become "
+             "a published review; those land in runs/ and are printed for "
+             "comparison. The workflow passes this; local runs usually should "
+             "not.",
     )
     ap.add_argument(
         "--command",
@@ -812,18 +915,9 @@ def main() -> int:
                     fh.write("bad_command=true\n")
                     fh.write(f"bad_command_reason={' '.join(str(exc).split())}\n")
             return 2
-        args.revise = args.revise or selected["revise"]
         args.provider = args.provider or selected["provider"]
         args.model = args.model or selected["model"]
-
-    if args.revise and args.revision_of:
-        ap.error("--revise and --revision-of do the same job; pass one.")
-    if args.rerun_of and (args.revise or args.revision_of):
-        ap.error(
-            "--rerun-of re-reviews the SAME draft under a new pipeline; "
-            "--revise/--revision-of review a NEW draft against the old round. "
-            "They answer different questions; pass one."
-        )
+        args.replace = args.replace or selected["replace"]
 
     workdir = Path(tempfile.mkdtemp(prefix="insilico-"))
     try:
@@ -846,20 +940,7 @@ def main() -> int:
 
 def _run(args, workdir: Path) -> int:
     """The review itself. Split out so the temp directory is always cleaned."""
-    rerun_prov: dict | None = None
-    if args.rerun_of:
-        rerun_prov = _rerun_provenance(args.rerun_of)
-        if rerun_prov is None:
-            return 1
-        url = str((rerun_prov.get("preprint") or {}).get("url") or "")
-        # Carried forward, because they describe the submission and the
-        # submission has not changed. Only the pipeline has.
-        args.submitter = args.submitter or str(rerun_prov.get("submitter") or "")
-        args.submitter_is_author = (
-            args.submitter_is_author or str(rerun_prov.get("submitter_is_author") or "")
-        )
-    else:
-        url = args.url or extract_url(args.issue_body)
+    url = args.url or extract_url(args.issue_body)
     # The form asks directly; a `/review` on a plain issue has no field to
     # read, and the page then says so rather than assuming either way.
     if not args.submitter_is_author and args.issue_body:
@@ -869,21 +950,27 @@ def _run(args, workdir: Path) -> int:
     if preprint.title:
         print(f"title     {preprint.title}", file=sys.stderr)
 
-    if rerun_prov is not None:
-        # resolve() follows the URL to whatever the server serves now, which
-        # for a bare bioRxiv link is the LATEST version. A rerun that silently
-        # picked up v2 would report a pipeline change while actually measuring
-        # a manuscript change, which is the one thing this flag exists to
-        # prevent. Pin the recorded PDF URL and check the bytes below.
-        pinned = str((rerun_prov.get("preprint") or {}).get("pdf_url") or "")
-        if pinned:
-            preprint.pdf_url = pinned
-
     pdf = download(preprint, workdir)
     print(f"pdf       {pdf} ({pdf.stat().st_size // 1024} KiB)", file=sys.stderr)
 
     if args.dry_run:
+        # Reports the plan too. --dry-run exists to check a URL is worth
+        # spending on, and "we reviewed this draft already" is exactly that
+        # kind of answer — worth getting before the panel, not after.
         print(json.dumps(preprint.to_dict(), indent=2))
+        try:
+            plan = plan_review(
+                find_paper_dir(preprint)
+                or REVIEWS
+                / (preprint.published or dt.date.today().isoformat())[:4]
+                / paper_slug(preprint, preprint.title or preprint.identifier),
+                draft_number(preprint),
+                args.replace,
+            )
+        except CommandError as exc:
+            print(f"{exc}", file=sys.stderr)
+            return 4
+        print(f"plan      {plan.kind}: draft v{plan.draft}", file=sys.stderr)
         return 0
 
     # Stop before the panel if the metadata lookup came back empty. The
@@ -901,6 +988,34 @@ def _run(args, workdir: Path) -> int:
             file=sys.stderr,
         )
         return 1
+
+    # Decided here, before a single model call. Refusing a draft we have
+    # already reviewed is worth nothing after the panel has run and the bill
+    # has been paid — and the destination is knowable the moment the archive
+    # tells us which draft it serves.
+    #
+    # The paper's directory is found by identifier where possible, never by
+    # slug alone: the slug embeds the title, authors retitle between versions
+    # routinely, and a slug lookup would open a second directory for the same
+    # paper and split its history in two.
+    year = (preprint.published or dt.date.today().isoformat())[:4]
+    slug = paper_slug(preprint, preprint.title or preprint.identifier)
+    known = find_paper_dir(preprint)
+    paper_dir = known or (REVIEWS / year / slug)
+    try:
+        plan = plan_review(paper_dir, draft_number(preprint), args.replace)
+    except CommandError as exc:
+        print(f"{exc}", file=sys.stderr)
+        if out := os.environ.get("GITHUB_OUTPUT"):
+            with open(out, "a", encoding="utf-8") as fh:
+                fh.write("already_reviewed=true\n")
+                fh.write(f"already_reviewed_reason={' '.join(str(exc).split())}\n")
+        return 4
+    print(
+        f"plan      {plan.kind}: draft v{plan.draft}"
+        + (f", ruling against {plan.prior.name}" if plan.prior else ""),
+        file=sys.stderr,
+    )
 
     from peerreviewagents.agents.editor.desk_screen import screen_mode
     from peerreviewagents.default_config import get_config
@@ -933,66 +1048,41 @@ def _run(args, workdir: Path) -> int:
         overrides["max_debate_rounds"] = args.debate_rounds
 
     revision: dict = {"round": 1}
-    if rerun_prov is not None:
-        # Round 1, and no `revision_of` in the config. Both are the point: the
-        # panel must not be shown the earlier round's findings, or it would
-        # rule on them instead of reading the paper, and a rerun that inherits
-        # the verdict it is supposed to be testing tests nothing.
-        prior_pipeline = (rerun_prov.get("pipeline") or {}).get("sha") or ""
-        revision = {
-            "round": 1,
-            "kind": "rerun",
-            "rerun_of": rerun_prov["_bundle"].name,
-            "prior_decision": str(rerun_prov.get("decision") or ""),
-            "prior_mean_score": rerun_prov.get("mean_score"),
-            "prior_pipeline_sha": prior_pipeline,
-            "prior_reviewed_at": str(rerun_prov.get("generated_at") or "")[:10],
-        }
-        print(
-            f"rerun     of {revision['rerun_of']} "
-            f"({revision['prior_decision'] or 'no decision'}, "
-            f"mean {revision['prior_mean_score']}, "
-            f"pipeline {prior_pipeline[:8] or 'unrecorded'})",
-            file=sys.stderr,
-        )
-    if args.revise:
-        found = find_prior_bundle(
-            preprint, preprint.title or preprint.identifier
-        )
-        if found is None:
-            print(
-                "No revisable round found for this preprint. Either it has "
-                "never been reviewed here, or its reviews predate round "
-                "records — run /review for a fresh round instead.",
-                file=sys.stderr,
-            )
-            return 1
-        args.revision_of = str(found)
-
-    if args.revision_of:
-        prior_bundle = Path(args.revision_of).resolve()
-        if not (prior_bundle / ROUND_RECORD).is_file():
-            print(
-                f"--revision-of {args.revision_of}: no {ROUND_RECORD} there.\n"
-                "A revision round needs the previous round's machine-readable "
-                "record. Reviews published before round records existed cannot "
-                "be revised — re-review the current draft as a fresh round "
-                "instead.",
-                file=sys.stderr,
-            )
-            return 1
+    prior_bundle = plan.prior
+    if prior_bundle is not None:
         overrides["revision_of"] = str(prior_bundle)
 
     config = get_config(**overrides)
 
-    # After config, because answering "same draft?" means converting the PDF
-    # the way this run will convert it, and the conversion depends on config
-    # (compression above all). The parse is cached, so the graph reuses it
-    # rather than paying for it twice.
-    if rerun_prov is not None and not _same_draft(pdf, rerun_prov, config):
-        return 1
+    if plan.replacing:
+        # Round 1, and no `revision_of` in the config. Both are the point: the
+        # panel must not be shown the earlier review's findings, or it would
+        # rule on them instead of reading the paper, and a re-review that
+        # inherits the verdict it is supposed to be testing tests nothing.
+        old = _rerun_provenance(str(plan.dest)) or {}
+        revision = {
+            "round": 1,
+            "kind": "rerun",
+            "replaced": plan.dest.name,
+            "prior_decision": str(old.get("decision") or ""),
+            "prior_mean_score": old.get("mean_score"),
+            "prior_pipeline_sha": (old.get("pipeline") or {}).get("sha") or "",
+            "prior_reviewed_at": str(old.get("generated_at") or "")[:10],
+        }
+        print(
+            f"replacing {plan.dest.name} "
+            f"({revision['prior_decision'] or 'no decision'}, "
+            f"mean {revision['prior_mean_score']})",
+            file=sys.stderr,
+        )
+        # The draft number matched, so the archive says this is the same
+        # version. Confirm the text as well: a server that quietly reposted
+        # different content under one version number would otherwise let a
+        # replacement claim to be a like-for-like comparison when it is not.
+        if old and not _same_draft(pdf, old, config):
+            return 1
 
-    if args.revision_of:
+    if prior_bundle is not None:
         prior = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
         prior_round = int(prior.get("round", 1))
         revision = {
@@ -1087,27 +1177,21 @@ def _run(args, workdir: Path) -> int:
         return 1
 
     run_dir = Path(write_reports(state))
-    title = preprint.title or state.get("manuscript_title") or preprint.identifier
-    year = (preprint.published or dt.date.today().isoformat())[:4]
-    slug = paper_slug(preprint, title)
-    paper_dir = REVIEWS / year / slug
-    if args.revision_of or rerun_prov is not None:
-        # Stay in the paper's existing directory. The slug embeds the title,
-        # so a revision that renamed the manuscript would otherwise open a
-        # second directory for the same paper and split its review history in
-        # two — with each half claiming to be the whole record.
-        #
-        # A rerun needs it for a plainer reason: the two reviews are of the
-        # same draft, and the whole value of the exercise is being able to
-        # read them side by side on one page.
-        anchor = args.revision_of or str(rerun_prov["_bundle"])
-        paper_dir = Path(anchor).resolve().parent
-        slug = paper_dir.name
-    # Always a fresh vN. A re-review of a revised manuscript sits beside the
-    # earlier one instead of overwriting it, which the policy promises and
-    # the previous flat layout quietly broke.
-    version = next_version(paper_dir)
-    dest = paper_dir / f"v{version}"
+    version = plan.draft
+
+    # Where it lands is decided by --publish, not by what kind of run it was.
+    # A run made to see what a prompt change did is a question about the
+    # pipeline, and answering it should not add a review to a stranger's paper
+    # — which is exactly how this corpus acquired four reviews of one draft.
+    if args.publish:
+        dest = plan.dest
+        if plan.replacing and dest.exists():
+            # Removed rather than written over: the old bundle's specialist
+            # reports would otherwise survive alongside the new ones and be
+            # read as part of this review.
+            shutil.rmtree(dest)
+    else:
+        dest = RUNS / f"{slug}-v{version}-{dt.datetime.now():%Y%m%d-%H%M%S}"
 
     write_bundle(
         preprint, state, run_dir, dest,

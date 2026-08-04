@@ -13,7 +13,7 @@ looks never means touching the program that produces one.
 ```
 docs/                     # the record, written by the pipeline
 ├── policy.md  criteria.md  submit.md  development.md
-└── reviews/<year>/<slug>/v<N>/     # one review of one version
+└── reviews/<year>/<slug>/v<N>/     # our review of the authors' Nth draft
     ├── provenance.json   # verdict, scores, models, cost, PDF fingerprint
     ├── round.json        # machine-readable record a later round rules on
     ├── summary.md  decision_letter.md  desk_screen.md
@@ -39,7 +39,7 @@ scripts/
 └── _pinned_review.py     # test helper: review a named version, not the latest
 
 .github/workflows/
-├── review.yml            # /review and /revise, opens a review PR
+├── review.yml            # /review, opens a review PR
 ├── ci.yml                # checks the data contract and that the site builds
 ├── publish.yml           # builds and deploys on merge
 └── check-updates.yml     # monthly sweep for stale reviews
@@ -77,12 +77,22 @@ export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 ```
 
-The bundle lands under `docs/reviews/<year>/<slug>/v<N>/` and the site picks it up
-on the next build.
+`v<N>` is the draft the archive served, not a count of our runs — `v3` is our
+review of the authors' third draft. `resolve()` always reports the current
+draft and refuses to go backwards, so the number only ever increases and folder
+order can never disagree with the order the drafts were written in.
 
 - `--dry-run` resolves the URL and downloads the PDF without calling a model. It
   does not check the PDF has extractable text, so a scanned paper passes this and
   fails later.
+- **Local runs do not publish.** The bundle lands in `runs/` (git-ignored) and
+  the comparison is printed. Pass `--publish` to write into `docs/reviews/`,
+  which is what the workflow does. A run made to see what a prompt change did
+  is a question about the pipeline, and answering it should not add a review to
+  someone's paper.
+- `--replace` re-reviews a draft that already has a review, overwriting it. It
+  can only ever hit a review of the *same* draft: if the authors have posted a
+  new version since, the draft number differs and you get a new round instead.
 - `--provider openrouter --model <cheap-model>` routes a run through a cheap
   model on a personal key. Use this for prompt work rather than editing
   `peerreview.toml`.

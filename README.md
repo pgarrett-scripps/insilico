@@ -65,21 +65,26 @@ In Silico **accepts** a paper the panel returns at accept or minor revision, and
 the four standard verdicts, and the line is drawn afterwards
 ([why](docs/policy.md#what-acceptance-means)).
 
-Editors have three commands, written as a comment on the submission issue. Only
-owners, members and collaborators can trigger them.
+Editors have one command, written as a comment on the submission issue. Only
+owners, members and collaborators can trigger it.
 
-| Command | Use it when |
+| Command | What happens |
 |---|---|
-| `/review` | first look at a preprint — the graded panel, cheap models for the wide fan-out and the best one only for the verdict |
-| `/revise` | the authors changed the paper — referees rule on what changed |
+| `/review` | reviews whatever draft the archive serves now |
+| `/review replace` | redoes a draft already reviewed, overwriting it |
 | `/review openrouter vendor/model` | the paid budget is spent — that one named model, for every agent |
+
+Whether a run is a first look or a new round is not something an editor
+declares. A bundle is named after the draft it read, so a draft we have not
+reviewed is a new round and one we have needs `replace` said out loud before
+anything is overwritten.
 
 A review run on a single model says so on its page: one model wrote all of it,
 and nothing checked the referees that was any better than the referees.
 
 ## Reading a review
 
-Each review is one folder per version of a paper under `docs/reviews/`, holding
+Each review is one folder per draft of a paper under `docs/reviews/`, holding
 the editor's decision letter, the eight specialist reports, the audits, the
 debate, and a `provenance.json` recording the verdict, panel scores, models and
 cost. A later review sits **beside** the one before it rather than replacing it.
