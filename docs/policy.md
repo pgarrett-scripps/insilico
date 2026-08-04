@@ -8,7 +8,7 @@ Do not cite an In Silico listing as evidence that a result is correct.
 
 ## Authority
 
-**The panel is advisory. A human editor decides.**
+**The panel decides the verdict. A human decides whether to publish it.**
 
 The editor agent produces a recommendation (accept, minor revision, major
 revision, or reject) and we publish it word for word. It binds nobody. A human

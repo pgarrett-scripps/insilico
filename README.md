@@ -9,9 +9,10 @@ publish the entire review next to a pointer to your paper.
 The review is the point. Eight specialist reviewers, two audits, a debate, an
 area chair and an editor, all published in full.
 
-> **This is an experiment.** The AI panel only advises. A human editor makes
-> every decision, and no automated verdict is final. Read these reviews as a
-> machine-generated second opinion, not as a stamp of approval.
+> **This is an experiment.** The verdict on every paper here was produced by a
+> language model, not a person. A human decides only whether a review gets
+> published, never what it says. Read these as a machine-generated second
+> opinion, not as a stamp of approval.
 
 **[Read the reviews →](https://pgarrett-scripps.github.io/insilico/reviews/)**
 
