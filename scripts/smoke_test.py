@@ -265,29 +265,26 @@ def check_desk_reject() -> None:
     """A desk reject produces almost none of the usual bundle. Render anyway.
 
     This is the shape that breaks a bundler written against the happy path:
-    no reports, no mean score, and decision_letter / desk_screen / integrity
-    all set to the same body by the pipeline.
+    no reports, no mean score, and decision_letter / desk_screen both set to
+    the same body by the pipeline.
     """
-    body = "# Submission integrity\n\n**Outcome:** concealed instructions found.\n"
+    body = "# Desk screen\n\n**Outcome:** out of scope for the venue.\n"
     with tempfile.TemporaryDirectory() as tmp:
         run_dir = Path(tmp) / "run"
         run_dir.mkdir()
-        for name in ("decision_letter.md", "desk_screen.md", "integrity.md"):
+        for name in ("decision_letter.md", "desk_screen.md"):
             (run_dir / name).write_text(body)
         (run_dir / "summary.md").write_text("# Summary\n\nDesk rejected.\n")
 
         os.environ["REVIEW_MODELS"] = "{}"
         os.environ["REVIEW_AGENT_MODELS"] = "{}"
-        os.environ["REVIEW_SCREENS"] = json.dumps(
-            {"injection_screen": True, "injection_screen_action": "reject",
-             "desk_screen_mode": "gate"}
-        )
+        os.environ["REVIEW_SCREENS"] = json.dumps({"desk_screen_mode": "gate"})
         preprint = Preprint(
             url="https://arxiv.org/abs/0000.00001",
             source="arxiv",
             pdf_url="https://arxiv.org/pdf/0000.00001",
             identifier="0000.00001",
-            title="A manuscript with a concealed payload",
+            title="A manuscript stopped at the desk",
         )
         state = {
             "decision": "reject",
@@ -310,9 +307,9 @@ def check_desk_reject() -> None:
         assert prov["panel"] == [], "a desk reject convened no panel"
         assert prov["screens"]["desk_screen_mode"] == "gate", "screen config not recorded"
 
-        # All three identical bodies are copied so a direct link resolves; the
+        # Both identical bodies are copied so a direct link resolves; the
         # site is what collapses them to one entry.
-        for name in ("integrity.md", "decision_letter.md", "desk_screen.md"):
+        for name in ("decision_letter.md", "desk_screen.md"):
             assert (dest / name).exists(), f"{name} not copied into the bundle"
 
 

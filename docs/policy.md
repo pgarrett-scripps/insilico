@@ -93,25 +93,25 @@ a lower bar than for reviews the authors asked for.
 Two checks run before any referee is assigned, and either can stop a submission.
 `provenance.json` records which were active.
 
-### Submission integrity
+### We do not screen for prompt injection
 
-Every file is scanned for text hidden from human readers — white fill, zero
-opacity, invisible render mode, tiny type, off-page placement — carrying
-instructions aimed at an automated reviewer. Our referees are all AI, so a
-payload written for AI reaches every referee we have.
+Our referees are all AI, so a paragraph hidden in a PDF telling the reviewer to
+recommend acceptance would reach every referee we have. You should know that we
+do not look for it.
 
-- **It runs before any model reads the file.** No tokens, no model call.
-- **Hidden text alone is never a rejection.** Scanned PDFs carry an invisible
-  OCR layer. Rejection needs an instruction aimed at the reviewer inside it.
-- **Visible instructions count too.** The line is who the text speaks to.
-  Language *addressing* the reviewer is manipulation; language *describing* such
-  attempts is a paper about prompt injection quoting its subject. If you quote
-  payloads, say so in the submission.
+We used to. The scan compared a text run's colour against a threshold without
+checking what was drawn behind it, so white labels on a dark figure read as
+concealed text — and on a real submission it reported that the authors had
+hidden eleven thousand characters, which were the axis labels of a heatmap. The
+matching half was a list of phrasings: it caught the payload copied off a blog
+and nothing rewritten. A check that reliably accuses honest authors and
+unreliably catches dishonest ones is worse than no check, so it was removed
+rather than tuned.
 
-**A finding is never published automatically.** It is an allegation about named
-people. Findings open as draft pull requests and go nowhere unless a human
-editor reads the evidence and agrees. If we are unsure we contact the authors
-privately and publish nothing.
+Nothing here replaces it. If you submit a manuscript with instructions hidden
+in it, our referees will read them as prose. What we can promise is the
+opposite of what the scan promised: we will not publish a claim that anyone
+concealed anything, because we are no longer in a position to make one.
 
 ### Editorial triage
 

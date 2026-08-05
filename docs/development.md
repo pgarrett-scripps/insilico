@@ -19,7 +19,6 @@ docs/                     # the record, written by the pipeline
     ├── summary.md  decision_letter.md  desk_screen.md
     ├── meta_review.md  author_rebuttal.md  debate_transcript.md
     ├── journal_recommendations.md
-    ├── integrity.md      # only when the hidden-text scan found something
     ├── manuscript_stats.md   # deterministic counts over the text the panel read
     ├── review_*.md       # 8 specialist reports
     └── audit_*.md        # 2 audits, 3 in a revision round
@@ -136,10 +135,11 @@ model slugs matching a strict pattern.
 
 ## The PDF converter
 
-`run_review.py` hands the pipeline the PDF itself, never a conversion of it. Only
-the integrity screen's PDF path can find text hidden inside a content stream;
-give it a `.md` and the screen reports as having run while looking for something
-it cannot find.
+`run_review.py` hands the pipeline the PDF itself, never a conversion of it.
+Every run records which converter read the manuscript, and a conversion done
+here would be recorded as though the pipeline's own converter produced it. It
+also fixes the manuscript cache key a later round re-derives to recover this
+draft.
 
 Behind the loader the PDF becomes markdown, and that is what the referees read.
 The converter is [rustypaper](https://github.com/pgarrett-scripps/rustypaper), a

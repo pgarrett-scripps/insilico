@@ -84,8 +84,7 @@ REPO_URL = (
 # site's business, and lives in src/lib/corpus.js.
 #
 # desk_screen.md carries the triage verdict and is written whenever that screen
-# ran, pass or reject. integrity.md is written only when the concealed-text scan
-# found something, so most bundles do not have one.
+# ran, pass or reject.
 #
 # The pipeline also supports an author response letter, and In Silico
 # deliberately never sends one. Given a letter asserting that revisions were
@@ -106,7 +105,6 @@ REPO_URL = (
 BUNDLE_FILES = [
     "summary.md",
     "decision_letter.md",
-    "integrity.md",
     "desk_screen.md",
     "meta_review.md",
     "author_rebuttal.md",
@@ -672,9 +670,9 @@ def write_bundle(
     research = research or {}
 
     # Every document is copied, including the ones a desk reject makes
-    # byte-identical (it sets decision_letter, desk_screen and integrity to the
-    # same body). A reader following a direct link should find the file; the
-    # site is what decides not to show one text under three headings.
+    # byte-identical (it sets decision_letter and desk_screen to the same
+    # body). A reader following a direct link should find the file; the site
+    # is what decides not to show one text under two headings.
     for name in BUNDLE_FILES:
         src = run_dir / name
         if src.exists():
@@ -1130,8 +1128,6 @@ def _run(args, workdir: Path) -> int:
     # contents of peerreview.toml.
     os.environ["REVIEW_SCREENS"] = json.dumps(
         {
-            "injection_screen": bool(config.get("injection_screen", True)),
-            "injection_screen_action": config.get("injection_screen_action") or "reject",
             # Ask the pipeline rather than reading the key: `desk_screen_mode`
             # and the legacy boolean `desk_screen` both feed this, and
             # screen_mode() is what actually decides.
@@ -1148,10 +1144,10 @@ def _run(args, workdir: Path) -> int:
     try:
         with _telemetry_recorder(graph.run_id) as telemetry:
             # The PDF, not a conversion of it. The pipeline converts it to
-            # markdown internally; handing it a .md instead would route the
-            # integrity screen to its markup scanner, which cannot see text
-            # concealed in a content stream, and would change the manuscript
-            # cache key that the next round re-derives to recover this draft.
+            # markdown internally; handing it a .md instead would record a
+            # converter that did not read this file, and would change the
+            # manuscript cache key that the next round re-derives to recover
+            # this draft.
             state = graph.review(str(pdf))
     except ManuscriptUnreadable as exc:
         # No bundle, no verdict, nothing published. A scanned or image-only

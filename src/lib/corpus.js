@@ -71,7 +71,6 @@ export function statusOf(review) {
 const DOCUMENT_ORDER = [
   ["summary.md", "Summary", "The panel's assessment in brief."],
   ["decision_letter.md", "Decision letter", "The editor's verdict and what it requires."],
-  ["integrity.md", "Submission integrity scan", "Deterministic scan for text concealed from human readers."],
   ["desk_screen.md", "Desk screen", "Whether the submission cleared the bar for full review."],
   ["meta_review.md", "Area chair synthesis", "Ten reports weighed into one assessment."],
   ["author_rebuttal.md", "Simulated author rebuttal", "The authors' side, argued for the editor to weigh."],
@@ -111,10 +110,10 @@ export function titleFromFilename(name) {
 /**
  * Every document in one bundle, split by the role it played.
  *
- * On a desk reject the pipeline writes the same body to decision_letter,
- * desk_screen and integrity, so those arrive byte-identical. Each distinct
- * body is listed once — a reader following a direct link still finds the file,
- * but the page doesn't show one text under three headings.
+ * On a desk reject the pipeline writes the same body to decision_letter and
+ * desk_screen, so those arrive byte-identical. Each distinct body is listed
+ * once — a reader following a direct link still finds the file, but the page
+ * doesn't show one text under two headings.
  */
 function readDocuments(bundleDir) {
   const files = (() => {

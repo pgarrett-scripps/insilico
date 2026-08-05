@@ -148,13 +148,12 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
       )}
     </div>
 
-    <div class="prov__cell">
-      <p class="label">Desk screens</p>
-      <p class="prov__value mono">
-        {screens.injection_screen ? "integrity on" : "integrity off"}
-        {screens.desk_screen_mode ? ` · triage ${screens.desk_screen_mode}` : ""}
-      </p>
-    </div>
+    {screens.desk_screen_mode && (
+      <div class="prov__cell">
+        <p class="label">Desk screen</p>
+        <p class="prov__value mono">triage {screens.desk_screen_mode}</p>
+      </div>
+    )}
   </div>
 
   {singleModel && (

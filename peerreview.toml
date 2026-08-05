@@ -63,49 +63,10 @@ journals_dir = "journals"
 target_journal = "insilico"
 
 # ---------------------------------------------------------------------------
-# The desk — two independent screens, before any reviewer is assigned
+# The desk — before any reviewer is assigned
 # ---------------------------------------------------------------------------
 
-# 1. Submission integrity — a deterministic, token-free scan of the PDF's
-#    content stream for text hidden from a human reader (white fill, zero
-#    opacity, invisible render mode, sub-point type, off-page placement) that
-#    carries instructions aimed at an automated reviewer. This is the attack
-#    that matters for a journal whose referees are all models: a paragraph no
-#    human sees telling the reviewer to recommend acceptance.
-#
-#    On by default upstream; set explicitly here because for In Silico it is a
-#    policy commitment, not a preference, and a default that silently flipped
-#    would change what the journal guarantees.
-#
-#    It runs *before* any model reads the file — that ordering is the whole
-#    point, since a payload only works on a model that reads it. Concealed
-#    text alone is never a reject (scanned papers carry an invisible OCR
-#    layer); the reject needs an instruction found inside the concealed text.
-injection_screen = true
-
-# "reject" desk-rejects a confirmed injection outright; "flag" records the
-# evidence and lets the review proceed. Keep this at "reject" — but note that
-# a legitimate paper *about* prompt injection quotes these strings in visible
-# text, and visible matches are only ever noted, so such papers are not caught
-# by this. Flip to "flag" only to deliberately review a compromised file.
-injection_screen_action = "reject"
-
-# What reviewer-directed language in *visible* text does. "judge" hands it to
-# the desk screen, which decides whether the passage addresses the reviewer
-# (manipulation, reject) or describes attacks addressed to one (a paper about
-# prompt injection, proceed).
-#
-# Not "reject": In Silico reviews computational and security work, and a paper
-# studying this attack has to quote payloads to study them. Rejecting it for
-# containing its own subject would be a worse failure than the one we are
-# guarding against — and the discriminator is judgeable, so an agent should
-# judge it rather than a regex deciding by whether the text was hidden.
-#
-# The desk screen is on (below), so there is always something to judge with.
-# With triage off this falls through to a reject instead.
-visible_injection_action = "judge"
-
-# 2. Editorial triage — a single fast pass that desk-rejects work plainly
+# Editorial triage — a single fast pass that desk-rejects work plainly
 #    below the bar before spending the full panel on it.
 #
 #    On even though a human editor already ran `/review`, because those are

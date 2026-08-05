@@ -360,15 +360,11 @@ jobs:
               echo "> **Opened as a draft — read the bundle before merging.**"
               echo ">"
               echo "> This submission was stopped at the desk; no referee panel ran."
-              echo "> If the cause was the submission-integrity scan, merging this"
-              echo "> publishes a finding that a named author concealed instructions"
-              echo "> to a reviewer inside their manuscript. That is a public"
-              echo "> allegation about real people, not a review, and a false"
-              echo "> positive would be damaging and hard to walk back."
-              echo ">"
-              echo "> Confirm the finding in \`integrity.md\` yourself first. If it is"
-              echo "> wrong, close this PR. If you are unsure, close it and contact"
-              echo "> the authors privately rather than publishing."
+              echo "> Merging publishes a rejection of a named author's work that one"
+              echo "> triage pass produced and nothing checked. Read"
+              echo "> \`desk_screen.md\` yourself first. If it is wrong, close this"
+              echo "> PR. If you are unsure, close it and contact the authors"
+              echo "> privately rather than publishing."
             else
               echo "The recommendation above is **advisory**. Merging this PR publishes"
               echo "the review and lists the preprint; closing it declines the submission."
@@ -409,9 +405,9 @@ jobs:
         run: |
           # On a desk reject this comment stays deliberately spare. The issue
           # is public and the submitter is named on it, so quoting the desk's
-          # reasoning here would publish an unreviewed finding — possibly an
-          # integrity allegation — before any human has confirmed it. Say that
-          # it was held and who decides next; nothing more.
+          # reasoning here would publish an unreviewed rejection before any
+          # human has confirmed it. Say that it was held and who decides next;
+          # nothing more.
           if [ "${DESK_REJECTED}" = "true" ]; then
             {
               echo "This submission was **stopped at the desk** and has not been sent"
