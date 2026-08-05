@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T07:57:16+00:00",
+  "generated_at": "2026-08-02T17:48:57+00:00",
   "pipeline": {
     "sha": "",
     "version": "0.1.0"
@@ -29,15 +29,27 @@
     }
   },
   "debate_rounds": 1,
-  "decision": "minor",
+  "decision": "major",
   "desk_rejected": false,
   "round": 1,
   "revision": {
     "round": 1,
-    "response_published": false
+    "kind": "rerun",
+    "replaced": "v1",
+    "prior_decision": "minor",
+    "prior_mean_score": 4.0,
+    "prior_pipeline_sha": "",
+    "prior_reviewed_at": "2026-08-02"
   },
   "submitter": "insilico-test",
   "submitter_is_author": "no",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypdf 0.1.0",
+    "caveman": "light",
+    "chars": 38663,
+    "reason": ""
+  },
   "screens": {
     "desk_screen_mode": "gate",
     "injection_screen": true,
@@ -46,12 +58,12 @@
   "panel": [
     {
       "reviewer": "clarity",
-      "score": 4.0,
-      "confidence": 5.0
+      "score": 3.0,
+      "confidence": 4.0
     },
     {
       "reviewer": "data_analysis",
-      "score": 4.0,
+      "score": 3.0,
       "confidence": 4.0
     },
     {
@@ -66,32 +78,34 @@
     },
     {
       "reviewer": "methodology",
-      "score": 4.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "novelty",
-      "score": 4.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "reproducibility",
       "score": 3.0,
       "confidence": 4.0
     },
     {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
       "reviewer": "rigor",
-      "score": 4.0,
+      "score": 3.0,
       "confidence": 4.0
     }
   ],
-  "mean_score": 4.0,
-  "total_cost_usd": 1.173702,
+  "mean_score": 3.25,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 1.284118,
   "cost_by_node": {
-    "audit_citation_integrity": 0.08814,
-    "reviewer_literature": 0.081397,
-    "reviewer_novelty": 0.112176,
-    "unattributed": 0.891989
+    "audit_citation_integrity": 0.110853,
+    "reviewer_literature": 0.081586,
+    "reviewer_novelty": 0.131416,
+    "unattributed": 0.960263
   },
   "errors": [],
   "preprint": {

@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-03T07:32:53+00:00",
+  "generated_at": "2026-08-04T19:26:28+00:00",
   "pipeline": {
-    "sha": "",
+    "sha": "02e83b76c357ed6bd1aa854ee1bfab8e3a498645",
     "version": "0.1.0"
   },
   "provider": "anthropic",
@@ -31,12 +31,18 @@
       "model": "claude-sonnet-5"
     }
   },
-  "debate_rounds": 1,
+  "debate_rounds": 2,
   "decision": "major",
   "desk_rejected": false,
   "round": 1,
   "revision": {
-    "round": 1
+    "round": 1,
+    "kind": "rerun",
+    "replaced": "v1",
+    "prior_decision": "minor",
+    "prior_mean_score": 3.88,
+    "prior_pipeline_sha": "",
+    "prior_reviewed_at": "2026-08-03"
   },
   "submitter": "",
   "submitter_is_author": "no",
@@ -45,6 +51,7 @@
     "tool": "rustypaper 0.1.1",
     "caveman": null,
     "chars": 86988,
+    "text_sha256": "b2ef02d556404030494886c465eb9c7c108aad9f4185ae7f75a4a2f3d8d0a619",
     "prose": {
       "health": {
         "fused_per_1k": 0.0,
@@ -94,7 +101,7 @@
     {
       "reviewer": "clarity",
       "score": 4.0,
-      "confidence": 5.0
+      "confidence": 4.0
     },
     {
       "reviewer": "data_analysis",
@@ -135,25 +142,218 @@
   "mean_score": 3.75,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 1.7618185000000002,
+  "total_cost_usd": 2.3735012,
   "cost_by_node": {
-    "audit_citation_integrity": 0.093866,
-    "audit_methods_completeness": 0.076265,
-    "author_rebuttal": 0.352858,
-    "debate_advocate": 0.197862,
-    "debate_skeptic": 0.075784,
-    "desk_screen": 0.038695,
-    "editor": 0.186641,
-    "journal_recommender": 0.06809,
-    "meta_reviewer": 0.105563,
-    "reviewer_clarity": 0.056924,
-    "reviewer_data_analysis": 0.045553,
-    "reviewer_ethics": 0.126839,
-    "reviewer_literature": 0.128069,
-    "reviewer_methodology": 0.013163,
-    "reviewer_novelty": 0.100995,
-    "reviewer_reproducibility": 0.045735,
-    "reviewer_rigor": 0.048913
+    "audit_citation_integrity": 0.156678,
+    "audit_methods_completeness": 0.100669,
+    "author_rebuttal": 0.399105,
+    "debate_advocate": 0.375883,
+    "debate_skeptic": 0.185285,
+    "desk_screen": 0.061013,
+    "editor": 0.194645,
+    "journal_recommender": 0.07102,
+    "meta_reviewer": 0.111396,
+    "reviewer_clarity": 0.068728,
+    "reviewer_data_analysis": 0.068375,
+    "reviewer_ethics": 0.069093,
+    "reviewer_literature": 0.147466,
+    "reviewer_methodology": 0.071694,
+    "reviewer_novelty": 0.147732,
+    "reviewer_reproducibility": 0.071957,
+    "reviewer_rigor": 0.07276
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "find_related_work",
+        "query": "MreB actin homolog bacterial polymerization",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "actin filament nucleotide exchange ATP hydrolysis",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "MreB Bacillus subtilis cell morphogenesis",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "van den Ent Izor\u00e9 MreB antiparallel double filaments eLife 2014",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Dom\u00ednguez-Escobar MreB processive movement cell wall Science 2011",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Garner MreB circumferential motions cell wall Science 2011",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "actin filament nucleotide trapped subunit depolymerization",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ParM filament ADP disassembly prokaryotic actin",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "cardiolipin MreB membrane binding anionic phospholipid",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Pollard actin filament nucleotide exchange trapped 1992",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Holmes atomic model actin filament Nature 1990",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Mao nucleotides lipids MreB polymerization eLife 2023",
+        "hits": 0
+      }
+    ],
+    "reviewer_literature": [
+      {
+        "tool": "find_related_work",
+        "query": "MreB polymerization nucleotide ATP hydrolysis bacterial actin",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "actin filament nucleotide exchange within filaments",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ParM prokaryotic actin homolog assembly dynamics",
+        "hits": 8
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "MreB membrane binding cardiolipin phospholipids",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "nucleotide exchange actin filament trapped nucleotide",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "MreB Bacillus subtilis filament assembly critical concentration",
+        "hits": 8
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "actin nucleotide binding kinetics ATP ADP dissociation",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Geobacillus stearothermophilus MreB nucleotide binding",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "actin filament ATP cap barbed end pointed end polymerization",
+        "hits": 8
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "actin filament nucleotide bound subunits trapped",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "MreB antiparallel protofilaments double filaments structure",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "van den Ent Izor\u00e9 Bharat Johnson L\u00f6we bacterial actin MreB antiparallel",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Mao nucleotides lipids MreB polymerization Gram-positive",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Pollard actin filament nucleotide exchange",
+        "hits": 6
+      }
+    ],
+    "reviewer_novelty": [
+      {
+        "tool": "find_related_work",
+        "query": "MreB nucleotide exchange filament dynamics",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "intrafilament nucleotide cycling biological polymers",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "MreB polymerization ATP hydrolysis membrane",
+        "hits": 6
+      },
+      {
+        "tool": "search_preprints",
+        "query": "prokaryotic actin homolog nucleotide exchange",
+        "hits": 6
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ATP hydrolysis actin filament polymerization mechanism",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ParM filament nucleotide dynamics prokaryotic",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "MreB ATP hydrolysis not required polymerization",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "nucleotide exchange within filament polymer actin tubulin",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Mao nucleotide lipids MreB polymerization 2023",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Mao MreB Geobacillus nucleotide lipid eLife 2023",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "van den Ent MreB antiparallel double filaments eLife 2014",
+        "hits": 0
+      }
+    ]
   },
   "errors": [],
   "preprint": {
@@ -180,7 +380,7 @@
     "abstract": "Polymerisation and disassembly govern the cellular functions of cytoskeletal proteins. In canonical nucleotide-dependent polymers such as actin and tubulin, nucleotide exchange occurs in soluble subunits but not within intact protofilaments. By contrast, the assembly dynamics and nucleotide dependency of the prokaryotic actin homolog MreB, whose polymerization into membrane-associated filaments is essential for bacterial cell morphogenesis, remain poorly understood. We used total internal reflection fluorescence microscopy and high-speed atomic force microscopy to monitor the assembly of MreB on supported lipid bilayers in real time. ATP binding triggers MreB polymerization into symmetrically elongating pairs of filaments on cardiolipin-containing membranes. While ATP hydrolysis occurs within filaments and contributes to endwise disassembly, continuous nucleotide exchange within filaments tunes their stability on the membrane. Nucleotide cycling within MreB filaments defines a new class of biological polymer behavior and highlights the evolutionary divergence of mechanisms governing actin homologs assembly dynamics.",
     "published": "2026-07-25",
     "version": "1",
-    "pdf_sha256": "b038478a24cebc5d6da723c6c27bd5de18f7ee0a013f4525af82a05206d8ad46",
+    "pdf_sha256": "5f085708427bfc0de4e0d57ede69df8e42011916336e5d971f0acb862ecb85e6",
     "pdf_bytes": 1689095
   }
 }

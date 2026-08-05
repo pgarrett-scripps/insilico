@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T08:26:48+00:00",
+  "generated_at": "2026-08-02T17:01:28+00:00",
   "pipeline": {
     "sha": "",
     "version": "0.1.0"
@@ -29,12 +29,17 @@
     }
   },
   "debate_rounds": 1,
-  "decision": "minor",
+  "decision": "major",
   "desk_rejected": false,
   "round": 1,
   "revision": {
     "round": 1,
-    "response_published": false
+    "kind": "rerun",
+    "replaced": "v1",
+    "prior_decision": "minor",
+    "prior_mean_score": 4.12,
+    "prior_pipeline_sha": "",
+    "prior_reviewed_at": "2026-08-02"
   },
   "submitter": "insilico-test",
   "submitter_is_author": "no",
@@ -51,12 +56,13 @@
     },
     {
       "reviewer": "data_analysis",
-      "score": 5.0,
-      "confidence": 5.0
+      "score": null,
+      "confidence": 5.0,
+      "not_applicable_reason": "This is a qualitative interview study using reflexive thematic analysis. It contains no quantitative hypothesis tests, statistical comparisons, p-values, confidence intervals, effect sizes, sample-size calculations, or statistical claims to evaluate."
     },
     {
       "reviewer": "ethics",
-      "score": 5.0,
+      "score": 4.0,
       "confidence": 5.0
     },
     {
@@ -66,32 +72,34 @@
     },
     {
       "reviewer": "methodology",
-      "score": 4.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "novelty",
       "score": 3.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "reproducibility",
+      "reviewer": "novelty",
       "score": 4.0,
       "confidence": 4.0
     },
     {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 5.0
+    },
+    {
       "reviewer": "rigor",
-      "score": 4.0,
-      "confidence": 4.0
+      "score": 3.0,
+      "confidence": 5.0
     }
   ],
-  "mean_score": 4.12,
-  "total_cost_usd": 1.549583,
+  "mean_score": 3.43,
+  "scored_count": 7,
+  "panel_size": 8,
+  "total_cost_usd": 1.7521630000000001,
   "cost_by_node": {
-    "audit_citation_integrity": 0.078287,
-    "reviewer_literature": 0.150652,
-    "reviewer_novelty": 0.107214,
-    "unattributed": 1.21343
+    "audit_citation_integrity": 0.191402,
+    "reviewer_literature": 0.15949,
+    "reviewer_novelty": 0.181075,
+    "unattributed": 1.220196
   },
   "errors": [],
   "preprint": {

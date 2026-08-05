@@ -1,9 +1,9 @@
 # Ethics & Compliance Reviewer
 
 ## Summary
-This manuscript presents a comprehensive experimental and computational study of MreB polymerization dynamics on lipid membranes, with rigorous disclosure of funding, authorship, and data availability. All required ethical and compliance elements are present and properly documented. The work involves no human subjects, clinical interventions, or regulated animal research; bacterial protein biochemistry and in vitro biophysics require no IRB approval. Funding sources are explicitly listed, competing interests are declared as absent, and the authors commit to data deposition on Zenodo. The study meets all applicable compliance standards for publication.
+This manuscript presents a thorough experimental and computational study of MreB polymerization dynamics with full transparency on methods, data availability, and funding. No ethics or compliance issues are identified. All required statements are present: funding is disclosed (ERC, NRF Singapore, Kanazawa University), competing interests are explicitly declared as none, and in vivo work uses standard model organisms (B. subtilis) requiring no special approval. The work is sound on compliance grounds.
 
 ## Strengths
-- Funding sources comprehensively disclosed (ERC, NRF Singapore, Kanazawa University, NUS) with grant numbers and principal investigators identified.
-- Competing interests explicitly stated as absent, and authorship contributions are itemized by role (Conceptualization, Investigation, Methodology, etc.) with no evidence of ghost or gift authorship.
-- Data and materials availability statement commits to Zenodo deposition post-publication and offers constructs under material transfer agreement, with reproducibility supported by detailed Methods.
+- Funding sources and competing interests are clearly and completely disclosed in the manuscript.
+- All experimental procedures are described with sufficient detail for reproducibility, and the authors commit to data deposition on Zenodo.
+- In vivo imaging uses B. subtilis, a standard model organism not requiring ethics approval, and no human subjects, identifiable data, or restricted materials are involved.

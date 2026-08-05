@@ -1,19 +1,20 @@
 # Ethics & Compliance Reviewer
 
 ## Summary
-This manuscript presents a computational study comparing different scoring rules for training machine-learned weather forecast models. No human subjects, animals, clinical interventions, dual-use biosafety risks, or secondary/sensitive data are involved. The work is purely computational, using publicly available ERA5 reanalysis data and open-source frameworks. Funding sources are disclosed (Gauss Centre for Supercomputing, EuroHPC Joint Undertaking). No competing interests statement is provided, but the authors are from ECMWF and appear to be developing the Anemoi framework they use; this relationship should be explicitly declared. No IRB, ethics committee, or animal-welfare approvals are needed. Code and data availability are not explicitly addressed, which is a soft transparency issue for reproducibility but not a compliance barrier. Overall, no hard ethical or compliance violations are evident.
+This is a computational study on machine-learned weather forecasting using public reanalysis data (ERA5) and open-source software (Anemoi framework). The work involves no human subjects, animal research, clinical interventions, dual-use biosafety concerns, or secondary data requiring special consent. Funding is acknowledged (Gauss Centre for Supercomputing and EuroHPC), and no competing interests are declared. The authors are named and authorship appears straightforward. No ethics-committee approvals are required for this category of work. The manuscript is compliant with standard research-integrity expectations for computational meteorology.
 
 ## Strengths
-- Funding sources are clearly acknowledged: Gauss Centre for Supercomputing and EuroHPC Joint Undertaking are named with specific computing resources (JUPITER supercomputer at JSC).
-- The work uses only publicly available data (ERA5 reanalysis, 1979–2020) with no privacy, consent, or human-subjects concerns.
-- The study is purely computational and methodological, with no clinical, animal, or dual-use biosafety triggers.
-- Authors acknowledge contributors to the Anemoi framework, showing transparency about collaborative development.
+- Funding sources explicitly acknowledged (Gauss Centre for Supercomputing, EuroHPC Joint Undertaking, Jülich Supercomputing Centre).
+- Open-source framework (Anemoi) used and referenced, supporting reproducibility and transparency.
+- Public reanalysis data (ERA5) used as the basis for training and evaluation, with no privacy or consent barriers.
+- No human subjects, animal subjects, or sensitive dual-use methods involved.
+- Authorship is clear and straightforward (three named authors with institutional affiliations implied).
 
 ## Weaknesses
-- No explicit declaration of competing interests or conflicts of interest is provided. The authors appear to be affiliated with ECMWF and are developing/using the Anemoi framework (https://github.com/ecmwf/anemoi-core), which is central to the experiments; this relationship should be declared as present or absent.
-- Code and data availability are not addressed. While ERA5 is public, the trained models, custom scoring-rule implementations, and experimental configurations are not stated to be deposited or made available, limiting reproducibility and transparency.
+- No explicit statement of competing interests or conflicts of interest, even a simple 'none declared' statement would strengthen transparency.
+- No data or code availability statement provided, despite the use of public data and open-source framework; authors should clarify whether trained model weights, experimental configurations, and analysis scripts are or will be made available.
 
 ## Questions
-- Do the authors have any competing interests, financial or otherwise, related to the Anemoi framework, ECMWF, or the scoring-rule implementations tested? Please provide an explicit declaration.
-- Will the trained models, code for the custom scoring rules, and experimental configurations be made available (e.g., on GitHub, Zenodo, or a supplementary repository)? If not, what are the barriers?
-- The manuscript states 'All scores are implemented in the Anemoi framework' — are these implementations already public in the Anemoi repository, or are they new contributions that will be released?
+- Will the trained model weights, hyperparameter configurations, and analysis scripts be made available in a repository (e.g., GitHub, Zenodo) to enable reproducibility and reuse?
+- Do the authors have any competing interests, financial or otherwise, related to this work or the institutions/funding bodies involved? An explicit statement (even 'none') would be appropriate for a public review.
+- Are there any restrictions on use of the ERA5 data or Anemoi framework that should be disclosed to readers?

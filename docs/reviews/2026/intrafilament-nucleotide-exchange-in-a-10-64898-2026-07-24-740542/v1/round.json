@@ -1,92 +1,104 @@
 {
   "schema_version": 1,
   "round": 1,
-  "job_id": "20260803-003253-intrafilament-nucleotide-exchange-in-a-prokaryotic",
+  "job_id": "20260804-122628-intrafilament-nucleotide-exchange-in-a-prokaryotic",
   "manuscript_title": "Intrafilament nucleotide exchange in a prokaryotic actin homolog",
-  "manuscript_cache_key": "770b5545ddec4b3cb2557604a1d57cbfc0bc3a3527d4c2f30ea13033aa677f4c",
+  "manuscript_cache_key": "c89d451b566f5efc1a7afb2071fc8cadebbfdbc516cc9a350776b420fbf91109",
   "decision": "major",
-  "weighted_score": 3.7941,
+  "weighted_score": 3.7879,
   "required_revisions": [
     {
       "id": "R1-01",
-      "text": "Deposit, concurrent with the revised submission, the complete Monte Carlo simulation code, the MATLAB data-extraction script, model equations and simulation algorithm (specify the Gillespie variant or equivalent), and a parameter-provenance table marking each rate constant as directly measured or fitted with its uncertainty, in a public repository with a permanent DOI (Zenodo/GitHub). Post-publication deposition is not sufficient. Include the promised sensitivity analysis varying k+,n and k-,n over 5-10x, and state goodness-of-fit for the comparisons in Fig. S8 and S10.",
+      "text": "Disambiguate interior from end-limited exchange quantitatively, as the authors propose: compare the observed ATP* FRAP recovery rate (Fig. 3F) against the rate predicted for purely end-limited exchange given the measured k−,t and the measured filament-length distribution, and report the comparison explicitly with uncertainties. State plainly in the Results and Discussion what this analysis can and cannot exclude. If the analysis cannot exclude an end-limited mechanism, retitle and rescope the 'intrafilament' claim accordingly rather than retaining it as established.",
       "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-02",
-      "text": "Rescale the central mechanistic claim to the evidence presented. In the abstract, title framing and Discussion, (a) replace 'tunes' with the non-agentive formulation the authors propose, (b) drop or explicitly qualify 'a new class of biological polymer behavior', scoping conclusions to B. subtilis MreB and noting that generality across MreB orthologs is untested, and (c) add an explicit paragraph in the Results or Discussion naming the alternative interpretations of the Fig. 3E/F FRAP result — lateral subunit diffusion, nonspecific nucleotide rebinding, and end-restricted exchange — and setting out which specific data (E136A abolition, D158A acceleration, homogeneous ATP* incorporation in Fig. 3H/I) argue against each, and what each still leaves open. State plainly which experiment would be definitive.",
+      "text": "For the Monte Carlo model, add a table distinguishing independently measured parameters (each with citation to the source experiment) from parameters fitted to reproduce Fig. S8/S10, and report a sensitivity analysis varying k−,d, k−,e, k+,n and k−,n across their plausible ranges. State explicitly which conclusions (in particular Fig. 4I 'rejuvenation' and the ADP-flush narrative) depend on the interior-independent-exchange assumption, so readers can see where model output is a prediction versus a restatement of fitted data.",
       "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-03",
-      "text": "Resolve the Ref. 17 citation. The quantitative statement that B. subtilis MreB nucleotide-binding kinetics are ~10-20-fold lower than Geobacillus stearothermophilus MreB is currently supported only by an unpublished, future-dated reference. Either replace it with published, resolvable sources, support it with data presented in this manuscript, or remove the numerical comparison and state that the comparison awaits publication of the companion work. Apply the same check to the other 'as previously described' delegations to Adriaans et al. (liposome binding, TEM, QCM-D, ATPase); since full protocols are given in-text, it is sufficient to make clear that the manuscript is self-contained on these points.",
+      "text": "Deposit runnable model code and analysis artifacts in a public repository (Zenodo/GitHub) with a DOI cited in the manuscript, including: the Monte Carlo implementation with simulation procedure, number of runs, initial conditions and random seed handling; the TSOAX parameter files and MATLAB extraction script; and the raw FRAP curves, filament-tracking outputs and anisotropy fits underlying Figs. 2-4. Replace the 'deposited after publication' statement with a private-for-review link now and a public DOI at acceptance.",
       "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-04",
-      "text": "Add the quantitative timescale comparison the authors propose: a table or paragraph in Results setting k-,n (0.0141 s-1) against k_hyd (1.54x10-3 s-1) and against estimated subunit residence times in the filament, with the assumptions and uncertainties stated. This comparison is load-bearing for the claim that intrafilament exchange is fast enough to be physiologically consequential and is currently absent.",
+      "text": "Add the missing FRAP acquisition methods for both TFLime and ATP* experiments: bleach ROI radius, laser power/percentage, pixel dwell time, frame interval, total acquisition time, and number of frames; and report the mobile fraction and recovery half-time with propagated uncertainty for Fig. 3F, at the level of detail currently given only for the CL-FRAP Soumpasis fit. Without these the reported exchange rate cannot be independently assessed.",
       "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-05",
-      "text": "Complete the statistical reporting for Fig. 4B: name the test used (Mann-Whitney U as proposed), state the distributional justification, define whether n counts independent filaments or independent experiments and how pooling was handled, and apply and report the Holm-Bonferroni correction for the pairwise genotype comparisons. Extend the same explicit test/n/error-bar annotation to Figs. 2E and 4I, where the error-bar definition is currently unstated.",
-      "source_reviewer": "",
+      "text": "Add named statistical tests, test statistics and multiplicity-corrected p-values for Fig. 3D (elongation rates across WT/E136A/D158A) and Fig. 4B-C (disassembly rates across conditions), and state the test and correction in the Statistical Analysis section. Also make the error-bar definition (SD, SEM or CI) explicit in every figure legend, which is currently inconsistent.",
+      "source_reviewer": "data_analysis",
       "blocking": false
     },
     {
       "id": "R1-06",
-      "text": "Quantify the CCCP delocalization experiment (Fig. 4J). Report the number of cells and independent experiments for WT and E136A, provide a quantitative measure of fluorescence retention or delocalization over time, and give a statistical comparison between the two strains. As presented, this in vivo support for the model is qualitative only.",
-      "source_reviewer": "reproducibility",
+      "text": "Define 'homogeneous' ATP* incorporation (Fig. 3H) operationally and quantitatively — e.g. line-scan intensity profiles with a coefficient of variation along filament length and an end-proximal versus mid-filament intensity comparison over time — and report the metric in the figure and legend. As written this is a qualitative visual claim doing causal work.",
+      "source_reviewer": "clarity",
       "blocking": false
     },
     {
       "id": "R1-07",
-      "text": "Cite Pande et al. 2022 (J. Cell Biol.) and add a short Discussion paragraph comparing their findings on nucleotide-state-dependent MreB organization with the present data, stating explicitly what remains new here (exchange within intact filaments) and what does not.",
-      "source_reviewer": "literature",
+      "text": "Scope the 'new class of biopolymer behaviour' language to the tested regime (B. subtilis MreB on cardiolipin-containing SLBs, 0.05-1.2 uM) and add an explicit contrast with the ParM end-exchange literature stating whether and how MreB's behaviour is distinguishable from an end-limited mechanism. Elevate the E136A-capping result (breakage within the WT segment despite non-exchanging caps) into this discussion, with its qualitative status stated.",
+      "source_reviewer": "rigor",
       "blocking": false
     },
     {
       "id": "R1-08",
-      "text": "Correct the two flagged attributions: replace or supplement Colombo et al. 2021 with primary sources (e.g. Pollard et al. 1992; Holmes et al. 1990) for actin nucleotide trapping in filaments, and verify the Garner et al. 2004 attribution for ParM end-exchange-driven disassembly, correcting or rephrasing to match what that paper actually reports.",
-      "source_reviewer": "literature",
+      "text": "Correct the citation attribution for the actin trapped-nucleotide principle to refs. 36/37 (Pollard et al. 1992 and companion), retaining ref. 8 only where the fluorescent-nucleotide methodology is discussed. Additionally, verify and correct the load-bearing attributions flagged by the audit — ParM E136A ATPase loss and ADP-induced ParM disassembly (ref. 29), actin D158A ATPase reduction (refs. 30/31), TFLime photochemistry (ref. 13), and CCCP-mediated ATP depletion (ref. 39) — citing primary sources that actually demonstrate each claim.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Add a Discussion paragraph delineating what is new relative to Mao et al. (2023) and the concurrent MreB polymerization-cycle preprint, citing the latter as independent complementary work. Clarify the publication status of the future-dated refs. 17 and 18 (2026, 2025), and if either is the authors' own concurrent or in-press work, say so.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "Provide vendor catalog numbers for the ATTO-488 nucleotide analogs (ATP*, ADP*, AMPPNP*; Jena Bioscience) and for CCCP, DOPC and cardiolipin, since the nucleotide analogs are the critical reagents for the paper's central experiments. Reproduce, or make accessible in the deposited materials, Supplementary Tables S1-S3 (primers, strain genotypes with parental background, plasmid sequence) and the 'Modeling MreB dynamics' supplementary text.",
+      "source_reviewer": "",
       "blocking": false
     }
   ],
   "minor_suggestions": [
-    "Add version numbers for ImageJ/Fiji, MATLAB, PRISM and SOAX/TSOAX, and vendor/catalogue details for non-fluorescent ATP/ADP/AMPPNP/AMPPCP, CCCP and phosphatidylglycerol.",
-    "For the FRAP experiments, state laser power, dwell time and the number of independent filaments/replicates per condition alongside the reported bleach radius, half-time and mobile fraction.",
-    "Add the clarifying statement and Table 1 footnote on the critical concentration (Cc ~0.003 uM), distinguishing the thermodynamic Cc from the higher-concentration kinetic plateau, as proposed in the rebuttal.",
-    "For the statement that Mao et al. 2023 previously suggested ATP hydrolysis mediates MreB filament formation at the membrane, add a specific figure or section pointer, since the present work reinterprets that result.",
-    "Consider ensuring Supplementary Tables S1-S3 (primer sequences, strain genotypes, plasmid sequence) are deposited alongside the code, as the reagent audit could not verify them from the main text.",
-    "Brief details on B. subtilis strain construction (Gibson assembly conditions, transformation and selection) would make that section self-contained."
+    "Consider adding the concentration-dependent liposome-binding titration for DOPC:CL versus DOPC:PG that you propose. This would strengthen the cardiolipin claim, but I am treating it as optional: if it is not included, rescope the Fig. 1E-F conclusion to state that cardiolipin is a contributing determinant measured at a single MreB concentration rather than the major determinant.",
+    "Add citations for the general statements currently unsupported: cardiolipin's cone-shaped tetra-acylated structure, the intracellular MreB concentration relative to Cc, and the absence of canonical actin-binding-protein homologues in bacteria.",
+    "Report software versions consistently (ImageJ/Fiji, SOAX/TSOAX, MATLAB, PRISM) and note any validation of the custom Omnipose model used for cell-morphology segmentation.",
+    "State briefly how model 'accuracy' in reproducing Fig. S8 kinetics was assessed (goodness-of-fit metric or tolerance), since the current phrasing is qualitative.",
+    "No IACUC statement is needed for B. subtilis, but a one-line biosafety/ethics statement would pre-empt the question for readers outside microbiology."
   ],
   "reviewer_reports": [
     {
       "reviewer": "clarity",
       "score": 4.0,
-      "confidence": 5.0,
+      "confidence": 4.0,
       "weaknesses": [
         {
           "id": "clarity-1",
-          "text": "The claim that intrafilament nucleotide exchange 'tunes filament stability' (Abstract, line 44; Main Text, line 282) is supported by showing that free ADP accelerates disassembly and free ATP stabilizes filaments, but the manuscript does not clearly distinguish this from a simpler alternative: that filament stability is determined solely by the nucleotide state of subunits at filament ends (an ATP cap), with interior exchange being incidental. The capping experiment (Fig. 4G-H) shows that E136A caps stabilize WT cores in ADP, but this tests whether caps matter, not whether interior exchange tunes stability independently of end effects. The model predicts interior exchange is 'significantly faster than Pi release' (line 331), but if interior exchange simply equilibrates the filament interior with the solution while end dynamics dominate stability, the mechanistic novelty claimed is overstated. What would resolve this: explicit modeling or experiment showing that interior nucleotide composition, independent of end state, causally affects disassembly rates."
+          "text": "Figure 3H legend states 'homogeneous binding of ATP* was observed along the length of both WT and D158A filaments, but not of E136A filaments' but does not explicitly define what 'homogeneous' means visually or quantitatively—does it mean uniform intensity, or absence of end-preferential accumulation? The distinction matters because the caption claims this shows nucleotide exchange occurs throughout the filament, yet the visual criterion for 'homogeneous' is not specified in the legend, forcing the reader to infer it from the image alone."
         },
         {
           "id": "clarity-2",
-          "text": "The quantitative claim that ATP binding 'triggers' polymerization (Abstract, line 42) is stated without quantifying the threshold or mechanism—does ATP binding to monomers trigger assembly, or does membrane binding of ATP-MreB trigger it, or both? The critical concentration is reported as ~0.003 µM (line 187), but the text does not state whether this applies to ATP-MreB or to the overall system, and whether the triggering is a nucleotide-dependent conformational change or simply a concentration effect."
+          "text": "The model section (Fig. 4D and Supplementary 'Modeling MreB dynamics') is referenced as supporting the main claims, but the manuscript text does not explain the model structure, parameter sources, or validation approach clearly enough for a reader to assess whether the model is an independent test of the hypothesis or merely a restatement of the experimental observations in mathematical form. Specifically, it is unclear whether the model's parameters were fit to the data or derived independently, which determines whether the simulations in Fig. 4I constitute genuine prediction or post-hoc fitting."
         },
         {
           "id": "clarity-3",
-          "text": "The statement that 'nucleotide exchange within MreB filaments defines a new class of biological polymer behavior' (Abstract, lines 44-45) is not quantitatively bounded—the exchange rate (0.014 s⁻¹ for WT, Table 1) is stated but not compared to the timescale of polymerization (elongation rate ~45 µM⁻¹s⁻¹ at filament ends) or to the residence time of a subunit in the filament, making it unclear whether this exchange is functionally significant on the timescale of filament dynamics in vivo."
+          "text": "The claim that 'nucleotide exchange within filaments tunes their stability on the membrane' (Abstract) is supported by the ADP-flush experiment (Fig. 4A–C) and the capping experiment (Fig. 4G–H), but the causal chain is not fully isolated: the rapid disassembly upon ADP exposure could result from (1) ADP-bound subunits being inherently unstable, (2) ADP competing with ATP at the nucleotide-binding pocket and destabilizing the filament, or (3) the absence of ATP preventing stabilizing nucleotide exchange. The E136A capping experiment argues against mechanism (3) by showing that ATP-capped filaments remain stable even when the WT core is exposed to ADP, but this does not exclude mechanism (1) or (2), nor does it prove that exchange itself (rather than the nucleotide identity) is the tuning mechanism. A direct test—such as blocking exchange while maintaining nucleotide binding—would strengthen this claim."
         }
       ],
       "questions": [
-        "Figure 2E shows a plateau in elongation rate above 0.06–0.09 µM MreB, but the text attributes this to 2D diffusion limitation; does the model in Fig. 4D predict this plateau, and if so, does it arise from the same mechanism?",
-        "In the FRAP experiment (Fig. 3E), why does TFLime show no recovery while ATP* shows rapid recovery (Fig. 3F)—is this due to irreversible photochemical trapping of TFLime as stated, and if so, why is this mechanism not a confound for interpreting the ATP* recovery as nucleotide exchange rather than fluorogen exchange?",
-        "The in vivo experiment (Fig. 4J) shows E136A filaments remain stable upon CCCP addition while WT filaments delocalize, but CCCP depletes ATP and raises ADP; does the model predict that E136A filaments would remain stable under high ADP, and if not, what explains the in vivo observation?"
+        "In Fig. 2E, the plateau in elongation rate at high MreB concentration is attributed to 2D diffusion on the membrane, but the text does not state whether the plateau is significantly different from the linear extrapolation or merely a visual trend; what is the statistical support for a true plateau versus continued linear growth?",
+        "Figure 1G reports Pi release rates of 0.030 ± 0.001 Pi/min/MreB in the presence of excess ATP, but does not state the number of replicates or whether this is from one or two independent experiments; the figure legend says 'Results of two independent experiments' but does not specify n per experiment.",
+        "The FRAP experiment (Fig. 3E) concludes that 'monomers do not turnover within filaments' based on lack of TFLime recovery, but the text then explains this as photochemical trapping of the fluorogen, not absence of exchange; does this interpretation rest on the assumption that TFLime rebinding is the only source of recovery, or could other mechanisms (e.g., lateral diffusion of labeled subunits) contribute?",
+        "In the in vivo experiment (Fig. 4J), CCCP addition depletes ATP and E136A filaments remain stable while WT filaments delocalize; does the text confirm that E136A filaments remain ATP-bound under CCCP treatment, or is stability inferred only from the absence of delocalization?"
       ]
     },
     {
@@ -96,22 +108,23 @@
       "weaknesses": [
         {
           "id": "data_analysis-1",
-          "text": "The critical claim that MreB filaments exhibit intrafilament nucleotide exchange rests on FRAP recovery of ATP* (Fig. 3F) versus no recovery of TFLime (Fig. 3E). The authors attribute the difference to photochemical trapping of TFLime but do not directly test this mechanism—they could have used a reversible TFLime-binding condition or compared recovery kinetics quantitatively to distinguish reversible exchange from irreversible trapping. Without this control, the conclusion that nucleotide exchange occurs (rather than that TFLime simply does not exchange) remains an inference rather than a direct observation. The paper would be strengthened by either demonstrating TFLime recovery under conditions where photochemical trapping is prevented, or by quantifying the ATP* recovery rate and showing it matches the predicted nucleotide exchange rate from the Monte Carlo model."
+          "text": "The HS-AFM elongation rate (14.4 ± 10.16 nm·s⁻¹, n=7) is stated as a 'first estimate' but is then compared directly to TIRF plateau rates to argue consistency; the small n and high variability (SD ~70% of mean) make this comparison weak evidence for the claim that the plateau is not an artifact. The authors acknowledge tracking difficulties but do not justify why 7 filaments suffice to validate the TIRF result, nor do they report whether the 7 were pre-selected or represent all trackable segments."
         },
         {
           "id": "data_analysis-2",
-          "text": "The disassembly rate comparisons (Fig. 4A–C, quantified in Fig. 4B) report mean ± SD for WT, E136A, and D158A filaments under three conditions (buffer wash, ADP wash) but do not state which statistical test was used to compare rates between genotypes, whether assumptions (normality, equal variance) were checked, or whether multiple comparisons were corrected. The figure legend states 'n = 219, 206, 87, 157, 408 and 60' but does not clarify whether these are independent filaments or replicates, and whether the data are normally distributed (given the wide SDs and apparent non-linearity in Fig. 4C, non-parametric tests may be more appropriate). A student's t-test is mentioned in the Methods (line 845) but not applied to these headline comparisons."
+          "text": "FRAP experiments (Fig. 3E, F) are presented as evidence that monomers do not turn over within filaments, but the interpretation conflates two different mechanisms: irreversible photochemical trapping of TFLime (preventing recovery) versus absence of nucleotide exchange. The authors state TFLime binding is 'reversible under normal imaging conditions' but becomes trapped under photobleaching; this does not directly measure monomer turnover and the conclusion that 'monomers do not turnover' overstates what the TFLime-FRAP result shows. The ATP*-FRAP recovery (Fig. 3F) does show nucleotide exchange, but the two experiments measure different things and should not be conflated as evidence for the same claim."
         },
         {
           "id": "data_analysis-3",
-          "text": "The Monte Carlo model (Fig. 4D, Supplementary Information) is presented as validation of the nucleotide exchange hypothesis, but the paper does not report goodness-of-fit metrics, confidence intervals on fitted parameters, or sensitivity analysis showing which parameters most strongly drive the predicted behavior. The model uses experimentally determined rate constants but does not quantify uncertainty in those constants or show how parameter uncertainty propagates to the model predictions. Without this, it is unclear whether the model's agreement with experiment (Fig. S8, S10) is tight enough to distinguish the proposed mechanism from alternatives."
+          "text": "Statistical tests for key comparisons lack explicit naming or p-values: (1) the difference in elongation rates between WT and mutants (Fig. 3D) is shown graphically but no test statistic or p-value is reported; (2) the disassembly rates in Fig. 4B-C (WT vs E136A vs D158A under buffer wash and ADP conditions) are presented as bar plots with error bars but no statistical test is named; (3) the claim that D158A filaments 'depolymerize much faster' than WT (line 310) lacks a p-value or test name. For a paper centered on quantitative dynamics, unnamed comparisons weaken the rigor."
         }
       ],
       "questions": [
-        "Figure 2E shows elongation rate plateaus above 0.06–0.09 µM MreB; the text states this plateau 'is not an artefact of the pFAST tag' by comparing to HS-AFM at 1.2 µM, but HS-AFM measures only 7 filaments with high SD (14.4 ± 10.16 nm·s⁻¹) and the authors acknowledge 'only a very limited number of filaments could be tracked'—is the HS-AFM rate actually consistent with the TIRF plateau within error, or is this a post-hoc comparison without a formal test?",
-        "Table 1 reports ATP and ADP binding rates for MreB as ~300-fold slower than actin and attributes this to conformational rearrangement, but the A260/A280 ratio (0.62) indicates MreB is nucleotide-free at purification; was the nucleotide-free state confirmed for each batch used in kinetic experiments, and could residual nucleotide or aggregation state explain the slow binding kinetics?",
-        "The in vivo CCCP experiment (Fig. 4J) shows E136A remains localized while WT delocalizes, supporting the model, but only qualitative images are shown; were multiple cells quantified, and was the delocalization rate or extent compared statistically between WT and E136A?",
-        "FRAP experiments (Fig. 3E, F) report 'no significant recovery' for TFLime but do not state the threshold for significance, the number of replicates, or the statistical test used to conclude recovery was absent."
+        "Figure 3D: what statistical test was used to compare elongation rates among WT, E136A, and D158A, and what are the p-values? The figure shows means and error bars but no test is named in the text.",
+        "Figure 4B-C: what test was applied to compare disassembly rates across the six conditions (WT, E136A, D158A × buffer wash, ADP wash)? Are these unpaired t-tests, ANOVA with post-hoc correction, or Mann-Whitney tests, and what is the multiple-comparison correction if any?",
+        "In the liposome binding assay (Fig. 1E-F), how many independent experiments (n) were performed? The figure legend states 'n, number of TEM fields' for TEM but does not clearly state the replication for the liposome assay quantified in panel F.",
+        "For the Monte Carlo model (Fig. 4D, S10), were the rate constants fixed at their point estimates or were they varied within their measured error ranges to assess sensitivity? If fixed, how does uncertainty in the input parameters propagate to the model predictions?",
+        "The critical concentration is reported as 0.003 µM (Table 1) derived from a linear fit at low concentrations; what is the R² of this fit and over what concentration range was it applied?"
       ]
     },
     {
@@ -128,33 +141,29 @@
       "weaknesses": [
         {
           "id": "literature-1",
-          "text": "Missing directly competing work: Pande et al. (2022, J. Cell Biol. 221:e202108065) on nucleotide-state-dependent MreB filament organization is not cited. This is a HARD omission of a directly relevant recent paper that bears on the novelty claim that nucleotide cycling within filaments is a 'new class of biological polymer behavior.' The authors must either cite this work and explain how their findings differ, or verify that Pande et al. does not address intrafilament exchange."
+          "text": "Ref. 8 (Colombo et al. 2021) is described as a methods paper on fluorescent nucleotide analogues, not the primary source establishing the \"trapped nucleotide\" principle in actin filaments; the foundational source is ref. 36 (Pollard et al. 1992), which should be clarified as the primary attribution."
         },
         {
           "id": "literature-2",
-          "text": "Imprecise attribution of actin nucleotide-trapping claim: The statement that nucleotides are 'effectively trapped' in actin filaments (line 8) cites Colombo et al. (2021), which is a methods paper on fluorescent nucleotide analogs, not a primary source for the nucleotide-trapping mechanism. The correct primary source is likely Pollard et al. (1992) or earlier work on actin filament nucleotide kinetics. This is a SOFT issue of citation clarity that should be corrected."
+          "text": "The manuscript states that ParM filaments exhibit nucleotide exchange (ref. 29, line 313) with the suggestion that this occurs at filament ends, but does not explicitly distinguish whether MreB exchange occurs throughout the filament interior while ParM exchange is restricted to ends, leaving the novelty claim of a \"new class of biological polymer behavior\" ambiguous."
         },
         {
           "id": "literature-3",
-          "text": "Uncertain attribution of ParM nucleotide-exchange claim: The claim that 'free ADP was reported to also increase the rate of ParM filament disassembly, and this effect was proposed to result from nucleotide exchange at filament ends' (line 313) is attributed to Garner et al. (2004), but this paper focuses on dynamic instability and does not appear to address nucleotide exchange at filament ends. The authors should verify this attribution or cite a more specific source."
+          "text": "The manuscript cites Mao et al. (2023, ref. 10) on B. subtilis MreB nucleotide and lipid requirements but does not clearly distinguish what new mechanistic insights (intrafilament nucleotide exchange, kinetic symmetry, the Monte Carlo model) go beyond Mao et al.'s findings, leaving this distinction to the reader to infer."
         },
         {
           "id": "literature-4",
-          "text": "Self-citation to in-press work: Reference 17 (Adriaans et al., in press, Biophys. J. 2026) is cited as primary evidence for MreB membrane binding and ATP-dependent polymerization (Fig. 1E–H). While self-citation is acceptable, the liposome co-sedimentation and QCM-D data presented in the current manuscript should be the primary evidence, with the in-press paper as supporting detail."
+          "text": "Ref. 17 (De San Eustaquio-Campillo et al., in preparation) is cited for E136A and D158A mutations in Geobacillus MreB; while not load-bearing here, unpublished work should be flagged as preliminary when used to support claims."
         },
         {
           "id": "literature-5",
-          "text": "Incomplete comparison to membrane-templated polymerization: The manuscript does not cite prior work on membrane-templated polymerization of other bacterial actin homologs (e.g., ParM, FtsZ) to position this mechanism in the broader context of bacterial cytoskeletal assembly."
-        },
-        {
-          "id": "literature-6",
-          "text": "Verification needed for Mao et al. claim: The statement that 'Under limiting ATP concentrations, Geobacillus MreB filaments progressively disappeared from TEM fields over time' (line 227) should be verified as accurately representing Mao et al. (2023)."
+          "text": "The CCCP-induced ATP depletion experiment (Fig. 4J) cites ref. 39 (Strahl & Hamoen 2010) for CCCP's effect on membrane potential and cell division, but a citation to CCCP's mechanism of ATP depletion (uncoupling oxidative phosphorylation) would strengthen the methods section."
         }
       ],
       "questions": [
-        "Can the authors confirm that Pande et al. (2022, J. Cell Biol. 221:e202108065) does not address intrafilament nucleotide exchange, and if it does, how does their work differ from the current findings?",
-        "Does Garner et al. (2004) specifically propose nucleotide exchange at ParM filament ends, or should this attribution be directed to a later paper on ParM dynamics?",
-        "Which primary source establishes that actin filaments show no nucleotide exchange—is it Pollard et al. (1992), or an earlier work that should be cited directly rather than through Colombo et al. (2021)?"
+        "Does ParM exchange nucleotides only at filament ends (as ref. 29 suggests), while MreB exchanges throughout the filament interior? If so, state this explicitly to support the \"new class\" claim.",
+        "What specific mechanistic insights (intrafilament exchange kinetics, the Monte Carlo model, kinetic symmetry) are novel relative to Mao et al. (2023, ref. 10)'s recent study of B. subtilis MreB nucleotide and lipid requirements?",
+        "Is ref. 8 (Colombo et al. 2021) intended as the source for the \"trapped nucleotide\" principle in actin, or should ref. 36 (Pollard et al. 1992) be cited as the foundational work establishing this principle?"
       ]
     },
     {
@@ -164,38 +173,39 @@
       "weaknesses": [
         {
           "id": "methodology-1",
-          "text": "**Nucleotide exchange vs. alternative mechanisms for stability regulation.** The central claim is that \"intrafilament nucleotide exchange tunes filament stability\" (Abstract, Main Text). The evidence for exchange itself is strong: ATP* FRAP recovery (Fig. 3F) and homogeneous ATP* incorporation along filament length (Fig. 3H) directly show nucleotide movement. However, the causal link between exchange and stability is inferred, not demonstrated. When WT filaments are exposed to ADP, they depolymerize rapidly (Fig. 4A–B). The authors attribute this to ADP-loading via exchange, but the design does not exclude an alternative: ADP could directly destabilize subunits at filament ends without requiring exchange throughout the filament. The capping experiment (Fig. 4G–H) shows that WT cores fragment even when capped, which argues against simple end-capping, but it does not prove that interior nucleotide exchange is the mechanism. A nucleotide-free interior with ADP-bound ends could produce the same fragmentation pattern. To distinguish these, one would need to show that preventing exchange (e.g., by a mutation that blocks nucleotide dissociation from interior subunits) prevents ADP-induced destabilization, or that the rate of depolymerization correlates with the rate of exchange. The model predicts this correlation but does not test it experimentally. As written, the paper demonstrates that nucleotide exchange occurs and that filament stability depends on nucleotide identity, but the causal role of exchange in stability is not isolated from the role of nucleotide state at filament ends."
+          "text": "**Mechanism of ADP-induced depolymerization is not established.** The paper shows that free ADP triggers rapid filament collapse (Fig. 4A–C, Movie 6), but the design does not isolate whether this occurs because: (1) ADP-bound subunits have intrinsically higher dissociation rates (a nucleotide-state effect); (2) ADP loading destabilizes the filament lattice through a conformational change that propagates; or (3) ADP competes with ATP at filament ends, removing a stabilizing cap. The capping experiment (Fig. 4G–H) shows that E136A caps protect WT cores from rapid disassembly, but this tests whether ATP-bound caps stabilize, not why ADP destabilizes. The model (Fig. 4D, Fig. S10) assigns ADP a higher dissociation rate (k_{-,d} = 60 s⁻¹ vs. k_{-,t} = 0.135 s⁻¹), but this parameter is not independently measured—it is inferred from the requirement that the model reproduce the observed disassembly kinetics. This is circular: the model is fit to the phenomenon it is meant to explain. To establish mechanism, the authors would need to measure ADP-subunit dissociation rates directly (e.g., by stopped-flow kinetics or single-molecule tracking) or show that ADP binding alone, without free nucleotide exchange, is sufficient to trigger disassembly by using a nucleotide-exchange-deficient mutant or a closed system. Without this, the claim that 'ADP promotes disassembly' conflates observation with mechanism."
         },
         {
           "id": "methodology-2",
-          "text": "**Interpretation of the Monte-Carlo model as mechanistic evidence.** The model (Fig. 4D, S10) is presented as support for the nucleotide-exchange mechanism (\"Simulating a buffer exchange to MreB-free and nucleotide-free buffer mirrors the distinct behaviors observed experimentally\"). However, a model that reproduces observations does not prove the mechanism is correct—it shows the mechanism is *consistent* with the data. The model incorporates intrafilament exchange as a parameter and shows that including it produces the observed kinetics. But the same kinetics could arise from other parameter sets or mechanisms not explored. The model is valuable for hypothesis generation and for showing internal consistency, but it should not be presented as independent experimental validation of the exchange mechanism. The paper would be stronger if it acknowledged this limitation explicitly."
+          "text": "**The Monte Carlo model is not validated against independent data.** The model incorporates experimentally measured parameters (k_{+,t}, k_{-,t}, nucleotide binding affinities from anisotropy) but also infers others (k_{-,d}, k_{-,e}, k_{hyd}, k_{Pir}) by fitting to the same polymerization and disassembly time courses it is meant to explain (Fig. S8, S10). The model then generates predictions (e.g., Fig. 4I: the fate of filaments under different nucleotide conditions), but these are not tested against new, independent experiments. For instance, the model predicts that ATP stabilizes filaments while ADP promotes disassembly (Fig. 4I); this is consistent with the ADP-flush experiments, but those experiments were used to constrain the model. A genuine test would be to predict the outcome of a condition not used in fitting—e.g., a mixed ATP/ADP buffer at a specific ratio, or the kinetics of nucleotide exchange under varying ATP* concentrations—and then measure it. Without such validation, the model is a post-hoc narrative that fits the data but does not independently support the mechanistic claims."
         },
         {
           "id": "methodology-3",
-          "text": "**Incomplete characterization of the nucleotide-exchange rate and its functional significance.** Figure 3F shows FRAP recovery of ATP* in WT filaments, but the recovery kinetics are not quantified in detail (no half-time, mobile fraction, or diffusion coefficient reported for the filament interior). The initial slope in Fig. 3I is given for incorporation of pure ATP*, but the exchange rate in the presence of competing ATP (the physiological condition) is not directly measured. The model uses $k_{+,n} = 0.28 \\mu M^{-1}.s^{-1}$ and $k_{-,n} = 0.0141 s^{-1}$, but these are not independently validated experimentally. Without quantitative kinetics, it is difficult to assess whether the exchange rate is fast enough to be physiologically relevant or whether it is a minor side reaction."
+          "text": "**The FRAP experiment (Fig. 3E) does not measure monomer turnover as claimed.** The authors state that 'monomers do not turnover within filaments' based on the absence of TFLime recovery after photobleaching. However, they then acknowledge that TFLime binding to pFAST is reversible under normal imaging but becomes irreversibly photochemically trapped by the high-intensity bleach laser. This means the FRAP result does not distinguish between (1) no nucleotide exchange (no new ATP* enters the bleached region) and (2) nucleotide exchange occurs but the fluorophore does not recover because the photochemical trap prevents re-binding. The ATP* FRAP (Fig. 3F) does show recovery and is the appropriate experiment for measuring nucleotide exchange, but the TFLime FRAP is not a valid test of monomer turnover and should not be presented as evidence against it. The text acknowledges this caveat but still uses the TFLime result to frame the finding; this conflates two different questions."
         },
         {
           "id": "methodology-4",
-          "text": "**The in vivo experiment (Fig. 4J) does not directly test the nucleotide-exchange hypothesis.** The CCCP-induced delocalization of WT MreB but not E136A is consistent with the model (ATP depletion → loss of ATP-bound stabilization), but it does not distinguish between stabilization by ATP-bound subunits at filament ends versus stabilization by ATP-bound subunits throughout the filament via exchange. Both mechanisms predict the same in vivo outcome. A more direct test would be to measure ATP/ADP ratios in cells and correlate them with MreB localization, or to use a nucleotide-exchange-deficient mutant (if one could be designed) and show it behaves differently from WT in vivo."
+          "text": "The critical concentration (C_c ≈ 0.003 µM) is derived from a linear fit at low MreB concentrations (Fig. 2E), but the fit window and method are not specified—it is unclear whether the authors used all data points below the plateau or selected a subset, and whether error propagation was performed to estimate uncertainty in C_c."
         },
         {
           "id": "methodology-5",
-          "text": "The claim that MreB filaments display \"non-polar growth\" (Abstract, Main Text) rests on the photobleaching experiment (Fig. 2G), which shows comparable elongation rates at both ends, but the authors acknowledge that \"weak apparent polarity\" is observed and attribute it to crowding and stochastic noise—a post-hoc explanation that weakens the conclusion that growth is truly symmetrical rather than weakly polar."
+          "text": "The claim that 'nucleotide exchange within MreB filaments defines a new class of biological polymer behavior' (abstract, main text) rests on the comparison to actin, but the paper does not measure whether nucleotide exchange occurs in other prokaryotic actin homologs (ParM, FtsA) or whether it is unique to MreB; the generality of the finding is therefore unknown."
         },
         {
           "id": "methodology-6",
-          "text": "The liposome co-sedimentation assay (Fig. 1E–F) shows that CL promotes MreB binding, but the assay does not distinguish between direct binding to CL and indirect effects (e.g., CL-induced changes in membrane fluidity or protein conformation); the QCM-D data (Fig. 1H) provide complementary evidence but are limited to one lipid composition."
+          "text": "The in vivo CCCP experiment (Fig. 4J) shows that E136A filaments remain stable when ATP is depleted, consistent with the model, but the experiment is qualitative (visual delocalization scoring) and does not quantify filament dynamics, stability, or the ATP/ADP ratio during the treatment, limiting the strength of the in vivo validation."
         },
         {
           "id": "methodology-7",
-          "text": "The critical concentration is estimated from TIRF elongation rates at low MreB concentrations (Fig. 2E), but the plateau in elongation rate above 0.06–0.09 µM is attributed to 2D diffusion limitation without direct measurement of diffusion coefficients or membrane-bound monomer concentrations to validate this interpretation."
-        },
-        {
-          "id": "methodology-8",
-          "text": "The HS-AFM elongation rate (14.4 ± 10.16 nm·s⁻¹, n=7) is described as a \"first estimate\" due to tracking difficulties, and the authors note that only a limited number of filaments could be tracked; this small sample size and acknowledged technical limitation reduce confidence in this quantitative result, though the TIRF data provide a more robust measure."
+          "text": "The liposome co-sedimentation assay (Fig. 1E–F) uses a single MreB concentration (2 µM) and does not measure binding affinity or kinetics, so it cannot distinguish between cardiolipin being a major determinant of binding versus one of several contributing factors."
         }
       ],
-      "questions": []
+      "questions": [
+        "What is the measured dissociation rate of ADP-bound MreB subunits from filament ends, and does it differ significantly from ATP-bound subunits under the same conditions?",
+        "Were the model parameters (k_{-,d}, k_{-,e}, k_{hyd}, k_{Pir}) fit to the polymerization and disassembly data shown in Figures 2, 3, and 4, or were they independently measured or derived from the literature?",
+        "Does nucleotide exchange occur in ParM or other prokaryotic actin homologs, and if so, at comparable rates to MreB?",
+        "In the capping experiment (Fig. 4G–H), what is the distribution of E136A cap sizes, and does the occasional filament stability or complete depolymerization correlate with cap length?"
+      ]
     },
     {
       "reviewer": "novelty",
@@ -204,41 +214,40 @@
       "weaknesses": [
         {
           "id": "novelty-1",
-          "text": "**Intrafilament nucleotide exchange mechanism not definitively established.** The central novelty claim rests on FRAP recovery of ATP*-labeled filaments (Fig. 3F), interpreted as nucleotide exchange within subunits. However, the experimental design does not cleanly isolate this from alternative mechanisms: (a) lateral diffusion of ATP*-labeled subunits into the bleached region, (b) rebinding of ATP* from solution to the same subunits after dissociation, or (c) exchange of entire subunits. The authors acknowledge that ATP* has different photochemical properties than TFLime (lines 250–252) but do not present a direct measurement distinguishing intrafilament nucleotide exchange from these alternatives. The capping experiment (Fig. 4G-H) shows ADP-induced fragmentation but is consistent with nucleotide-dependent stability without proving the exchange mechanism. A direct measurement—such as tracking the fate of a single nucleotide within a filament using a non-exchangeable analog, or measuring nucleotide occupancy by mass spectrometry—would resolve this."
+          "text": "The claim that ATP hydrolysis is 'not required' for polymerization is supported for initiation (E136A and D158A do polymerize), but the mechanistic distinction between ATP binding and phosphate retention is not fully resolved experimentally; ADP-AlF₄⁻ permits polymerization while ADP alone does not, suggesting the phosphate group may be required, not merely ATP binding."
         },
         {
           "id": "novelty-2",
-          "text": "Nucleotide binding affinity differences in ATPase mutants confound interpretation of polymerization data. E136A has higher affinity for both ATP and ADP; D158A has reduced ATP affinity and undetectable ADP binding (Fig. 3B). The polymerization of these mutants could result from their altered binding kinetics rather than proving hydrolysis is truly dispensable. The ADP-AlF₄⁻ result (Fig. S6A-C) more directly supports the claim, but the mutant data alone do not fully separate nucleotide-binding effects from hydrolysis effects."
+          "text": "The model's predictive power for claim 3 (nucleotide cycling tunes stability) is limited by the fact that several kinetic parameters (especially intrafilament nucleotide exchange rates k₊,ₙ and k₋,ₙ, Table 1) are derived from or fitted to the same experiments the model is used to explain (Fig. 4I, S10), creating a circularity where the model is validated by reproducing the data it was parameterized to fit."
         },
         {
           "id": "novelty-3",
-          "text": "HS-AFM elongation rate estimate is based on only 7 filament segments due to high lateral mobility, limiting quantitative confidence in the 14.4 ± 10.16 nm/s rate and its comparison to TIRF-derived rates."
+          "text": "The in vivo experiment (Fig. 4J) provides independent support for claim 3, but it is qualitative (localization vs. delocalization) rather than quantitative, limiting the strength of the mechanistic claim."
         },
         {
           "id": "novelty-4",
-          "text": "Monte Carlo model parameters include inferred rates (nucleotide exchange kinetics from FRAP recovery) that rest on the interpretation of ATP* recovery as exchange; the model is consistent with the data but is not independent evidence for the proposed mechanism."
+          "text": "The critical concentration (Cc ≈ 0.003 µM) is much lower than actin's (0.15 µM), but the authors do not discuss whether this reflects the membrane-templated 2D polymerization mechanism or a fundamentally different nucleotide affinity, affecting generalizability of the model."
         },
         {
           "id": "novelty-5",
-          "text": "Cardiolipin requirement claimed as 'major determinant' of MreB membrane association in vivo (line 133) based on its proportion in lipid extracts, but direct in vivo evidence of necessity is absent."
+          "text": "The HS-AFM elongation rate (14.4 ± 10.16 nm·s⁻¹, n=7) is based on only 7 filament segments with high lateral mobility, and the authors acknowledge this is a 'first estimate' (line 177), leaving uncertainty about true elongation kinetics at physiological densities."
         },
         {
           "id": "novelty-6",
-          "text": "CCCP-induced delocalization experiment (Fig. 4J) is consistent with ATP-dependent filament stability but does not exclude indirect effects of CCCP on MreB localization through other cellular pathways."
+          "text": "The manuscript does not discuss whether the nucleotide exchange mechanism observed in vitro on supported lipid bilayers (which lack crowded cellular environment, membrane curvature, and associated proteins) reflects the in vivo situation."
         },
         {
           "id": "novelty-7",
-          "text": "Generalizability unclear: Geobacillus MreB shows markedly different Pi release kinetics (reference 10), raising questions about whether the nucleotide exchange mechanism is conserved across MreB orthologs."
-        },
-        {
-          "id": "novelty-8",
-          "text": "The claim of 'first report' of nucleotide cycling in biological polymers survives the preprint search, but ParM (another prokaryotic actin homolog) is mentioned as showing ADP-induced disassembly via nucleotide exchange at filament ends (line 313); the distinction between end-exchange and intrafilament exchange should be clarified."
+          "text": "The relationship and complementarity with the concurrent preprint 'A genetic screen unveils the polymerization cycle of the bacterial actin-like MreB' (de San Eustaquio-Campillo et al., 2026) is not discussed, leaving unclear whether they represent independent confirmation or overlapping work."
         }
       ],
       "questions": [
-        "Can the authors provide a direct measurement distinguishing intrafilament nucleotide exchange from lateral diffusion of labeled subunits or nucleotide rebinding (e.g., using a non-exchangeable nucleotide analog or mass spectrometry)?",
-        "How do the altered nucleotide binding affinities of E136A and D158A (Fig. 3B) affect the interpretation that ATP hydrolysis is dispensable for polymerization, rather than that altered binding kinetics compensate?",
-        "Is the nucleotide exchange mechanism conserved in Geobacillus MreB, given its different Pi release kinetics, and does this affect the generality of the proposed 'new class' of polymer behavior?"
+        "Were the intrafilament nucleotide exchange rates (k₊,ₙ and k₋,ₙ, Table 1) measured independently of the Monte-Carlo model, or are they fitted parameters derived from matching the model to the FRAP and disassembly data?",
+        "Does ADP-Pi alone (without ATP) support MreB polymerization, and if so, at what rate relative to ATP, to clarify whether the requirement is for ATP binding or for phosphate retention?",
+        "How do the findings in this manuscript relate to the concurrent preprint by de San Eustaquio-Campillo et al. (2026) on the MreB polymerization cycle, and are the two studies independent or complementary?",
+        "The claim that nucleotide binding rates to MreB are '~300-fold lower than those reported for actin' is attributed to MreB being purified in a nucleotide-free state; is this directly tested (e.g., by pre-incubating with nucleotide and measuring rebinding)?",
+        "The FRAP experiment on TFLime-labeled filaments (Fig. 3E) shows no recovery, attributed to photochemical trapping of the fluorogen; is this explanation independently validated?",
+        "Does the in vivo CCCP experiment (Fig. 4J) directly measure filament length or number, or does the interpretation that E136A filaments are 'stable' rely solely on the localization signal as a proxy for filament persistence?"
       ]
     },
     {
@@ -248,26 +257,43 @@
       "weaknesses": [
         {
           "id": "reproducibility-1",
-          "text": "The stochastic Monte-Carlo model (Fig. 4D, Supplementary Information 'Modeling MreB dynamics') is the load-bearing artifact for the central claim that intrafilament nucleotide exchange tunes filament stability. The manuscript states the model 'accurately reproduces MreB polymerization kinetics' and uses it to explain why WT, E136A, and D158A filaments behave differently under nucleotide-free and ADP-containing conditions (Fig. 4C, S10). However, no code, pseudocode, or detailed algorithm is provided in the main text or supplementary materials, and the authors state only that data 'will be deposited on Zenodo after publication'—a conditional promise that does not satisfy reproducibility standards. Without the model specification, a reader cannot verify whether the simulations genuinely constrain the interpretation or whether alternative parameter sets or mechanisms would produce the same outputs. This is a HARD reproducibility failure for a claim that depends entirely on computational validation."
+          "text": "**Load-bearing claim: Intrafilament nucleotide exchange tunes filament stability.** The evidence rests on three observations: (1) ATP* FRAP recovery in Fig. 3F, (2) rapid ADP-induced disassembly in Fig. 4A–B, and (3) the Monte-Carlo model predicting nucleotide-state-dependent stability (Fig. 4I). For (1), the FRAP protocol is described only as 'standard ATP*-labelling conditions (ATP:ATP* 17:1)' with no specification of laser power, dwell time, bleach region size, or recovery frame rate—parameters that directly affect the measured exchange rate and could be misinterpreted if the fluorophore is photochemically trapped rather than exchanging. For (2), the disassembly rates are reported (−70.34 ± 29.89 nm·s⁻¹ for WT in ADP) but the quantification method is not detailed: how were filament ends tracked in TIRF? Were both ends measured? How were transient filament breaks distinguished from end depolymerization? For (3), the model is the linchpin for interpreting why D158A disassembles faster than WT in ADP despite lower nucleotide affinity, yet the model specification is incomplete—the paper states 'intrafilament nucleotide exchange dynamics are independent of the nucleotide state' (Fig. 4D caption) but does not specify whether exchange rates differ between ATP-bound and ADP-bound subunits, whether the model includes cooperative effects, or how the 0.014 s⁻¹ exchange rate was fitted to the FRAP data. Without these details, an independent group cannot verify whether the model's predictions arise from the proposed exchange mechanism or from hidden parameter choices."
         },
         {
           "id": "reproducibility-2",
-          "text": "The kinetic parameters used in the model (Fig. 4D caption: k₊,ₜ = 45 µM⁻¹s⁻¹, k₋,ₜ = 0.135 s⁻¹, k₋,ₐ = 60 s⁻¹, etc.) are stated but their derivation from the experimental data is not fully transparent: it is unclear whether these are fitted values, measured values, or hybrid estimates, and no confidence intervals or sensitivity analysis is provided to show which parameters most strongly constrain the model's predictions."
+          "text": "**Load-bearing claim: ATP hydrolysis is not required for polymerization.** The evidence is that E136A and D158A mutants polymerize at rates indistinguishable from WT (Fig. 3C–D) despite markedly reduced Pi release (Fig. 3A). However, the elongation-rate quantification in Fig. 3D lacks error bars or statistical comparison (n values are given but no p-values or confidence intervals), making it unclear whether the apparent equivalence is statistically supported or merely visually similar. The claim also depends on the assumption that E136A and D158A mutations truly abolish or severely impair hydrolysis, but the paper does not directly measure ATP hydrolysis rates for these mutants in the polymerization assay—only Pi release in a separate liposome-binding assay. If hydrolysis occurs but Pi release is blocked, the mutants would still be ATP-hydrolysis-competent, and the conclusion would not hold. The paper should report kₕᵧ𝒹 for each mutant under polymerization conditions."
         },
         {
           "id": "reproducibility-3",
-          "text": "The FRAP experiments (Fig. 3E–F) are central to claiming that monomers do not turn over within filaments but nucleotides do. However, the authors acknowledge that TFLime photobleaching may cause 'irreversible photochemical trapping' of the fluorogen, preventing recovery—a caveat that undermines the negative result (no FRAP recovery for TFLime) but is not quantified. The recovery observed for ATP* is interpreted as nucleotide exchange, but the kinetics of ATP* binding and the possibility of non-specific rebinding from solution are not fully disentangled from genuine intrafilament exchange."
+          "text": "**Load-bearing claim: Nucleotide exchange within filaments defines a new polymer class.** This claim is supported by the contrast with actin (which shows no FRAP recovery) and by the model simulations. However, the FRAP experiment in Fig. 3F uses a fluorescent ATP analog (ATP*) that is 17-fold diluted relative to unlabeled ATP, and the paper notes that ATP* is 'less efficient for polymerization than ATP' (Fig. S5C, F). If ATP* is incorporated into filaments at a lower rate or with different kinetics than ATP, the measured exchange rate may not reflect the physiological nucleotide-cycling rate. Additionally, the paper does not report the mobile fraction from the FRAP recovery, which is essential for distinguishing between rapid exchange and slow exchange of a subpopulation. Without the mobile fraction and a direct comparison of ATP* vs. ATP exchange kinetics, the claim that nucleotide cycling is a defining feature remains partially supported."
         },
         {
           "id": "reproducibility-4",
-          "text": "The in vivo experiment (Fig. 4J, CCCP-induced delocalization) is qualitative and relies on visual inspection of TIRF images at discrete timepoints; no quantitative metrics (e.g., fluorescence intensity over time, number of cells scored, statistical test) are provided to support the claim that E136A filaments 'remained stable' while WT filaments 'became progressively delocalized.'"
+          "text": "TIRF image analysis relies on TSOAX software for filament tracking and length measurement, but the paper does not specify the TSOAX parameters (ridge detection threshold, minimum filament length, tracking algorithm settings) needed to reproduce the elongation-rate calculations in Fig. 2E and Fig. 3C–D."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "The Monte-Carlo model code is not deposited or linked; the paper states 'Supplementary Information, Modeling MreB dynamics' but provides only a prose description of reactions and rate constants, not the simulation code or a runnable implementation."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "The data availability statement promises deposition 'after publication' on Zenodo with no accession number or pre-registration; this is a HARD flag for load-bearing quantitative results (elongation rates, disassembly rates, FRAP recovery curves) that cannot be independently verified until publication."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "HS-AFM image processing uses FFT bandpass filtering with specific pixel thresholds (8 and 1 pixel) but does not justify these choices or report sensitivity analysis; the resulting filament-length measurements in Fig. 2B–D depend on these parameters and cannot be reproduced without them."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "The fluorescence anisotropy binding assay (Fig. 1D, Table 1) reports Kd values but does not specify whether the fits were constrained (the methods state rmax and rmin are 'constrained' but do not report the actual values used for each mutant), preventing independent verification of the reported affinities."
         }
       ],
       "questions": [
-        "Where is the Monte-Carlo model code deposited, and what is the accession or repository link? If it is truly 'to be deposited after publication,' how can readers verify the simulations now?",
-        "For the kinetic parameters in Fig. 4D, which were measured directly from the experiments (e.g., k₊,ₜ from Fig. 2E) and which were fitted or estimated from other sources? Provide a table mapping each parameter to its source and uncertainty.",
-        "In Fig. 3F (ATP* FRAP recovery), what is the timescale of the recovery, and how does it compare to the timescale of ATP hydrolysis (k_hyd = 1.54 × 10⁻³ s⁻¹)? Is the recovery fast enough to rule out simple rebinding from solution?",
-        "For the CCCP experiment (Fig. 4J), how many cells were imaged, what quantitative metric was used to score delocalization, and was a statistical test applied to compare WT and E136A?"
+        "What are the exact FRAP acquisition parameters (laser power, pixel dwell time, bleach region radius, frame interval, number of post-bleach frames) for the ATP* exchange experiment in Fig. 3F, and what is the mobile fraction?",
+        "How were filament ends identified and tracked in the TIRF disassembly experiments (Fig. 4A–B), and were both ends of each filament measured or only one?",
+        "Can the authors provide the Monte-Carlo model code (or a detailed pseudocode with all rate equations and parameter values) and specify whether intrafilament exchange rates depend on nucleotide state?",
+        "What are the TSOAX parameters (ridge detection threshold, minimum filament length, tracking settings) used for filament tracking in Figs. 2E and 3C–D?",
+        "For the E136A and D158A mutants, what are the measured ATP hydrolysis rates (kₕᵧ𝒹) under the polymerization conditions (on SLBs with ATP), not just the Pi release rates in the liposome-binding assay?"
       ]
     },
     {
@@ -277,38 +303,42 @@
       "weaknesses": [
         {
           "id": "rigor-1",
-          "text": "**Nucleotide exchange mechanism and evidence.** The central claim is that 'continuous nucleotide exchange within filaments tunes their stability' (Abstract). The primary evidence is FRAP recovery of ATP* fluorescence (Fig. 3F), which shows ~50% recovery in ~2 min for WT but not E136A. However, the authors acknowledge that TFLime-labeled filaments show no recovery because 'high-intensity laser illumination used for photobleaching induces irreversible photochemical trapping' (line 251). This raises a critical ambiguity: ATP* recovery could reflect either (i) nucleotide dissociation and rebinding from solution, or (ii) lateral diffusion of ATP*-labeled subunits within the filament, or (iii) exchange of ATP* between neighboring subunits without full dissociation. The authors do not experimentally distinguish these mechanisms. The claim that exchange 'tunes stability' is further weakened by the fact that the model predicts the same filament behaviors (polymerization, ADP-induced depolymerization, E136A stability) without requiring any intrafilament exchange at all — exchange is invoked post-hoc to explain the FRAP data, not independently predicted. A direct measurement of nucleotide off-rates from intact filaments (e.g., by stopped-flow kinetics or single-molecule tracking) would be needed to establish that nucleotides actually dissociate from filament subunits rather than merely diffusing laterally or exchanging with neighbors."
+          "text": "**Nucleotide exchange mechanism not isolated from alternatives.** The core claim is that 'continuous nucleotide exchange within filaments tunes their stability' (abstract). The evidence is: (1) ATP* FRAP recovery in Fig. 3F showing fluorescence recovery after photobleaching, and (2) rapid ADP-induced depolymerization in Fig. 4A–B. However, FRAP recovery of a fluorescent nucleotide analogue is consistent with nucleotide exchange anywhere in the filament, at the ends, or via transient dissociation and rebinding of subunits without true intrafilament exchange. The manuscript does not experimentally distinguish between these mechanisms. The ADP-induced depolymerization phenotype (Fig. 4A–B) is equally explained by a simpler model: ADP binds poorly to MreB (Kd ~0.56 µM, Table 1) and fails to stabilize filaments, so filaments shed ADP-bound or nucleotide-free subunits. This does not require active exchange; it only requires that ADP-loaded filaments are unstable. The authors' model (Fig. 4D, S10) assumes intrafilament exchange occurs and uses it to explain the data, but the model is not validated against the alternative hypothesis that exchange is negligible and the phenotypes arise from nucleotide affinity and end-wise dissociation alone. To isolate true intrafilament exchange, one would need to show that nucleotide is released and rebound within the filament interior in a way that cannot occur at the ends—for example, by blocking end dissociation and measuring whether internal nucleotide still exchanges. The current data do not exclude end-only exchange."
         },
         {
           "id": "rigor-2",
-          "text": "**Causal language about 'tuning' stability.** The Abstract states that 'continuous nucleotide exchange within filaments tunes their stability on the membrane.' The Results show that (i) WT filaments exchange ATP* with solution (Fig. 3F), (ii) the rate of exchange is faster than the rate of Pi release (line 283), and (iii) in simulations, filaments loaded with ADP disassemble faster than those with ATP (Fig. 4I). However, 'tuning' implies active regulation — that exchange causally controls stability — whereas the data show only that the nucleotide state (ATP vs ADP) affects stability. Exchange is a passive consequence of the filament structure, not a regulatory mechanism. The model shows that even without exchange, the ATP/ADP ratio in the free pool would control filament fate (Fig. S10). The distinction matters: the title and abstract claim a novel regulatory mechanism, but the evidence supports only that nucleotide composition (which happens to be maintained by exchange) correlates with stability. Reframing as 'nucleotide exchange maintains ATP-bound state, which stabilizes filaments' would be more precise."
+          "text": "**Claim of 'new class of biopolymer behavior' not adequately scoped.** The abstract and main text state that 'nucleotide cycling within MreB filaments defines a new class of biological polymer behavior' and 'nucleotide cycling within intact filaments defines a new class of biopolymer dynamics.' This is presented as a fundamental discovery. However, the evidence is restricted to B. subtilis MreB on supported lipid bilayers at 0.05–1.2 µM protein, 0.2 mM ATP, 20% cardiolipin, and room temperature or 37°C. No other MreB species is tested; no other conditions are explored. The in vivo data (Fig. 4J) show only that E136A (ATPase-deficient) MreB remains localized when ATP is depleted by CCCP, consistent with the model, but do not directly demonstrate that nucleotide exchange occurs in living cells or that it is the dominant mechanism regulating MreB in vivo. The claim of a 'new class' is not hedged to the tested regime and overstates the generality of the finding. A more precise claim would be: 'MreB filaments on cardiolipin-containing membranes exhibit nucleotide exchange that may contribute to filament stability,' with explicit acknowledgment that the mechanism and its prevalence in vivo remain to be established."
         },
         {
           "id": "rigor-3",
-          "text": "**Generalization of the 'new class' claim.** The Abstract and Discussion claim that 'nucleotide cycling within MreB filaments defines a new class of biological polymer behavior' (Abstract) and 'a new class of self-organizing biological filament dynamics' (line 367). This is presented as a fundamental distinction from actin. However, the evidence is limited to B. subtilis MreB under in vitro conditions on a supported lipid bilayer. The authors note that Geobacillus MreB shows different Pi release kinetics (line 10 of Discussion), and ParM (another prokaryotic actin homolog) shows ADP-induced disassembly (line 313), suggesting heterogeneity among prokaryotic actins. The claim would be stronger if restricted to 'MreB' rather than 'prokaryotic actin homologs' or if the authors had tested MreB from another species. As written, the claim overgeneralizes from one organism."
+          "text": "**Overclaiming on mechanism of ADP-induced depolymerization.** The manuscript states (line 310–311) that 'ADP-rich MreB filaments disassembly occurs through both rapid depolymerization at rates corresponding to k_{-,d} and filament instability leading to fragmentation.' The evidence is the capping experiment (Fig. 4G–H) in which E136A-capped WT filaments break in the WT section when exposed to ADP. However, this experiment does not prove that ADP causes filament instability or fragmentation as a mechanism; it shows that WT filaments depolymerize faster in the presence of ADP than E136A filaments do. The fragmentation observed could result from differential depolymerization rates at the two ends of the WT section, not from ADP-induced instability of the filament interior. The model (Fig. S10A, C) predicts rapid end-wise depolymerization (k_{-,d}) when ADP is present, which alone explains the data without invoking filament fragmentation as a separate mechanism. The language 'filament instability leading to fragmentation' suggests a mechanism not directly demonstrated."
         },
         {
           "id": "rigor-4",
-          "text": "The claim that ATP hydrolysis is 'not required for polymerization' (section heading, line 222) is supported, but the phrasing risks confusion: hydrolysis is not required for the initial polymerization event, but the model shows it is required for the eventual depolymerization and turnover that stabilize filaments in vivo (Fig. S10). A qualifier such as 'not required for the initial polymerization event' would be clearer."
+          "text": "The claim that ATP hydrolysis is 'not required for polymerization' (section heading, line 223) is supported by the E136A and D158A mutant data, but the phrasing is imprecise: hydrolysis is not required for the initial polymerization reaction, but the manuscript shows it does occur within filaments and contributes to disassembly, so the functional role of hydrolysis is not 'dispensable' as the heading might imply—it is decoupled from initiation."
         },
         {
           "id": "rigor-5",
-          "text": "The critical concentration is reported as 'negligible (0.003 µM)' (Table 1, line 476) based on a linear fit at low concentrations, but the plateau in Fig. 2E suggests the true Cc may be higher; the authors should clarify whether 0.003 µM is the Cc for ATP-MreB or an artifact of the 2D diffusion model."
+          "text": "The critical concentration estimate (Cc ≈ 0.003 µM, Table 1) is derived from a linear fit at low MreB concentrations (0.01–0.05 µM, Fig. 2E), but the fit window and error bounds are not shown, and the extrapolation to zero concentration is not validated; confidence in this value is unclear."
         },
         {
           "id": "rigor-6",
-          "text": "The claim that filaments 'remain stable through TIRF time courses (up to several hours), with no detectable depolymerization' (line 246) is not quantified; a figure showing filament length over hours would strengthen this claim and rule out slow, steady depolymerization."
+          "text": "The statement that 'nucleotide exchange with free ATP in solution stabilizes the filaments, while exchange with free ADP promotes their disassembly' (line 337–338) is a model prediction (Fig. 4I), not a direct experimental observation; it should be labeled as such."
         },
         {
           "id": "rigor-7",
-          "text": "The model assumes 'identical dynamics at both filament ends' (Fig. 4D legend), but Fig. 2G shows occasional weak polarity; the impact of this assumption on the simulations is not discussed."
+          "text": "The in vivo CCCP experiment (Fig. 4J) measures MreB localization, not filament assembly or nucleotide state directly; the interpretation that E136A remains stable because ATP is not hydrolyzed is indirect and depends on the model."
+        },
+        {
+          "id": "rigor-8",
+          "text": "The manuscript does not report whether the pFAST tag or TFLime/TFCoral fluorophores affect MreB polymerization kinetics or nucleotide binding, beyond the note that ATP* is 'less efficient' (Fig. S5); potential artifacts from labeling are not fully addressed."
         }
       ],
       "questions": [
-        "Does the ATP* FRAP recovery (Fig. 3F) represent nucleotide dissociation from the filament, or could it reflect lateral diffusion of ATP*-labeled subunits or exchange between adjacent subunits without full release into solution?",
-        "In the model, what is the sensitivity of the predicted filament stability to the intrafilament exchange rate (k+,n and k-,n)? If exchange rates were 10-fold slower, would the polymerization and depolymerization kinetics still match the data?",
-        "Why do WT and D158A filaments show such different nucleotide affinities (Fig. 3B) when both are expected to have the same nucleotide-binding pocket? Is this a direct effect of the mutation on binding, or an indirect effect on protein folding?",
-        "The in vivo CCCP experiment (Fig. 4J) shows E136A remains localized while WT delocalizes, but does not directly measure ATP/ADP ratios in the cell; could the difference reflect other ATP-dependent processes (e.g., membrane potential, protein synthesis) rather than MreB nucleotide state?"
+        "Can you provide the fitting window and residuals for the critical concentration estimate (Cc ≈ 0.003 µM) to assess the reliability of the extrapolation?",
+        "In the FRAP experiment (Fig. 3F), what is the recovery time constant and mobile fraction, and have you tested whether blocking filament ends (e.g., with capping proteins or by anchoring filaments at both ends) abolishes ATP* recovery to distinguish end exchange from internal exchange?",
+        "In the ADP-induced depolymerization experiment, can you measure the depolymerization rate separately at the two ends of a single filament to test whether fragmentation results from differential end rates rather than interior instability?",
+        "Does the model prediction that intrafilament nucleotide exchange is 'significantly faster than the rate of Pi release' (line 335) depend on the assumed exchange rate constant (k_{+,n}, k_{-,n}), and how were these values determined or constrained from the data?"
       ]
     }
   ],

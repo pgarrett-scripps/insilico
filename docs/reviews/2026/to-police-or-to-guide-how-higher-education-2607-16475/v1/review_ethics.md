@@ -1,21 +1,23 @@
 # Ethics & Compliance Reviewer
 
 ## Summary
-This qualitative interview study involving human subjects received appropriate IRB review and exemption, with clear informed consent and compensation disclosed. The authors transparently acknowledge their positionality and reflexive methodology, and have taken reasonable steps to protect participant privacy by withholding demographic details. No funding sources are disclosed, but the authors do not claim external funding. No competing interests are stated, though this is appropriate for an unfunded academic study. The manuscript meets the ethical standards expected for In Silico review of qualitative education research.
+This qualitative interview study with 13 CS instructors received IRB exemption and reports appropriate informed consent and compensation ($50 per participant). The authors disclose their positionality and funding sources are not mentioned—a soft gap for a qualitative study. No human-subjects vulnerabilities, identifiable data, or secondary-data reuse issues are present. The de-identification approach (anonymizing participant demographics and using ID codes) is sound and appropriate for the sensitivity of policy discussions. The study design, reflexive thematic analysis, and acknowledgment of researcher subjectivity align with ethical qualitative-research practice. No competing interests are declared, which is a minor transparency gap. Overall, the ethics and compliance posture is solid for a qualitative education study, with only minor disclosure refinements needed.
 
 ## Strengths
-- IRB exemption explicitly stated: 'The interview study was reviewed and granted exemption by the IRB' (Section 3.1), satisfying the HARD requirement for ethics-committee approval documentation.
-- Informed consent and compensation clearly disclosed: 'each interviewee was compensated with $50 for participating' (Section 3.1), indicating voluntary participation with consideration.
-- Participant privacy actively protected through deliberate de-identification: 'we opted to take extra care in protecting the participants' identities and not report their demographic information' (Section 3.2), exceeding minimum standards.
-- Reflexive methodology and positionality transparently acknowledged: 'All three researchers have recent programming teaching experience... The researchers have varying degrees of skill and trust in using GenAI tools... All three researchers are motivated by interest in AI policies' (Section 3.3), enabling readers to assess potential bias.
-- No undisclosed funding or competing interests: the manuscript does not claim external funding, and no conflicts of interest are evident from the text.
+- IRB exemption explicitly stated and study reviewed by ethics committee, meeting the hard requirement for human-subjects research.
+- Informed consent and participant compensation ($50) clearly documented, establishing voluntary participation and fair reciprocity.
+- Participant de-identification is thorough: no demographic information reported, only institution type and course context, protecting instructor privacy in a sensitive policy domain.
+- Positionality statement included (Section 3.3), acknowledging researchers' prior teaching experience and varying AI tool use, which supports reflexive methodology transparency.
+- No identifiable data or vulnerable populations involved; interview content is professional observation rather than sensitive personal information.
 
 ## Weaknesses
-- IRB approval body and protocol number not named: while exemption is stated, the specific IRB committee name and protocol identifier are absent, preventing verification and limiting transparency (Section 3.1).
-- No explicit statement on data retention, storage security, or long-term archival plans for interview recordings and transcripts, which is a SOFT transparency gap for qualitative data involving human subjects.
-- Recruitment method mixes purposive and snowball sampling without explicit safeguards against bias: 'Most interviewees were recruited by purposive sampling, with some instructors recruited by snowball sampling' (Section 3.1) could introduce selection bias, though this is a methodological rather than ethics issue and belongs to the methods reviewer.
+- Funding sources are not disclosed anywhere in the manuscript, creating a soft transparency gap on potential conflicts of interest or institutional pressures that may have shaped the research.
+- No explicit statement of competing interests or conflicts of interest (e.g., whether authors have financial stakes in AI tools, textbook publishers, or educational platforms), which is standard in research ethics disclosure.
+- The reflexive thematic analysis relies on three researchers' interpretations without inter-rater reliability metrics or external audit trail, raising questions about whether the analysis process itself was documented for reproducibility and bias-checking (soft issue for qualitative work, but relevant to research integrity).
+- No data-availability or code-availability statement provided; while interview transcripts cannot be shared due to confidentiality, the paper should explicitly state this limitation and clarify what supplementary materials (e.g., codebook, analysis memos) are available.
 
 ## Questions
-- Can you provide the name of the IRB committee and the protocol number under which this study was reviewed and exempted? This is standard for transparency and verification.
-- How were interview recordings and transcripts stored, secured, and will they be retained or destroyed after the study? Were participants informed of these data-handling practices?
-- Did the informed consent process explicitly address the use of direct quotes in publication, given that some quotes are quite detailed and could potentially identify instructors? How did you balance transparency with anonymity?
+- What funding sources, if any, supported this research? Please disclose any grants, institutional support, or external funding.
+- Do any authors have competing interests—financial, professional, or personal—related to AI tools, educational technology, or CS education policy? Please provide an explicit statement.
+- Can you clarify the data-availability policy: are anonymized interview transcripts, the codebook, or analysis memos available to readers or depositors (e.g., OSF, institutional repository) subject to confidentiality constraints?
+- The reflexive thematic analysis involved three researchers; can you describe the process for resolving disagreements in coding or theme interpretation, and whether an external auditor or member-checking with participants occurred?

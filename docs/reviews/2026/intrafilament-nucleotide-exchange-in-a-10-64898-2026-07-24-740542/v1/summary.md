@@ -5,7 +5,7 @@
 **Review strictness:** Balanced (3/5)
 
 ## Reviewer Scores
-- **clarity** — score 4.0/5 (confidence 5.0/5)
+- **clarity** — score 4.0/5 (confidence 4.0/5)
 - **data_analysis** — score 4.0/5 (confidence 4.0/5)
 - **ethics** — score 5.0/5 (confidence 5.0/5)
 - **literature** — score 4.0/5 (confidence 4.0/5)
@@ -17,8 +17,8 @@
 **Average reviewer score:** 3.75/5
 
 ## Editorial Audits
-- **Citation Integrity Auditor** — 1 HARD gap(s), 3 SOFT gap(s)
-- **Methods Completeness & Reagent Traceability Auditor** — 2 HARD gap(s), 6 SOFT gap(s)
+- **Citation Integrity Auditor** — 0 HARD gap(s), 11 SOFT gap(s)
+- **Methods Completeness & Reagent Traceability Auditor** — 3 HARD gap(s), 11 SOFT gap(s)
 
-**Estimated cost:** $1.7618
-**Prompt cache:** 397,637 tokens read, 411,460 written (49% served from cache)
+**Estimated cost:** $2.3735
+**Prompt cache:** 500,368 tokens read, 440,606 written (53% served from cache)
