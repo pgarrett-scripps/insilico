@@ -3,7 +3,6 @@
 **Decision:** Major Revision
 **Target venue:** In Silico
 **Review strictness:** Balanced (3/5)
-**Submission integrity:** Concealed text present (448 characters) — see integrity.md
 
 ## Reviewer Scores
 - **clarity** — score 4.0/5 (confidence 4.0/5)

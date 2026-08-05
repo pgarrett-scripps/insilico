@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This is a computational modeling study of virus-defective interfering particle (DIP) coevolution that is in scope for In Silico. The manuscript presents a novel partial differential equation framework capturing phenotype-dependent interference, mutation, and fitness trade-offs. It reproduces known experimental phenomena (von Magnus oscillations, transient resistance cycles) and generates testable predictions about parameter regimes. The work is technically sound in its core approach, the methods are clearly described, code is made publicly available, and the authors candidly acknowledge limitations (2D phenotype space, deterministic framework, simplified kernels). The hidden text detected appears to be standard preprint metadata (bioRxiv headers and license information positioned outside the page margins), which is an innocent artifact of PDF conversion and does not indicate misconduct. While the manuscript would benefit from empirical validation and more detailed biological grounding of abstract parameters, these are not threshold problems—they are appropriate directions for full peer review to address. The work merits evaluation by the panel.

@@ -3,7 +3,6 @@
 **Decision:** Minor Revision
 **Target venue:** General Peer-Reviewed Journal
 **Review strictness:** Balanced (3/5)
-**Submission integrity:** Concealed text present (2844 characters) — see integrity.md
 
 ## Reviewer Scores
 - **clarity** — score 4.0/5 (confidence 5.0/5)

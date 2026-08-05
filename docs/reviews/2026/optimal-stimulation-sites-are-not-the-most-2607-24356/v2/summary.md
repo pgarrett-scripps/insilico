@@ -5,7 +5,6 @@
 **Review strictness:** Balanced (3/5)
 **Round:** 2 (revision of 20260802-005211-from-read-out-geometry-to-in-silico-stimulation-a-)
 **Previous decision:** Major Revision
-**Submission integrity:** Concealed text present (448 characters) — see integrity.md
 
 ## Reviewer Scores
 - **clarity** — score 4.0/5 (confidence 4.0/5)
