@@ -16,6 +16,8 @@ if any published bundle goes unrendered.
 from __future__ import annotations
 
 import contextlib
+import datetime as dt
+import email.utils
 import hashlib
 import json
 import os
@@ -884,6 +886,69 @@ def check_metadata_fetch_retries_throttling() -> None:
         fp._get_once, fp.time.sleep = real_once, real_sleep
 
 
+def check_a_rate_limit_is_waited_out_in_minutes() -> None:
+    """A 429 and a 500 are both "later", on timescales two orders apart.
+
+    The schedule used to be one exponential curve for both, topping out at 16
+    seconds. bioRxiv throttled a repeated `.full.pdf` fetch and the run died on
+    the download — before any model call, so nothing was billed, but also
+    before any review existed. No rate limit lifts inside 28 seconds.
+
+    So: a hiccup is still answered in seconds, a throttle in minutes, a server
+    that names its own interval is taken at its word, and the total is bounded
+    so a host refusing us all afternoon fails the run instead of eating the
+    workflow's whole time budget to arrive at the same place.
+    """
+    import fetch_preprint as fp
+
+    def err(code, headers=None):
+        return urllib.error.HTTPError("https://x/y", code, "no", headers or {}, None)
+
+    # A hiccup keeps the seconds-scale curve.
+    assert [fp._retry_delay(err(500), n, 0) for n in (1, 2, 3)] == [4, 8, 16], \
+        "a 5xx should still be retried in seconds"
+
+    # A throttle does not.
+    throttle = [fp._retry_delay(err(429), n, 0) for n in (1, 2, 3)]
+    assert throttle == [30.0, 120.0, 300.0], f"429 backoff should be minutes, got {throttle}"
+
+    # Retry-After wins over the schedule, in either legal form.
+    assert fp._retry_delay(err(429, {"Retry-After": "45"}), 1, 0) == 45.0
+    when = email.utils.format_datetime(
+        dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=90)
+    )
+    dated = fp._retry_delay(err(429, {"Retry-After": when}), 1, 0)
+    assert 80 <= dated <= 95, f"an HTTP-date Retry-After should resolve to ~90s, got {dated}"
+
+    # ... but is not trusted past the budget, and nonsense falls back.
+    assert fp._retry_delay(err(429, {"Retry-After": "9999"}), 1, 0) == fp.MAX_THROTTLE_WAIT_SECONDS
+    assert fp._retry_delay(err(429, {"Retry-After": "soon"}), 1, 0) == 30.0
+
+    # Spent budget stops the retrying rather than extending it.
+    assert fp._retry_delay(err(429), 2, fp.MAX_THROTTLE_WAIT_SECONDS) is None
+
+    # End to end: a host that never relents costs exactly the budget.
+    slept: list[float] = []
+    real_once, real_sleep = fp._get_once, fp.time.sleep
+    fp.time.sleep = lambda s: slept.append(s)
+
+    def always_throttled(url, max_bytes=None, opener=None):
+        raise urllib.error.HTTPError(url, 429, "Too Many Requests", {}, None)
+
+    fp._get_once = always_throttled
+    try:
+        try:
+            fp._get("https://www.biorxiv.org/x.pdf", retries=fp.METADATA_RETRIES)
+        except urllib.error.HTTPError as exc:
+            assert exc.code == 429
+        else:
+            raise AssertionError("a permanent throttle should surface, not hang")
+        assert sum(slept) == fp.MAX_THROTTLE_WAIT_SECONDS, \
+            f"should spend exactly the budget, spent {sum(slept)}"
+    finally:
+        fp._get_once, fp.time.sleep = real_once, real_sleep
+
+
 def check_pdf_download_retries_a_flaky_server() -> None:
     """The PDF fetch is retried on the same terms as the metadata lookup.
 
@@ -1162,6 +1227,8 @@ def main() -> int:
     print("ok  a throttled metadata lookup is retried, a missing one is not")
     check_pdf_download_retries_a_flaky_server()
     print("ok  a flaky PDF download is retried too")
+    check_a_rate_limit_is_waited_out_in_minutes()
+    print("ok  a rate limit is waited out in minutes, within a budget")
     check_command_parsing_is_strict()
     print("ok  editor commands are parsed strictly")
     check_one_model_means_one_model()

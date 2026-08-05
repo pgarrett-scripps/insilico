@@ -12,9 +12,12 @@ API keys.
 
 from __future__ import annotations
 
+import datetime as dt
+import email.utils
 import hashlib
 import json
 import re
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -26,10 +29,27 @@ from pathlib import Path
 USER_AGENT = "InSilico-overlay-journal/0.1 (+https://github.com/pgarrett-scripps)"
 TIMEOUT = 60
 
-# arXiv asks for a few seconds between API calls and refuses outright when it
-# does not get them. Start above their stated interval and double from there.
+# A server hiccup — bioRxiv 500s on a `.full.pdf` it served a minute earlier —
+# clears in seconds. arXiv asks for a few seconds between API calls and refuses
+# outright when it does not get them. Start above their stated interval and
+# double from there.
 RETRY_BACKOFF_SECONDS = 4
-METADATA_RETRIES = 3
+# Four, not three, so the throttle schedule below can actually reach its own
+# budget: 30 + 120 + 300 + 300 covers the ten minutes, where three attempts
+# would stop at 450 seconds and leave a quarter of the allowance unused.
+METADATA_RETRIES = 4
+
+# A 429 is not a hiccup, and backing off in seconds is the same as not backing
+# off at all. bioRxiv throttled a repeated `.full.pdf` fetch for longer than
+# the 4/8/16-second schedule above could outlast, so the run died on the
+# download — before any model call, but also before any review. These waits are
+# minutes because that is the timescale a rate limit actually operates on.
+THROTTLE_BACKOFF_SECONDS = (30, 120, 300)
+# Total spent waiting out a throttle, across all attempts. The review workflow
+# allows itself 60 minutes and the panel needs most of them, so a fetch that
+# cannot get in within ten gives the run back rather than eating the budget and
+# failing anyway.
+MAX_THROTTLE_WAIT_SECONDS = 600
 
 # A URL sitting on its own in an issue-form field.
 URL_RE = re.compile(r"https?://[^\s<>\"')\]]+")
@@ -120,16 +140,35 @@ def _get(
     re-checked rather than trusted. Preprint fetches leave it unset, since
     those URLs are rebuilt by :func:`resolve` for three known hosts.
 
-    ``retries`` is for the metadata APIs, which throttle. arXiv asks callers
-    to leave a few seconds between requests and simply refuses when they
-    don't; a review that resolves during a busy minute would otherwise be
-    published with no title, no authors and no DOI. The backoff starts above
-    arXiv's stated interval deliberately.
+    ``retries`` is for the hosts that throttle, which is all of them. arXiv
+    asks callers to leave a few seconds between requests and simply refuses
+    when they don't; a review that resolves during a busy minute would
+    otherwise be published with no title, no authors and no DOI.
+
+    How long to wait depends on which failure it was, and the difference is
+    two orders of magnitude — see :func:`_retry_delay`.
     """
     last: Exception | None = None
+    waited = 0.0
     for attempt in range(retries + 1):
         if attempt:
-            time.sleep(RETRY_BACKOFF_SECONDS * (2 ** (attempt - 1)))
+            delay = _retry_delay(last, attempt, waited)
+            if delay is None:
+                break
+            # Announced, because a silent five-minute sleep in a CI log is
+            # indistinguishable from a hung job, and the reflex is to cancel
+            # it — which is the one thing that guarantees the fetch fails.
+            # Naming the cause too: waiting out a rate limit and retrying a
+            # server hiccup look identical in a log and are not the same
+            # problem to go and fix.
+            cause = getattr(last, "code", "") or type(last).__name__
+            print(
+                f"{urllib.parse.urlsplit(url).netloc} returned {cause}; "
+                f"waiting {delay:.0f}s before retry {attempt} of {retries}",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+            waited += delay
         try:
             return _get_once(url, max_bytes, opener)
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
@@ -139,6 +178,60 @@ def _get(
                 raise
             last = exc
     raise last if last else RuntimeError(f"could not fetch {url}")
+
+
+def _retry_delay(exc: Exception | None, attempt: int, waited: float) -> float | None:
+    """Seconds to wait before ``attempt``, or None to stop retrying.
+
+    A 5xx and a 429 are both "try again later", and treating them the same is
+    what let a rate limit kill a run: the exponential schedule tops out at 16
+    seconds, which no throttle has ever lifted in. So they get separate
+    schedules, and a 429 that names its own interval gets that instead.
+
+    Returns None once :data:`MAX_THROTTLE_WAIT_SECONDS` is spent, so a host
+    that is refusing us for the afternoon fails the run promptly rather than
+    holding the workflow's whole time budget to arrive at the same place.
+    """
+    throttled = isinstance(exc, urllib.error.HTTPError) and exc.code == 429
+    if not throttled:
+        return RETRY_BACKOFF_SECONDS * (2 ** (attempt - 1))
+
+    delay = _retry_after(exc)
+    if delay is None:
+        step = min(attempt - 1, len(THROTTLE_BACKOFF_SECONDS) - 1)
+        delay = float(THROTTLE_BACKOFF_SECONDS[step])
+
+    remaining = MAX_THROTTLE_WAIT_SECONDS - waited
+    return min(delay, remaining) if remaining > 0 else None
+
+
+def _retry_after(exc: urllib.error.HTTPError) -> float | None:
+    """The server's own ``Retry-After``, in seconds, if it gave a usable one.
+
+    Both forms are legal: a count of seconds, or an HTTP date. Trusted only up
+    to the total budget — a header asking for an hour is answered by giving up,
+    not by sleeping for an hour.
+    """
+    raw = ""
+    try:
+        raw = (exc.headers.get("Retry-After") or "").strip()
+    except AttributeError:  # a synthesised HTTPError may carry no headers
+        return None
+    if not raw:
+        return None
+    try:
+        return max(0.0, float(int(raw)))
+    except ValueError:
+        pass
+    try:
+        when = email.utils.parsedate_to_datetime(raw)
+    except (TypeError, ValueError):
+        return None
+    if when is None:
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=dt.timezone.utc)
+    return max(0.0, (when - dt.datetime.now(dt.timezone.utc)).total_seconds())
 
 
 def _get_once(
