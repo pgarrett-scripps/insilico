@@ -1,0 +1,29 @@
+# Related-Work & Citations Reviewer
+
+## Summary
+The manuscript's citation record is substantially sound on core mechanistic claims and appropriately attributes prior work on alternate translation. However, there is one significant omission: inadequate engagement with Pataskar et al. (2022) on tryptophan-to-phenylalanine substitutions under amino acid starvation, which directly bears on the claim that high-abundance substitutions reflect stabilizing effects. Additionally, the claim that patient genomes show no corresponding mutations is asserted without supporting data or supplemental documentation, and the evidence for sense codon recoding via mRNA modifications is suggestive but lacks quantified effect sizes. Several citation errors and incomplete methodological attributions (CPTAC versions, Oktoberfest FDR on SAAP sequences, histone ruler assumptions) further weaken reproducibility and mechanistic clarity. The related-work section is otherwise reasonably complete for a proteomics study but underweights recent biomedical literature on sense codon recoding mechanisms.
+
+## Strengths
+- The Mordret et al. (2019) citation is correctly attributed as foundational prior work on systematic detection of amino acid substitutions in proteomes and appropriately positioned as the starting point for this study's extension to mammals.
+- Mechanistic claims about codon frequency and tRNA availability are grounded in established models (Drummond & Wilke 2008, Quax et al. 2015) and the authors transparently acknowledge dependence on prior work without overstating novelty.
+- The manuscript cites key pseudouridylation work (Karijolich & Yu 2011, Dai et al. 2023) and correctly attributes the mechanism of stop-codon recoding, appropriately flagging uncertainty about its role in endogenous sense-codon recoding as an open question rather than a proven mechanism.
+- Citation hygiene is generally good; all major references resolve and are accurately attributed.
+
+## Weaknesses
+- The authors do not adequately engage with Pataskar et al. (2022) on tryptophan-to-phenylalanine substitutions under amino acid starvation, which directly competes with the claim that high-abundance substitutions reflect protein stabilization rather than synthesis rates alone; the manuscript cites Pataskar et al. only in passing as evidence that substitutions occur under stress, not as a competing mechanistic explanation.
+- The statement 'Mutations in the genomes of LSCC patients did not correspond to any of the identified AAS' is asserted without showing data, supplemental tables, or methodological details (sample size, variant-calling pipeline, matching threshold), making the claim unverifiable from the text alone.
+- The claim that U modifications overlap significantly with substitution sites (p < 10^−10) lacks specification of which U modifications are involved and does not provide effect sizes; the authors acknowledge they 'cannot confidently rule out the possibility of multiple modifications or alternate events,' undercutting the mechanistic claim.
+- The claim that 'the prevalence and stability of alternatively translated proteins are presumed low' in microorganisms cites ref. 12 (Wright & Vissel on AMPA receptors), which does not address microorganisms—this appears to be a citation error.
+- The authors cite Netzer et al. (2009) for the claim that 'non-cognate amino acid acylation may confer beneficial functions,' but the abstract focuses on oxidative stress and translational fidelity, not functional benefits of mischarging—the citation support is unclear.
+- The claim that 'previous reports of substitutions did not test if they have genetic origin' is unsupported by specific references; Mordret et al. (2019) did address genetic origin in yeast, so this claim needs clarification.
+- The histone ruler method (Wiśniewski et al. 2014) is cited for copy-number estimation without discussing the assumption that histone abundance is constant across tissues and cell types, which may not hold in cancer.
+- The CPTAC datasets are cited without specifying version, release date, or dataset identifiers, making reproducibility harder.
+- The Oktoberfest rescoring pipeline is cited as validation but the authors do not report FDR or sensitivity on SAAP sequences specifically, leaving confidence in the re-scoring step unclear.
+- The claim that 'substitutions of polar amino acids have consistently higher RAAS than substitutions of other amino acid types' is supported by figures but the authors do not explain why polar amino acids would be preferentially misread or stabilized, leaving the mechanism unclear.
+
+## Questions
+- Does the filtering of peptides that could be explained by both an AAS and a PTM (e.g., Q→E, N→D as deamidation) remove true substitutions that happen to overlap with known PTMs, and how many SAAP were discarded on this basis?
+- For the claim that 'mutations in the genomes of LSCC patients did not correspond to any of the identified AAS,' please provide the supplemental table or figure showing the variant-calling results and the matching procedure used to exclude genetic origin.
+- The degradation-rate analysis is restricted to three cell types (hepatocytes, B cells, NK cells); do the authors have SILAC data from other tissues (e.g., cancer cell lines) that would allow testing whether the stabilization signature holds across the full dataset?
+- Can the authors explicitly state whether Pataskar et al.'s starvation-induced substitutions show the same stabilization signature in degradation data, or whether the mechanisms differ between starvation-induced and healthy-tissue substitutions?
+- For the U modification analysis, can the authors quantify the effect size of the modification–RAAS correlation and specify which U modifications (pseudouridine, dihydrouridine, other?) are involved?
