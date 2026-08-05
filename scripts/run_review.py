@@ -369,7 +369,9 @@ class Plan:
         return "revision round" if self.prior else "first review"
 
 
-def plan_review(paper_dir: Path, draft: int, replace: bool) -> Plan:
+def plan_review(
+    paper_dir: Path, draft: int, replace: bool, *, publishing: bool = True
+) -> Plan:
     """Decide where a review of ``draft`` belongs, or refuse.
 
     Three cases, and the caller declares none of them:
@@ -383,11 +385,18 @@ def plan_review(paper_dir: Path, draft: int, replace: bool) -> Plan:
     draft. If the authors have posted a new version since, the draft number
     differs, so ``--replace`` silently becomes a new round rather than
     clobbering the record of a draft nobody can read any more.
+
+    ``publishing`` is false for a run that lands in ``runs/``, and then that
+    refusal does not apply: there is no bundle at stake, because the run
+    cannot reach ``docs/reviews/`` at all. Enforcing it anyway made the
+    already-reviewed papers the ones a pipeline change could never be tested
+    against — which is backwards, since they are the ones with a published
+    result to compare against.
     """
     published = existing_bundles(paper_dir)
     dest = paper_dir / f"v{draft}"
 
-    if draft in published:
+    if draft in published and publishing:
         if not replace:
             raise CommandError(
                 f"Draft v{draft} of this paper has already been reviewed "
@@ -964,6 +973,10 @@ def _run(args, workdir: Path) -> int:
                 / paper_slug(preprint, preprint.title or preprint.identifier),
                 draft_number(preprint),
                 args.replace,
+                # Predict what the real run with these same flags will do. A
+                # dry run that refuses where the run itself would proceed is
+                # worse than no dry run.
+                publishing=args.publish,
             )
         except CommandError as exc:
             print(f"{exc}", file=sys.stderr)
@@ -1001,7 +1014,9 @@ def _run(args, workdir: Path) -> int:
     known = find_paper_dir(preprint)
     paper_dir = known or (REVIEWS / year / slug)
     try:
-        plan = plan_review(paper_dir, draft_number(preprint), args.replace)
+        plan = plan_review(
+            paper_dir, draft_number(preprint), args.replace, publishing=args.publish
+        )
     except CommandError as exc:
         print(f"{exc}", file=sys.stderr)
         if out := os.environ.get("GITHUB_OUTPUT"):

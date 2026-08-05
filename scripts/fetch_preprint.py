@@ -45,6 +45,8 @@ METADATA_RETRIES = 4
 # download — before any model call, but also before any review. These waits are
 # minutes because that is the timescale a rate limit actually operates on.
 THROTTLE_BACKOFF_SECONDS = (30, 120, 300)
+# Floor under a server-supplied Retry-After. See _retry_delay.
+MIN_THROTTLE_WAIT_SECONDS = 5
 # Total spent waiting out a throttle, across all attempts. The review workflow
 # allows itself 60 minutes and the panel needs most of them, so a fetch that
 # cannot get in within ten gives the run back rather than eating the budget and
@@ -200,6 +202,12 @@ def _retry_delay(exc: Exception | None, attempt: int, waited: float) -> float | 
     if delay is None:
         step = min(attempt - 1, len(THROTTLE_BACKOFF_SECONDS) - 1)
         delay = float(THROTTLE_BACKOFF_SECONDS[step])
+    else:
+        # bioRxiv answers a second 429 with `Retry-After: 0`. Taken literally
+        # that is a retry with no backoff at all, which is what earned the
+        # throttle. Honour the header as an instruction about how long, not as
+        # permission to hammer.
+        delay = max(delay, MIN_THROTTLE_WAIT_SECONDS)
 
     remaining = MAX_THROTTLE_WAIT_SECONDS - waited
     return min(delay, remaining) if remaining > 0 else None

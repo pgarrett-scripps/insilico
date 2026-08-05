@@ -924,6 +924,10 @@ def check_a_rate_limit_is_waited_out_in_minutes() -> None:
     assert fp._retry_delay(err(429, {"Retry-After": "9999"}), 1, 0) == fp.MAX_THROTTLE_WAIT_SECONDS
     assert fp._retry_delay(err(429, {"Retry-After": "soon"}), 1, 0) == 30.0
 
+    # `Retry-After: 0` is what bioRxiv answers a second 429 with. Taken at its
+    # word that is no backoff at all, which is what earned the throttle.
+    assert fp._retry_delay(err(429, {"Retry-After": "0"}), 1, 0) == fp.MIN_THROTTLE_WAIT_SECONDS
+
     # Spent budget stops the retrying rather than extending it.
     assert fp._retry_delay(err(429), 2, fp.MAX_THROTTLE_WAIT_SECONDS) is None
 
