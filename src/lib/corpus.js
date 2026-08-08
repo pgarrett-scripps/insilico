@@ -72,6 +72,7 @@ const DOCUMENT_ORDER = [
   ["summary.md", "Summary", "The panel's assessment in brief."],
   ["decision_letter.md", "Decision letter", "The editor's verdict and what it requires."],
   ["desk_screen.md", "Desk screen", "Whether the submission cleared the bar for full review."],
+  ["cross_exam.md", "Cross-examination", "What the reports say together that none said alone."],
   ["meta_review.md", "Area chair synthesis", "Ten reports weighed into one assessment."],
   ["author_rebuttal.md", "Simulated author rebuttal", "The authors' side, argued for the editor to weigh."],
   ["debate_transcript.md", "Advocate / skeptic debate", "The case for and against, in full."],

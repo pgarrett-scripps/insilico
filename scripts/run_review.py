@@ -106,6 +106,7 @@ BUNDLE_FILES = [
     "summary.md",
     "decision_letter.md",
     "desk_screen.md",
+    "cross_exam.md",
     "meta_review.md",
     "author_rebuttal.md",
     "debate_transcript.md",

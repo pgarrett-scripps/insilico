@@ -154,3 +154,49 @@ meta_reviewer = { model = "claude-sonnet-5" }
 
 author_rebuttal = { model = "claude-sonnet-5" }
 journal_recommender = { model = "claude-haiku-4-5" }
+
+# Two reviewers off the Haiku tag and onto Opus.
+#
+# READ THE CAVEAT AT THE BOTTOM OF THIS BLOCK BEFORE TRUSTING IT.
+#
+# Benchmarking this panel against Nature's published referee reports for one
+# paper (runs/benchmark-609665v2) attributed every human-matching finding to
+# the node that originated it. Four of the eight specialists produce nearly
+# all of the overlap, and on that run the gap between an all-Haiku panel and
+# an all-Opus panel sat almost entirely in these two:
+#
+#   data_analysis  On Opus it originated six of the referees' points, including
+#                  both of the chemistry explanations that were the referees'
+#                  strongest attack on the paper — that the manuscript's
+#                  headline sequence motifs are sample-preparation artefacts.
+#                  On Haiku, DeepSeek and a free model, the same node named the
+#                  same motifs and only asked whether they were defined post
+#                  hoc. Same prompt, same manuscript, different depth.
+#   rigor          Produced the single sharpest finding in the benchmark: the
+#                  "KRAQ motif" is more parsimoniously a ragged-cleavage
+#                  artefact, and the manuscript's own enrichment data say so.
+#
+# The other six specialists stay on Haiku, where the benchmark found no
+# separation between Haiku, a $0.10 model and a free one.
+#
+# Measured cost: $3.38 per review, against $9.28 to put the whole panel on
+# Opus and about $3.00 for the all-Haiku panel.
+#
+# THE CAVEAT. The first run of this configuration did not reproduce either
+# finding described above. Its Opus data_analysis reviewer wrote a competent
+# review about causal inference and multiple testing and never raised the
+# measurement artefact at all; its Opus rigor reviewer found a minor filtering
+# point instead of the ragged-cleavage argument, and abstained from scoring.
+# Same model, same prompt, same manuscript, same profile as the run that
+# produced both — and reviewers run in parallel and never read each other, so
+# sampling randomness is the only variable that differed.
+#
+# What that means: a single review is one sample of a high-variance process,
+# and the all-Opus run that motivated this change was one sample too. This
+# setting is a reasonable bet, not a demonstrated improvement. Do not quote
+# the benchmark as evidence that it works until it has been run over several
+# papers — and note that the same variance makes the *prompt* lever more
+# attractive than the model lever, since an instruction that makes the
+# artefact question mandatory does not depend on a model choosing to ask it.
+data_analysis = { model = "claude-opus-5" }
+rigor = { model = "claude-opus-5" }
