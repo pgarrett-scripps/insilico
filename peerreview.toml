@@ -198,5 +198,12 @@ journal_recommender = { model = "claude-haiku-4-5" }
 # papers — and note that the same variance makes the *prompt* lever more
 # attractive than the model lever, since an instruction that makes the
 # artefact question mandatory does not depend on a model choosing to ask it.
-data_analysis = { model = "claude-opus-5" }
-rigor = { model = "claude-opus-5" }
+# Keyed by the agents' full names. These two lines spent a while as bare
+# `data_analysis` / `rigor`, which match no agent and were silently inert:
+# every review billed as this config ran both reviewers on Haiku, and the
+# caveat above about the first run "not reproducing" the Opus findings has
+# a simpler reading — it was never Opus. The pipeline now warns on an
+# unknown agent name, and `peerreview --show-panel --config peerreview.toml`
+# prints the resolved table this file actually produces.
+reviewer_data_analysis = { model = "claude-opus-5" }
+reviewer_rigor = { model = "claude-opus-5" }

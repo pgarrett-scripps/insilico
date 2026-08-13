@@ -106,7 +106,7 @@ BUNDLE_FILES = [
     "summary.md",
     "decision_letter.md",
     "desk_screen.md",
-    "cross_exam.md",
+    "panel_gaps.md",
     "meta_review.md",
     "author_rebuttal.md",
     "debate_transcript.md",
@@ -765,25 +765,31 @@ def write_bundle(
 
 
 def restore_prior_draft(prior_bundle: Path, workdir: Path, config: dict) -> dict:
-    """Put the previously reviewed PDF back in the ingest cache.
+    """Recover the previously reviewed PDF so the round can diff against it.
 
     A revision round diffs the new draft against the old one, but the round
-    record deliberately stores no copy of the manuscript — only its ingest
-    cache key. That cache lives on whichever machine ran the review, and a
-    CI runner is destroyed when the job ends, so on GitHub the previous draft
-    is always gone and the round would quietly degrade to a no-diff review.
+    record deliberately stores no copy of the manuscript. That draft lives
+    only on whichever machine ran the review, and a CI runner is destroyed
+    when the job ends, so on GitHub the previous draft is always gone and the
+    round would quietly degrade to a no-diff review.
 
     We can rebuild it because we recorded exactly which bytes were reviewed:
     the preprint's versioned PDF URL and a SHA-256 of the file. Re-fetch,
-    check it still hashes to what we reviewed, and re-parse it — the ingest
-    cache is keyed by file content, so parsing the identical file repopulates
-    the identical key.
+    check it still hashes to what we reviewed, and hand the file to the
+    pipeline as ``revision_baseline_path`` — the caller reads it from the
+    returned ``path``. This used to work by re-parsing the file so it
+    resurfaced in the ingest cache under the key the old round.json recorded,
+    which held only as long as the pipeline's key derivation never changed;
+    its v8 key change orphaned every key recorded before it. The file is the
+    baseline now; the cache is just a cache.
 
-    Returns a status dict recorded in provenance. Never raises: a failed
-    restoration costs the diff, not the round, and the caller says so on the
-    published page rather than presenting a no-diff round as a real one.
+    Returns a status dict recorded in provenance. ``path`` is popped by the
+    caller before publishing — a temp-directory path is plumbing, not
+    provenance. Never raises: a failed restoration costs the diff, not the
+    round, and the caller says so on the published page rather than
+    presenting a no-diff round as a real one.
     """
-    status = {"restored": False, "reason": "", "verified": False}
+    status = {"restored": False, "reason": "", "verified": False, "path": ""}
     try:
         prov = json.loads((prior_bundle / "provenance.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -819,36 +825,21 @@ def restore_prior_draft(prior_bundle: Path, workdir: Path, config: dict) -> dict
     prior_pdf.write_bytes(data)
 
     try:
-        from peerreviewagents.ingest.cache import cache_key
         from peerreviewagents.ingest.loader import load_manuscript
 
-        key = cache_key(prior_pdf, config)
-        recorded = _prior_cache_key(prior_bundle)
-        if recorded and key != recorded:
-            # Same bytes should give the same key; a mismatch means the key
-            # derivation changed upstream, and the graph will look up the old
-            # one and miss. Better to say so than to leave it looking fine.
-            status["reason"] = (
-                "the re-parsed draft does not land on the cache key the "
-                "previous round recorded, so the pipeline will not find it"
-            )
-            return status
+        # Parse it now rather than leaving it to the graph: a baseline that
+        # will not convert should be reported here, where the message can say
+        # which draft failed, not surface later as an unavailable diff with a
+        # generic reason. Parsing also repopulates the ingest cache, which is
+        # still the graph's fallback when no baseline path is given.
         load_manuscript(str(prior_pdf), config)
     except Exception as exc:  # noqa: BLE001
         status["reason"] = f"could not re-parse the previous draft ({exc})"
         return status
 
     status["restored"] = True
+    status["path"] = str(prior_pdf)
     return status
-
-
-def _prior_cache_key(prior_bundle: Path) -> str:
-    """The manuscript cache key the previous round wrote into round.json."""
-    try:
-        record = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return ""
-    return str(record.get("manuscript_cache_key") or "")
 
 
 def main() -> int:
@@ -1111,6 +1102,12 @@ def _run(args, workdir: Path) -> int:
             "kind": "revision",
             "baseline": restore_prior_draft(prior_bundle, workdir, config),
         }
+        # A temp-directory path is plumbing, not provenance: popped before the
+        # status dict is published, and handed to the graph so the local diff
+        # reads the file directly instead of betting on cache-key stability.
+        baseline_path = revision["baseline"].pop("path", "")
+        if baseline_path:
+            config["revision_baseline_path"] = baseline_path
         max_rounds = int(config.get("max_rounds") or 3)
         if revision["round"] > max_rounds:
             print(
@@ -1223,6 +1220,11 @@ def _run(args, workdir: Path) -> int:
         hits = sum(c.get("hits", 0) for c in calls)
         note = f" ({lost} failed)" if lost else ""
         print(f"  search  {node:<28} {len(calls)} call(s), {hits} hit(s){note}", file=sys.stderr)
+
+    # Flattened for the same reason as unreadable_reason above: a newline in a
+    # `key=value` output line silently truncates the value and leaves the
+    # remainder parsed as another key.
+    title = " ".join((preprint.title or preprint.identifier or url).split())
 
     if out := os.environ.get("GITHUB_OUTPUT"):
         with open(out, "a") as fh:
