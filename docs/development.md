@@ -137,17 +137,17 @@ model slugs matching a strict pattern.
 
 `run_review.py` hands the pipeline the PDF itself, never a conversion of it.
 Every run records which converter read the manuscript, and a conversion done
-here would be recorded as though the pipeline's own converter produced it. It
-also fixes the manuscript cache key a later round re-derives to recover this
-draft.
+here would be recorded as though the pipeline's own converter produced it.
 
 Behind the loader the PDF becomes markdown, and that is what the referees read.
 The converter is [rustypaper](https://github.com/pgarrett-scripps/rustypaper), a
 per-platform wheel with no Rust toolchain to install. It is required and has no
 fallback: one that will not install stops the run rather than quietly degrading
-it. The workflow pins an exact version, because a converter that changed how it
-reads a two-column page between two rounds would look like the authors having
-rewritten the paper.
+it. The workflow pins an exact version, and the pin is what `replace` rests on:
+a rerun proves it is reading the same draft by comparing the converted text
+against the previous run's, so a converter that changed how it reads a
+two-column page would refuse the correct draft. It is also what makes
+`manuscript_stats.md` comparable between two reviews of one paper.
 
 ```bash
 uv pip install rustypaper

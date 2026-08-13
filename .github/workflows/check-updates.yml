@@ -61,7 +61,7 @@ jobs:
                   "version of the manuscript. Re-running the panel costs money and "
                   "is an editorial call, so nothing has been re-reviewed "
                   "automatically — comment `/revise` on the original submission "
-                  "issue to review the new draft against the previous round."
+                  "issue to open a new round on the new draft."
               )
               print(
                   "\n**Bytes differ** means the file was replaced without the server "

@@ -10,7 +10,7 @@ This pins the version for the first leg of that test. It changes nothing about
 how a review is produced — the pinned Preprint goes through the ordinary
 run_review path — so what it exercises is the real bundle writer, the real
 round record, and afterwards the real `--revise` flow resolving forward to v2
-and diffing against the recorded v1 bytes.
+and carrying the v1 letter's numbered required revisions into round 2.
 
 The other reason to pin is a benchmark against human referees: a journal's
 peer review file describes the manuscript as *submitted*, which is whichever

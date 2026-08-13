@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import contextlib
 import datetime as dt
-import hashlib
 import json
 import os
 import re
@@ -27,7 +26,6 @@ from queue import Empty, Queue
 sys.path.insert(0, str(Path(__file__).parent))
 
 from fetch_preprint import (  # noqa: E402
-    _get,
     Preprint,
     download,
     extract_authorship,
@@ -189,7 +187,9 @@ def find_prior_bundle(preprint: Preprint, title: str) -> Path | None:
     slug embeds the title, and authors retitle between versions routinely — so
     a slug lookup would miss its own round 1 for exactly the papers most
     likely to be revised, report "no revisable round", and quietly restart at
-    round 1 with the referees' prior points lost.
+    round 1. The panel would not notice — it reads every draft cold — but the
+    editor's numbered required revisions are the whole lineage of a
+    manuscript, and a round that cannot find them severs it.
     """
     del title  # kept for call-site symmetry; the identifier is what matches
     wanted = (preprint.identifier or preprint.doi or "").strip().lower()
@@ -764,84 +764,6 @@ def write_bundle(
     (dest / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
 
 
-def restore_prior_draft(prior_bundle: Path, workdir: Path, config: dict) -> dict:
-    """Recover the previously reviewed PDF so the round can diff against it.
-
-    A revision round diffs the new draft against the old one, but the round
-    record deliberately stores no copy of the manuscript. That draft lives
-    only on whichever machine ran the review, and a CI runner is destroyed
-    when the job ends, so on GitHub the previous draft is always gone and the
-    round would quietly degrade to a no-diff review.
-
-    We can rebuild it because we recorded exactly which bytes were reviewed:
-    the preprint's versioned PDF URL and a SHA-256 of the file. Re-fetch,
-    check it still hashes to what we reviewed, and hand the file to the
-    pipeline as ``revision_baseline_path`` — the caller reads it from the
-    returned ``path``. This used to work by re-parsing the file so it
-    resurfaced in the ingest cache under the key the old round.json recorded,
-    which held only as long as the pipeline's key derivation never changed;
-    its v8 key change orphaned every key recorded before it. The file is the
-    baseline now; the cache is just a cache.
-
-    Returns a status dict recorded in provenance. ``path`` is popped by the
-    caller before publishing — a temp-directory path is plumbing, not
-    provenance. Never raises: a failed restoration costs the diff, not the
-    round, and the caller says so on the published page rather than
-    presenting a no-diff round as a real one.
-    """
-    status = {"restored": False, "reason": "", "verified": False, "path": ""}
-    try:
-        prov = json.loads((prior_bundle / "provenance.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        status["reason"] = f"could not read the previous round's provenance ({exc})"
-        return status
-
-    pre = prov.get("preprint") or {}
-    url, want_sha = pre.get("pdf_url", ""), pre.get("pdf_sha256", "")
-    if not url:
-        status["reason"] = "the previous round recorded no PDF URL"
-        return status
-
-    try:
-        data = _get(url)
-    except Exception as exc:  # noqa: BLE001 - any fetch failure is the same outcome
-        status["reason"] = f"could not re-fetch the previous draft ({exc})"
-        return status
-
-    got_sha = hashlib.sha256(data).hexdigest()
-    if want_sha and got_sha != want_sha:
-        # The file at that URL is no longer the file we reviewed. Diffing
-        # against it would produce a confident delta over the wrong baseline,
-        # which is worse than having no diff at all.
-        status["reason"] = (
-            f"the PDF at {url} no longer matches what round "
-            f"{prov.get('round', 1)} reviewed (recorded {want_sha[:12]}…, "
-            f"fetched {got_sha[:12]}…), so it is not a safe baseline"
-        )
-        return status
-    status["verified"] = bool(want_sha)
-
-    prior_pdf = workdir / "prior-draft.pdf"
-    prior_pdf.write_bytes(data)
-
-    try:
-        from peerreviewagents.ingest.loader import load_manuscript
-
-        # Parse it now rather than leaving it to the graph: a baseline that
-        # will not convert should be reported here, where the message can say
-        # which draft failed, not surface later as an unavailable diff with a
-        # generic reason. Parsing also repopulates the ingest cache, which is
-        # still the graph's fallback when no baseline path is given.
-        load_manuscript(str(prior_pdf), config)
-    except Exception as exc:  # noqa: BLE001
-        status["reason"] = f"could not re-parse the previous draft ({exc})"
-        return status
-
-    status["restored"] = True
-    status["path"] = str(prior_pdf)
-    return status
-
-
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     # Where the manuscript comes from. Exactly one, and --rerun-of belongs
@@ -1060,10 +982,10 @@ def _run(args, workdir: Path) -> int:
     config = get_config(**overrides)
 
     if plan.replacing:
-        # Round 1, and no `revision_of` in the config. Both are the point: the
-        # panel must not be shown the earlier review's findings, or it would
-        # rule on them instead of reading the paper, and a re-review that
-        # inherits the verdict it is supposed to be testing tests nothing.
+        # Round 1, and no `revision_of` in the config. Both are the point.
+        # `revision_of` hands the editor the earlier round's decision, score
+        # and required-revisions list as its reference point, and a re-review
+        # that inherits the verdict it exists to test tests nothing.
         old = _rerun_provenance(str(plan.dest)) or {}
         revision = {
             "round": 1,
@@ -1100,14 +1022,7 @@ def _run(args, workdir: Path) -> int:
             # page attributing one round's asks to another.
             "prior_required_revisions": len(prior.get("required_revisions") or []),
             "kind": "revision",
-            "baseline": restore_prior_draft(prior_bundle, workdir, config),
         }
-        # A temp-directory path is plumbing, not provenance: popped before the
-        # status dict is published, and handed to the graph so the local diff
-        # reads the file directly instead of betting on cache-key stability.
-        baseline_path = revision["baseline"].pop("path", "")
-        if baseline_path:
-            config["revision_baseline_path"] = baseline_path
         max_rounds = int(config.get("max_rounds") or 3)
         if revision["round"] > max_rounds:
             print(
@@ -1117,14 +1032,12 @@ def _run(args, workdir: Path) -> int:
                 file=sys.stderr,
             )
             return 1
-        b = revision["baseline"]
         print(
             f"revision  round {revision['round']} of {prior_bundle.name}"
-            f" — baseline {'restored' if b['restored'] else 'UNAVAILABLE'}",
+            f" — {revision['prior_required_revisions']} required revision(s)"
+            " carried in",
             file=sys.stderr,
         )
-        if not b["restored"]:
-            print(f"          {b['reason']}", file=sys.stderr)
 
     # Record what actually ran, not what was requested — with roles configured
     # these differ per agent, so the resolved config is the honest answer.
@@ -1237,14 +1150,6 @@ def _run(args, workdir: Path) -> int:
             # earlier review of this paper already exists and is not replaced.
             fh.write(f"version={version}\n")
             fh.write(f"round={revision['round']}\n")
-            # Surfaced so the PR can say a revision round ran without a
-            # verified diff, which changes how much the delta is worth.
-            fh.write(
-                "baseline="
-                + ("restored" if (revision.get("baseline") or {}).get("restored")
-                   else "unavailable" if revision["round"] > 1 else "n/a")
-                + "\n"
-            )
             fh.write(f"title={title}\n")
             fh.write(f"cost={state.get('total_cost') or 0}\n")
 

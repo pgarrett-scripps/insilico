@@ -18,7 +18,6 @@ from __future__ import annotations
 import contextlib
 import datetime as dt
 import email.utils
-import hashlib
 import json
 import os
 import sys
@@ -390,66 +389,6 @@ def check_versioning() -> None:
         assert versions == ["v1", "v2"], f"unexpected bundle layout: {versions}"
 
 
-def check_baseline_restoration() -> None:
-    """A revision round must never present a missing diff as a real one.
-
-    Restoration runs on a CI runner whose ingest cache is empty, so the
-    failure path is the *common* path, not the edge case. Each way it can
-    fail has to come back as restored=False with a reason — a silent no-diff
-    round is indistinguishable on the page from one that actually compared
-    the drafts.
-    """
-    import run_review
-
-    with tempfile.TemporaryDirectory() as tmp:
-        work = Path(tmp) / "work"
-        work.mkdir()
-        prior = Path(tmp) / "v1"
-        prior.mkdir()
-
-        # No provenance at all.
-        st = run_review.restore_prior_draft(prior, work, {})
-        assert not st["restored"] and "provenance" in st["reason"], st
-
-        # Provenance with no PDF URL — reviews from before fingerprinting.
-        (prior / "provenance.json").write_text(json.dumps({"preprint": {}}))
-        st = run_review.restore_prior_draft(prior, work, {})
-        assert not st["restored"] and "no PDF URL" in st["reason"], st
-
-        # The file at the recorded URL no longer hashes to what we reviewed.
-        # This one matters most: diffing against it would produce a confident
-        # delta over the wrong baseline, which is worse than no delta at all.
-        payload = b"%PDF-1.4 not the reviewed bytes"
-        (prior / "provenance.json").write_text(json.dumps({
-            "round": 1,
-            "preprint": {
-                "pdf_url": "https://example.org/v1.pdf",
-                "pdf_sha256": "0" * 64,
-            },
-        }))
-        original_get = run_review._get
-        run_review._get = lambda url: payload
-        try:
-            st = run_review.restore_prior_draft(prior, work, {})
-        finally:
-            run_review._get = original_get
-        assert not st["restored"], "a hash mismatch must not be a usable baseline"
-        assert "no longer matches" in st["reason"], st["reason"]
-        assert hashlib.sha256(payload).hexdigest()[:12] in st["reason"], \
-            "the reason should name the hash actually fetched"
-
-        # A fetch failure degrades, it does not raise.
-        def boom(url):
-            raise OSError("network is unreachable")
-
-        run_review._get = boom
-        try:
-            st = run_review.restore_prior_draft(prior, work, {})
-        finally:
-            run_review._get = original_get
-        assert not st["restored"] and "re-fetch" in st["reason"], st
-
-
 def check_round_is_not_version() -> None:
     """The bundle's vN and the review round are different numbers.
 
@@ -481,18 +420,18 @@ def check_round_is_not_version() -> None:
         # Now a genuine round 2.
         write_bundle(
             preprint, state, run_dir, paper / "v3", "1", "me", None,
-            {"round": 2, "prior_decision": "major",
-             "baseline": {"restored": False, "reason": "cache was empty"}},
+            {"round": 2, "prior_decision": "major", "kind": "revision",
+             "prior_required_revisions": 7},
         )
         v3 = provenance_of(paper / "v3")
         assert v3["round"] == 2, "explicit round not recorded"
-        # A round with no verified baseline is weaker evidence than one that
-        # diffed the drafts, and the site says so on the page and in the
-        # history — but only because these two fields survive into the record.
-        assert v3["revision"]["baseline"]["restored"] is False
-        assert v3["revision"]["baseline"]["reason"] == "cache was empty", \
-            "the reason must reach the record, or the page cannot give it"
-
+        # The panel reads every round cold, so what the previous round decided
+        # and how many revisions it required is the only continuity a reader
+        # has — and the page can only state it because these fields survive
+        # into the record.
+        assert v3["revision"]["prior_decision"] == "major"
+        assert v3["revision"]["prior_required_revisions"] == 7, \
+            "the previous round's asks must reach the record"
 
 
 def check_site_never_injects_raw_html() -> None:
@@ -1120,8 +1059,9 @@ def check_rerun_does_not_inherit_the_prior_round() -> None:
 
     Two properties, both load-bearing. It stays round 1, because nothing was
     revised. And `revision_of` never reaches the pipeline config, because that
-    is what hands each reviewer its own earlier report to rule on — a
-    re-review that inherits the verdict it exists to test is not a test.
+    is what hands the editor the earlier round's decision, score and numbered
+    required revisions as its reference point — a re-review that inherits the
+    verdict it exists to test is not a test.
 
     `plan_review` enforces the second structurally: a replacement carries no
     prior, and only a prior sets `revision_of`. Asserted there as well as
@@ -1207,8 +1147,6 @@ def main() -> int:
     print("ok  the staleness scan finds the layout we write")
     check_restamping_is_not_staleness()
     print("ok  a re-stamped bioRxiv PDF is not reported as stale")
-    check_baseline_restoration()
-    print("ok  a missing revision baseline is never silent")
     check_round_is_not_version()
     print("ok  bundle version and review round stay distinct")
     check_solicitation_is_labelled()

@@ -55,10 +55,18 @@ Post the new version to the same preprint server, then say so on your original
 issue. An editor runs `/review` again — the archive now serves your new draft,
 so it opens a new round by itself.
 
-A revision round is not a fresh review. Each referee gets back the points it
-raised, by number, and rules on each: addressed, partly addressed, or not. An
-auditor checks the previous decision letter's required revisions against the new
-draft. The editor decides on what changed rather than reading the paper cold.
+Expect the panel to read your revision from scratch. The eight referees are
+never told a previous round happened, so they will not credit you for a fix by
+comparing drafts — write the paper so that someone meeting it for the first time
+finds nothing to raise. It is the same standard your first submission was held
+to, applied again.
+
+What does follow you between rounds is the numbered list in the decision letter.
+An auditor rules on every item against your new draft and has to quote the
+passage that settles it, so an ask is closed by text that is in the paper, not
+by a claim that it was handled. Items still open keep their original numbers, so
+`R1-03` stays `R1-03` however many rounds it takes. The editor decides on that
+list, the previous recommendation, and this round's panel.
 
 The earlier review is never edited or removed; it stays published as the record
 of that version, and the paper's page shows the whole arc. **Cap of three

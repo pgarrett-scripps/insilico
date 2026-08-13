@@ -172,8 +172,6 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                   // history table shows two identical rows and looks like a
                   // duplicate rather than a deliberate second read.
                   const rerun = (b.revision || {}).kind === "rerun";
-                  const unverified =
-                    b.round > 1 && !((b.revision || {}).baseline || {}).restored;
                   return (
                     <tr>
                       <td>
@@ -185,11 +183,6 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                         {b.round}
                         {corrected && <span class="dim"> (corrected)</span>}
                         {rerun && <span class="dim"> (re-review)</span>}
-                        {unverified && (
-                          <span class="history__flag" title="ran without a verified draft comparison">
-                            {" "}⚠
-                          </span>
-                        )}
                       </td>
                       <td class="mono">
                         {b.preprint.version ? `v${b.preprint.version}` : "—"}
@@ -561,10 +554,6 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
     letter-spacing: 0.09em;
     text-transform: uppercase;
     color: var(--muted);
-  }
-
-  .history__flag {
-    color: var(--v-major);
   }
 
   .history__note {

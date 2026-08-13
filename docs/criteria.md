@@ -95,20 +95,44 @@ which report, and what it cost.
 
 ## Revision rounds
 
-Round 2 evaluates what changed, not the paper cold. Each referee gets its own
-prior report back and rules on every weakness it raised, by stable id (`R1-03`
-names the third ask of round 1 for the life of the manuscript). A compliance
-auditor checks the previous letter's required revisions against the new draft.
-Referees still never see each other's reports. Rounds are capped at three.
+**The referees are blind to the round.** Round 3 asks the eight specialists
+exactly what round 1 asked: read this manuscript. None of them is told that a
+previous round exists, sees its own earlier report, or is shown what changed.
+They still never see each other's reports either. Rounds are capped at three.
+
+That is a correction, not an economy. Referees used to be handed their prior
+critique and asked to rule on a revision, and a panel told it is judging a
+revision is a panel given a reason to find progress. On a resubmission that was
+byte-identical to the draft before it, one referee raised its score from 3 to 5
+"because the revision successfully addresses the concerns", an audit described
+an expanded methods section that was not in the paper, and the editor rejected
+the manuscript for disregarding a review process nobody had gone through. A
+round published before that panel went blind is never edited to match this
+page; it carries a notice saying which arrangement produced its reports.
+
+Continuity lives on the editor's numbered required revisions instead, which is
+the actual contract with the authors. An item keeps the id it was born with:
+`R1-03` is the third ask of round 1 for the life of the manuscript, still called
+`R1-03` in round 3. A compliance auditor rules on each one against the new
+draft, and to call an item addressed it must quote manuscript text — the quote
+is then searched for in the manuscript, and one that is not there is recorded as
+unsubstantiated and counts as still open.
+
+Two things follow for a reader. The specialist reports in a later round are an
+independent read of the paper as it stands, so a referee restating a concern is
+not evidence the authors ignored it, and score movement between rounds includes
+the resampling noise of a fresh panel. The account of what happened to the asks
+is the compliance audit and the decision letter.
 
 Each round publishes a `round.json` in its bundle, so you can verify what was
 carried forward. A review published before round records existed cannot be
 revised and needs a fresh review instead.
 
-A revision round also diffs the old and new manuscripts, rebuilding the baseline
-by re-fetching the exact version reviewed and confirming it still hashes to what
-the panel saw. Where that fails, the round says so on its own page: a round that
-ruled without a verified comparison is weaker evidence than one that did.
+An unchanged resubmission is caught by comparing the manuscript file's SHA-256
+against the one the previous round recorded — no re-reading, no converter that
+could disagree with itself. The editor is told plainly that this is a fact about
+a file rather than defiance: this pipeline reviews whatever draft an archive
+serves it, and the authors have usually never seen the decision letter.
 
 Nothing an author writes reaches the panel
 ([why](submit.md#why-we-do-not-accept-a-response-letter)). The recourse that

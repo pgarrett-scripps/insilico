@@ -227,9 +227,9 @@ jobs:
           # change is a question about the pipeline and lands in runs/.
           #
           # Neither form accepts author text. The panel judges the manuscript
-          # and the diff between drafts; an author's account of what they
-          # changed is not evidence, and when it was accepted the compliance
-          # auditor confirmed claims the manuscript did not support.
+          # in front of it; an author's account of what they changed is not
+          # evidence, and when it was accepted the compliance auditor
+          # confirmed claims the manuscript did not support.
           #
           # The comment is passed through, never interpreted here. `replace`
           # and the provider options are parsed in Python (see parse_command),
@@ -312,7 +312,6 @@ jobs:
           DECISION: ${{ steps.run.outputs.decision }}
           DESK_REJECTED: ${{ steps.run.outputs.desk_rejected }}
           ROUND: ${{ steps.run.outputs.round }}
-          BASELINE: ${{ steps.run.outputs.baseline }}
           SLUG: ${{ steps.run.outputs.slug }}
           TITLE: ${{ steps.run.outputs.title }}
           BUNDLE: ${{ steps.run.outputs.path }}
@@ -346,15 +345,6 @@ jobs:
             [ "${ROUND:-1}" != "1" ] && echo "| Round | ${ROUND} |"
             [ -n "${SUBMISSION_ID}" ] && echo "| Submission | #${SUBMISSION_ID} |"
             echo
-            if [ "${BASELINE}" = "unavailable" ]; then
-              echo "> [!WARNING]"
-              echo "> **This revision round ran without a draft comparison.**"
-              echo "> The previously reviewed PDF could not be recovered, so nothing"
-              echo "> here rests on a verified diff of what actually changed. The"
-              echo "> referees still held their earlier points, but read the delta"
-              echo "> claims with that in mind."
-              echo
-            fi
             if [ "${DESK_REJECTED}" = "true" ]; then
               echo "> [!CAUTION]"
               echo "> **Opened as a draft — read the bundle before merging.**"
