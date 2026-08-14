@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This manuscript investigates the role of the ESCRT-0 protein Hrs in regulating AMPA receptor currents and Ca2+-dependent signaling at the post-synapse. It presents evidence for Hrs localization to pre- and post-synaptic compartments, bidirectional regulation of Hrs by neuronal activity, and functional effects of Hrs depletion and overexpression on AMPAR kinetics, surface expression, and downstream signaling. The work combines biochemical fractionation, confocal and STED imaging, electrophysiology, phosphoproteomics, and genetic mouse models. This is a research manuscript with original claims that are checkable from the presented data and deposited materials. It falls within scope for In Silico, which accepts any original research in any discipline whose claims can be evaluated from the manuscript itself. There is no clinical or safety concern that would warrant desk rejection, the submission appears complete and intelligible, and the claims are scaled to the evidence. The manuscript should proceed to full review.

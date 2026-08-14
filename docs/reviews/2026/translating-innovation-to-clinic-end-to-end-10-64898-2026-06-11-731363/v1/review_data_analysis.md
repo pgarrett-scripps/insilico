@@ -1,0 +1,28 @@
+# Statistics & Data-Analysis Reviewer
+
+## Summary
+This is a process-development and manufacturing paper whose quantitative claims are mostly descriptive (yields, purities, log-reduction values) rather than hypothesis tests, so the statistical burden is lighter than in a typical experimental paper — but the claims that matter are asserted without the evidence that would support them. The genetic-stability claim is load-bearing and its data are absent; the "multiple cGMP batches" claim is contradicted by the single GMP run described; and the viral-clearance table lacks n and error definitions. The process itself appears sound and the authors are candid about several known limitations (reference-standard drift, >100% step yield), which I credit. The revision needs the missing data presented and the overreaching claims scaled to what was actually done.
+
+## Strengths
+- The authors disclose the reference-standard confound in titer comparisons across runs and the assay-variability explanation for the >100% 2G12 step yield — both are the kind of candour that makes the remaining numbers more credible.
+- The viral-clearance total is reported as a lower bound ("≥") where steps hit the limit of detection, which is the conservative and correct treatment.
+- The glycan-occupancy disagreement between the two analytical methods is acknowledged rather than smoothed over.
+
+## Weaknesses
+- The genetic-stability claim is unsupported by any presented data. The abstract claims "genetic stability through 60 population doublings," and §2.3.8 describes a 60-PD study with productivity, transgene copy number, and mRNA identity as stability indicators — but no results from that study appear anywhere in the manuscript. No table, figure, or value shows PD0 vs. PD60±Gln productivity, copy number, or sequence identity. This claim is load-bearing for the entire cell-line story: if the clone drifts, the process is not what was validated. What would settle it: a table of the PD0 vs. PD60 productivity, copy number, and mRNA-identity results.
+- "Consistent product quality across multiple cGMP batches" outruns the evidence. The manuscript describes exactly one GMP production run (the XDR-200 GMP run); the comparison in Table 11 is between one non-GMP pilot demonstration batch and one GMP batch, each a single measurement with no replicates or error bars. The abstract's "multiple cGMP batches" is not supported by the body. Separately, the titer comparison across the three 50-L runs (562, 355, 390 mg/L) is confounded: the authors state the differences are "mainly due to the reference material used," and three different reference standards were used. The "consistent" claim therefore rests on a comparison in which the measurement scale itself changed between runs. What would settle it: state the number of GMP batches, and report all run titers against a single common reference standard.
+- Viral-clearance LRVs lack n and error definitions. Table 12 reports step LRVs with ± errors (e.g., 2G12 affinity 2.95 ± 0.57; total ≥18.14 ± 0.75) but no n is stated for any step and the error is not defined (SD across replicate runs? assay uncertainty?). The total error is numerically consistent with summing the step variances in quadrature (√(0.57²+0.17²+0.34²+0.31²) = 0.75), which suggests propagation, but this is not stated. The reader cannot tell how many replicate clearance runs each LRV rests on. What would settle it: state n per step and the error definition.
+- Process optimization used n=1 per condition. The Ambr250 study (Table 6, Figure 13) ran 12 conditions, each in a single bioreactor. The selection of "Control + 7a bolus" (752 mg/L, 87.2% viability) over the two controls (~640–650 mg/L) rests on single runs; with n=1, the ~15% titer advantage could be run-to-run noise. The 50-L scale-up confirmation partially addresses this, but the optimization decision itself is unreplicated. What would settle it: acknowledge the n=1 limitation explicitly, or report replicate runs for the chosen condition.
+- The hold-time stability threshold (0.7% HMW/LMW increase = "unstable") is arbitrary and unjustified; the UF/DF1 retentate's 3–4% HMW jump from Day 0 to Day 1 drives the ≤1-day hold, but the threshold's basis is never given.
+- The BDS relative-potency "decreasing trend" over hold times is reported without values or a test; "within target potency range" is not quantified.
+- The nsEM "nearly 100% native-like trimers" claim rests on 2D classification of 6,086 particles, but the number contributing to the final class averages (vs. discarded) is not stated.
+- The abstract's ">99% trimeric purity" slightly overstates the pilot batch's 98.6% Main Peak (Table 11).
+- The clone-ranking criteria (BG18/PGT145 ratios, growth characteristics) are qualitative; no quantitative threshold for selecting C235 is given.
+- The glycan "matching design specifications" claim is unanchored: the design specifications are never defined, and the two methods disagree on occupancy at N185e, N611, and N625 (the text acknowledges "higher variation between analytical approaches").
+- The 2G12 step yield >100% (Figure 16) is attributed to "titer assay variability" — honest, but it means the yield and titer numbers carry substantial unquantified uncertainty.
+
+## Questions
+- How many GMP batches were produced, and can titers for all runs be reported against a single reference standard?
+- What is the n per viral-clearance step, and how are the ± errors in Table 12 defined?
+- Can the PD0 vs. PD60 genetic-stability results (productivity, copy number, mRNA identity) be provided?
+- What is the basis for the 0.7% HMW/LMW hold-time stability threshold?

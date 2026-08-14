@@ -1,0 +1,20 @@
+# Related-Work & Citations Reviewer
+
+## Summary
+The manuscript's citation of the foundational HIV Env trimer literature is broadly adequate, and the key reference to the preceding cGMP BG505 SOSIP.664 work (Dey et al., 2018) is properly positioned. No fabricated or unresolvable references were detected. The main citation concerns are: (1) several DOIs are garbled by PDF conversion spaces that must be corrected for resolvability; (2) one author name is misspelled; and (3) closely related GMP-manufacturing work for HIV Env trimers is omitted, which would better situate the process described. None of these individually undermines the manuscript's central claim, but together they warrant revision before publication.
+
+## Strengths
+- The foundational HIV-1 Env trimer literature is appropriately cited, including the BG505 SOSIP.664 design (ref [19]), cGMP production precedent (ref [7]), germline-targeting design strategy (ref [24]), and preclinical NHP proof-of-concept (ref [23]).
+- Self-citation is proportionate — the authors cite their own prior work (Steichen et al., refs [23,24,31]; Pallerla et al., ref [13]) only where it bears directly on the claims made.
+
+## Weaknesses
+- The downstream process differs from its stated basis in a key selectivity choice, but this is not discussed. Section 2.5 states the process was "developed based on the process established for BG505 SOSIP.664 (Dey et al., 2018)". However, Dey et al. used PGT145 affinity capture (quaternary trimer-specific epitope), whereas the current process uses 2G12 affinity capture (glycan-dependent gp120 epitope, not trimer-specific). These antibodies have fundamentally different selectivity, with implications for yield, purity of correctly folded trimer, and HCP clearance that are not acknowledged or compared. The claim of lineage to Dey et al. is not false, but the significant divergence in the capture chemistry means the related-work framing understates the difference. Either cite other work that uses 2G12 capture (e.g., Rameszani-Rad et al. 2025, ref [18], which used 2G12 for mRNA-encoded trimers), or explicitly discuss why 2G12 was chosen over PGT145 and how this affects the comparability of the processes.
+- The claim about 20/27 BG18 precursor antibody binding (Kd ≤ 1 μM) is attributed to ref [24] but the specific numerical cutoff is not verifiable from metadata alone. The manuscript states in the Introduction: "N332-GT5 emerged as a highly refined immunogen that binds 20 of 27 potential BG18 precursor antibodies with Kd ≤ 1 μM." While the design paper (Steichen et al., 2019, Science) is the obvious source, the exact number 20/27 and the 1 μM threshold are unsupported in the prose. Please confirm (in a sentence or a supplementary table) that these values appear in ref [24] or give the correct source.
+- DOI strings in refs [4], [18], and [32] contain inserted spaces (e.g., "10.1 128/JVI.01894-16") that will prevent resolution. Replace each with the correct unbroken DOI.
+- Ref [33] lists the author as "Sander et al." — the correct name is "Sanders et al." (Sanders RW et al. Science 2015). This is a garbled conversion artifact but will impede retrieval.
+- A directly relevant GMP-manufacturing paper — Gulla et al. "A non-affinity purification process for GMP production of prefusion-closed HIV-1 envelope trimers from clades A and C for clinical evaluation," Vaccine 2021 (PMID: 34020817) — describes production of cGMP-grade HIV Env trimers for clinical evaluation and is not cited. Please add it to the related-work discussion to acknowledge alternative purification strategies.
+- Ref [3] (Bale et al. 2025, npj Vaccines) is cited without a DOI or volume/page, and its publication status ("2025") is ambiguous. Provide the DOI and clarify whether this is a published article, an accepted manuscript, or a preprint.
+
+## Questions
+- For each DOI with embedded spaces (refs [4], [18], [32]): can you supply the corrected DOI?
+- Ref [33]: can you confirm the correct author list (Sanders et al.) and supply the DOI?

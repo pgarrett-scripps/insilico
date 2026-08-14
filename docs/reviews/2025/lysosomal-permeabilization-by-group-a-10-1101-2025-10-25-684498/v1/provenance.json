@@ -1,0 +1,443 @@
+{
+  "generated_at": "2026-08-14T18:00:51+00:00",
+  "pipeline": {
+    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "version": "0.3.0"
+  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 68597,
+    "section_source": "document",
+    "text_sha256": "7f1095064cfaa5cb68a281a5ac2e41031239c212df0a89de60814f84d8c99fae",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.11,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 43,
+        "preamble_share": 0.1198,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 68597,
+        "words": 8967,
+        "sentences": 566,
+        "blocks": 203,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 285,
+        "references_separable": true,
+        "main_text_words": 8682,
+        "reference_entries": 1
+      },
+      "density": {
+        "sentence_len_mean": 17.51,
+        "sentence_len_median": 17.0,
+        "sentence_len_p90": 34.0,
+        "long_sentence_share": 0.041,
+        "numbers_per_1k": 207.98,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 4.46,
+        "boosters_per_1k": 2.12,
+        "mattr": 0.4862,
+        "passive_per_sentence_approx": 0.3039,
+        "p_values_exact": 0,
+        "p_values_threshold": 22
+      },
+      "sections": {
+        "_preamble": {
+          "words": 1062,
+          "sentences": 43,
+          "sentence_len_mean": 24.7,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 5.65,
+          "boosters_per_1k": 0.94
+        },
+        "methods": {
+          "words": 7618,
+          "sentences": 498,
+          "sentence_len_mean": 17.12,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 4.46,
+          "boosters_per_1k": 1.84
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "7331a75b6c9568b5782031147ab9d3610e7f39562c725b7efa699d27d41bf055"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.5,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.06535796195999999,
+  "cost_by_node": {
+    "audit_citation_integrity": 0.008604,
+    "audit_methods_completeness": 0.000981,
+    "debate_advocate": 0.00129,
+    "debate_skeptic": 0.002435,
+    "desk_screen": 0.001605,
+    "editor": 0.003232,
+    "journal_recommender": 0.002198,
+    "reviewer_clarity": 0.00276,
+    "reviewer_data_analysis": 0.003729,
+    "reviewer_ethics": 0.005202,
+    "reviewer_literature": 0.011216,
+    "reviewer_methodology": 0.002812,
+    "reviewer_novelty": 0.006879,
+    "reviewer_reproducibility": 0.00888,
+    "reviewer_rigor": 0.003534
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "search_biomedical_literature",
+        "query": "streptolysin O Group A Streptococcus macrophage lysosomal permeabilization streptolysin O SLO",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "M1 protein NLRP3 inflammasome Group A Streptococcus Valderrama 2017 Nature Microbiology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus lysosomal dysfunction THP-1 macrophages Nishioka 2024 Infection Immunity",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus streptolysin O NAD-glycohydrolase phagolysosome acidification macrophages Bastiat-Sempe 2014 mBio",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A streptococcal M protein activates NLRP3 inflammasome Valderrama 2017 Nature Microbiology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "LaRock CN IL-1beta innate immune sensor microbial proteolysis 2016 Science Immunology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Streptolysin O promotes group A Streptococcus immune evasion by accelerated macrophage apoptosis Timmer 2009",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "M1 protein allows Group A streptococcal survival in phagocyte extracellular traps cathelicidin inhibition Lauth 2009",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus induces GSDMA-dependent pyroptosis in keratinocytes LaRock 2022 Nature",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Valderrama Riestra Gao LaRock Group A streptococcal M protein activates NLRP3 inflammasome 2017",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Nishioka Snipper Lee Schapiro Group A Streptococcus induces lysosomal dysfunction THP-1 2024",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bastiat-Sempe Love Lomayesva Wessels Streptolysin O NAD-glycohydrolase phagolysosome acidification Group A Streptococcus 2014",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Group A streptococcal M protein activates the NLRP3 inflammasome Valderrama 2017",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Streptolysin O and NAD-glycohydrolase prevent phagolysosome acidification and promote group A Streptococcus survival in macrophages Bastiat-Sempe 2014",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Group A Streptococcus induces lysosomal dysfunction in THP-1 macrophages Nishioka 2024",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Streptococcal M protein promotes IL-10 production by cGAS-independent activation of STING signaling pathway Movert 2018",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "DNase expression allows the pathogen group A Streptococcus to escape killing in neutrophil extracellular traps Buchanan 2006",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcal M1 Protein Provides Resistance against the Antimicrobial Activity of Histones Dohrmann 2017",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Streptolysins are the primary inflammasome activators in macrophages during Streptococcus pyogenes infection Richter 2021",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "cathepsin B required NLRP3 inflammasome activation macrophages NLRP3 interaction Chevriaux 2020",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Harder Franchi Munoz-Planillo activation Nlrp3 inflammasome Streptococcus pyogenes requires streptolysin O 2009",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus M1 protein NLRP3 inflammasome Nature Microbiology 2017",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "streptolysin O phagolysosome acidification group A streptococcus survival macrophages mBio 2014",
+        "hits": 1
+      }
+    ],
+    "reviewer_literature": [
+      {
+        "tool": "find_related_work",
+        "query": "Group A Streptococcus streptolysin O macrophage lysosomal permeabilization inflammasome",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Streptococcus pyogenes M1 protein NLRP3 inflammasome macrophage cytosol",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus streptolysin O macrophage lysosomal permeabilization SLO phagosome",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Streptococcus pyogenes M1 protein NLRP3 inflammasome macrophage cytosolic delivery",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus histone release macrophage cytosol infection",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus streptolysin O NLRP3 inflammasome activation 2009",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus macrophage survival phagosome escape streptolysin O",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "streptolysin O NAD-glycohydrolase phagolysosome acidification macrophage Bastiat-Sempe Wessels 2014",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus M1 protein inflammasome Valderrama 2017 Nature Microbiology",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Streptococcus pyogenes SpeB pro-IL-1beta cleavage LaRock 2016",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus DNase Sda1 neutrophil extracellular traps Buchanan 2006",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus M1 protein histone antimicrobial D\u00f6hrmann 2017",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus M protein cytosolic delivery macrophage inflammasome natural infection mechanism",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Streptococcus pyogenes macrophage proteomics cytosolic proteins phagosome escape",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "O'Neill Thurston Holden cytosolic replication Group A Streptococcus macrophages mBio 2016",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "cathepsin B NLRP3 inflammasome Chevriaux 2020 Frontiers Cell Developmental Biology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Movert streptococcal M protein STING cGAS IL-10 PLOS Pathogens 2018",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "histone extracellular trap macrophage bacterial infection nuclear envelope gasdermin D NLRP3",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Group A Streptococcus streptolysin O pore size lysosomal leakage dextran",
+        "hits": 0
+      }
+    ],
+    "reviewer_novelty": [
+      {
+        "tool": "find_related_work",
+        "query": "Group A Streptococcus macrophage cytosol proteomics lysosomal permeabilization",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "streptolysin O M1 protein macrophage cytosol NLRP3 inflammasome",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Group A Streptococcus lysosomal permeabilization proteomics macrophage cytosol",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "M1 protein Streptococcus pyogenes cytosolic release macrophage NLRP3 inflammasome",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "histone release macrophage cytosol Streptococcus pyogenes infection",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "streptolysin O phagosome permeabilization macrophage proteomics",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Streptococcus pyogenes M protein NLRP3 inflammasome cytosolic delivery mechanism",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "extracellular histones Streptococcus pyogenes sepsis inflammation",
+        "hits": 8
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Group A Streptococcus M1 protein cytosol inflammasome histones",
+        "hits": 0
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2025.10.25.684498v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2025.10.25.684498v1.full.pdf",
+    "identifier": "10.1101/2025.10.25.684498",
+    "doi": "10.1101/2025.10.25.684498",
+    "title": "Lysosomal permeabilization by Group A Streptococcus releases proteins into the macrophage cytosol",
+    "authors": [
+      "Quezada, A.",
+      "Lord, K.",
+      "Alcantara, C.",
+      "Delahunty, C. M.",
+      "Kim, K.",
+      "Okamoto, O.",
+      "Yates, J. R.",
+      "Okumura, C. Y. M."
+    ],
+    "abstract": "The human-specific bacterial pathogen Group A Streptococcus (GAS) is a significant cause of morbidity and mortality due to its ability to cause severe invasive infection. Although macrophages are important for controlling GAS infection, we and others have demonstrated that GAS can persist in macrophages by perforating the phagolysosome using the pore-forming toxin streptolysin O (SLO). In this study, we examined how phagosomal perforation releases lysosomal and bacterial proteins into the cytosol and alters cytosolic protein content in the macrophage. Using IL-1{beta} as a measure of intracellular pathogen detection, we confirmed that cytosolic preparations from macrophages infected with either wild-type (WT) or SLO-deficient ({Delta}SLO) bacteria contained new proteins that are absent in uninfected cytosol controls. Proteomic analysis revealed distinct cytosolic protein profiles in both WT- and {Delta}SLO-infected macrophages. M1 protein was detected only in the cytosol of WT-infected macrophages and corresponded with the IL-1{beta} response, indicating SLO-mediated release of M1 protein from the phagosome, and providing a mechanism for cytosolic recognition of this virulence factor. Unexpectedly, cytosolic extracts of both WT- and {Delta}SLO-infected macrophages contained all histone proteins, suggesting that nucleosomal complexes are released into the cytosol during GAS infection. Our work reveals both a mechanism for the activation of the inflammatory response on a cellular level, and the surprising consequences of phagosomal perforation in GAS infections. These responses may collectively contribute to the pathologies observed during severe invasive GAS infection, and can help inform therapies aimed at improving macrophage function and patient outcomes. ImportanceThe post-pandemic increase in cases of invasive Group A Streptococcus (GAS) infection, along with its sudden onset and severity of symptoms, underscores the need to understand GAS survival in host cells. Macrophages are key first responder immune cells essential for limiting the spread of GAS infection. As professional phagocytes, macrophages typically engulf bacteria in phagosomes and digest them using proteolytic enzymes. However, the human-specific pathogen GAS has acquired several evasion tactics through co-evolution with our immune system. In previous work, we have shown that GAS survives digestion by perforating the phagosome. In this study, we determined that this perforation allows both host and bacterial proteins to leak into the cytosol. These leaked proteins can dictate the subsequent response of the macrophage and may contribute to the pathology observed in invasive infection. Understanding this response can lead to improved therapies for GAS infections.",
+    "published": "2025-10-25",
+    "version": "1",
+    "pdf_sha256": "7331a75b6c9568b5782031147ab9d3610e7f39562c725b7efa699d27d41bf055",
+    "pdf_bytes": 1593027
+  }
+}

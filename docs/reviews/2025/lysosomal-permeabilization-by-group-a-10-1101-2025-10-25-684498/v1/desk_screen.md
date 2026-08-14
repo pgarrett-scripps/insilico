@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+Thank you for submitting your manuscript to In Silico. The work presents an original research investigation into how Group A Streptococcus infection and lysosomal permeabilization alter the macrophage cytosolic proteome, with implications for inflammasome activation and host-pathogen interactions. The manuscript reports empirical findings grounded in experimental data (proteomics, Western blot, ELISA, bacterial genetics) with appropriate controls. The claims are checkable from the manuscript itself and its deposited data (MassIVE PXD069795). The methods, results, and limitations are described in sufficient detail for evaluation. There are no threshold issues: the work is within scope for In Silico (original research in biology, evidence-based claims evaluable from the manuscript), it is a complete research manuscript, it does not involve clinical recommendations affecting patient care, and its central evidence is accessible. The manuscript should proceed to full review.

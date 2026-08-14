@@ -1,0 +1,21 @@
+# Related-Work & Citations Reviewer
+
+## Summary
+The citation record is strong on coverage of the recent organoid-EV literature and on the foundational Aβ/tau-in-EV attributions, but the load-bearing "failed AEV biogenesis" signature — a headline claim — rests on two SNARE citations that do not support the sentences they are attached to, and the amyloid-dye section's framing that "EVs can enhance aggregation" is supported by citations about lipid membranes rather than EVs. These are correctable but real defects in the factual record the novelty and interpretation claims sit on.
+
+## Strengths
+- The "first observed" attributions are accurate and primary-sourced: Rajendran et al. 2006 (Aβ in exosomes) and Saman et al. 2012 (tau in exosomes/CSF) are correctly credited.
+- The directly-competing recent organoid-EV work (Liu 2025a/b, Silver 2025, Forero 2024) is cited, so no obvious competing organoid-EV study is omitted.
+- The reference list is current (2023–2025 anchors) and self-citation (Labra et al. 2026) is proportionate, since that is the organoid model the work builds on.
+
+## Weaknesses
+- Two SNARE citations in the "failed AEV biogenesis" section do not support the sentences they are attached to. The manuscript states "The secretory SNARE protein STX3 was detected only in AD EVs (Kumar et al. 2018), while the degradative autophagy SNARE STX7 showed 1.5-fold enrichment in WT EVs (adj. p = 0.036) (Matsui et al. 2018)." The cited Kumar et al. 2018 (J Cell Biol 217:997–1013) is titled "Mechanism of Stx17 recruitment to autophagosomes via IRGM and mammalian Atg8 proteins" — it concerns STX17, not STX3, and does not establish STX3 as a secretory SNARE. Matsui et al. 2018 ("Autophagosomal YKT6 is required for fusion with lysosomes independently of syntaxin 17") is likewise about YKT6/STX17, not STX7. Both citations appear to be a systematic STX17/STX3–STX7 confusion. This matters because the discussion builds the "novel extracellular biomarker signature of failed AEV biogenesis" on "the complete molecular suite for secretory autophagy" (RAB11B, RAB8A/B, STX3). What would resolve it: cite sources that actually establish STX3 as a plasma-membrane/secretory SNARE and STX7 as a degradative-autophagy SNARE, or reattribute.
+- The claim that "EVs can enhance the aggregation propensity of amyloidogenic proteins (Mirdha 2024; Budvytyte & Valincius 2023)" is supported by citations about lipid membranes, not EVs. Mirdha 2024 (J Membrane Biol) concerns Aβ aggregation depending on membrane lipid composition; Budvytyte & Valincius 2023 (Biochem Soc Trans) concerns Aβ aggregates interacting with phospholipid membranes. Neither is about EVs, and neither demonstrates EVs enhancing aggregation. The discussion then cites Halipi et al. 2024, which reports the opposite direction — EVs *slow down* Aβ(1–42) aggregation by interfering with fibril elongation. The manuscript should either cite EV-specific aggregation studies or soften the results framing to "influence" and acknowledge the conflicting direction.
+- Asai et al. 2015 (Nature), the foundational demonstration that exosome-synthesis inhibition halts tau propagation, is absent from the EV-mediated spread discussion and would round out the tau-propagation citations (SOFT).
+- Jakhria et al. 2014 is cited for "amyloid fibrils are established to mediate the rupture of membranes," but that paper reports fibrils disrupting lysosomal membrane protein trafficking and inhibiting degradation, not membrane rupture — confirm the intended claim (SOFT).
+- The claim that "L1CAM generally correlates with neuronal cell number" is supported by citations (Patzke 2016; Barman & Thakur 2024) establishing L1CAM's role in neuronal development, not a correlation with cell number; soften or re-source (SOFT).
+- The Mao et al. 2025 Nat Commun entry (load-bearing for the AEV definition) lacks volume/page identifiers; add full citation details (SOFT).
+
+## Questions
+- Which source establishes STX3 as a secretory SNARE in the context cited, and STX7 as a degradative-autophagy SNARE — the current Kumar 2018 and Matsui 2018 citations are both STX17 papers?
+- Can the authors confirm whether Jakhria et al. 2014 supports "membrane rupture" or only trafficking disruption/degradation inhibition?

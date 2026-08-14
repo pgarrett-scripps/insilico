@@ -1,0 +1,564 @@
+{
+  "generated_at": "2026-08-14T18:25:12+00:00",
+  "pipeline": {
+    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "version": "0.3.0"
+  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 86513,
+    "section_source": "headings",
+    "text_sha256": "33a63f0452e726521471a4f620b9df854fa77cc086d2a04520be13ed5b9770e6",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.17,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 1,
+        "preamble_share": 0.0385,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 86513,
+        "words": 11820,
+        "sentences": 587,
+        "blocks": 136,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 2844,
+        "references_separable": true,
+        "main_text_words": 8976,
+        "reference_entries": 69
+      },
+      "density": {
+        "sentence_len_mean": 20.74,
+        "sentence_len_median": 20.0,
+        "sentence_len_p90": 35.0,
+        "long_sentence_share": 0.0596,
+        "numbers_per_1k": 145.6,
+        "citations": 9,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.76,
+        "hedges_per_1k": 4.15,
+        "boosters_per_1k": 1.35,
+        "mattr": 0.5289,
+        "passive_per_sentence_approx": 0.4208,
+        "p_values_exact": 6,
+        "p_values_threshold": 4
+      },
+      "sections": {
+        "_preamble": {
+          "words": 432,
+          "sentences": 14,
+          "sentence_len_mean": 33.23,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "introduction": {
+          "words": 8544,
+          "sentences": 344,
+          "sentence_len_mean": 25.2,
+          "citations_per_1k": 1.05,
+          "hedges_per_1k": 5.74,
+          "boosters_per_1k": 1.4
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "d911c484e0251e43ee7f922fc80e6742649040e6b702a7e794355e5a1490ac6e"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 2.88,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.0947687232,
+  "cost_by_node": {
+    "audit_citation_integrity": 0.013886,
+    "audit_methods_completeness": 0.003108,
+    "debate_advocate": 0.002742,
+    "debate_skeptic": 0.00268,
+    "desk_screen": 0.002007,
+    "editor": 0.001872,
+    "journal_recommender": 0.000864,
+    "reviewer_clarity": 0.010035,
+    "reviewer_data_analysis": 0.012596,
+    "reviewer_ethics": 0.003639,
+    "reviewer_literature": 0.01303,
+    "reviewer_methodology": 0.003183,
+    "reviewer_novelty": 0.007199,
+    "reviewer_reproducibility": 0.009527,
+    "reviewer_rigor": 0.008402
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Wild-type Presenilin 1 Protects against Alzheimer Disease Mutation-induced Amyloid Pathology M146V",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Rajendran Alzheimer's disease beta-amyloid peptides released in association with exosomes 2006",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Saman exosome-associated tau secreted tauopathy models phosphorylated cerebrospinal fluid early Alzheimer",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Fowler tau filaments tethered within brain extracellular vesicles Alzheimer's disease",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Rajendran 2006 exosomes amyloid beta Alzheimer",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Paquet 2016 CRISPR Cas9 homozygous heterozygous mutations presenilin",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Fowler 2025 tau filaments extracellular vesicles Alzheimer brain",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Wang 2006 wild-type presenilin 1 protects Alzheimer amyloid pathology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "amyloid beta exosomes Alzheimer extracellular vesicles",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "presenilin 1 M146V amyloid pathology",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Rajendran Honsho Zahn Keller Geiger Verkade Simons exosomes amyloid beta 2006 PNAS",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Saman Kim Raya exosome-associated tau secreted tauopathy models 2012",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Paquet Kwart Chen efficient introduction specific homozygous heterozygous mutations CRISPR Cas9 2016 Nature",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Fowler Behr Turkes tau filaments tethered brain extracellular vesicles 2025 Nature Neuroscience",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Wang Wang He Zheng wild-type presenilin 1 protects Alzheimer mutation amyloid pathology 2006",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Kowal Arras Colombo proteomic comparison novel markers heterogeneous extracellular vesicle subtypes 2016",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Mathieu Nevo Jouve specificities exosome small ectosome secretion CD63 CD9 2021",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Cocucci Meldolesi ectosomes exosomes shedding confusion extracellular vesicles 2015",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Wild-type Presenilin 1 Protects against Alzheimer Disease Mutation-induced Amyloid Pathology",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Alzheimer's disease beta-amyloid peptides are released in association with exosomes Rajendran",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Exosome-associated Tau Is Secreted in Tauopathy Models and Is Selectively Phosphorylated in Cerebrospinal Fluid in Early Alzheimer Disease",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Efficient introduction of specific homozygous and heterozygous mutations using CRISPR/Cas9 Paquet",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Kumar Jain Farzam Mechanism of Stx17 recruitment to autophagosomes IRGM mammalian Atg8",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Matsui Jiang Nakano Autophagosomal YKT6 required fusion lysosomes syntaxin 17",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lipinski genome-wide analysis mechanisms modulating autophagy normal brain aging Alzheimer",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Nixon Wegiel Kumar Extensive Involvement Autophagy Alzheimer Immuno-Electron Microscopy",
+        "hits": 0
+      },
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ],
+    "reviewer_clarity": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ],
+    "reviewer_data_analysis": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ],
+    "reviewer_literature": [
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Alzheimer's disease beta-amyloid peptides released in association with exosomes Rajendran",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "exosome-associated tau secreted tauopathy models cerebrospinal fluid early Alzheimer disease Saman",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "tau filaments tethered within brain extracellular vesicles Alzheimer's disease",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "autophagic extracellular vesicles AEVs distinct from exosomes viral infections",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Alzheimer's disease beta-amyloid peptides released in association with exosomes",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "tau filaments tethered within brain extracellular vesicles Alzheimer's disease",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "autophagic extracellular vesicles distinct from exosomes",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "extracellular vesicles cerebral organoids characterization",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "extracellular vesicles Alzheimer's disease cerebral organoids PSEN1 amyloid spread",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "exosomes amyloid-beta propagation Alzheimer's disease cell-to-cell transfer",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "extracellular vesicles Alzheimer's disease organoid proteomics",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "microglia exosomes tau propagation depletion exosome synthesis halt tau spread",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Alzheimer's disease organoid extracellular vesicles amyloid beta exosome",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "beta2-microglobulin amyloid fibrils disrupt lysosomal membrane protein trafficking inhibit protein degradation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "tetraspanins extracellular vesicle formation biogenesis CD9 CD63 CD81",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "L1CAM neuron-derived extracellular vesicle biomarker single EV",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "amyloid fibrils membrane disruption rupture vesicle leakage",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "depletion of microglia inhibition of exosome synthesis halt tau propagation Asai",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Syntaxin 3 STX3 secretory SNARE extracellular vesicle exosome",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "exosome-mediated transfer amyloid-beta neurons Alzheimer's disease propagation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Asai depletion microglia exosome synthesis halt tau propagation 2015 Nature",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Kumar Jain Farzam Stx17 recruitment autophagosomes IRGM mammalian Atg8",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "microglia exosomes tau propagation depletion exosome synthesis halt tau spread Asai",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Syntaxin 17 autophagosome fusion endosome lysosome IRGM",
+        "hits": 5
+      }
+    ],
+    "reviewer_novelty": [
+      {
+        "tool": "find_related_work",
+        "query": "extracellular vesicles cerebral organoids Alzheimer's disease characterization",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "extracellular vesicles amyloid beta transfer spread organoid co-culture",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "extracellular vesicles brain organoids Alzheimer's PSEN1",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "multilamellar vesicles amyloid fibrils extracellular vesicles Alzheimer's cryo-EM",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "extracellular vesicles human brain organoids proteomics characterization",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "tau filaments extracellular vesicles Alzheimer's brain cryo-electron microscopy",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "autophagic extracellular vesicles secretory autophagy LC3 exosome biogenesis",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "cerebral organoid extracellular vesicles amyloid tau spread",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "extracellular vesicles secreted brain organoids regional identity engineering",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "exosome amyloid beta propagation neuron uptake Alzheimer's disease pathology spread",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "extracellular vesicle amyloid transfer organoid co-culture wildtype Alzheimer",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "brain organoid extracellular vesicle proteomics Alzheimer's disease",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "extracellular vesicle trafficking molecular cues human brain development Forero",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "tau filaments tethered brain extracellular vesicles Alzheimer's disease Fowler",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "extracellular vesicles cerebral organoids characterization miRNA",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "amyloid beta exosome transfer neuron-to-neuron organoid",
+        "hits": 0
+      }
+    ],
+    "reviewer_reproducibility": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ],
+    "reviewer_rigor": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.05.13.724352v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.05.13.724352v1.full.pdf",
+    "identifier": "10.64898/2026.05.13.724352",
+    "doi": "10.64898/2026.05.13.724352",
+    "title": "Molecular and Structural Characterization Reveals Divergent Extracellular Vesicle Profiles Between Wild Type and Alzheimer's Disease Cerebrocortical Organoids",
+    "authors": [
+      "Balistreri, A.",
+      "Turner, N.",
+      "Compher, J.",
+      "Almaraz, M.",
+      "Prabhavalkar, A.",
+      "Chittal, S.",
+      "Labra, S. R.",
+      "Ezekiel, K.",
+      "Baal, C.",
+      "Cedeno Kwong, C.",
+      "Ghatak, S.",
+      "Schaefer, J.-H.",
+      "Vanderpool, K.",
+      "Spencer, K.",
+      "Yates, J. R.",
+      "Nolan, J. P.",
+      "Henderson, S.",
+      "Lipton, S. A.",
+      "Kelly, J. W."
+    ],
+    "abstract": "Alzheimers disease (AD) is a neurodegenerative disorder affecting millions of patients globally. Despite significant efforts from researchers in recent decades, there are still many unanswered questions about AD pathogenesis. AD patient brains manifest changes in extracellular vesicles (EVs) secreted from diseased neurons, and the effect of this phenomenon remains poorly understood. EVs contain a variety of biomolecules and play a critical role in cell-to-cell communication in all eukaryotic organisms. Here, we report a thorough characterization of small EVs purified from cultures of human cerebrocortical organoids. These organoids are differentiated from human patient-derived stem cells that bear a familial AD mutation in the presenilin 1 (PSEN1) gene, or from an isogenic wildtype (WT) control. The organoid conditioned media was aspirated from cultures and processed for EV enrichment using a non-invasive technique that requires no cellular disruption. EVs purified from AD organoid conditioned media have a wider size distribution and show differential expression of tetraspanins CD63, CD9, and CD81 when compared to WT organoid-derived EVs. AD organoid-derived EVs can have single, double, and even triple membranes and display luminal fibrillar material. A deep proteomic profiling of the EVs reveals several statistically significant differences, including evidence for modifications in secretory autophagy. EV isolates from both WT and AD organoids show strong binding to amyloid detecting dyes, both in bulk fluorescence and fluorescence microscopy assays. After a 1-week co-culture of AD organoids with WT organoids, there is evidence of endosomal membrane transfer between the isogenic cultures with an increase in amyloid-{beta} peptides in the WT organoids. These observations support the notion that non-cell-autonomous spread of amyloid-containing EVs in human AD brains can be modeled in a cerebral organoid system.",
+    "published": "2026-05-14",
+    "version": "1",
+    "pdf_sha256": "d911c484e0251e43ee7f922fc80e6742649040e6b702a7e794355e5a1490ac6e",
+    "pdf_bytes": 3125827
+  }
+}

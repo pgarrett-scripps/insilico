@@ -1,0 +1,491 @@
+{
+  "generated_at": "2026-08-14T18:07:43+00:00",
+  "pipeline": {
+    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "version": "0.3.0"
+  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 64405,
+    "section_source": "document",
+    "text_sha256": "572f2a47e48f63d415ef3294c9d7f771818b97b2ef23d439c0483771b4223f0f",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 2,
+        "preamble_share": 0.0115,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 64405,
+        "words": 8633,
+        "sentences": 431,
+        "blocks": 92,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 664,
+        "references_separable": true,
+        "main_text_words": 7969,
+        "reference_entries": 34
+      },
+      "density": {
+        "sentence_len_mean": 21.86,
+        "sentence_len_median": 21.0,
+        "sentence_len_p90": 40.0,
+        "long_sentence_share": 0.0861,
+        "numbers_per_1k": 54.33,
+        "citations": 30,
+        "citation_style": "numeric",
+        "citations_per_1k": 3.48,
+        "hedges_per_1k": 8.46,
+        "boosters_per_1k": 1.74,
+        "mattr": 0.5514,
+        "passive_per_sentence_approx": 0.3248,
+        "p_values_exact": 0,
+        "p_values_threshold": 4
+      },
+      "sections": {
+        "_preamble": {
+          "words": 98,
+          "sentences": 1,
+          "sentence_len_mean": 98.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 7870,
+          "sentences": 303,
+          "sentence_len_mean": 26.06,
+          "citations_per_1k": 3.81,
+          "hedges_per_1k": 9.15,
+          "boosters_per_1k": 1.78
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "61be8b05bc50b46fa85dea9842ade01bdecbf1d7c6978376946c6ee4389bebec"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 2.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.38,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.08105749431999999,
+  "cost_by_node": {
+    "audit_citation_integrity": 0.011491,
+    "audit_methods_completeness": 0.000839,
+    "debate_advocate": 0.001944,
+    "debate_skeptic": 0.002002,
+    "desk_screen": 0.001239,
+    "editor": 0.002684,
+    "journal_recommender": 0.001903,
+    "reviewer_clarity": 0.01099,
+    "reviewer_data_analysis": 0.003097,
+    "reviewer_ethics": 0.005741,
+    "reviewer_literature": 0.009253,
+    "reviewer_methodology": 0.006862,
+    "reviewer_novelty": 0.010741,
+    "reviewer_reproducibility": 0.004013,
+    "reviewer_rigor": 0.008304
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Qiu et al 2012 single-neuron RNA-Seq Frontiers in Genetics",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Cadwell et al 2016 Patch-seq electrophysiological transcriptomic morphologic profiling single neurons Nature Biotechnology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Choi Polter Nemes 2022 Patch-Clamp Proteomics Single Neurons Tissue Electrophysiology Subcellular Capillary Electrophoresis Mass Spectrometry Analytical Chemistry",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lee et al 2024 Sex differences single neuron function proteomics patch-clamp mass spectrometry locus coeruleus Acta Physiol",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Qiu S single-neuron RNA-Seq technical feasibility reproducibility Frontiers Genetics 2012",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Cadwell CR Patch-seq electrophysiological transcriptomic morphologic profiling single neurons Nature Biotechnology 2016",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Choi SB Polter AM Nemes P Patch-Clamp Proteomics Single Neurons Tissue Electrophysiology Subcellular Capillary Electrophoresis Mass Spectrometry Analytical Chemistry 2022",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Lee J Sex differences single neuron function proteomics patch-clamp mass spectrometry locus coeruleus Acta Physiol 2024",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "single-neuron RNA-Seq technical feasibility reproducibility Qiu Frontiers Genetics 2012",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Patch-seq electrophysiological transcriptomic morphologic profiling Cadwell Nature Biotechnology 2016",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Patch-Clamp Proteomics Single Neurons Tissue Choi Polter Nemes Analytical Chemistry 2022",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Sex differences single neuron proteomics locus coeruleus patch-clamp Lee 2024 Acta Physiologica",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Ghatak S 2024 Single-Cell Patch-Clamp Proteomics Human Alzheimer's Disease iPSC-Derived Excitatory Neurons Advanced Science",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Ghatak+S+2024+Single-Cell+Patch-Clamp+Proteomics+Human+Alzheimer%27s+Disease+iPSC-Derived+Excitatory+Neurons+Advanced+Science&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Patel RR 2024 Functional morphological adaptation medial prefrontal corticotropin releasing factor receptor 1 ethanol Neurobiology Stress",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Patel+RR+2024+Functional+morphological+adaptation+medial+prefrontal+corticotropin+releasing+factor+receptor+1+ethanol+Neurobiology+Stress&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Koopmans F 2019 SynGO Evidence-Based Expert-Curated Knowledge Base Synapse Neuron",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Demichev V 2020 DIA-NN neural networks interference correction deep proteome coverage Nature Methods",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Demichev+V+2020+DIA-NN+neural+networks+interference+correction+deep+proteome+coverage+Nature+Methods&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Koopmans F SynGO Synapse Gene Ontology 2019 Neuron",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Demichev V DIA-NN neural networks interference correction proteome 2020 Nature Methods",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Ghatak S Single-Cell Patch-Clamp Proteomics Human Alzheimer's Disease iPSC 2024 Advanced Science",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Gatto L Initial recommendations performing benchmarking reporting single-cell proteomics experiments 2023 Nature Methods",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bernaerts Y Combined statistical-biophysical modeling links ion channel genes physiology cortical neuron types Patterns 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Hu W Distinct contributions Nav1.6 Nav1.2 action potential initiation backpropagation Nature Neuroscience 2009",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Gatto L Initial recommendations performing benchmarking reporting single-cell proteomics experiments Nature Methods 2023",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"Gatto L\" \"Initial recommendations\" \"single-cell proteomics\" Nature Methods 2023",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=%22Gatto+L%22+%22Initial+recommendations%22+%22single-cell+proteomics%22+Nature+Methods+2023&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"Aerts JT\" \"Patch Clamp Electrophysiology\" \"Capillary Electrophoresis Mass Spectrometry Metabolomics\" Analytical Chemistry 2014",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=%22Aerts+JT%22+%22Patch+Clamp+Electrophysiology%22+%22Capillary+Electrophoresis+Mass+Spectrometry+Metabolomics%22+Analytical+Chemistry+2014&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      }
+    ],
+    "reviewer_clarity": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ],
+    "reviewer_literature": [
+      {
+        "tool": "find_related_work",
+        "query": "patch-clamp single-cell proteomics neurons acute brain slices",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "patch-clamp single-cell proteomics neurons acute brain slices mass spectrometry",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"patch-clamp\" \"single-cell proteomics\" neuron soma retrieval mass spectrometry",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "patch clamp single cell proteomics brain slice whole soma retrieval mass spectrometry DIA",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"patch-clamp proteomics\" single neuron tissue mass spectrometry capillary electrophoresis",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "single-neuron proteomics patch-clamp electrophysiology brain slice whole-cell recording mass spectrometry",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Johnson Choi Nemes \"aspiration patch proteomics\" single neuron intact brain",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"aspiration patch proteomics\" single neuron brain tissue",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=%22aspiration+patch+proteomics%22+single+neuron+brain+tissue&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lee 2024 \"single neuron function and proteomics\" locus coeruleus patch-clamp",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Choi 2022 \"Patch-Clamp Proteomics of Single Neurons in Tissue\" electrophysiology capillary electrophoresis",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"single-cell proteomics\" patch-clamp neuron brain slice mass spectrometry 2023 2024 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Choi SB Polter AM Nemes P \"Patch-Clamp Proteomics of Single Neurons in Tissue\" Anal Chem 2022",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Ghatak 2024 \"Single-Cell Patch-Clamp/Proteomics\" Alzheimer iPSC excitatory neurons",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lee J 2024 \"Sex differences in single neuron function and proteomics profiles\" locus coeruleus Acta Physiol",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Koopmans F 2019 SynGO \"Evidence-Based Expert-Curated Knowledge Base for the Synapse\" Neuron",
+        "hits": 1
+      }
+    ],
+    "reviewer_methodology": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ],
+    "reviewer_novelty": [
+      {
+        "tool": "find_related_work",
+        "query": "patch-clamp single-cell proteomics acute brain slices",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "patch-clamp single-cell proteomics acute brain slices",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "patch-seq single-cell proteomics ion channels GPCR neurons",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "aspiration patch proteomics single neuron intact brain tissue",
+        "hits": 1
+      },
+      {
+        "tool": "search_preprints",
+        "query": "patch-clamp proteomics single neuron soma retrieval gigaseal",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "patch clamp proteomics single cell mass spectrometry brain slice",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Choi Polter Nemes patch-clamp proteomics single neurons tissue 2022",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Lee Polter Nemes locus coeruleus patch-clamp proteomics single neuron 2024",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Ghatak single-cell patch-clamp proteomics Alzheimer iPSC neurons 2024",
+        "hits": 1
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Johnson Choi Nemes aspiration patch proteomics intact brain tissue 2025",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"patch-clamp\" \"single-cell\" proteomics \"brain slice\" 2023 2024 2025",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=%22patch-clamp%22+%22single-cell%22+proteomics+%22brain+slice%22+2023+2024+2025&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Johnson Choi Nemes \"aspiration patch proteomics\" 2025 2026",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Johnson+Choi+Nemes+%22aspiration+patch+proteomics%22+2025+2026&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"gigaseal\" \"proteomics\" single neuron soma retrieval",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=%22gigaseal%22+%22proteomics%22+single+neuron+soma+retrieval&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"whole-soma\" retrieval patch-clamp proteomics",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=%22whole-soma%22+retrieval+patch-clamp+proteomics&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      }
+    ],
+    "reviewer_rigor": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2025.09.15.675920v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2025.09.15.675920v4.full.pdf",
+    "identifier": "10.1101/2025.09.15.675920",
+    "doi": "10.1101/2025.09.15.675920",
+    "title": "Patch-Clamp Single-Cell Proteomics in Acute Brain Slices: A Framework for Recording, Retrieval, and Interpretation",
+    "authors": [
+      "Rodriguez, L.",
+      "Diedrich, J.",
+      "Sun, L.",
+      "Tsu, B.",
+      "Kairs, S.",
+      "Vlkolinsky, R.",
+      "Barnes, C. A.",
+      "Martins, A. M. A.",
+      "Roberto, M.",
+      "Yates, J. R."
+    ],
+    "abstract": "Single-cell proteomics (SCP) is a powerful method for interrogating the molecular composition of neurons, yet its application to acute brain slices has remained limited. Patch-clamp electrophysiology provides direct information on neuronal excitability, synaptic inputs, and ion channel function, making it a natural partner for SCP. However, combining these techniques introduces unique challenges. For instance, after patch-clamping a neuron, its soma must be physically retrieved, and variability during extraction from the brain slice may influence how well proteomic measurements reflect in situ physiology. Here, we introduce a framework for contextualizing patch-SCP outcomes, with an emphasis on retrieval quality (material yield and soma-enriched synaptic content). We used an indiscriminate shotgun strategy in which all patched neurons were collected regardless of electrophysiological outcome to assess soma retrieval in an exploratory dataset of rat medial prefrontal cortex pyramidal neurons. Capacitance during gigaseal-preserved retrieval correlated with protein identifications, suggesting that proteome yield could be linked to soma size. Preservation of neuronal spiking during relocation tended to be associated with broader synaptic enrichment and recovery of transmembrane proteins. By comparison, torn or aspirated neurons produced small proteomes with poor synaptic representation and neurons with little to no characterization displayed more variable outcomes. These results demonstrate that patch-SCP can be used to assess soma retrieval and they provide a framework for interpreting how electrophysiological context and soma retrieval quality shape single-neuron proteomic measurements in semi-intact circuits.",
+    "published": "2026-03-18",
+    "version": "4",
+    "pdf_sha256": "61be8b05bc50b46fa85dea9842ade01bdecbf1d7c6978376946c6ee4389bebec",
+    "pdf_bytes": 7216146
+  }
+}

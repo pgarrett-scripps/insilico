@@ -1,0 +1,308 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260814-104752-translating-innovation-to-clinic-end-to-end-biopro",
+  "manuscript_title": "Translating Innovation to Clinic: End-to-End Bioprocess Development and cGMP Manufacturing of N332-GT5 HIV Vaccine Candidate for First-in-Human Trials HVTN144",
+  "manuscript_cache_key": "6b05fddbad36e2c4c8df82491889442a31a41b7454335d16c98ec565f1377bb8",
+  "decision": "major",
+  "weighted_score": 3.4286,
+  "required_revisions": [],
+  "minor_suggestions": [],
+  "reviewer_reports": [
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "The claim that the process \"scaled efficiently\" from Ambr®250 to 200-L rests on BLI titer as the primary comparability metric, but the three production runs (50-L RCB, demonstration, GMP) each used a different reference standard for the BLI assay: Lot 19Apr0088 for the RCB run, KBI S-20210314-0001-SD2-E-M for the demonstration run, and KBI P65 for the GMP run. The reported Day-14 bioreactor titers — 562, 355 and 390 mg/L — cannot be meaningfully compared across runs because a change in reference standard is a change in the measurement scale. This is a HARD weakness for any comparative claim about titer across runs, and the scale-up conclusion cannot rely on these numbers. The authors note this briefly in the text (\"mainly due to reference material\") but then draw the conclusion anyway; the design does not include a cross-run bridging study that would allow the comparison to be made."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "HARD — Three titer values compared against three different reference standards make the reproducibility claim uncheckable. Section 3.2.3 reports the 50-L RCB run at 562 mg/L (IAVI reference, Lot 19Apr0088), the MCB run at 355 mg/L (KBI reference), and the GMP run at 390 mg/L (KBI reference P65): \"The difference in titer was mainly sagged by the reference material used.\" No normalization data, cross-calibrated, or dilution curves are shown. A reader cannot determine whether \"355 vs. 562\" reflects the product or the artifact. Resolution: either state the yield assay as the replication, report all three runs relative to a single calibrated reference standard (normalized values and curves), or provide the cross-referencing of the three standards with ED50 or Kd values per standard."
+        },
+        {
+          "id": "clarity-2",
+          "text": "HARD: The site-occupancy results of the two mass-spectrometry measures are presented but never numerically reconciled; the textual claim, \"high glycan occupancy at most sites\" (3.6.1), outruns one of the figures. DeGlyphoR is reported showing N625 ~50% unoccupied and N185e/N611/N618 10–20% unoccupied; the second method \"only non-occupied peptides were prominent\" at N185e, N611, N625. The text acknowledges with \"revealing that assessment of occupancy exhibits higher variation between methods\" — but never gives numbers for both methods per site. As written, a reader cannot decide whether the product is mostly occupied (as claimed) or half-empty (as suggested by the LC-MS peptide pool). Resolution: a small table with per-site occupancy (DeGlyPHER %) and (LC-MS %, with peptide- and glycan-detection thresholds) for all 27 sites."
+        },
+        {
+          "id": "clarity-3",
+          "text": "HARD: The peak-collection window in the protein-A flowthrough step is stated as contradictory. Section 2.5.4.5: \"product collection was defined between ≥ 0.05 AU/cm and ≤ 0.05 AU/cm,\" both thresholds being equal is an empty window. Even if the reader guesses the intent (from rising to falling 0.05 AU/cm), the written condition leaves the step irreproducible. One line — or a revised sentence stating the collection window DURING rise and fall."
+        },
+        {
+          "id": "clarity-4",
+          "text": "HARD (and the title case of ambiguity): a central claim is made in the abstract but entirely absent from the body. The abstract ends with \"Clinical material manufactured through this platform has been successfully administered in HVTN144.\" The body never describes dose, route, number of participants, trial status, or where the reader might check this. A claim that \"the vaccine has been administered in humans\" is precisely the type of sentence a reviewer must not have to take on faith. If this is correct, the body needs a clinical-trial-data statement (trial ID, dates, progress status). If true but unverifiable here, the sentence should be removed from the abstract."
+        }
+      ],
+      "questions": [
+        "For §3.2.3: Run all three BLI titers against one common reference and report normalized values; likewise, list the detection limits and normalization curves for both references, neither of which is provided.",
+        "For §3.2.2 / Table 1: The conditions \"Control #1\" and \"Control #2\" are listed with identical parameters (27% CB7a slow, 2.7% CB7b bolus, 34°C Day 4). What differentiates them? (If it is the inoculum density or another parameter, that must be in the table.)",
+        "For §3.6.1: Provide the per-site occupancy table for both methods (as in weakness 2); in particular, specify the assigned glycoman count for N625 for that position 50% vs. \"mostly non-occupied.\"",
+        "For §2.5.4.5: Is the assignment window \"≥ 0.05 AU/cm on the ascending shoulder to ≤ 0.05 AU/cm on the descending shoulder\"? State the actual protein load per L of column and the collection start/end definitions.",
+        "For §2.1 (parent cell line derivation): \"HD BIOP3 is a GS-null cell line derived from ECACC CHOK1 established by Horizon Discovery\" — does \"established by Horizon Discovery\" refer to HD BIOP3 or CHOK1? If the former, the \"HD\" abbreviation should be removed to avoid ambiguity."
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "For this dimension, the manuscript's compliance claims are supported. The statement that clinical material \"has been successfully administered in HVTN144\" rests on the cited registration (NCT05217641, reference 10), which is present and checkable — no HARD issue. The manuscript reports no human-subject data, no animal studies of its own (the macaque work in Steichen et al., 2024 is cited context, not this paper's data), and no restricted-consent material, so no approval statements are required in this paper itself. I found no internal contradiction between the human-administration claim and the cited registration."
+        },
+        {
+          "id": "ethics-2",
+          "text": "The competing-interests section declares only WRS's Moderna employment/shareholding; it does not explicitly state that all other authors declare no competing interests — SOFT, add the explicit sentence."
+        },
+        {
+          "id": "ethics-3",
+          "text": "The manuscript cites macaque immunization studies but reports none of its own, so no animal-ethics statement is required here."
+        },
+        {
+          "id": "ethics-4",
+          "text": "The manufacturing process (CHO cells, standard bioprocessing, HIV vaccine immunogen for prevention) does not trigger dual-use or biosafety reporting requirements beyond routine institutional practice."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The downstream process differs from its stated basis in a key selectivity choice, but this is not discussed. Section 2.5 states the process was \"developed based on the process established for BG505 SOSIP.664 (Dey et al., 2018)\". However, Dey et al. used PGT145 affinity capture (quaternary trimer-specific epitope), whereas the current process uses 2G12 affinity capture (glycan-dependent gp120 epitope, not trimer-specific). These antibodies have fundamentally different selectivity, with implications for yield, purity of correctly folded trimer, and HCP clearance that are not acknowledged or compared. The claim of lineage to Dey et al. is not false, but the significant divergence in the capture chemistry means the related-work framing understates the difference. Either cite other work that uses 2G12 capture (e.g., Rameszani-Rad et al. 2025, ref [18], which used 2G12 for mRNA-encoded trimers), or explicitly discuss why 2G12 was chosen over PGT145 and how this affects the comparability of the processes."
+        },
+        {
+          "id": "literature-2",
+          "text": "The claim about 20/27 BG18 precursor antibody binding (Kd ≤ 1 μM) is attributed to ref [24] but the specific numerical cutoff is not verifiable from metadata alone. The manuscript states in the Introduction: \"N332-GT5 emerged as a highly refined immunogen that binds 20 of 27 potential BG18 precursor antibodies with Kd ≤ 1 μM.\" While the design paper (Steichen et al., 2019, Science) is the obvious source, the exact number 20/27 and the 1 μM threshold are unsupported in the prose. Please confirm (in a sentence or a supplementary table) that these values appear in ref [24] or give the correct source."
+        },
+        {
+          "id": "literature-3",
+          "text": "DOI strings in refs [4], [18], and [32] contain inserted spaces (e.g., \"10.1 128/JVI.01894-16\") that will prevent resolution. Replace each with the correct unbroken DOI."
+        },
+        {
+          "id": "literature-4",
+          "text": "Ref [33] lists the author as \"Sander et al.\" — the correct name is \"Sanders et al.\" (Sanders RW et al. Science 2015). This is a garbled conversion artifact but will impede retrieval."
+        },
+        {
+          "id": "literature-5",
+          "text": "A directly relevant GMP-manufacturing paper — Gulla et al. \"A non-affinity purification process for GMP production of prefusion-closed HIV-1 envelope trimers from clades A and C for clinical evaluation,\" Vaccine 2021 (PMID: 34020817) — describes production of cGMP-grade HIV Env trimers for clinical evaluation and is not cited. Please add it to the related-work discussion to acknowledge alternative purification strategies."
+        },
+        {
+          "id": "literature-6",
+          "text": "Ref [3] (Bale et al. 2025, npj Vaccines) is cited without a DOI or volume/page, and its publication status (\"2025\") is ambiguous. Provide the DOI and clarify whether this is a published article, an accepted manuscript, or a preprint."
+        }
+      ],
+      "questions": [
+        "For each DOI with embedded spaces (refs [4], [18], [32]): can you supply the corrected DOI?",
+        "Ref [33]: can you confirm the correct author list (Sanders et al.) and supply the DOI?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The genetic-stability claim is unsupported by any presented data. The abstract claims \"genetic stability through 60 population doublings,\" and §2.3.8 describes a 60-PD study with productivity, transgene copy number, and mRNA identity as stability indicators — but no results from that study appear anywhere in the manuscript. No table, figure, or value shows PD0 vs. PD60±Gln productivity, copy number, or sequence identity. This claim is load-bearing for the entire cell-line story: if the clone drifts, the process is not what was validated. What would settle it: a table of the PD0 vs. PD60 productivity, copy number, and mRNA-identity results."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "\"Consistent product quality across multiple cGMP batches\" outruns the evidence. The manuscript describes exactly one GMP production run (the XDR-200 GMP run); the comparison in Table 11 is between one non-GMP pilot demonstration batch and one GMP batch, each a single measurement with no replicates or error bars. The abstract's \"multiple cGMP batches\" is not supported by the body. Separately, the titer comparison across the three 50-L runs (562, 355, 390 mg/L) is confounded: the authors state the differences are \"mainly due to the reference material used,\" and three different reference standards were used. The \"consistent\" claim therefore rests on a comparison in which the measurement scale itself changed between runs. What would settle it: state the number of GMP batches, and report all run titers against a single common reference standard."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "Viral-clearance LRVs lack n and error definitions. Table 12 reports step LRVs with ± errors (e.g., 2G12 affinity 2.95 ± 0.57; total ≥18.14 ± 0.75) but no n is stated for any step and the error is not defined (SD across replicate runs? assay uncertainty?). The total error is numerically consistent with summing the step variances in quadrature (√(0.57²+0.17²+0.34²+0.31²) = 0.75), which suggests propagation, but this is not stated. The reader cannot tell how many replicate clearance runs each LRV rests on. What would settle it: state n per step and the error definition."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "Process optimization used n=1 per condition. The Ambr250 study (Table 6, Figure 13) ran 12 conditions, each in a single bioreactor. The selection of \"Control + 7a bolus\" (752 mg/L, 87.2% viability) over the two controls (~640–650 mg/L) rests on single runs; with n=1, the ~15% titer advantage could be run-to-run noise. The 50-L scale-up confirmation partially addresses this, but the optimization decision itself is unreplicated. What would settle it: acknowledge the n=1 limitation explicitly, or report replicate runs for the chosen condition."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "The hold-time stability threshold (0.7% HMW/LMW increase = \"unstable\") is arbitrary and unjustified; the UF/DF1 retentate's 3–4% HMW jump from Day 0 to Day 1 drives the ≤1-day hold, but the threshold's basis is never given."
+        },
+        {
+          "id": "data_analysis-6",
+          "text": "The BDS relative-potency \"decreasing trend\" over hold times is reported without values or a test; \"within target potency range\" is not quantified."
+        },
+        {
+          "id": "data_analysis-7",
+          "text": "The nsEM \"nearly 100% native-like trimers\" claim rests on 2D classification of 6,086 particles, but the number contributing to the final class averages (vs. discarded) is not stated."
+        },
+        {
+          "id": "data_analysis-8",
+          "text": "The abstract's \">99% trimeric purity\" slightly overstates the pilot batch's 98.6% Main Peak (Table 11)."
+        },
+        {
+          "id": "data_analysis-9",
+          "text": "The clone-ranking criteria (BG18/PGT145 ratios, growth characteristics) are qualitative; no quantitative threshold for selecting C235 is given."
+        },
+        {
+          "id": "data_analysis-10",
+          "text": "The glycan \"matching design specifications\" claim is unanchored: the design specifications are never defined, and the two methods disagree on occupancy at N185e, N611, and N625 (the text acknowledges \"higher variation between analytical approaches\")."
+        },
+        {
+          "id": "data_analysis-11",
+          "text": "The 2G12 step yield >100% (Figure 16) is attributed to \"titer assay variability\" — honest, but it means the yield and titer numbers carry substantial unquantified uncertainty."
+        }
+      ],
+      "questions": [
+        "How many GMP batches were produced, and can titers for all runs be reported against a single reference standard?",
+        "What is the n per viral-clearance step, and how are the ± errors in Table 12 defined?",
+        "Can the PD0 vs. PD60 genetic-stability results (productivity, copy number, mRNA identity) be provided?",
+        "What is the basis for the 0.7% HMW/LMW hold-time stability threshold?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The molecule-specific novelty is real but the 'paradigm' claim outruns it. The abstract concludes that the work 'establishes a scalable, reproducible manufacturing paradigm for structurally complex HIV-1 envelope immunogens.' But the core manufacturing approach — CHO cell fed-batch, 2G12 affinity capture, mixed-mode polishing, virus filtration — follows the same architecture as the BG505 SOSIP.664 process (Dey et al. 2018, Biotechnol. Bioeng. 115:885–899) and the electroporation-based trimer process (Bale et al. 2025, npj Vaccines). What is new is molecule-specific: the Leap-In transposon cell line, the removal of preparative SEC, and the process parameters tuned for N332-GT5. That is a legitimate contribution, but it is not a new paradigm. The claim should be scaled back to match what the paper demonstrates: a successful case study of adapting an existing manufacturing platform to a new germline-targeting immunogen."
+        },
+        {
+          "id": "novelty-2",
+          "text": "No head-to-head comparison with the nearest prior work. The manuscript does not provide a table comparing yields, purity, glycosylation patterns, or impurity clearance with the BG505 SOSIP.664 cGMP campaign (Dey 2018) or the Bale et al. (2025) campaign. Without such a comparison, a reader cannot assess whether the claimed advances (e.g., removal of SEC, use of Leap-In transposition) actually improve on or match the state of the art. This is especially relevant for the SEC removal claim: the paper shows that SEC removal did not degrade quality, but it does not report whether the final purity (%Main by SE-HPLC of 98.6–99.4%) is comparable to, better than, or worse than what Dey et al. achieved with SEC included. A comparative table would resolve this."
+        },
+        {
+          "id": "novelty-3",
+          "text": "The N332-GT5 design itself is not new to this manuscript. The immunogen was published in Steichen et al. 2019 (Science 366:eaax4380), and the non-human primate data in Steichen et al. 2024 (Science 384:adj8321). The contribution of the present manuscript is solely the translation to cGMP manufacturing. This is fine — process-development papers routinely describe manufacturing of previously published molecules — but it means the significance rests entirely on whether the manufacturing details themselves teach something not already available. The removal of preparative SEC and the Leap-In transposon application are the only method elements that are not already described in Dey et al. 2018 or Bale et al. 2025. The paper would benefit from explicitly stating this delta in the introduction."
+        },
+        {
+          "id": "novelty-4",
+          "text": "The productivity comparison across the three 50-L runs is complicated by the use of different reference standards for BLI titer (Lot 19Apr0088 vs S-20210314-0001-SD2-E-M vs P65), making the reported titer differences (562 vs 355 vs 390 mg/L) uninterpretable without cross-calibration — this weakens the process-reproducibility narrative."
+        },
+        {
+          "id": "novelty-5",
+          "text": "The claim that glycosylation 'matched design specifications' (abstract and conclusions) is asserted but no design specification for glycosylation is stated anywhere in the manuscript against which the results could be checked."
+        },
+        {
+          "id": "novelty-6",
+          "text": "The reference to Bale et al. 2025 (cited as ref 3) appears in the Introduction as 'similar to published cGMP production runs' but no substantive differentiation from that work is offered — a sentence stating what the present manuscript adds relative to Bale et al. would suffice."
+        },
+        {
+          "id": "novelty-7",
+          "text": "The paper does not discuss whether the N332-GT5 process would be transferable to other HIV Env immunogens (e.g., other GT-series members) or whether any learnings are molecule-specific, which weakens the 'paradigm' claim further."
+        },
+        {
+          "id": "novelty-8",
+          "text": "I cannot verify from the manuscript text that the material 'has been successfully administered in HVTN144' (Conclusions), as this requires external trial data — the paper should cite the relevant interim or published clinical-trial record."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": null,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The central claim — \"the fed-batch process … is scalable and reproducible across both cell bank sources and vessel scales\" — is supported only by titers read on three different reference standards. The manuscript reports Day-14 titers of 562 mg/L (RCB, XDR-50), 355 mg/L (MCB, XDR-200) and 390.2 mg/L (GMP, MCB, XDR-200), and states \"the difference in titer was mainly due to the reference material used,\" citing three lots (IAVI/Scripps 19Apr0088; KBI S-20210314-0001-SD2-E-M; KBI P65). The alternative the authors did not exclude: the MCB-based cultures genuinely produce ~35–40% less than the RCB-based run, and the reference-standard explanation is post-hoc. This is unfalsifiable as presented because no two runs were ever read on a common scale. What would settle it: re-assay stored harvest samples from all three runs against a single reference standard and report the adjusted titers. If they converge within the assay's accepted variability, the claim holds; if the RCB/MCB split persists, the process differs between cell banks. The authors' own >100% step yield for 2G12, attributed to \"titer assay variability,\" reinforces that the assay's comparator problem is real and acknowledged."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "The abstract's claim of \"genetic stability through 60 population doublings\" has no corresponding results. Section 2.3.8 describes the design (60-PD cultures ±5 mM glutamine; readouts of productivity, transgene copy number, N332/furin mRNA identity), but Section 3 contains no PD0-vs-PD60 data anywhere — no productivity comparison, no copy-number or mRNA-identity table. The RCB/MCB qualification and the entire 200-L campaign rest on this result, and a reader cannot check it. The missing artifact is a single figure/table of the 60-PD metrics; note also that the transgene copy-number assay itself is never described (method, instrument, primers)."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "Both quantitative axes — titer and relative potency — are calibrated against internal reference materials that are not deposited or characterized beyond a lot number. The GMP BDS \"percent trimer\" is reported as \"116% compared to Reference\" (an unidentified KBI lot), and all Octet titers trace to one of three proprietary lots. An independent lab cannot recover an absolute titer or potency from this manuscript. Similarly, the expression construct is \"codon-optimized using ATUM's proprietary algorithm\" with no sequence given, and the C235 RCB/MCB is an ATUM-internal line with no accession or access path. For a process paper, the exact transgene sequence is a load-bearing input; any reproduction must re-synthesize the gene, and the sequence is not available."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "The Ambr250 optimization that selected the final process cannot be reconstructed from the text. Table 1 is garbled — rows 8–9 lack condition names entirely (only stray \">\" and pH fragments), so the 12-condition design is not fully recoverable. Base DO and pH control setpoints for the Ambr250 runs are never stated (only the pH test arms), and the feed schedule is given as \"27% CB7a slow, 2.7% CB7b bolus\" without defining the base — percent of what, delivered over what interval, from which days? The same gap affects the 50-L runs, which use \"boluses according to predefined feed schedules\" but never tabulate the schedule. A replicator cannot compute a single feed volume."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "The 2G12 capture step omits the column bed height, load pH/conductivity, residence time, and the resin/ligand coupling chemistry; only the equilibration and elution buffers are given, so the step cannot be sized."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "The Amberlite XAD-2 step specifies circulation time (120–150 min) but not the resin-to-product volume ratio — the scale-critical parameter needed to reproduce the <0.002% residual Triton X-100 result."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "The viral-clearance scale-down model is asserted to \"ensure comparability with the manufacturing-scale process,\" but no qualification data (LRV agreement with manufacturing scale, load-matrix comparability, virus spike-to-load ratio, which should be ≤5% to avoid altering the load) are shown; without this, the ≥18.14/≥11.70 total LRVs are not tied to the GMP process."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "No data availability statement exists: raw MS data behind the Fig. 17/18 site-specific glycan occupancy percentages are not deposited (no accession or DOI), so those percentages cannot be recomputed."
+        },
+        {
+          "id": "reproducibility-9",
+          "text": "Table 2's column headers are misaligned with its values — the GMP XDR-200 column appears to show a Day-0 weight of 34.0 ± 0.5 kg, which is implausible given the 87.6 kg harvest recovered; initial working volumes cannot be reliably attributed to each run."
+        },
+        {
+          "id": "reproducibility-10",
+          "text": "Bed heights are given only for MabSelect SuRe and Capto adhere; the \"10–20 cm ID\" pilot and \"14–45 cm ID\" cGMP columns lack a per-step bed-height/residence-time comparison, so scale comparability of the chromatography train cannot be assessed."
+        },
+        {
+          "id": "reproducibility-11",
+          "text": "The contributions section credits the authors with cryo-EM structure determination, but no cryo-EM data appear anywhere in the manuscript — readers cannot tell which structural claims rest on the 6,086-particle nsEM dataset alone."
+        }
+      ],
+      "questions": [
+        "What was the measured inter-assay variability (%CV) of the Octet titer method on identical samples, and can stored harvests from all three runs be re-assayed on a single reference standard to produce a common-scale titer comparison?",
+        "What is the Amberlite XAD-2 resin-to-product volume ratio used in section 2.5.4.4?",
+        "Was the viral-clearance scale-down model qualified against manufacturing scale (LRV agreement, load composition, pressure/flow), and what was the virus spike-to-load ratio in each study?",
+        "Does the 60-PD genetic stability dataset exist in analyzable form and can it be included as a results figure/table?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "HARD — \"delivering consistent product quality across multiple cGMP batches\" (abstract). The manuscript describes exactly one GMP run: \"the same process was successfully executed for the GMP manufacturing using the XDR-200 bioreactor\" (Section 3.2.3). The 50-L material supply and 50-L demonstration runs are explicitly pilot-scale (RCB and MCB, non-GMP). \"Multiple cGMP batches\" is contradicted by the manuscript's own account — and even by its own title, which says \"cGMP Manufacturing\" in the singular. Fix: change to \"across pilot and GMP scale runs,\" or present data from additional GMP batches."
+        },
+        {
+          "id": "rigor-2",
+          "text": "HARD — \"genetic stability through 60 population doublings\" (abstract). Methods 2.3.8 describes a 60-PD study using productivity, transgene copy number, and N332/furin mRNA identity as stability indicators. The Results section never reports any of these outcomes — Section 3.1 covers stable pool development and clone ranking only. The abstract asserts a result the manuscript does not present. Fix: report the PD60 productivity, copy-number, and mRNA-identity data, or remove the claim."
+        },
+        {
+          "id": "rigor-3",
+          "text": "SOFT — \"confirmed site-specific glycan occupancy matching design specifications\" (abstract). Two problems. First, no design specification is stated anywhere in the manuscript, so \"matching design specifications\" is unverifiable as worded. Second, the two methods disagree on occupancy at several sites: DeGlyPHER shows N625 ~50% unoccupied and N185e/N611/N618 10–20% unoccupied, while the LC-MS glycoproteomics shows N185e, N611, and N625 as predominantly unoccupied (\"only the non-occupied peptides were prominent\"). The body acknowledges this (\"assessment of occupancy exhibits higher variation between analytical approaches\") but the abstract claim does not. Fix: state the specification, reconcile the two methods' occupancy calls, or hedge."
+        },
+        {
+          "id": "rigor-4",
+          "text": "SOFT — \"Clinical material manufactured through this platform has been successfully administered in HVTN144\" (abstract, conclusions). No data in the manuscript supports \"successfully administered\"; it is an assertion about an external trial, and \"successfully\" implies safety/tolerability data that are not presented. Fix: remove, or replace with a citation to the trial record."
+        },
+        {
+          "id": "rigor-5",
+          "text": "SOFT — \"preserved quaternary structure and native-like antigenicity\" (abstract). The nsEM structural analysis was performed on demonstration-run material (\"N332-GT5 from the 50L demonstration run\"), not the cGMP batch. The cGMP BDS has BLI (116% relative potency) but no nsEM. The structural claim about the clinical material rests on pilot material."
+        },
+        {
+          "id": "rigor-6",
+          "text": "SOFT — \"robust, cGMP-compliant process\" (abstract). The Capto adhere step yield dropped from ~60% to ~24% under worst-case yield conditions (Table 7), and the authors recommend monitoring loading and pH to avoid those conditions. \"Robust\" is over-strong for a step that requires active avoidance of worst-case conditions, though the body does acknowledge this."
+        },
+        {
+          "id": "rigor-7",
+          "text": "Sweep: \"A streamlined three-step purification strategy\" (abstract) is a categorization that obscures the actual eight unit operations (2G12, UF/DF1, Triton VI, Amberlite, MabSelect SuRe, Capto adhere, virus filtration, UF/DF2). The summed viral clearance (≥18.14 XMuLV, ≥11.70 MMV) assumes independence across unit operations; standard practice, but the summed value is an upper-bound estimate, not a measured total. Reproducibility is claimed across three runs while titers varied 355–562 mg/L, attributed to different reference standards; plausible but unverified — a single reference standard across runs would strengthen the claim. The \"first-in-human\" priority claim in the title is a novelty assertion (novelty reviewer's call), but note the manuscript itself provides no evidence of administration."
+        }
+      ],
+      "questions": []
+    }
+  ],
+  "manuscript_text_sha256": "9496c7e0d60aa87bbd0c29d07bca19510476312856fe12b9ceb773cd4efa2b1c",
+  "manuscript_file_sha256": "59596862147f1df074afcb29821afdb27c8e39ad454bf3e8ebcd4c6a834f4b86",
+  "prior_job_id": "",
+  "desk_rejected": false
+}

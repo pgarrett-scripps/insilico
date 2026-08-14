@@ -1,0 +1,25 @@
+# Statistics & Data-Analysis Reviewer
+
+## Summary
+The headline quantitative claims — that AD organoids secrete ~2× more EVs, that the proteomic differences (170/184 proteins, CD9/RAB8A/B/LC3A/B) are real, and that co-culture raises WT Aβ puncta — all rest on single pooled EV preparations per genotype analyzed in technical triplicate, with no biological replication anywhere in the paper. The statistics are computed over technical replicates and over individual EVs or images, so the reported p-values and effect sizes do not generalize to the biological question asked. The work is methodologically rich but the statistical foundation for its central claims is not yet in place; this is a major revision at best.
+
+## Strengths
+- The proteomics pipeline is described in unusual detail (MSstats settings, DIA-NN parameters, normalization, FDR thresholds), and multiple-comparison correction is applied and named for the volcano-plot hits.
+- The vFC assay is calibrated against size and fluorescence standards and follows MISEV/MIFlowCyt-EV guidance, with explicit controls for swarm and detergent treatment.
+- The authors report a non-significant cryo-TEM size difference rather than overstating it, and disclose the outlier-removal step in the image analysis.
+
+## Weaknesses
+- LOAD-BEARING — EV count difference (3.1e9 vs 1.6e9/mL, ~2×) rests on a single pooled 120 mL sample per genotype, with no biological replicates, no error bars, no test, and no n stated. The count is expressed per mL of concentrated media, a denominator that is itself one measured quantity per genotype, so the difference cannot be separated from batch or biological variability. Report the count with ≥3 independent organoid batches per genotype and a test on those, or the claim is unsupported.
+- LOAD-BEARING — All proteomic significance (170/184 proteins; CD9 4.8×, RAB8A/B 2.2×/2.0×, LC3B 4.9×, etc.) is computed across three technical replicates of one pooled EV prep per genotype (methods: 'in technical triplicate'). The adj p-values therefore reflect measurement noise, not biological variability, and every 'significant' difference could be driven by batch effects between the two pooled preparations. The PCA (Supplementary Figure 4) shows 'dispersed clusters of replicates' — but those are technical replicates. Biological replication (independent organoid batches) is required before any of these differences can be attributed to genotype.
+- LOAD-BEARING — The co-culture Aβ-puncta increase (Figure 7D) is tested with a Student's t-test on n=27 (WT+AD) vs n=49 (WT+WT) images, where images are pseudo-replicates (multiple images per organoid), the n per group is unequal, and 3 outliers were removed post-hoc by ROUT. State the number of independent organoids per condition, treat organoid (not image) as the unit, and report the analysis with and without the excluded outliers.
+- The cryo-TEM size comparison treats 24 WT vs 65 AD individual EVs as independent observations (Mann-Whitney U), but EVs within one preparation are not independent; and 'not significantly different' is asserted from an unpowered sample, which cannot support a no-difference claim.
+- The methods section states significance was assigned by two-way ANOVA, but the results (Figure 7D) report a Student's t-test; the stated thresholds are non-standard (** = p<0.005 rather than 0.01). Reconcile the stated and used tests.
+- The ThT '~25× higher' signal is reported with no test, no n, and no definition of the error bars; three technical replicates of one prep per genotype cannot support a quantitative comparison.
+- Several mechanism-supporting markers are discussed as evidence despite being non-significant or unreported (RAB11B adj p=0.056; ATG7 1.1-fold with no p; LC3A 'exclusively detected' in 3/3 vs 0/3 technical replicates). The 'failed AEV biogenesis' narrative is built on a pattern of individually marginal markers.
+- The vFC TS expression is reported as 'at or below the LOD (~38 ABC)' — a floor value is being reported as a measurement; state the fraction of events above LOD rather than a mean at the detection limit.
+
+## Questions
+- How many independent organoid differentiation batches (biological replicates) were used for the vFC count, the proteomics, and the co-culture experiment, and how many organoids per batch?
+- For the co-culture quantification, how many independent organoids contributed to the 27 and 49 images, and is the t-test on image-level or organoid-level means?
+- Was the proteomics 'replicate' a technical injection of one pooled digest or a separate EV purification? If the latter, from how many independent batches?
+- What was the exact test and correction used for the volcano-plot hits, and were the individual-marker claims (RAB8A/B, STX3, LC3A/B) tested against the same corrected threshold or reported uncorrected?

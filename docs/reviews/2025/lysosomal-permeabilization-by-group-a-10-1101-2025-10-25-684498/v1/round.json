@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260814-110051-ava-quezadaa-kevin-lorda-cheldon-alcantaraa-claire",
+  "manuscript_title": "Ava Quezadaa, Kevin Lorda, Cheldon Alcantaraa, Claire Delahuntyb, Kevin Kima, Olivia Okamotoa, John R Yates IIIb, Cheryl YM Okumuraa#",
+  "manuscript_cache_key": "9179f8a23f24a399d03dc65c32d15e9d2a56d265b8ada27fdf769382bbd0426c",
+  "decision": "major",
+  "weighted_score": 3.5,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Resolve the IL-1β carry-over confound in the cytosol-transfer experiments (Figs. 1C, 2C, 4A, 4B). Measure IL-1β directly in the cytosol input fractions before transfer, and/or add a protein-synthesis inhibitor (e.g., cycloheximide) to the recipient cells to demonstrate that the measured IL-1β reflects new synthesis rather than donor pro-IL-1β carried over and cleaved in the recipient well. Report the IL-1β concentration in the cytosol input for WT vs. uninfected donors.",
+      "source_reviewer": "data_analysis",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Strengthen the M1 attribution. Characterize the ΔM1 strain's phenotype (intracellular bacterial load at harvest, SLO and other secreted-virulence-factor expression, and extent of phagolysosomal permeabilization) so that the reduced IL-1β response to ΔM1 cytosol can be attributed to the specific absence of cytosolic M1 rather than to generally weaker permeabilization or lower bacterial load. Ideally, add back recombinant M1 to ΔM1 cytosol and show restoration of the response, and/or verify the M1-in-WT-cytosol proteomics call by targeted MS or Western blot.",
+      "source_reviewer": "methodology",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Address the dead-cell alternative for the histone finding. Report cell viability at the 1-h harvest and show that the cytosolic histone signal tracks with a live-cell permeabilization readout (e.g., cathepsin B release) rather than with the dead-cell fraction; or isolate cytosol from cells in which death is blocked (e.g., a pancaspase inhibitor) and show histones persist. Requalify the abstract's 'released into the cytosol' to 'present in the cytosol' unless active release from live cells is demonstrated.",
+      "source_reviewer": "methodology",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Correct the citation error: O'Neill et al. 2016 (ref 17) argues that GAS does escape the phagosome and replicate in the cytosol, the opposite of the claim it is cited to support. Re-cite it as a competing model and engage with the discrepancy, or remove it from that sentence.",
+      "source_reviewer": "literature",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Add a positive control for the CA-074 experiment (Fig. 4B): demonstrate that the inhibitor actually blocks cathepsin B activity in this system (activity assay, or a positive control where cathepsin B is known to drive the response). Without this, the negative result is uninterpretable; otherwise, drop the claim that cathepsin B does not contribute.",
+      "source_reviewer": "data_analysis",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Reconcile the ΔSLO-elicits-IL-1β result with Harder 2009 and Richter 2021, which concluded SLO is required for NLRP3 activation. Provide a head-to-head account of the discrepancy (assay, strain, MOI, the 30-kDa cutoff, or the newly described CD63/LAMP-3 pathway), and report effect sizes/CIs for the WT-vs-ΔSLO comparison rather than relying on the underpowered n=3 null.",
+      "source_reviewer": "novelty",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Make the analysis reproducible: deposit the R analysis script (with sessionInfo) at the MassIVE record or a versioned repository; define the imputation thresholds ('consistently absent' replicate criterion; whether 'below the least expressed protein' is within-sample or across-dataset); state which side of the 30-kDa membrane was analyzed for the proteomics input (this bears directly on the nucleosome interpretation, since monomeric histones are 10-23 kDa); and reconcile the MassIVE accession (PXD069795) with the embedded identifier (MSV000099561).",
+      "source_reviewer": "reproducibility",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Complete the methods reporting: provide working dilutions (and secondary antibodies) for all antibodies; state cell-line authentication (STR) and mycoplasma-testing status for THP-1; and add an institutional biosafety statement confirming BSL-2 containment and approval for the live GAS/GBS work, plus a statement on the IRB-exempt status of the pooled human serum.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Requalify over-strong abstract/claims: align 'all histone proteins' with the body's 'almost all'; soften 'M1 corresponded with the IL-1β response' and 'indicating SLO-mediated release' to 'consistent with' and 'accounts for the majority of the response to WT-infected cytosol'; and temper the 'strong' IL-1β response and the speculative exosome interpretation.",
+      "source_reviewer": "rigor",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Add one-sentence numeric summaries (mean ± SD, n) for each ELISA comparison in the Results text so effect sizes are visible without inspecting figures.",
+    "Use a single symbol for the SLO-deficient mutant throughout (recommend ΔSLO, not DSLO).",
+    "State the y-axis units (IL-1β, pg/mL) in the legends of Figs. 1C, 2B, 2C, 4A, 4B, and specify what the Fig. 3A heatmap color scale represents (z-score of log2 NSAF, fold-change from row mean, etc.).",
+    "Clarify the Fig. 1C axis: the media-only control appears to exceed the WT-cytosol treatment; confirm the 'increased IL-1β' claim is not a suppression relative to untreated cells.",
+    "State the rSLO dose range for Fig. 2A in the Methods, and the LPS concentration used in Supp. Fig. 1.",
+    "Clarify whether cells were washed after the CA-074 pre-incubation before adding cytosolic fractions, and whether the inhibitor was present throughout the 2-h exposure.",
+    "Explain the purpose of 0.1 µg/mL penicillin in the digitonin lysis buffer and confirm it does not affect macrophage protein content or viability during the 1-h lysis.",
+    "Provide an RRID/CVCL identifier for THP-1 and reconcile the 24-h (Methods) vs. 2-h (Fig. 4 legend) exposure times for the cytosol-transfer assay.",
+    "Add a cytosol-from-heat-killed-GAS-infected-cells control to separate 'bacterial proteins present but no permeabilization' from 'permeabilization occurred.'",
+    "Resolve the 'streptolysin O precursor' annotation in ΔSLO-infected cytosol by checking the specific peptides identified, to rule out a strain-contamination artifact."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "The text reports *only* the direction of the IL-1β responses (e.g., “increased amount”, “significantly decreased”) without any numeric summary. A reader skimming the results cannot judge effect sizes without interrupting the narrative to inspect every figure. For each ELISA comparison, provide one sentence giving the mean ± SD and sample size (e.g., “WT-infected cytosol stimulated 2,400 ± 600 pg/mL IL-1β vs. 400 ± 200 pg/mL for uninfected cytosol, p < 0.01, n = 3 preparations”)."
+        },
+        {
+          "id": "clarity-2",
+          "text": "The ΔSLO mutant is written as “ΔSLO” in the main text and some legends, but as “DSLO” in Fig. 2C, Fig. 3A heading, and occasionally in the text (“DSLO-infected” in the proteomics results). Pick one symbol throughout (recommend “ΔSLO”)."
+        },
+        {
+          "id": "clarity-3",
+          "text": "Several figure legends for ELISA plots do not state the units of the y-axis. Add “IL-1β (pg/mL)” to the legends of Figs. 1C, 2B, 2C, 4A, 4B."
+        },
+        {
+          "id": "clarity-4",
+          "text": "In the results for Fig. 2B, the claim that “in individual experiments the ΔSLO mutant always produced a slightly lower response” is not supported by the aggregate statistical test shown. Either show the individual experiment values or remove the qualitative statement."
+        },
+        {
+          "id": "clarity-5",
+          "text": "The list of ECM/collagen/integrin proteins found exclusively in the ΔSLO-infected cytosol (proteomics results) is presented without interpretation or a caveat about possible isolation artefacts, leaving the reader uncertain whether these are genuine cytosolic signals."
+        },
+        {
+          "id": "clarity-6",
+          "text": "In the discussion, the sentence linking cytosolic histones to sepsis in invasive GAS infection is speculative; the current data show only intracellular cytosolic histones, not extracellular release. Insert a qualifier such as “if released from dying cells, this could contribute to…”."
+        }
+      ],
+      "questions": [
+        "Why was penicillin at 0.1 µg/mL added to the digitonin lysis buffer? Could this concentration affect macrophage protein content or viability during the 1 h lysis on ice?",
+        "What does the colour scale in the heatmap (Fig. 3A) represent? The legend says “Relative abundance” – please specify: z-score of log₂ NSAF, or fold-change from the row mean, or something else.",
+        "In the CA-074 experiment (Fig. 4B), were the cells washed after the 1 h pre-incubation with the inhibitor before adding the cytosolic fractions, or was the inhibitor present throughout the 2 h exposure?"
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "The histone-release claim does not exclude dead-cell contamination of the cytosolic fraction (HARD). GAS infection — and SLO in particular, per the authors' own prior work — causes macrophage apoptosis and pyroptosis. Dead or dying cells have permeabilized plasma membranes, and their nuclei may be partially degraded or leaky. When the mixed population is lysed with digitonin, contents of dead cells (including histones) would enter the \"cytosolic\" fraction. The absence of Lamin A/C does not rule this out: Lamin A/C is ~70 kD and would not leak from a nucleus whose small pores admit 10–23 kD histones. The authors report no viability or LDH data at harvest, and no correlation between histone signal and cell death. The GBS control shows specificity to GAS but not to live-cell permeabilization — GBS also kills macrophages. What would settle it: report viability at harvest and show that the histone signal tracks with the live-cell permeabilization readout (e.g., cathepsin B release) rather than with the dead-cell fraction; or isolate cytosol from cells where death is blocked (e.g., a pancaspase inhibitor) and show histones persist."
+        },
+        {
+          "id": "methodology-2",
+          "text": "The M1 attribution confounds \"M1 released into cytosol\" with \"M1 present on the bacterium\" (HARD). The IL-1β comparison is WT cytosol vs ΔM1 cytosol. The ΔM1 strain lacks M1 on its surface entirely, which changes its phagocytosis, survival, and secreted-protein repertoire — none of which are measured. The reduced IL-1β from ΔM1 cytosol could reflect lower intracellular bacterial load or altered bacterial protein release, not the specific absence of cytosolic M1. The proteomics finding (M1 in WT but not ΔSLO cytosol) is the evidence for *release*, but the ΔSLO strain still expresses M1, so this comparison does support release — the gap is that the IL-1β experiment uses a different strain (ΔM1) whose phenotype is not characterized. What would settle it: report intracellular bacterial counts for WT and ΔM1 at harvest, and/or spike recombinant M1 into ΔM1 cytosol and show the response is restored."
+        },
+        {
+          "id": "methodology-3",
+          "text": "The nucleosome claim is weakened by the absence of DNA (SOFT). The authors argue that histones must be released as nucleosomes because they used a 30 kD MWCO and found all histone subunits. But individual histones are 10–23 kD and would pass the filter as free proteins. The DNA quantification shows no increase in cytosolic DNA in infected cells; the authors invoke GAS DNase to explain this, but do not test it (no DNase inhibitor, no measurement of DNA degradation). The data are equally consistent with free histone release, which would not require nucleosome-sized complexes. What would settle it: size-fractionate the cytosol (e.g., native gel or SEC) and show histones co-migrate with DNA, or add a DNase inhibitor during infection and show DNA then appears in the cytosol."
+        },
+        {
+          "id": "methodology-4",
+          "text": "The methods state cytosolic fractions were exposed to cells for 24 hrs, but the Fig. 4 legend says 2 hours — this timing difference matters for whether the response reflects processing of pre-formed pro-IL-1β (inflammasome) or de novo synthesis (TLR-driven), and should be reconciled."
+        },
+        {
+          "id": "methodology-5",
+          "text": "The proteomics annotation of \"streptolysin O precursor\" in ΔSLO-infected cytosol is a red flag — either the annotation is wrong (Ifs/Nga from the same operon, as the authors speculate) or the strain is not clean; this should be resolved by checking the specific peptides identified before relying on the annotation."
+        },
+        {
+          "id": "methodology-6",
+          "text": "The CA-074 methyl ester experiment has no positive control showing the inhibitor actually blocked cathepsin B in this system; without it, the negative result is uninterpretable."
+        },
+        {
+          "id": "methodology-7",
+          "text": "No dose-response is shown for the IL-1β transfer assay — a single 20 µg dose cannot distinguish a specific protein effect from a threshold/contaminant effect."
+        },
+        {
+          "id": "methodology-8",
+          "text": "The cathepsin B Western blot negative result sits at the 30 kD MWCO boundary and cannot support the conclusion that cathepsin B is absent from the fractions; the proteomics identification is the better evidence and should be the cited one."
+        },
+        {
+          "id": "methodology-9",
+          "text": "A cytosol-from-heat-killed-GAS-infected-cells control would isolate \"bacterial proteins present but no permeabilization\" from \"permeabilization occurred,\" strengthening the claim that the IL-1β response is specifically due to lysosomal leakage."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "Load-bearing."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "1. **The post-search analysis pipeline is not executable from the text.** The results (Fig. 3, Supp. Tables 1–3) depend on a chain — NSAF log2 transform, per-sample mean scaling, correlation-slope normalization (citing Aguilan et al., a guide, not code), missForest imputation, then floor imputation for \"proteins consistently absent in a sample type\" — for which no script is deposited and the two imputation thresholds are undefined: what counts as \"consistently absent\" (2/3 replicates? 3/3?), and does \"values below the least expressed protein\" mean within a sample or across the dataset? The ≥2-peptide/≥2-replicate filters would recover the presence/absence lists, but Fig. 3A and Supp. Fig. 2D cannot be reproduced exactly without guessing. ProLuCID and DTASelect2 versions are also not stated. Remedy: deposit the R script with `sessionInfo()` at the MassIVE record or a versioned repository."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "2. **The size-exclusion direction for the proteomics input is ambiguous, and it bears directly on the histone claim.** Methods state cytosolic fractions were passed through \"30 kDa MWCO columns… to separate the content by size (all other data)\" but never state which side of the membrane was analyzed. This matters specifically for the headline finding: monomeric histones are 10–23 kDa and would not appear in a >30 kDa retentate, yet they were identified and interpreted as nucleosome complexes. If the retentate was analyzed, say so explicitly; if the flow-through was, the nucleosome interpretation needs revision. This must be stated to reproduce the experiment."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "3. **The MassIVE accession is inconsistent and unverifiable from the text.** The data statement cites \"PXD069795\" but the URL embeds \"MSV000099561\"; the two may be the same dataset (MassIVE↔ProteomeXchange), but as written a replicator searching by accession will find a different identifier. I cannot resolve the link from the text, so I cannot confirm the deposit's contents or completeness — lower confidence on all results that depend on it."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "Sweep."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "- No R version or heatmaply version is given anywhere (only missForest is versioned), so even with the script, the PCA/heatmap environment is not pinned. — SOFT"
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "- The rSLO dose range for Fig. 2A is not specified in Methods (only \"high concentrations\"), so the negative control cannot be re-dosed. — SOFT"
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "- The ΔSLO and ΔM1 strains are \"previously described\" with no deposit or availability statement; a replicator must obtain them from the original lab — that is methods_completeness's call on traceability, flagged here in one line. — attributed"
+        },
+        {
+          "id": "reproducibility-9",
+          "text": "- The reduced IL-1β response to ΔM1 cytosol (Fig. 4A) could in principle reflect generally weaker permeabilization in ΔM1-infected cells rather than specific loss of M1; whether that confound is excluded is data_analysis's verdict, noted here only because the comparison's wording (\"primarily responsible\") outruns what I can assess from the text. — attributed"
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "No biosafety approval statement for live BSL-2 pathogen work. The central experiments infect THP-1 macrophages with live GAS M1T1 5448 (a clinical isolate from a necrotizing fasciitis patient) and GBS COH1 — both Risk Group 2 agents requiring BSL-2 containment. The manuscript contains no statement of institutional biosafety approval or the containment level used. Per the standard that silence is not compliance, this is a HARD gap: the authors should add a line naming their institutional biosafety committee approval and confirming BSL-2 practices. This is a one-line fix but is a required statement for NIH-funded pathogen work and for most journals publishing it."
+        },
+        {
+          "id": "ethics-2",
+          "text": "Pooled human serum: vendor named, exemption not stated. The manuscript uses \"pooled normal human serum (Thermo Fisher Scientific)\" for opsonization. Naming the commercial vendor is the right way to establish that the material is a commercial product, but the manuscript does not explicitly state that the product is IRB-exempt or that the vendor obtained appropriate donor consent. A one-line statement would close this."
+        }
+      ],
+      "questions": [
+        "Please provide the institutional biosafety committee approval and confirm BSL-2 containment for the live GAS and GBS experiments.",
+        "Please confirm that the pooled human serum from Thermo Fisher Scientific is a commercial product exempt from IRB review, or provide the vendor's documentation of donor consent."
+      ]
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "HARD — O'Neill et al. 2016 (ref 17) is cited in support of a claim it directly contradicts. The manuscript states: \"Following lysosomal permeabilization, GAS remains in lysosomes, where it neither replicates nor escapes into the cytosol, enabling persistence in a cell that normally functions to kill them (7,12,16,17).\" O'Neill et al. 2016 (mBio, \"Cytosolic Replication of Group A Streptococcus in Human Macrophages\") presents evidence that GAS *does* escape the phagosome and replicate in the cytosol of human macrophages. That paper's central claim and the statement it is cited to support are opposites. This is a HARD attribution error. It matters for the paper's novelty: if the reader believes GAS can reach the cytosol (as O'Neill argues), then finding GAS proteins in the cytosol is less surprising and the SLO-pore mechanism is not the only route. The authors must either correct the citation, or if they dispute O'Neill's findings, state that disagreement explicitly and provide evidence. Resolution needed: cite O'Neill as a competing view, not as support for the claim that GAS stays in lysosomes; or remove the reference from that sentence and engage with it elsewhere as prior work that conflicts with their model."
+        },
+        {
+          "id": "literature-2",
+          "text": "SOFT — The claim that histones are present in the cytosol \"in the absence of DNA\" is not well-situated against prior work on GAS-mediated nuclear damage. The manuscript notes that GAS induces NETs and that extracellular histones are inflammatory (refs 45–46, 49–50), but does not cite work showing that GAS or its toxins (SLO in particular) can directly damage the nuclear envelope, potentially releasing histones without DNA (e.g., via gasdermin D pores or SLO itself). The discussion speculates about this mechanism but does not anchor it in the relevant literature on SLO-mediated nuclear envelope permeabilization or GAS-induced pyroptosis pathways that involve nuclear rupture. This is a SOFT completeness issue — the finding is still interesting, but situating it against known mechanisms of nuclear damage in GAS infection would strengthen the claim of novelty."
+        }
+      ],
+      "questions": [
+        "None beyond the resolutions specified above — the HARD issue (O'Neill citation) and the two SOFT verification requests (refs 23, 7) cover what needs fixing."
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The DSLO-elicits-IL-1β claim contradicts prior published work and the reconciliation is thin. The manuscript states this \"in contrast to previous findings\" (Harder et al. 2009, J Immunol; Richter et al. 2021, Immunol Cell Biol), which both concluded SLO is required for NLRP3 activation. The authors attribute DSLO activity to SpeB and CD63/LAMP-3-mediated permeabilization, but they do not explain why prior groups saw no DSLO response — a head-to-head account of the discrepancy (assay differences, strain, MOI, the 30-kD cutoff, or the CD63 pathway being newly described) is needed. As it stands, the \"regardless of SLO expression\" framing rests on a result that the nearest competing work contradicts, and the differentiation is asserted rather than argued. This is a SOFT issue (the work is named and a mechanism offered) but it is the one place where the novelty claim could be preempted or artifact-driven, and it deserves a sharper treatment."
+        },
+        {
+          "id": "novelty-2",
+          "text": "The \"smaller pores in DSLO-infected cells\" explanation for M1's absence is inferred, not demonstrated. The claim that CD63/LAMP-3-mediated permeabilization produces pores too small for M1 but large enough for SpeB is used to explain the WT/DSLO difference, yet no pore-size measurement is offered for the DSLO pathway (the >40-kD dextran data cited are from the SLO/WT context). If the DSLO cytosol simply lacks M1 for another reason (e.g., lower bacterial load or different M1 expression), the mechanistic framing overreaches. This is a magnitude/positioning question rather than a preemption."
+        }
+      ],
+      "questions": [
+        "Can the authors state the residual IL-1β response in ΔM1-infected cytosol as a fraction of the WT response, and does it reach baseline?",
+        "What explains the discrepancy with Harder 2009 and Richter 2021, who found no NLRP3 activation without SLO — assay, strain, or the CD63/LAMP-3 pathway being newly characterized?",
+        "Is there direct evidence (pore-size or dextran-leakage data) for the DSLO/CD63 permeabilization being smaller than SLO pores, or is that inferred from the M1/SpeB size difference alone?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "Load-bearing claim 1 — M1 protein released into the cytosol drives the IL-1β response. The evidence (M1 detected in WT but not ΔSLO cytosol; ΔM1 cytosol elicits significantly less IL-1β than WT cytosol) supports the claim in the body. However, the abstract states that M1 \"corresponded with the IL-1β response,\" which is over-strong: Fig. 2B shows WT and ΔSLO infections elicit IL-1β responses that are *not significantly different*, and ΔSLO cytosol (which lacks M1) also elicits a strong response (Fig. 2C). M1 therefore does not correspond with the IL-1β response in general — only with the specific WT-vs-ΔM1 cytosol difference. Similarly, the abstract's \"indicating SLO-mediated release of M1 protein\" is stronger than the body's own \"likely due to the different-sized pores\" (line ~365). The alternative — that ΔSLO bacteria express less M1 or that the smaller CD63/LAMP-3 pores retain M1 for a different reason — is not excluded. Requalify the abstract: \"consistent with SLO-mediated release\" and \"accounts for the majority of the response to WT-infected cytosol,\" not a general correspondence."
+        },
+        {
+          "id": "rigor-2",
+          "text": "Load-bearing claim 2 — histones are released into the cytosol during GAS infection. The Western blot (Fig. 5A) and proteomics support that histones are present in the >30 kD cytosolic fraction of infected but not uninfected cells. But the claim that they are \"released into the cytosol\" (abstract) carries a mechanistic implication the data do not exclude. GAS causes SLO-mediated macrophage apoptosis (ref 26); in a dead or dying cell, the nuclear membrane is compromised, and histones could leak into the digitonin-released \"cytosol\" fraction. The absence of Lamin A/C argues against wholesale nuclear contamination but does not distinguish active release from intact nuclei against release from cells that died during the 1-hour infection — a dead cell's nucleus could release abundant histones while other nuclear proteins remain below detection. The body's hedging (\"hypothesize,\" \"mechanism... remain to be determined\") is appropriate; the abstract's \"released into the cytosol during GAS infection\" is not. Either requalify to \"histones are present in the cytosol\" or add a cell-viability/cell-death control (e.g., LDH or propidium iodide staining at the 1-hour time point) to show the histones come from live cells."
+        },
+        {
+          "id": "rigor-3",
+          "text": "Fig. 4B: the CA-074 negative result has no positive control; without evidence that CA-074 actually inhibits cathepsin B in this system, the conclusion \"cathepsin B does not contribute\" is uninterpretable — show the inhibitor blocks a known cathepsin B-dependent readout, or drop the claim."
+        },
+        {
+          "id": "rigor-4",
+          "text": "Abstract says \"all histone proteins\"; the body says \"almost all\" (line ~354) — align the wording."
+        },
+        {
+          "id": "rigor-5",
+          "text": "The IL-1β assay applies donor-cell cytosol to recipient cells; if WT-infected donor cells contain more pro-IL-1β (primed by infection) than uninfected donors, the apparent response could be partly donor-derived pro-IL-1β processed in the recipient — this is a design confound for the data_analysis reviewer to weigh."
+        },
+        {
+          "id": "rigor-6",
+          "text": "\"Strong\" IL-1β response (line ~310): the WT-cytosol response is roughly 2–4× the uninfected control (Figs. 1C, 2C) — \"strong\" overstates a modest effect size."
+        },
+        {
+          "id": "rigor-7",
+          "text": "The exosome interpretation (\"GAS infection significantly alters exosome/extracellular vesicles,\" line ~360) is speculative; exosome annotations are broad and overlap with cytosolic proteins — requalify."
+        },
+        {
+          "id": "rigor-8",
+          "text": "Cathepsin B is \"not detectable by Western blot\" (Supp. Fig. 3) yet identified by proteomics; the explanation (\"close to the molecular weight cut-off\") is questionable since mature cathepsin B is ~30 kD, at the cutoff — clarify the discrepancy."
+        }
+      ],
+      "questions": [
+        "What is the cell viability at the 1-hour infection time point, and does the cytosolic histone signal track with the fraction of dead cells?",
+        "Is there a positive control for CA-074 activity in this system (e.g., inhibition of a known cathepsin B-dependent IL-1β stimulus)?",
+        "Does the ΔM1 strain express WT levels of SLO and other secreted virulence factors, so the reduced IL-1β response is attributable to M1 rather than a pleiotropic effect of the mutation?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "IL-1β carry-over confound in the cytosol-transfer experiments (Figs. 1C, 2C, 4A, 4B): the cytosol is isolated from PMA-primed THP-1 cells, which express pro-IL-1β (~31 kD); the 30 kD MWCO concentration step retains pro-IL-1β in the transferred fraction; the ELISA measures total IL-1β in the supernatant and cannot distinguish newly synthesized IL-1β from the naïve cells from pro-IL-1β carried over in the cytosol and cleaved in vitro by proteases (cathepsin B, SpeB) present in the same fraction; the 'inflammasome-stimulating activity' could therefore be an in vitro cleavage artifact rather than activation of the naïve cells; the difference between WT and UI cytosol could reflect the amount of cleaving protease in the fraction, not inflammasome activation; a control measuring IL-1β directly in the cytosol input, or blocking new protein synthesis in the naïve cells (e.g., cycloheximide), would settle it."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "M1 attribution confound (Fig. 4A): the reduced IL-1β response to ΔM1 cytosol is attributed to the absence of M1, but ΔM1 bacteria may permeabilize phagosomes less or be phagocytosed differently, so ΔM1 cytosol could contain less of all leaked agonists, not just M1; normalizing to equal total protein (20 µg) does not control for composition — if ΔM1-infected cells leak less total protein, the same 20 µg contains proportionally more host cytosolic protein and less leaked bacterial/lysosomal protein; the authors should show comparable levels of another leaked protein (e.g., SLO, GAPDH) in WT vs ΔM1 cytosol, or add back recombinant M1 to ΔM1 cytosol to restore the response."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "CA-074 negative result lacks a positive control (Fig. 4B): 'No significant reduction' with n=3 does not establish that cathepsin B is uninvolved, particularly since cathepsin B is below detection in the >30 kD fraction (Supp. Fig. 3); without a demonstration that CA-074 actually inhibited cathepsin B in this system (activity assay, or a positive control where cathepsin B is known to drive the response), the negative result is uninterpretable — it is equally consistent with the inhibitor not working."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "DNA 'no difference' is an underpowered null (Fig. 5C): the claim 'histones in the absence of DNA' rests on a non-significant result with n=3, at values near the Qubit detection floor, and GAS DNase could degrade released DNA; the claim should be 'no DNA detected above background,' not 'no DNA present'; equivalence testing or reporting the assay's detection limit in this sample matrix would strengthen this."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "Fig. 2B: 'not significantly different' between WT and ΔSLO with n=3 is an underpowered null; the authors' own observation that ΔSLO 'always' trended lower supports this — report effect sizes and CIs rather than relying on the non-significant p-value."
+        },
+        {
+          "id": "data_analysis-6",
+          "text": "Proteomics presence/absence calls (Fig. 3, Supp. Table 2): with label-free MS and 3–4 replicates, absence of a protein in one condition could be a detection artifact; the M1-only-in-WT call is a single presence/absence observation and should be verified by targeted MS or Western blot."
+        },
+        {
+          "id": "data_analysis-7",
+          "text": "Fig. 1C axis: the media-only control appears to produce far more IL-1β than any cytosol treatment — please clarify the axis values and confirm the WT cytosol 'increase' is not a suppression relative to untreated cells."
+        },
+        {
+          "id": "data_analysis-8",
+          "text": "Multiple testing: 1532 proteins tested; ShinyGO enrichment uses FDR (good), but the presence/absence Venn analysis is uncorrected — acceptable as descriptive, but this should be stated."
+        }
+      ],
+      "questions": [
+        "What is the IL-1β concentration in the cytosol fractions themselves (input), before addition to naïve cells?",
+        "Please clarify the Fig. 1C axis values — does the media-only control exceed the WT cytosol treatment, and if so, how is the 'increased IL-1β' claim reconciled with that baseline?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "7f1095064cfaa5cb68a281a5ac2e41031239c212df0a89de60814f84d8c99fae",
+  "manuscript_file_sha256": "7331a75b6c9568b5782031147ab9d3610e7f39562c725b7efa699d27d41bf055",
+  "prior_job_id": "",
+  "desk_rejected": false
+}

@@ -1,0 +1,19 @@
+# Clarity & Presentation Reviewer
+
+## Summary
+This is a clearly framed preliminary discovery study with honest limitations, and the detection-based logic is transparent throughout. However, several presentation defects genuinely block understanding: a direct color contradiction between the text and the Figure 1 legend, malformed table headers that make the evidence columns unparseable, an ambiguous group-composition sentence, and an abstract that introduces the anti-IL-6R antibody without context. The central claims are stated explicitly, but the 'dichotomous/qualitative' framing outruns what presence/absence detection at n=4–5 can support, and the vascular-protein evidence for BBB disruption is not distinguished from a collection artifact the paper's own hypothesis predicts.
+
+## Strengths
+- The detection criteria (≥2/4 vs ≤1/5) are stated explicitly and applied consistently, and the limitations section candidly acknowledges the power problem.
+- Data and code are deposited (MassIVE, GitHub), and the supplementary files are enumerated — the work is checkable.
+- The abstract honestly frames the study as 'preliminary discovery' rather than overclaiming.
+
+## Weaknesses
+- The BBB-disruption claim is not distinguished from a collection artifact. The central claim — that Dep-specific vascular proteins (MMP2, VE-cadherin, VCAM1, LAMB2, fibulins) evidence in vivo BBB breakdown — rests on CSF drawn by cisterna magna puncture with a pulled pipette, a method that can introduce blood. The paper detects hemoglobin and keratins in Dep samples and dismisses them as trace contamination, but the same reasoning applies to the very proteins anchoring the BBB claim: if Dep vasculature is fragile (as the paper argues), the puncture could differentially contaminate Dep CSF with endothelial and blood proteins. The paper's own hypothesis predicts this confound and does not exclude it. Reporting a blood-marker ratio (hemoglobin or albumin normalized per sample) or using a blood-sparing collection method (e.g., the Lourbopoulos 2025 method the paper itself cites) would separate in vivo BBB leak from collection artifact.
+- The 'dichotomous/qualitative' framing outruns the detection-based evidence. The abstract's 'clear molecular transition' and the title's 'Evidence for Blood-Brain Barrier Dysfunction' state the dependence transition as qualitatively distinct, but the evidence is presence/absence at 1% FDR in n=4–5. A protein 'not detected' in DIA-MS is below the detection limit, not absent; the data support 'detectably different at this threshold,' not 'qualitatively distinct mechanisms.' The limitations acknowledge this ('minimum estimates'), but the abstract and title state it more strongly than the evidence allows.
+- The 'preserved protective mechanisms' reading of Non-dep proteins rests on unexamined technical variation. The interpretation of CALB1, SUMO2/3, TAGL3, and immunoglobulin regions as maintained protective mechanisms depends on detection asymmetry that could reflect sample load. CSF volumes ranged 5–20 µL (a 4-fold range); the paper does not report total protein per sample or normalize detection for it. If Non-dep samples carried higher protein load, more low-abundance proteins would be detected regardless of biology. Reporting total protein per sample or quantifying (not merely detecting) these proteins would distinguish a biological signal from a technical one.
+
+## Questions
+- What is the sex composition of each group (Dep n=4, Non-dep n=5)? The methods sentence is ambiguous as written.
+- Which color corresponds to which group in Figure 1c — the text and legend disagree.
+- What was the total protein amount per CSF sample, and was detection normalized for it?

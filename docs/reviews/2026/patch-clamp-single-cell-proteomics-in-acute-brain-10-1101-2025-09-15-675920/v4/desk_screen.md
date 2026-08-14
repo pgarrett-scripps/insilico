@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+Thank you for submitting your manuscript to In Silico. After careful initial screening, we are proceeding to send the paper out for full review. The work describes a methodological framework for combining patch-clamp electrophysiology with single-cell proteomics in acute brain slices, supported by an exploratory dataset from rat medial prefrontal cortex. The manuscript is a research article presenting original methodological and empirical claims, all of which can be evaluated from the text and deposited data. It does not fall into any of the desk-reject categories: it is not a clinical trial or treatment/diagnostic guidance; its central evidence (mass spectrometry data, electrophysiology traces, analysis code) is deposited or described; and it is not an editorial, press release, or marketing material. The scope — original methodological work in neuroscience and proteomics — is appropriate for a venue that publishes across disciplines. We therefore find no threshold reason to reject without review. The reviewers' panel will now evaluate the claims, methods, data availability, and presentation in detail.

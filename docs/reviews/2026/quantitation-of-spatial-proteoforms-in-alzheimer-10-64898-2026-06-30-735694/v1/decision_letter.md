@@ -1,0 +1,28 @@
+# Decision Letter
+
+**Decision:** major
+
+## Summary of Evaluation
+This is a well-motivated spatial proteomics study whose core descriptive finding — that most AD-associated proteomic changes are fraction-specific — is robust enough to survive statistical tightening and represents a genuine advance. The panel identified multiple fixable defects: the 78% fraction-specificity statistic is computed from uncorrected p<0.05 thresholds; the QUAD genotype comparisons treat proteins as independent observations from 4 animals per group; the six-protein 'initiating features' overlap is not tested against its null expectation; raw MS data, normalization details, and analysis parameters are absent; ethics and funding statements are missing; and several presentation errors (swapped figure caption, contradictory legend, numeric inconsistencies) block a reader from verifying load-bearing numbers. The advocate's case that the descriptive spatial finding and the VPS35 redistribution result survive these fixes is convincing. However, the number and severity of the gaps — multiple HARD items in reproducibility, statistics, methodology, and compliance — mean the paper is not publishable in its current form. The required revisions are specific, actionable, and achievable without new experiments. I accept the advocate's recommended revision path and the skeptic's identification of the statistical and causal-overclaim issues. The decision is major revision: the authors must address all numbered revision requirements before resubmission.
+
+## Required Revisions
+1. 1. Apply a named FDR correction (e.g., Benjamini–Hochberg q<0.05) to the human ANOVA and recompute the 78% fraction-specificity statistic, reporting both the corrected and uncorrected values. Report how many of the 2,405 'significant changes' survive correction.
+2. 2. Fit a mixed-effects model with animal as a random effect, or compute a per-animal summary (e.g., median log-ratio across proteins) and test with n=4 per group, for the QUAD genotype comparisons (Figs 8E–F). Report whether direction and significance of the genotype differences survive.
+3. 3. Report the denominator N (proteins quantified in both human and mouse datasets at 2 months), compute the expected overlap under the null, and test the observed 6-protein overlap against it (e.g., hypergeometric or permutation test). Requalify 'initiating features of AD' to 'early-associated' or equivalent.
+4. 4. Deposit raw MS data (human and mouse) in a public repository (PRIDE or MassIVE) and provide the accession number in the manuscript. Deposit all 18 supplementary tables in the repository alongside the preprint.
+5. 5. State the normalization applied to TMT reporter ion intensities before ANOVA and before Day7/Day0 ratio calculation (e.g., total-intensity scaling, reference-channel scaling, median centering).
+6. 6. State the WGCNA parameters: soft-threshold power, minimum module size, merge cut height, and MetaNetwork version.
+7. 7. State the MS precursor and fragment mass tolerances used in the ProteomeDiscoverer search.
+8. 8. State how human and mouse proteins were matched for the cross-dataset overlap (gene symbol? orthology? accession?) and the exact inclusion thresholds (p < 0.05 in both? fold-change cutoffs? directionality criterion).
+9. 9. Provide an IRB/ethics approval statement for the human hippocampal tissue, including the approving body and the determination (approval or exemption). Provide a statement on consent or de-identification.
+10. 10. Provide the IACUC protocol number for the mouse experiments.
+11. 11. Provide a funding statement and a competing-interests declaration (or explicitly declare that none exist).
+12. 12. Provide a data availability statement that includes the repository accession (from #4) and confirms that all supplementary tables are deposited.
+13. 13. Fix the Figure 4 caption to match the text: panel C shows GO enrichment, panel D shows fraction-frequency data. The volcano-plot legend must be corrected ('Red < 0.05, black ≥ 0.05').
+14. 14. Fix the numeric inconsistency in the Results: reconcile 238 + 1,323 with the stated total of 1,436. Fix the 37/7 protein count inconsistency. Fix the duplicated '4 AD Day7 measurements' in the Methods.
+15. 15. Define what 'pre-pathological' means operationally for the 2-month mice, given that Abeta42 is detectable at that age. If it cannot be operationally defined, remove the term and adjust the associated claims.
+16. 16. Requalify the abstract's claim of 'protein degradation is altered by Aβ pathology' to acknowledge the relocalization confound explicitly stated in the Discussion. The abstract should carry the same caveat the Discussion carries.
+17. 17. Requalify the abstract's claim that 'subcellular localization is a primary determinant of disease vulnerability' — this conflates a descriptive observation (changes are fraction-specific) with a mechanistic one. Replace 'demonstrating that' with 'consistent with' or add language that excludes the aggregation alternative.
+18. 18. Cite Yarbro et al. 2025 (Nat Commun, PMID 39934151), which directly overlaps the QUAD/human–mouse design space, and state how the present fraction-resolved results differ. Either cite a source for the 'non-canonical CCT chaperonin structures' claim or drop the unsupported phrase.
+19. 19. Provide the IACUC protocol number for the mouse experiments.
+20. 20. For the VPS35 'mislocalization' claim: add a sentence acknowledging that the current data cannot distinguish redistribution from aggregation/insolubility, consistent with how the Discussion treats other P3/S2 discord proteins. Alternatively, add an orthogonal readout (e.g., solubility assay).

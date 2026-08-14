@@ -1,0 +1,507 @@
+{
+  "generated_at": "2026-08-14T18:11:05+00:00",
+  "pipeline": {
+    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "version": "0.3.0"
+  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 66565,
+    "section_source": "document",
+    "text_sha256": "254cc80e0588b71bdd66530be22a8d37288bb7b2123642729cad6575be1b3305",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 31,
+        "preamble_share": 0.0064,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 66565,
+        "words": 8602,
+        "sentences": 489,
+        "blocks": 199,
+        "display_math": 0,
+        "table_rows": 37,
+        "reference_words": 1640,
+        "references_separable": true,
+        "main_text_words": 6962,
+        "reference_entries": 69
+      },
+      "density": {
+        "sentence_len_mean": 20.68,
+        "sentence_len_median": 20.0,
+        "sentence_len_p90": 37.0,
+        "long_sentence_share": 0.0673,
+        "numbers_per_1k": 92.54,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 9.07,
+        "boosters_per_1k": 2.09,
+        "mattr": 0.5326,
+        "passive_per_sentence_approx": 0.2822,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 59,
+          "sentences": 1,
+          "sentence_len_mean": 59.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 261,
+          "sentences": 11,
+          "sentence_len_mean": 23.73,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 7.66,
+          "boosters_per_1k": 7.66
+        },
+        "introduction": {
+          "words": 406,
+          "sentences": 16,
+          "sentence_len_mean": 25.38,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 2.46,
+          "boosters_per_1k": 7.39
+        },
+        "results": {
+          "words": 3262,
+          "sentences": 128,
+          "sentence_len_mean": 25.48,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 16.86,
+          "boosters_per_1k": 1.84
+        },
+        "limitations": {
+          "words": 728,
+          "sentences": 25,
+          "sentence_len_mean": 29.12,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 15.11,
+          "boosters_per_1k": 4.12
+        },
+        "conclusion": {
+          "words": 363,
+          "sentences": 12,
+          "sentence_len_mean": 30.25,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 19.28,
+          "boosters_per_1k": 0.0
+        },
+        "methods": {
+          "words": 1701,
+          "sentences": 68,
+          "sentence_len_mean": 25.01,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 1.18,
+          "boosters_per_1k": 1.18
+        },
+        "acknowledgements": {
+          "words": 172,
+          "sentences": 9,
+          "sentence_len_mean": 19.11,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "52787bcafca395c3b3783ff136aa49d253d170f63245f510d4449b6778369c75"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 1.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    }
+  ],
+  "mean_score": 3.0,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.06645992652,
+  "cost_by_node": {
+    "audit_citation_integrity": 0.006154,
+    "audit_methods_completeness": 0.002501,
+    "debate_advocate": 0.001948,
+    "debate_skeptic": 0.00206,
+    "desk_screen": 0.00139,
+    "editor": 0.001472,
+    "journal_recommender": 0.001931,
+    "reviewer_clarity": 0.003148,
+    "reviewer_data_analysis": 0.004783,
+    "reviewer_ethics": 0.004999,
+    "reviewer_literature": 0.012928,
+    "reviewer_methodology": 0.004307,
+    "reviewer_novelty": 0.006576,
+    "reviewer_reproducibility": 0.005923,
+    "reviewer_rigor": 0.006339
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Muneer 2012 MMP VEGFR-2 alcohol cerebral vascular dysfunction neuroinflammation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Pimentel 2020 drugs of abuse blood-brain barrier",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "L\u00e9k\u00f3 2023 neuroinflammation alcohol use disorder vicious cycle",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Muneer Alikunju Szlachetka Haorah mechanisms cerebral vascular dysfunction neuroinflammation MMP degradation VEGFR-2 alcohol ingestion",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Pimentel Sivalingam Doke Samikkannu effects drugs abuse blood-brain barrier brief overview",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Leko Ray Leggio vicious cycle neuroinflammation alcohol use disorder new medications",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "alcohol MMP VEGFR-2 cerebral vascular dysfunction neuroinflammation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "drugs of abuse blood-brain barrier effects",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Rempe Hartz Bauer matrix metalloproteinases brain blood-brain barrier versatile breakers makers",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Carrino alcohol-induced blood-brain barrier impairment in vitro study",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Prystupa activity MMP-2 MMP-8 MMP-9 serum marker progression alcoholic liver disease",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "The mechanisms of cerebral vascular dysfunction and neuroinflammation by MMP-mediated degradation of VEGFR-2 in alcohol ingestion",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=The+mechanisms+of+cerebral+vascular+dysfunction+and+neuroinflammation+by+MMP-mediated+degradation+of+VEGFR-2+in+alcohol+ingestion&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Effects of Drugs of Abuse on the Blood-Brain Barrier: A Brief Overview",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Effects+of+Drugs+of+Abuse+on+the+Blood-Brain+Barrier%3A+A+Brief+Overview&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "The vicious cycle between (neuro)inflammation and alcohol use disorder",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=The+vicious+cycle+between+%28neuro%29inflammation+and+alcohol+use+disorder&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "MMP-mediated degradation of VEGFR-2 alcohol ingestion cerebral vascular dysfunction",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=MMP-mediated+degradation+of+VEGFR-2+alcohol+ingestion+cerebral+vascular+dysfunction&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "drugs of abuse blood-brain barrier overview",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=drugs+of+abuse+blood-brain+barrier+overview&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Muneer 2012 Arterioscler Thromb Vasc Biol alcohol MMP VEGFR-2",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Prystupa 2015 MMP-2 MMP-8 MMP-9 alcoholic liver disease Lublin",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lourbopoulos improved method sampling quantitative protein analytics cerebrospinal fluid individual mice",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Demichev DIA-NN neural networks interference correction deep proteome coverage high throughput",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Kuleshov Enrichr comprehensive gene set enrichment analysis web server 2016 update",
+        "hits": 1
+      }
+    ],
+    "reviewer_ethics": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned only 320 characters"
+      }
+    ],
+    "reviewer_literature": [
+      {
+        "tool": "find_related_work",
+        "query": "CSF proteomics alcohol dependence mice blood-brain barrier neuroinflammation",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "chronic intermittent ethanol two-bottle choice mouse model alcohol dependence CSF proteomics",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Prystupa MMP-2 MMP-8 MMP-9 serum alcoholic liver disease progression cirrhosis",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Carrino alcohol-induced blood-brain barrier impairment in vitro RBE4 GRP78 BIP",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Gaither chronic alcohol intake drug-metabolizing enzymes transporters human liver GRP78 BIP 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lourbopoulos improved method CSF sampling quantitative proteomics individual mice 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lopez Becker operant ethanol self-administration ethanol dependent mice 2014",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "CSF proteomics alcohol use disorder human biomarkers neuroinflammation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "MMP2 blood-brain barrier alcohol dependence ethanol matrix metalloproteinase",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Haorah MMP blood-brain barrier alcohol VEGFR-2 2012",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Adams meta-analysis neuroinflammation alcohol use disorder neuroimaging CSF postmortem 2023",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Erickson cortical astrocytes regulate ethanol consumption intoxication mice 2021",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Hashimoto alcohol dependence astrocyte immune activation nucleus accumbens 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Prystupa MMP-2 MMP-8 MMP-9 serum alcoholic liver disease 2015",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "cerebrospinal fluid proteomics alcohol dependence ethanol mouse mass spectrometry",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "alcohol dependence blood-brain barrier tight junction VE-cadherin claudin ethanol",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "cerebrospinal fluid proteomics alcohol dependence ethanol mouse brain",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "alcohol use disorder cerebrospinal fluid proteome biomarker mass spectrometry",
+        "hits": 1
+      }
+    ],
+    "reviewer_novelty": [
+      {
+        "tool": "find_related_work",
+        "query": "CSF proteomics alcohol dependence mice blood-brain barrier neuroinflammation",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "search_preprints",
+        "query": "cerebrospinal fluid proteomics alcohol dependence mouse model",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "alcohol dependence CSF proteomics mouse GFAP MMP2 blood-brain barrier",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "chronic intermittent ethanol vapor two-bottle choice CSF proteomics",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "CSF proteome alcohol dependence mice chronic intermittent ethanol",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "cerebrospinal fluid alcohol dependence proteomics differentially expressed proteins",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "\"CSF\" \"alcohol\" proteomics mouse brain",
+        "hits": 8
+      },
+      {
+        "tool": "search_preprints",
+        "query": "alcohol dependence cerebrospinal fluid proteomics mouse",
+        "hits": 1
+      },
+      {
+        "tool": "search_preprints",
+        "query": "chronic intermittent ethanol CSF proteome blood-brain barrier mouse",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "alcohol use disorder cerebrospinal fluid proteomics biomarker",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=alcohol+use+disorder+cerebrospinal+fluid+proteomics+biomarker&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "search_preprints",
+        "query": "alcohol dependence CSF mass spectrometry neuroinflammation",
+        "hits": 2
+      },
+      {
+        "tool": "find_related_work",
+        "query": "MMP2 GFAP cerebrospinal fluid alcohol dependent mice blood-brain barrier",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=MMP2+GFAP+cerebrospinal+fluid+alcohol+dependent+mice+blood-brain+barrier&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "search_preprints",
+        "query": "alcohol dependence blood-brain barrier dysfunction CSF proteome",
+        "hits": 2
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2025.11.10.687295v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2025.11.10.687295v1.full.pdf",
+    "identifier": "10.1101/2025.11.10.687295",
+    "doi": "10.1101/2025.11.10.687295",
+    "title": "The effects of Alcohol Dependence on the CSF Proteome in Mice: Evidence for Blood-Brain Barrier Dysfunction and Neuroinflammation",
+    "authors": [
+      "Turner, N. P.",
+      "Bajo, M.",
+      "Roberts, A. J.",
+      "Roberto, M. P.",
+      "Yates, J. R."
+    ],
+    "abstract": "Alcohol use disorder (AUD) represents a significant neurological health burden, yet the biological mechanisms underlying alcohol-induced brain pathology remain incompletely understood. Moreover, the molecular underpinnings of the transition from alcohol exposure to alcohol dependence are not well-characterized. We used mass spectrometry (MS)-based proteomics in a preliminary discovery study to compare cerebrospinal fluid (CSF) of alcohol-exposed Non-dependent (Non-dep) versus alcohol-dependent (Dep) mice that underwent the chronic intermittent ethanol (alcohol) - two-bottle choice (CIE-2BC) procedure and systemic anti-IL-6 Receptor antibody administration. CSF samples from individual mice were processed for proteomic analysis and digested with trypsin overnight. Peptides were analyzed via data-independent acquisition (DIA)-MS and data were processed in DIA-NN at 1% FDR. We identified 611 unique proteins across both groups, with 140 proteins differentially detected in CSF from Dep mice and 67 proteins specific to alcohol-exposed but Non-dep controls. The Dep-specific proteins revealed signatures of blood-brain barrier (BBB) disruption, neuroinflammation, cellular stress responses, and complement system activation. In contrast, Non-dep-specific proteins indicated preserved protective mechanisms including complement regulation, anti-inflammatory signaling, and neuronal calcium homeostasis. Ethanol-dependent-specific findings include MMP2, BIP, and to a lesser extent VE-cadherin (CDH5) and VCAM1, indicative of the beginnings of endothelial damage and BBB disruption, alongside established neuroinflammation markers GFAP, CHI3L1, and CX3CL1. This work provides novel preliminary protein-level evidence that alcohol exposure and alcohol dependence are dichotomous; despite the small sample size and limited power for moderate effect sizes, there appears to be a clear molecular transition from maintained protective mechanisms to vascular damage, BBB breakdown, and sustained neuroinflammation.",
+    "published": "2025-11-12",
+    "version": "1",
+    "pdf_sha256": "52787bcafca395c3b3783ff136aa49d253d170f63245f510d4449b6778369c75",
+    "pdf_bytes": 809114
+  }
+}
