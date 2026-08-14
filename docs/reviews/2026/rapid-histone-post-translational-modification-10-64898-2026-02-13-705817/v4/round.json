@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260814-113238-using-alternative-proteases-and-tandem-mass-tags",
+  "manuscript_title": "Using Alternative Proteases and Tandem Mass Tags",
+  "manuscript_cache_key": "20a677baa878a4ed460e4f38a4d78b2cd5a5c5fbd1e8928a37397390e00c6542",
+  "decision": "major",
+  "weighted_score": 3.2581,
+  "required_revisions": [],
+  "minor_suggestions": [],
+  "reviewer_reports": [
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "**Load-bearing: The claim that TMT rescues ionization of acidic acylations via charge compensation from its tertiary amine is a mechanistic assertion without direct evidence.**\n   The text states: \"TMT's tertiary amine provides charge compensation that rescues the ionization of negatively charged acylations revealing 58 succinylation and 31 glutarylation sites.\" The evidence offered is that more succinylation/glutarylation sites are identified with TMT than with propionylation. This is a correlational observation; it does not distinguish among several plausible explanations: higher labeling efficiency (>98% vs ~68%), different chromatographic retention, reduced chemical side-reactions, or the proposed charge compensation. The authors do not compare MS1 intensities of the same succinylated peptide under TMT versus propionylation, nor do they include a label that lacks a tertiary amine as a control. The phrase \"charge compensation that rescues the ionization\" asserts a mechanism the data do not isolate. At minimum, the language should be softened to \"is associated with improved detection\" or \"consistent with charge compensation.\" I recommend adding a direct comparison of ion signals for the same peptide in both labeling conditions."
+        },
+        {
+          "id": "rigor-2",
+          "text": "**Load-bearing: The abstract's quantitative claim about RIPUP conflates results from Arg-C Ultra alone with the full dual-protease workflow.**\n   The abstract states: \"In HEK293T cells treated with the pan-sirtuin inhibitor nicotinamide, RIPUP quantified 112 statistically significant peptidoforms (adj p < 0.05), predominantly increasing with NAM dose (88 up, 24 down).\" RIPUP is defined as a dual-protease workflow combining Arg-C Ultra and r-Chymotrypsin. However, the 112 figure comes exclusively from the Arg-C Ultra digest; r-Chymotrypsin yielded only 16 significant modified peptidoforms, and many peptidoforms were exclusive to treated groups and therefore untestable. The abstract misleadingly implies the full method achieved 112 significant hits. This should be corrected to \"Arg-C Ultra digestion within the RIPUP workflow quantified 112 significant peptidoforms\" or the authors should report combined totals if they performed a joint analysis (which they do not)."
+        },
+        {
+          "id": "rigor-3",
+          "text": "**The term \"dark epigenome\" to describe 58 succinylation and 31 glutarylation sites is hyperbolic and under-acknowledges prior literature.**\n   Succinylation and glutarylation have been reported on histones by multiple groups (Zhang et al. *Nat Chem Biol* 2011; Xie et al. *Mol Cell Proteomics* 2012; Weyh et al. *Nat Chem* 2024). The authors' own unlabeled Arg-C Ultra condition also detected succinylation (Figure 5A), showing these marks are not entirely opaque to other methods. The phrase \"largely undetected by propionylation-based methods\" is only tested against the authors' own propionylation workflow, not systematically benchmarked against all published propionylation-based studies. The claim should be qualified as \"under-detected in standard propionylation workflows as implemented here\" to avoid overstating novelty."
+        },
+        {
+          "id": "rigor-4",
+          "text": "**The quantitative analysis of NAM treatment has low power and an imputation strategy that may bias the set of testable peptidoforms.**\n   With n=3 per dose and DDA-LFQ (stochastic sampling), kNN imputation was restricted to dose groups where ≥2/3 replicates had values; groups with ≤1 measured value were left missing. This means peptidoforms appearing only at the highest NAM dose (potential true treatment effects) were excluded from testing, because they lacked a comparator. The authors do not discuss how many such peptidoforms were dropped or whether their inclusion could change the conclusions. The reported 112 significant peptidoforms should be interpreted as the lower bound of the response, and this limitation should be stated explicitly."
+        }
+      ],
+      "questions": [
+        "1. Can the authors provide a direct comparison of MS1 peak areas for the same succinylated peptide (e.g., H4 K31-succ) under TMT versus propionylation labeling to support the claim of enhanced ionization?",
+        "2. Of the 58 succinylation sites identified with TMT, how many were also present (even at lower abundance) in the unlabeled Arg-C Ultra data, and what was their rank order of intensity? This would help distinguish between charge compensation and simply more efficient labeling.",
+        "3. In the NAM experiment, how many peptidoforms were present in only one dose group and therefore excluded from testing, and what modifications did they carry?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "No competing-interests statement appears anywhere in the manuscript; the text contains no declaration of financial or non-financial interests for any author. This is a HARD gap because the paper's central contribution is a head-to-head evaluation of two commercial products (Promega Arg-C Ultra and r-Chymotrypsin) that concludes both outperform the conventional comparator, and the absence of a statement leaves the perceived-interest question unmanaged — the alternative to the authors' implicit position of no interests is a managed interest in favorable evaluation of these products, and nothing in the text distinguishes these because no statement exists at all. What would resolve it: a signed Competing Interests section for all authors, or the explicit sentence \"The authors declare no competing interests.\""
+        },
+        {
+          "id": "ethics-2",
+          "text": "The phrase \"kept in accordance with the ARRIVE guidelines\" is imprecise — ARRIVE is a reporting guideline, not a husbandry standard — and should be reworded so the housing standard is attributed to the NIH Guide, which is already cited."
+        },
+        {
+          "id": "ethics-3",
+          "text": "Human-subjects approval is not triggered (HEK293T is a commercial immortalized line), but a one-line source/authentication statement (vendor, STR or Mycoplasma status) would close a standard reproducibility gap; this belongs to the methods reviewer's remit."
+        },
+        {
+          "id": "ethics-4",
+          "text": "Dual-use and biosafety are not triggered: standard biochemical work on cultured cells and rodent tissue, no pathogens, toxins, or regulated genetic materials."
+        },
+        {
+          "id": "ethics-5",
+          "text": "Restricted-consent data are not in play: rat tissue comes from the authors' own IACUC-covered colony, with no biobank or secondary-use samples."
+        }
+      ],
+      "questions": [
+        "Please provide a Competing Interests statement for all authors (financial and non-financial), or explicitly declare none — this is the one required item missing from the manuscript.",
+        "What is the source and authentication status of the HEK293T cells (vendor/catalog number, STR verification date)?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 3.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The TMT \"ionization rescue\" claim is supported only by raw site counts, not by a tested rate."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "The \"112 statistically significant peptidoforms\" may rest on pseudoreplication."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The tested set is a non-random subset, and the largest treatment effect is excluded by it."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "Per-histone total normalization imposes a constant sum; \"24 down\" may be partly an artefact of \"88 up.\""
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The RIPUP workflow's novelty over Ryzhaya et al. (2025) is asserted but not demonstrated by direct comparison. Ryzhaya et al. (2025, *Anal. Chem.* 97(24):12486–12492) already showed that Arg-C Ultra with a single post-digestion derivatization (trimethylacetic anhydride, TMA) reduces histone sample preparation to ~3–4 hours. RIPUP (Arg-C Ultra ± r-Chymotrypsin, optionally TMT-labeled) is clearly a sibling approach rather than a parent. The manuscript acknowledges Ryzhaya et al. in a citation but provides no head-to-head comparison of RIPUP versus the TMA workflow on the same cell line, same instrument, same day. Without that, a referee cannot assess whether RIPUP's use of TMT over TMA or the addition of r-Chymotrypsin yields a quantitatively meaningful improvement in PTM coverage, or whether the differences are small and sample-dependent. This is a HARD issue for the novelty claim because the delta over the nearest neighbor is the entire remaining novelty of the workflow. The authors should either (a) provide a direct side-by-side experiment (RIPUP vs . Ryzhaya protocol on the same sample )or (b) sharply delimit what RIPUP adds that Ryzhaya's protocol lacks , and concede that the core rapid—Arg-C idea is not new ."
+        },
+        {
+          "id": "novelty-2",
+          "text": "The \"dark epigenome\" claim for succinylation and glutarylation is overstated. Histone lysine succinylation was identified in 2011 (Zhang et al. 2011, *Nat. Chem. Biol.* 7:58–63) and histone glutarylation in 2014 (Tan et al. 2014, *Cell Metab.* 19:605–617); both have been repeatedly detected by MS in multiple cell types since then . The manuscript's contribution is detecting *more* sites (58 succinylation, 31 glutarylation) and offering a mechanistic explanation for why propionylation misses them — which is genuinely valuable . But \"dark epigenome\" implies these marks were invisible , whereas they were merely underrepresented in propionylation —based workflows . This is a SOFT framing issue : the authors should replace \"dark epigenome\" with a quantitative claim (e.g ., \"58 succinylation sites not detected by propionylation in parallel analysis \") that does not erase the existing literature."
+        },
+        {
+          "id": "novelty-3",
+          "text": "The r-Chymotrypsin results are presented as complementary coverage, but no metric quantifies how many PTM sites are exclusive to r-Chymotrypsin versus accessible to Arg-C Ultra at a longer digest or with different missed-cleavage settings."
+        },
+        {
+          "id": "novelty-4",
+          "text": "The NAM quantitative experiment uses an unconventional normalization approach (histone-level scaling) rather than the widely used peptide-family-ratio method; the choice is defended, but not benchmarked against the standard approach on the same data, so the novelty of the quantitation pipeline is hard to assess."
+        },
+        {
+          "id": "novelty-5",
+          "text": "No comparison with the hybrid chemical labeling (PIC-TMT) of Maille et al. (2015, *Mol. Cell. Proteomics* 14:1148–1158) is offered, even though that earlier work also used TMT on histones and could have detected similar acylation enhancements without noting the mechanism."
+        },
+        {
+          "id": "novelty-6",
+          "text": "The claim that formylation is \"not a feature of our workflow\" (Discussion) is unsupported—no control experiment (e.g., labeling with isotopically labeled formaldehyde) is presented to exclude it as an artifact."
+        },
+        {
+          "id": "novelty-7",
+          "text": "The missed-cleavage motif analysis (SI Figures S6–S7) is interesting but the sample size is too small to draw generalizable conclusions about Arg-C Ultra / r-Chymotrypsin specificity rules."
+        },
+        {
+          "id": "novelty-8",
+          "text": "The per-sample reagent-cost table (SI Table S5) is useful but does not include the cost of the TMT-zero reagent needed for the non-multiplexed labeling the paper advocates, leaving the cost comparison incomplete."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "LOAD-BEARING: Figure 4A reports a propionylation efficiency of ~29–61% (by site count) and ~33–71% (by intensity), but the denominator that generates these percentages is not stated. The text says efficiency was calculated as 'labeled sites divided by the sum of labeled and free sites.' That seems to exclude biologically modified sites from the denominator. The problem: 'free sites' means unmodified lysines that were not derivatized, but in the same samples there are also biologically modified lysines (acetylation, methylation, succinylation, etc.) that are not substrates for propionylation because they are already occupied. If those biologically modified sites are excluded from the denominator, the efficiency number describes only the fraction of originally-free amines that got derivatized — which is the correct metric. But a reader cannot confirm this from the text, because the definition of 'free sites' is never given an operational criterion. The same ambiguity applies to the intensity-weighted calculation. Without knowing exactly which sites enter the denominator, two different labs using the same reagent could report very different efficiencies simply by counting differently. The authors should state unambiguously: are biologically modified lysines counted as 'not available for labeling' (excluded from the denominator) or as 'not labeled' (included)? And they should report the raw counts (labeled + free + biologically modified, per condition) alongside the percentages so the reader can see the actual numbers."
+        },
+        {
+          "id": "clarity-2",
+          "text": "HARD (methods readability): The Methods section describes two separate TMT experiments but does not give a reader the means to distinguish them operationally. One is the TMT-labeling comparison reported in Figures 3–5 (Arg-C Ultra + TMT and r-Chymotrypsin + TMT, with HEK293T histones). The other is implied by the NAM-treatment experiment (Figure 7), where the text says that unlabeled Arg-C Ultra was used. It is never stated explicitly that the NAM experiment used unlabeled digestion — the reader has to infer it from the absence of any TMT or propionylation step in the NAM workflow description. A Methods subsection should begin with a sentence saying 'For the NAM dose-response experiment, histones were digested with Arg-C Ultra and r-Chymotrypsin without chemical derivatization, and quantified by label-free DDA-LFQ.'"
+        },
+        {
+          "id": "clarity-3",
+          "text": "SOFT (Figure panel reference mismatch): Figure 5's caption begins 'Diversity and abundance of histone post-translational modifications detected across enzyme digestion and chemical labeling strategies.' The caption then labels panels (A–D). Panel B is described in text on page 16 as 'TMT-labeled peptides from Arg-C Ultra and r-Chymotrypsin digestion achieved comparable PTM numbers to conventional Trypsin + Prop methods (~120 PTMs) and enhanced identification of specific modification-types, including pronounced enrichment of negatively charged acylation marks such as succinylation and glutarylation (Figure 5B).' But the figure as described in the caption appears to show a stacked bar for all modification types across conditions in panel A and a second stacked bar for TMT vs Trypsin+Prop in panel B. The reader cannot tell whether panel B is a subset of the same data or an independently grouped analysis. The caption should state what is grouped in each panel and on what units the y-axis is plotted (count of sites? count of peptidoforms?)."
+        },
+        {
+          "id": "clarity-4",
+          "text": "HARD (quantitative claim without comparison state): Page 19 states 'RIPUP detected 231 unique PTM sites across both enzymes within 3 h, including all major PTM classes.' The claim that 231 unique PTM sites were detected is a number that needs an enumerator definition: does 'unique PTM site' mean a single residue-position–modification-type pair (e.g., H3K9ac counts once regardless of how many different peptides carry it) or one modification occurrence on one sequence? If the latter, the same PTM site on two different backbone lengths is counted twice. Neither the Methods nor the Results defines the unit, so a reader cannot tell what '231' counts."
+        },
+        {
+          "id": "clarity-5",
+          "text": "SOFT (orphaned Methods detail): The Methods describe an SDS-PAGE gel step (SI Methods, Histone Extraction) but nowhere in the Results or main-text Methods is it stated what the gel was used for — whether it was a QC check for extraction purity, a quantification step, or a preparative step. The gel images in SI Figure S9 are referenced, but their role in the workflow is not explained in the main text. This is not a serious flaw, but it leaves a reader to guess whether the gel was a quality control or a stage of sample preparation."
+        }
+      ],
+      "questions": [
+        "Figure 4A bars: are the propionylation efficiency values (by site count) averages of the four digestion replicates? If so, please report the individual replicate values alongside, because variability in a denominator that includes both occupied and free sites can produce the same ratio from very different absolute numbers and the reader cannot tell which scenario holds.",
+        "Figure 5 uses a persistent two-column panel layout (A–D) that the text references as 'Figure 5B', 'Figure 5C', etc. Panel D labels read 'C–D' in the caption's third sentence ('(C–D) Multiply modified peptidoforms...'). Is panel D the right half of the stacked-bar layout or a separate panel not referenced in text? A caption that labels its own subpanels unambiguously is needed.",
+        "Page 17 says 'Arg-C Ultra and Trypsin showed similar cleavage specificity on propionylated histones' — is this a claim about the two enzymes' intrinsic specificities (both cleave C-terminal to Arg only, so they should be identical by design) or about the observed cleavage patterns in this particular preparation? If the latter, the sentence is correct; if the former, it states the obvious about the proteases' design and should be reworded to avoid a tautology.",
+        "The Methods state that '0 mM NAM' is 'fresh complete media' without supplement. Was vehicle (e.g., a small amount of water or DMSO) added to the control to match the volume of NAM stock added to the treated dishes? If not, the control and treated conditions differ in total volume added to the dish, and any downstream effect (even trivial osmolarity or dilution) is not controlled for."
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "HARD — The charge-compensation mechanism is confounded with stepped collision energy. The paper's headline claim is that TMT's tertiary amine rescues ionization of succinylated/glutarylated peptides, revealing a \"dark epigenome.\" But TMT-labeled samples were fragmented with stepped NCE 30/40/50 while every non-TMT condition used fixed 30% (Methods, LC-MS/MS). Stepped NCE is itself known to improve fragmentation across diverse peptide classes — the authors cite Diedrich et al. 2013 for exactly this. The enhanced detection of acidic acylations and the enhanced b-ion series (Figure 3D) could therefore be entirely a collision-energy effect, with the tertiary amine playing no role. The design does not isolate the label from the fragmentation energy. To earn the mechanism: fragment TMT-labeled peptides at fixed 30% NCE and show succinylation/glutarylation detection is still enhanced, or fragment propionylated peptides at stepped NCE and show it does not reproduce the TMT effect. Without one of these, the \"dark epigenome\" claim stands only as an empirical observation with an unproven explanation."
+        },
+        {
+          "id": "methodology-2",
+          "text": "HARD — The NAM quantitative analysis is confounded by the cleavage redistribution the authors themselves report. The authors state that NAM induced dose-dependent missed-cleavage redistribution, with 259 peptidoforms detected exclusively in NAM-treated samples. Quantifying individual peptidoform intensities cannot distinguish a genuine increase in a modification from a shift in cleavage efficiency at that site: the same modified residue appearing in a longer, differently-cleaved peptide under NAM would register as an apparent decrease in one peptidoform and an increase in another, with no change in the underlying modification. Abandoning peptide-family ratios relocates this confound rather than removing it. The 112 significant peptidoforms (88 \"increasing\") need to be shown robust to this — for example, by restricting the analysis to peptidoforms with matched cleavage states across all dose groups, or by demonstrating the significant changes persist when intensities are summed across all backbone variants of the same modification site."
+        },
+        {
+          "id": "methodology-3",
+          "text": "SOFT — \"Exceeds Trypsin-based approaches\" is broader than the comparator tested. The Trypsin comparator is the Garcia et al. protocol with AMBIC buffer, which the authors acknowledge has suboptimal propionylation efficiency. A Trypsin protocol with optimized labeling (TEAB buffer, per Meert et al. or Searfoss et al.) might close the gap. The claim should be scoped to \"the Garcia et al. protocol as commonly implemented,\" or the optimized Trypsin comparator should be included."
+        },
+        {
+          "id": "methodology-4",
+          "text": "The b-ion enhancement claim (Figure 3D) rests on the same stepped-NCE confound as weakness 1, and the spectra cannot be inspected from the text, lowering confidence in the fragmentation-pattern claim."
+        },
+        {
+          "id": "methodology-5",
+          "text": "The 58 succinylation and 31 glutarylation sites are identified by unrestrictive search without synthetic validation; the \"dark epigenome\" prevalence claim should be hedged accordingly (the authors do acknowledge this in Limitations)."
+        },
+        {
+          "id": "methodology-6",
+          "text": "Propionylation was performed in AMBIC while TMT labeling in TEAB — buffer is confounded with label type in the labeling-efficiency comparison (Figure 4A), though the authors flag the AMBIC issue."
+        },
+        {
+          "id": "methodology-7",
+          "text": "Digestion conditions (time, temperature, enzyme:substrate ratio) differ across enzymes; defensible as a protocol comparison, but \"Arg-C Ultra is better\" should be read as \"this protocol configuration,\" not the enzyme in isolation."
+        },
+        {
+          "id": "methodology-8",
+          "text": "The IHP comparison in Figure 4B mixes search parameters (R-only for Trypsin vs FYLM for r-Chymotrypsin) — appropriate per enzyme, but the cross-condition percentages are not directly comparable."
+        }
+      ],
+      "questions": [
+        "Was any TMT-labeled sample run at fixed 30% NCE, or any propionylated sample at stepped NCE, that could be reported to isolate the collision-energy variable?",
+        "For the 112 significant NAM peptidoforms, what fraction are also detected with the same cleavage state in the untreated control, and do the significant changes persist when restricted to peptidoforms present in all three dose groups with identical missed-cleavage counts?"
+      ]
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The claim that TMT's tertiary amine \"provides charge compensation that rescues the ionization of negatively charged acylations\" is not uniquely supported by the data presented. The evidence is a comparison in which TMT labeling achieves ~98% efficiency (by intensity) while propionylation achieves only 33–71% efficiency under the same hands (Fig. 4A). The alternative explanation—that the *higher overall labeling efficiency* of TMT simply makes more peptides (including low-abundance succinylated ones) detectable, without any specific charge-compensation mechanism—has not been excluded."
+        },
+        {
+          "id": "literature-2",
+          "text": "The authors acknowledge the buffer incompatibility of the Garcia et al. protocol in a footnote (lines ~1050–1055), but they never present a condition where propionylation and TMT are matched for labeling efficiency and then compare acidic acylation yields."
+        },
+        {
+          "id": "literature-3",
+          "text": "Duplicate references inflate the reference list quietly: refs 1/7 (Sidoli 2016), 30/68 (Maile 2015), and 41/44 (Bao 2019) are each listed twice under different numbers."
+        },
+        {
+          "id": "literature-4",
+          "text": "The charge-compensation model would benefit from a supporting citation for the general principle that TMT's tertiary amine improves ionization of acidic peptides—the current citation (Thompson et al. 2003, ref 17) describes the TMT structure but not this property; the figure caption cites a Thermo manual but the text does not provide a verifiable reference for the claim."
+        },
+        {
+          "id": "literature-5",
+          "text": "The mobile-proton-model attribution to Steen & Mann 2004 (ref 27) is broad—that review covers peptide sequencing generally; the specific mechanistic framing used here (proton sequestration by tertiary amine shifting b-ion formation) is not established there."
+        },
+        {
+          "id": "literature-6",
+          "text": "Reference 36 (Jiang et al. 2026, *Biochem. J.*) is cited for \"histone modification cross-talk tools and molecular mechanisms\"—this paper is published in 2026; please confirm it appeared online by the submission date (or cite the preprint DOI if that is what was available)."
+        },
+        {
+          "id": "literature-7",
+          "text": "Reference 16 (Adoni et al. 2026, *J. Proteome Res.*) and reference 42 (Stransky et al. 2026, *Aging Cell*) are also 2026-dated; confirm they were published (or posted as preprints) at the time of submission, and if on a preprint server, disambiguate in the reference entry."
+        },
+        {
+          "id": "literature-8",
+          "text": "The term \"dark epigenome\" is used for succinylation/glutarylation that propionylation missed, but similar phrasing has been used for other under-detected PTM classes (e.g., oncohistones, ref 3; formylation, ref 61). No citation problem, but consider a brief disclaimer to avoid appearing to coin it de novo."
+        }
+      ],
+      "questions": [
+        "In the TMT-vs-propionylation comparison for succinylation/glutarylation detection, what are the numbers if propionylation is performed in TEAB (pH 8–8.5) rather than in AMBIC, matching the buffer used for TMT? This one experiment would distinguish the labeling-efficiency confound from the charge-compensation hypothesis."
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The TMT-rescues-acidic-acylation claim rests on a comparison that does not isolate the labeling chemistry. The evidence for the \"dark epigenome\" finding is the detection of 58 succinylation and 31 glutarylation sites in TMT-labeled samples versus few in propionylated ones (Figure 5B). But the comparison crosses enzyme conditions (Arg-C Ultra + TMT vs. Trypsin + Prop), and the manuscript never states whether the detailed mass offset list (SI Table S1) is identical across conditions. The alternative explanation — that the differential detection reflects a different search space or different peptide populations, not the TMT tertiary amine's charge compensation — is not excluded. What would settle it: a matched split-digest experiment (one Arg-C Ultra digest, half labeled with TMT, half with propionic anhydride, searched with identical parameters), reporting succinylation/glutarylation counts per condition. The mechanistic claim (charge compensation) is an inference from a confounded comparison and should be scaled to match."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "The \"Arg-C Ultra outperforms Trypsin\" headline comparison has an ambiguous basis. The manuscript acknowledges that the R-only Trypsin search overestimates labeling efficiency and that incomplete propionylation causes K cleavage (yielding ~2.2× more peptides in a KR search), yet the \"substantially higher peptide identifications\" claim in Figure 2C does not state which search underlies the comparison. If the R-only search is the basis, the comparison is biased against Trypsin; if the KR search, the peptide counts change materially. State explicitly which cleavage-specificity search produced the numbers in Figure 2C and the \"217 vs 179\" comparison."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "The analysis code is not versioned, and the search configuration is not fully recoverable. The custom R scripts are at a bare GitHub URL with no commit/tag or archived DOI — for load-bearing quantitative results (Figure 7's 112 significant peptidoforms), this is a HARD reproducibility gap. Separately, the FragPipe/HiP-Frag search is described as \"following the recommended guidelines for the HiP-Frag workflow, with some modifications\" — the modifications are never enumerated, so an independent group cannot reconstruct the exact search configuration. Provide a commit hash or archived DOI, and list the specific deviations from the published HiP-Frag workflow."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "No environment capture (lockfile, conda env, or container) or compute/hardware note for the FragPipe/R analysis — SOFT."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "No random-seed statement for kNN imputation (k=10), which is stochastic — SOFT."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "Scripts are not named per figure; the results-to-artifact mapping for Figures 2, 4, 5, and 7 is not explicit — HARD."
+        }
+      ],
+      "questions": []
+    }
+  ],
+  "manuscript_text_sha256": "ba8c2afc1c0840d55f92eb53b7cc5645d3958f1cce5132da2ce2436fe918d28a",
+  "manuscript_file_sha256": "15644e69acd8aaaea8c2bbab1e71021df776c6c9d9d280edba912bc2ac472623",
+  "prior_job_id": "",
+  "desk_rejected": false
+}
