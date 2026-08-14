@@ -117,8 +117,8 @@ wrong, say so.
 ## What gets published
 
 Everything the panel produced: eight specialist reports, the debate, the
-synthesis, the rebuttal, the decision letter, and a `provenance.json` recording
-the models, config, pipeline commit and cost.
+decision letter, and a `provenance.json` recording the models, config,
+pipeline commit and cost.
 
 Alongside it, `manuscript_stats.md`: counts over the text the panel actually
 read, with no model involved and no opinion in them. It is there so a reader

@@ -70,8 +70,8 @@ target_journal = "insilico"
 #    screen deliberately shares the reviewers' model and manuscript prefix, so
 #    its call warms the prompt cache that all 8 specialists then read on their
 #    parallel fan-out — which would otherwise race and largely miss. And a
-#    desk reject short-circuits the run before 18 further calls (8 reviewers,
-#    2 auditors, two debate rounds of 2, area chair, rebuttal, editor, scout).
+#    desk reject short-circuits the run before 14 further calls (8 reviewers,
+#    2 auditors, one debate round of 2, editor, scout).
 #
 #    "gate" enforces the verdict; "warm" runs it for the cache but ignores the
 #    verdict; "off" skips the call. The upstream prompt is explicitly
@@ -84,8 +84,8 @@ conversion_gate = "degraded"
 # ---------------------------------------------------------------------------
 #
 # Agents resolve a model through a named tag: reviewers -> "reviewer",
-# debate -> "debate", auditors -> "audit", and editor / meta-reviewer /
-# rebuttal / journal-scout -> "synthesis". The desk screen deliberately uses
+# debate -> "debate", auditors -> "audit", and editor / journal-scout ->
+# "synthesis". The desk screen deliberately uses
 # the *reviewer* tag rather than a tag of its own, so that the prompt cache it
 # warms is the one the panel then reads — caches are per-model. There is no
 # "screen" tag; a [models.screen] block here would be silently inert.
@@ -112,8 +112,8 @@ model = "claude-opus-5"
 # one paper: 74% of the output tokens billed produced no text in any file.
 #
 # It is now settable here and wins over the pipeline's call-site default (it
-# used to be the other way round, which made this key silently inert). Only
-# the editor is the only deliberative stage; the venue scout does not decide.
+# used to be the other way round, which made this key silently inert). The
+# editor is the only deliberative stage; the venue scout does not decide.
 
 # ---------------------------------------------------------------------------
 # Per-agent overrides

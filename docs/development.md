@@ -17,8 +17,7 @@ docs/                     # the record, written by the pipeline
     ├── provenance.json   # verdict, scores, models, cost, PDF fingerprint
     ├── round.json        # machine-readable record a later round rules on
     ├── summary.md  decision_letter.md  desk_screen.md
-    ├── meta_review.md  author_rebuttal.md  debate_transcript.md
-    ├── journal_recommendations.md
+    ├── debate_transcript.md  journal_recommendations.md
     ├── manuscript_stats.md   # deterministic counts over the text the panel read
     ├── review_*.md       # 8 specialist reports
     └── audit_*.md        # 2 audits, 3 in a revision round

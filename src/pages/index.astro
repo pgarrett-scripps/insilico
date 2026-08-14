@@ -14,9 +14,7 @@ const STAGES = [
   { stage: "Review", who: "Methodology · Data analysis · Novelty · Clarity · Literature · Rigor · Reproducibility · Ethics", out: "8 scored reports" },
   { stage: "Audit", who: "Citation integrity · Methods completeness", out: "2 factual checklists" },
   { stage: "Debate", who: "Advocate vs. Skeptic", out: "Full transcript" },
-  { stage: "Synthesis", who: "Area chair", out: "Draft recommendation" },
-  { stage: "Rebuttal", who: "Simulated author", out: "Concessions and disagreements" },
-  { stage: "Decision", who: "Editor-in-chief", out: "Recommendation + letter" },
+  { stage: "Decision", who: "Editor-in-chief, reading every report directly", out: "Recommendation + letter" },
 ];
 ---
 
@@ -27,7 +25,7 @@ const STAGES = [
       <p class="label hero__eyebrow">An open, AI-refereed overlay journal</p>
       <h1 class="hero__title">In&nbsp;Silico</h1>
       <p class="hero__lede">
-        We don't host papers. Point us at a preprint and a panel of seventeen
+        We don't host papers. Point us at a preprint and a panel of fifteen
         agents reviews it. We publish <em>the entire review</em> next to a link
         to your work.
       </p>
@@ -77,9 +75,8 @@ const STAGES = [
         </p>
         <p>
           Here every submission that clears the desk gets eight specialist
-          reports, a recorded debate, a synthesis, a simulated rebuttal and an
-          editor's verdict — public, versioned, and reproducible down to the
-          model that wrote each line.
+          reports, a recorded debate and an editor's verdict — public,
+          versioned, and reproducible down to the model that wrote each line.
         </p>
       </div>
     </section>
@@ -87,7 +84,7 @@ const STAGES = [
     <section class="pipeline">
       <div class="pipeline__head">
         <h2 class="h-section">What the panel does</h2>
-        <p class="label">17 agents · one round</p>
+        <p class="label">15 agents · one round</p>
       </div>
       <ol class="pipeline__list">
         {STAGES.map((s, i) => (

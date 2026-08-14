@@ -199,6 +199,25 @@ jobs:
             exit 1
           }
 
+      # A failed run's paid work survives it. The pipeline writes an atomic
+      # checkpoint per successful agent under runs/.checkpoints, keyed by
+      # manuscript content + semantic config, and resumes from them on a
+      # re-run — so `/review` after a mid-panel failure pays only for the
+      # agents that never finished, not the whole panel again. The runner
+      # opts in (see run_review.py); this step is what makes it matter on a
+      # runner whose workspace starts empty. Restoring a checkpoint that does
+      # not match — another paper, a new draft, changed models — is inert by
+      # construction, and `/review replace` restores but deliberately ignores
+      # them: the runner passes resume=False so a replacement samples fresh
+      # instead of replaying the review being replaced.
+      - name: Restore panel checkpoints
+        uses: actions/cache/restore@v4
+        with:
+          path: runs/.checkpoints
+          key: pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-${{ github.run_id }}
+          restore-keys: |
+            pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-
+
       - name: Run the panel
         id: run
         env:
@@ -263,6 +282,21 @@ jobs:
           set -e
           case "$rc" in 2|3|4) exit 0 ;; esac
           exit "$rc"
+
+      # Saved explicitly, and even when the job failed — a failed panel is
+      # exactly the run whose checkpoints are worth keeping. The cache
+      # action's built-in post-step skips saving on failure, hence the
+      # separate save. Caches are immutable, so each attempt saves under a
+      # fresh run-id key and the restore above picks the newest by prefix.
+      # The hashFiles guard skips the save when no agent checkpointed
+      # (a bad command, an unreadable PDF) rather than warning about an
+      # empty path.
+      - name: Save panel checkpoints
+        if: always() && hashFiles('runs/.checkpoints/**') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: runs/.checkpoints
+          key: pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-${{ github.run_id }}
 
       - name: Report a command nobody could act on
         if: steps.run.outputs.bad_command == 'true' && github.event_name == 'issue_comment'

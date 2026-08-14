@@ -999,7 +999,11 @@ def _run(args, workdir: Path) -> int:
         # atomically. The key includes manuscript content + semantic config,
         # so unrelated papers or model settings never share outputs.
         "checkpoint_dir": str(RUNS / ".checkpoints"),
-        "resume": True,
+        # `replace` exists to redo a review — after one was taken down, or
+        # because an editor wants a fresh look at the same draft. Resuming
+        # there would replay the recorded panel byte-for-byte and hand back
+        # the review being replaced, so a replacement always samples fresh.
+        "resume": not args.replace,
     }
     if args.provider:
         overrides["provider"] = args.provider

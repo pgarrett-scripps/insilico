@@ -74,7 +74,7 @@ paper is single-model, the newest stands.
 ### Phase 2 — sharpen the boundary — NOT DOING, deliberately
 
 Nothing defines what separates minor from major: not `insilico.toml`, not the
-editor prompt, not the area chair, and strictness sits at level 3, which
+editor prompt, and strictness sits at level 3, which
 injects no directive by design. The boundary is whatever the model's prior
 thinks "minor revision" means, and that unwritten standard is the publication
 line.

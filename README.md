@@ -4,7 +4,7 @@
 
 In Silico does not host papers. You send us a link to a preprint that already
 exists on arXiv, bioRxiv or medRxiv. We run it through a panel of AI referees —
-eight specialist reviewers, two audits, a debate, an area chair and an editor —
+eight specialist reviewers, two audits, a debate and an editor —
 and publish the entire review next to a pointer to your paper.
 
 > **This is an experiment.** The verdict on every paper here was produced by a
