@@ -71,7 +71,21 @@ free single-model rerun returning major — and taking the newest would have let
 a run the site itself warns about decide the paper. Where every review of a
 paper is single-model, the newest stands.
 
-### Phase 2 — sharpen the boundary — NOT DOING, deliberately
+### Phase 2 — sharpen the boundary — DONE, August 2026
+
+Two of the reversal triggers below fired on the Yates batch (V4 Flash,
+August 2026): acceptance collapsed to 0/10, and a letter contradicted its
+own verdict — `quantitation-of-spatial-proteoforms` ruled major while
+stating its revisions were "achievable without new experiments". The
+editor was counting items, not weighing them. The definition now lives in
+the editor prompt (PeerReviewAgents `editor_in_chief._SYS`): the verdict
+tracks what the revision *requires* — new experiments, new data, or an
+outcome-changing reanalysis is major; any number of text-and-files fixes
+is minor; a flaw revision cannot fix is reject. The corpus-reset had
+already removed the two-era cost that argued for waiting. The original
+record of the decision not to act, kept for the reasoning:
+
+### Phase 2 — sharpen the boundary — the earlier NOT-DOING record
 
 Nothing defines what separates minor from major: not `insilico.toml`, not the
 editor prompt, and strictness sits at level 3, which
