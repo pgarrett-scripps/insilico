@@ -95,26 +95,11 @@ same document.
 
 ## What a review costs
 
-Every review prices itself. `provenance.json` records a per-agent cost table
-and the total, so the bill is part of the published artifact rather than a
-number we quote.
-
-The current corpus was reviewed by `deepseek/deepseek-v4-flash-0731` — one
-model for every agent, and each page says so. A full run — desk screen, eight
-specialist reports, two audits, the advocate/skeptic debate, the editor's
-decision letter, and the live arXiv / Semantic Scholar / PubMed / bioRxiv
-lookups behind the Novelty and Literature reports — averages **about $0.08 a
-paper**, all-in.
-
-The configured alternative in `peerreview.toml` is a graded panel (~$3.40 a
-review): inexpensive models do the wide fan-out and stronger models write the
-verdict, with the split recorded per agent. Which kind of run produced a
-review is never something a reader has to guess — the single-model pages carry
-a notice that nothing better than the referees checked the referees.
-
-Reviews are judged against In Silico's own published criteria
-([`journals/insilico.toml`](journals/insilico.toml)), version-controlled next
-to the reviews it produced — not against a borrowed journal profile.
+About **$0.08 a paper** on the current setup (`deepseek/deepseek-v4-flash-0731`
+for every agent), including the live literature searches; the graded
+multi-model panel in `peerreview.toml` runs ~$3.40. Every review records its
+own bill in `provenance.json`, and reviews are judged against In Silico's own
+criteria ([`journals/insilico.toml`](journals/insilico.toml)).
 
 ## Documentation
 

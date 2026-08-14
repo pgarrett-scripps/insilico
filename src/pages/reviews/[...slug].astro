@@ -203,16 +203,10 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
             </table>
           </div>
           <p class="history__note">
-            Each review describes the revision of the manuscript named in its row,
-            and there is one review per revision. Reviewing a revision again —
-            because our pipeline changed, not because the authors did anything —
-            replaces that row rather than adding one; the replaced recommendation
-            and score are recorded in the review that replaced them, and the run
-            is marked <span class="dim">re-review</span> above. A review is
-            removed only by being replaced this way. Nothing removes the review
-            of a revision the authors have since superseded: those rows stand as
-            the record of what the panel said about a draft that is no longer
-            the current one.
+            One review per revision of the manuscript. A re-review under an
+            updated pipeline replaces its row (marked
+            <span class="dim">re-review</span> above); reviews of superseded
+            drafts stand as the record of what the panel said at the time.
           </p>
         </section>
 
