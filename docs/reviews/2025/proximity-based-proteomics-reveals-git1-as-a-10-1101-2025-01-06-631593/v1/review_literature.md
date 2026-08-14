@@ -1,0 +1,15 @@
+# Related-Work & Citations Reviewer
+
+## Summary
+The citation practice in this manuscript is sound — foundational prior work (Arveseth 2021, Happ 2022, Walker 2024 on Smo–PKA–Grk2; Branon 2018 on TurboID; Premont 1998 on GIT1–GRK2) is cited and the attributions appear accurate from what I could verify. No competing prior work on Git1 in Hedgehog signaling was omitted, and my searches did not surface any directly relevant study that Git1 has been reported in this context. The main reservation is reliance on a preprint (Steiner et al. 2024) for a claim about Grk2 phosphorylation mechanism, and a narrow framing of prior Smo interactome work.
+
+## Strengths
+- Fair attribution of lineage — The manuscript correctly signals that the Smo–PKA–Grk2 mechanism was established in the authors's own prior work (refs 16, 17, 19) rather than over-stating novelity from a clean slate.
+- Appropriate coverage of Git1 liteture — The premont 1998 origin of Git1 as a GRK-interacting protein, the centrosome localization (Cernohorska 2016), and the knockout mouse phenotypes (Badea 2021, Pang 2009) are all cited.
+
+## Weaknesses
+- Claim: "Grk2... phosphorylates the cytoplasmic tail of active Smo" (Introduction). This is cited to refs 18 (Steiner et al. 2024, bioRxiv preprint) and 19 (Walker et al. 2024, published PLoS Biology). Ref 19 provides published peer-reviewed support, so the claim is not orphaned. However, the Steiner preprint is cited as if equivalent to published work without explicit disambiguation. The authors should either note its preprint status in the citation or, if it has since been published, update the reference. (HARD if unpublished; SOFT if the journal permits preprint citations — In Silico allows them, but the reader deserves to know.)
+- Framing of prior Smo interactome work — The text states "Previous efforts to identify Smo interactors have employed co-IP based strategies [21]" without acknowledging that proximity-labeling approaches have been applied to ciliary Hedgehog proteomics before (Mick et al. 2015, ref 47; May et al. 2021, ref 48). Ref 48 (May et al., JCB 2021) is indeed a time-resolved ciliary proteomics study of the Hedgehog response using APEX2, which is methodologically the closest prior work. The manuscript eventually cites both, but the framing in the Introduction underplays their existence by contrasting only against Co-IP. The comparison should be explicit: the novelty is in using *Smo-tagged* TurboID (rather than a generic ciliary marker) and the time-resolved design — not proximity labeling per se. (SOFT — rephrase to avoid misrepresenting the prior art.)
+
+## Questions
+- Has the Steiner et al. 2024 bioRxiv preprint (ref 18) been published in a peer-reviewed journal since the current manuscript was posted, and if so, please update the citation?

@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260814-120045-proximity-based-proteomics-reveals-git1-as-a-regul",
+  "manuscript_title": "Proximity based proteomics reveals Git1 as a regulator of Smoothened signaling",
+  "manuscript_cache_key": "68e521b212966bafb6c17482eb9f00936a73a60fd08ee63a038fe77e95c67327",
+  "decision": "major",
+  "weighted_score": 2.8529,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "Provide an orthogonal readout for the Grk2-ciliary-translocation claim (Fig. 5C–E). The current evidence is a ~1.2-fold increase in lentivirally overexpressed Grk2-V5 at the limit of detection, with no stated threshold and no positive control showing the imaging system can resolve such a signal from noise. Add either (a) biochemical enrichment of Grk2 from cilia-enriched fractions, (b) a Grk2-V5 titration demonstrating the assay's dynamic range, or (c) an endogenous Grk2 ciliary measurement, and state the formal detection threshold (e.g., >2 SD above a no-primary/untransduced control). Without this, the claim is indistinguishable from 'ciliary Grk2 could not be measured under these conditions.'",
+      "source_reviewer": "methodology",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "Add the missing rescue control that isolates ciliary localization as the operative variable. The current rescue (Fig. 6G–H) compares Grk2-V5-DArl13b against a V5-DArl13b backbone. Add an arm expressing Grk2-V5 without the DArl13b ciliary tag (and ideally a non-ciliary membrane-anchored Grk2) at matched expression, and report whether it also restores Gli1 in Git1-null cells. This control is required before the 'primary site of Smo phosphorylation is the cilium' conclusion can stand as worded.",
+      "source_reviewer": "rigor",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "Resolve the GNP proliferation claim. Either add an Hh-specific readout or a rescue linking the reduced EdU incorporation to the Smo/Grk2 pathway in GNPs, or explicitly scope the claim to what the GNP data establish (Git1 knockdown reduces Gli1 and EdU incorporation) without asserting that the proliferation defect is Hh-mediated. Note that Smo phosphorylation was not measured in GNPs.",
+      "source_reviewer": "rigor",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Scale the abstract and Discussion claims to the systems in which each was tested. (a) Fix the abstract sentence 'Loss of Git1 impairs Smo phosphorylation by Grk2... leading to attenuated Hh signaling and reduced cell proliferation in granule neuron precursors' — the Smo-phosphorylation and Hh-signaling data are in NIH3T3 cells, while GNPs were tested only for Gli1 and EdU. (b) Replace 'Git1 is essential for Hh signaling' with 'important for / required for full activation' (Gli1 is reduced to 15–30% of control, not abolished). (c) Temper 'Git1 interacts with both Smo and Grk2 at the cilium base' — the Smo–Git1 proximity is shown only by TurboID biotinylation of overexpressed YFP-Git1 and the Git1–Grk2 interaction only by Co-IP of co-overexpressed proteins in 293T; neither demonstrates an endogenous ternary interaction at the cilium base. (d) Soften the claim that basal-body Grk2 'is less likely contributing' to Smo phosphorylation, which is asserted from absence-of-effect rather than a direct test.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Strengthen the statistical reporting. (a) Report an FDR/q-value or permutation-based threshold for the proteomic screen (the >1.5 TMT ratio and p<0.05 eBayes cutoff is arbitrary without a false-discovery assessment), and annotate the volcano plots with the multiple-testing correction used. (b) Report the ANOVA interaction terms for the two-way ANOVAs in Figs 4E/G, 5D–E, 6A/F, and state the number of pairwise comparisons and correction applied. (c) Address pseudoreplication: cell-level quantifications pooled across three experiments have an effective n of 3 experiments, not the cell count — analyze at the experiment level or use a mixed model. (d) For the cilium-length 'no difference' claim (Fig. S4E), add a power analysis or equivalence test (e.g., TOST), since a non-significant result in an unpowered sample does not support a claim of no effect. (e) State the qPCR reference gene(s), their stability validation, and the quantification method (delta-Ct vs standard curve); report the interaction term for the Gli1 comparisons.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Deposit the data and reagents required for independent verification. (a) Deposit the raw mass-spectrometry data (PRIDE/MassIVE or equivalent) with an accession number, and upload the custom R code for TMM/scaling normalization and eBayes analysis to a version-controlled repository. (b) Provide the full gRNA sequence used for Git1 knockout, the shRNA target sequences (Git1 shRNA #1/#2 and scrambled control), and the qPCR primer sequences for Gli1 and Git1. (c) Provide plasmid maps or accession numbers for Smo-V5-TurboID, YFP-Git1, and Grk2-V5-DArl13b. (d) Add a Data Availability statement covering all of the above.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Add the required compliance statements. (a) State the IACUC (or equivalent) approval and protocol number for the use of P7 C57BL/6J mice to harvest GNPs, and confirm that the PKA-null MEF work is covered by the same or a named approval. (b) Add a competing-interests statement declaring the presence or absence of competing interests for all authors.",
+      "source_reviewer": "ethics",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Complete the methods and reagent traceability. (a) Name the mass-spectrometer model and acquisition mode, and give versions for R, FIJI/ImageJ, ProLuCID, DTASelect2, Census2, and RawConverter. (b) Provide RRIDs (and clone identifiers where applicable) for all antibodies, and state application (WB/IF/IP) and dilution for each. (c) Provide vendor/catalog or CAS identifiers for SAG, recombinant ShhN, and biotin. (d) State the validated phosphosite(s) recognized by the pSmo antibody (7TM0239A-IC), or cite the specific validation. (e) Report animal sex, number of animals per condition, and any randomization/blinding for the GNP work. (f) State whether cell lines were STR-authenticated and mycoplasma-tested.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "Address the 'data not shown' claim that the Smo–Git1 interaction is not Co-IP-detectable, which is the stated rationale for relying on TurboID proximity labeling. Either show the Co-IP data or rephrase the rationale so it does not rest on an unverifiable negative result.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "Clarify the proteomic resource and its relationship to prior work. (a) State explicitly which known Smo interactors were recovered and which were missed, to substantiate the 'majority of known Smo-associated proteins' claim. (b) Compare the dataset explicitly to the closest prior time-resolved ciliary Hedgehog proteomics (May et al. 2021, JCB) and Mick et al. 2015, clarifying that the novelty is the Smo-tagged TurboID and time-resolved design rather than proximity labeling per se. (c) Report the overlap of candidates across the three Shh time points (15 min, 1 h, 4 h) rather than pooling them into a single post-Shh set.",
+      "source_reviewer": "literature",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "Minor presentation fixes: (a) correct the 'Smo-V5-TuboID' typo in the Fig. 1 legend and use one consistent construct name; (b) label the Fig. 2 volcano sub-panels by time point and define abbreviations in the Fig. 2D heatmap; (c) label the arrows in the Fig. 7F schematic; (d) state the wash incubation times in the streptavidin-purification protocol; (e) fix the embedded-space/OCR artifacts in the DOI list; (f) note the preprint status of Steiner et al. 2024 (ref 18) or update the citation if it has since been published.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Add a positive control to the cyclopamine time course (Fig. 3C–D) confirming that Smo remains at the cilium across the 24 h interval, so the flat PKA-C signal cannot be attributed to loss of drug activity or toxicity.",
+    "State the number of independent Git1-null clones used in each key experiment (Figs 4D–E, 5C–E, 6A–F) — the text says two clones were selected but does not specify whether both were tested in each figure.",
+    "For the Git1 biotinylation experiment (Fig. 4B), quantify the western blot with loading-control normalization across replicates and a statistical test before claiming a Shh-dependent increase.",
+    "Report individual data points or a consistent n for all quantified western-blot conditions (Figs 6B–D, S3B, S4C).",
+    "Specify how cilia were identified for intensity quantification (automated threshold vs manual selection) and the pixel size/binning used, to reduce friction for replicators.",
+    "Clarify the selection pressure and clone-isolation protocol for the Smo-TurboID Flp-In screen so a replicator can repeat it."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "Several comparative quantitative claims lack explicit comparators. In the Results section under 'Loss of Git1 diminishes Hh signaling,' the phrase 'substantial increase' is used for Gli1 transcription in WT cells and 'markedly lower' for Git1-null cells; the reader cannot determine the magnitude of the effect from the text alone (the figure reports it, but the text should too). Similarly, on the same page, 'significantly higher compared to WT cells' for Gli3R level states direction but not magnitude — '1.7-fold higher' (or whatever the value is) lets the reader assess it inline."
+        },
+        {
+          "id": "clarity-2",
+          "text": "Figure 2 panel C is referenced in the text as showing volcano plots for 'different time points after Shh activation,' which is correct, but panel B is described as showing proteins before Shh treatment. However, the legend for Figure 2 does not explicitly label which sub-panels in B and C correspond to which time points (the caption says 'Volcano plots showing protein fold change before Shh treatment biotin (B), and at different time points after Shh activation (C).' — the language 'at different time points' is vague; a reader cannot tell which of the four panels in C corresponds to which time point without guessing or cross-checking the axis labels in each panel."
+        },
+        {
+          "id": "clarity-3",
+          "text": "The abstract's claim that 'Loss of Git1 impairs Smo phosphorylation by Grk2, a critical step for Smo-PKA interaction, leading to attenuated Hh signaling and reduced cell proliferation in granule neuron precursors' is a HARD presentation issue: it combines the molecular mechanism (Smo phosphorylation) with the phenotypic consequence (reduced proliferation) without making clear which part is directly shown in GNPs and which is inferred from NIH3T3 data. A reader cannot determine from the abstract alone whether proliferation was measured in GNPs under Git1 knockdown (it was) or whether Smo phosphorylation was also verified in GNPs (it was not; only Gli1 transcript and EdU were reported there). The abstract should scope claims to match the experimental system in which each was tested."
+        },
+        {
+          "id": "clarity-4",
+          "text": "In Figure 4D and 4F, the text refers to 'phosphorylated Smo (pSmo)' staining. The antibody is described in the Methods as 'Rabbit anti-pSmo (7TM antibodies, 7TM0239A-IC)'. The text says it 'specifically recognizes the Grk2 phosphorylation sites on Smo.' A reader cannot determine from the text what specific residue(s) this antibody detects — is it S6 in the C-terminal tail? Multiple serines? The citation to Walker et al. 2024 is given, but not all readers will have immediate access to that paper's validation. A brief statement of the validated phosphosite(s) would resolve this."
+        },
+        {
+          "id": "clarity-5",
+          "text": "Several figure panels have abbreviations in legends that are not defined in the caption or the text at first use. In Figure 2D, the heatmap labels include abbreviations such as 'PKA-Ca' and 'Gnai2'; these are standard but are not expanded in the caption. In Figure S4, 'Indel' is used without definition. While most of these are standard in the field, the presentation guideline is to define all non-standard abbreviations at first use."
+        },
+        {
+          "id": "clarity-6",
+          "text": "In the Methods section under 'Streptavidin purification,' the washing protocol lists 'RIPA twice, 1 M KCl once, 0.1 M Na2CO3 once, 2 M Urea (in 10 mM Tris-HCl, pH 8.0) once, RIPA twice and DPBS once.' The order of operations is recoverable but a reader cannot determine how long each wash was incubated or whether each was a simple resuspension-and-pellet step versus a longer incubation with rotation. This matters because different washing stringencies can affect which biotinylated proteins are retained."
+        },
+        {
+          "id": "clarity-7",
+          "text": "The phrase 'Smo-TurboID' is sometimes written as 'Smo-V5-TurboID,' sometimes as 'Smo-TurboID,' and once as 'Smo-V5-TuboID' (typo in Figure 1 legend). While these are clearly the same construct, the inconsistency is a SOFT clarity issue — a careful reader may pause to wonder whether the V5 tag makes a difference. Pick one name and use it consistently."
+        },
+        {
+          "id": "clarity-8",
+          "text": "Figure 7F, the schematic model, uses arrows and T-bars that are described in the caption but the directionality of 'promotes' versus 'inhibits' is not color-coded or labeled on the diagram itself. For example, the arrow from Git1 to Grk2 says 'facilitates Grk2 translocation' in the text but the arrow is unlabeled on the figure. The legend says 'Git1 at the ciliary base facilitates Grk2's interaction with Smo; it also promotes Grk2 translocation into the cilium' but does not specify which arrow represents which step."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "Claim: \"Grk2... phosphorylates the cytoplasmic tail of active Smo\" (Introduction). This is cited to refs 18 (Steiner et al. 2024, bioRxiv preprint) and 19 (Walker et al. 2024, published PLoS Biology). Ref 19 provides published peer-reviewed support, so the claim is not orphaned. However, the Steiner preprint is cited as if equivalent to published work without explicit disambiguation. The authors should either note its preprint status in the citation or, if it has since been published, update the reference. (HARD if unpublished; SOFT if the journal permits preprint citations — In Silico allows them, but the reader deserves to know.)"
+        },
+        {
+          "id": "literature-2",
+          "text": "Framing of prior Smo interactome work — The text states \"Previous efforts to identify Smo interactors have employed co-IP based strategies [21]\" without acknowledging that proximity-labeling approaches have been applied to ciliary Hedgehog proteomics before (Mick et al. 2015, ref 47; May et al. 2021, ref 48). Ref 48 (May et al., JCB 2021) is indeed a time-resolved ciliary proteomics study of the Hedgehog response using APEX2, which is methodologically the closest prior work. The manuscript eventually cites both, but the framing in the Introduction underplays their existence by contrasting only against Co-IP. The comparison should be explicit: the novelty is in using *Smo-tagged* TurboID (rather than a generic ciliary marker) and the time-resolved design — not proximity labeling per se. (SOFT — rephrase to avoid misrepresenting the prior art.)"
+        }
+      ],
+      "questions": [
+        "Has the Steiner et al. 2024 bioRxiv preprint (ref 18) been published in a peer-reviewed journal since the current manuscript was posted, and if so, please update the citation?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "Animal research is reported with no IACUC statement (HARD). The Materials and Methods describe harvesting cerebella from postnatal day 7 C57BL/6J mice for primary GNP culture, and Figure 7 reports results from those cultures. No animal care and use approval, institution, or protocol number is stated anywhere in the manuscript. The claim that this work was conducted under appropriate animal ethics oversight rests on an approval that is never named. What would settle it: a statement identifying the IACUC (or equivalent) that approved the protocol, with the approval or protocol number. This is a required statement, not a formality — the manuscript's own methods section establishes that the category is triggered."
+        },
+        {
+          "id": "ethics-2",
+          "text": "Competing interests are never declared (HARD). Funding is disclosed, but the manuscript contains no competing-interests statement of any kind — neither a declaration of interests nor an explicit \"the authors declare no competing interests.\" The mandate here is that competing interests be declared or explicitly declared as none. What would settle it: a one-line statement in the manuscript declaring the presence or absence of competing interests for all authors."
+        },
+        {
+          "id": "ethics-3",
+          "text": "No ethics statement for the PKA-null MEF work. The PKA-deficient MEFs are described as derived from a colleague's lab and further modified by CRISPR; if these cells trace to animal-derived primary material, the same IACUC statement should cover them. This is a SOFT request to confirm the source is covered by the same approval, not a separate failure."
+        }
+      ],
+      "questions": [
+        "Which IACUC (or equivalent animal ethics committee) approved the use of P7 mice for GNP isolation, and what is the protocol number?",
+        "Do the authors declare any competing interests, financial or otherwise?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 2.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The load-bearing claim that Git1 knockout reduces Hh signaling (Figs 6A, 7C) rests on Gli1 qPCR fold-changes compared between WT and Git1-null cells. The test is named (two-way ANOVA followed by Tukey), but no information is given about the number of independent biological replicates per genotype × treatment cell, how normalization was performed (reference gene? geomean of multiple references? stability tested?), or whether the ANOVA assumptions were checked for qPCR data (typically log2-transformed to better approximate normality). The fold-change scale on the y-axis makes the interaction visually obvious but a formal interaction term in the ANOVA should be reported."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "The 'no difference' claim that Git1 knockout does not affect cilium length (Fig. S4E) is supported by a non-significant ANOVA result. With n=60 cells per condition from 3 biological replicates, the study may lack power to detect small differences; a power analysis or an equivalence test (e.g., TOST) is needed to support a claim of no effect. Furthermore, cells from the same culture dish are not independent—pseudoreplication inflates the n."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "Figures 4E, 4G, 5D-E, and 6F quantify immunofluorescence intensity using two-way ANOVA with Tukey's multiple comparison test. Which conditions were compared and what is the family (i.e., how many pairwise tests)? If all pairwise comparisons among time points × genotypes were tested, the number is large and a stricter correction (e.g., Bonferroni or Holm) or a pre-registered subset should be stated. No interaction term from the ANOVA is reported."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "For every immunofluorescence quantification (Figs 4E, 4G, 5D-E, 6F), the text states n = 90-150 cells/condition from 3 biological replicates. The unit of analysis is ambiguous: cells from three independent experiments are not independent units if all were pooled for the ANOVA—the effective n is 3 experiments, not the cell count. The analysis should use a mixed model or average per experiment and test at the experiment level."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "The proteomic data analysis (Fig. 2) uses a >1.5-fold TMT ratio and p<0.05 from an Empirical Bayes model as the hit threshold. No FDR, permutation, or q-value is reported for this multi-thousand-test screen. The >1.5 cutoff is arbitrary without a false-discovery assessment. The heatmap (Fig. 2D) and boxplots (Fig. 2E) show selected proteins without an FDR label — readers cannot tell which hits survive correction."
+        },
+        {
+          "id": "data_analysis-6",
+          "text": "The Git1 biotinylation experiment (Fig. 4B) is interpreted as showing Git1 is 'biotinylated before and after Shh stimulation but the intensity is slightly increased after Shh stimulation.' This is a qualitative reading of a western blot with no loading control normalization quantified, no replicates quantified, and no statistical test—it cannot support the claim of a Shh-dependent increase."
+        },
+        {
+          "id": "data_analysis-7",
+          "text": "Figures 1C, 4H-I, 6A-B, 7B-C use 'n = 3 biological replicates' or similar. For the western blots (Fig. 6B-D, S3B, S4C), no n is stated for quantifications; in Figure 6C-D the n=4 independent experiments is given but the error bars (SD) are shown only for selected bars. Full transparency requires reporting individual points or a consistent n for all quantified conditions."
+        },
+        {
+          "id": "data_analysis-8",
+          "text": "The qPCR data in Figures 6A and 7C do not state the reference gene(s) used for normalization, whether its stability was tested across conditions, or whether the delta-Ct method (or a standard-curve method) was used. Fold-change relative to a single reference without validation can be misleading if the reference itself changes with genotype or treatment"
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "HARD — The claim that Git1 controls Grk2 ‘translocation into the cilium’ rests on quantifying Grk2-V5 signal in lentivirally transduced cells (Fig. 5C–E). The ciliary Grk2 signal in WT cells after 30 min Shh is only ~1.2-fold above background, and the text labels the Git1-null signal as ‘background levels’ — but no formal threshold (e.g., >2 SD above the mean of a no-primary or untransduced control) is stated, and no positive control shows that the imaging system can resolve a signal of 1.2-fold from noise. A 20% increase at the very limit of detection is not a sound foundation for a mechanistic conclusion that the entire paper rests on. A second orthogonal readout — e.g., biochemical enrichment of Grk2 from cilia-enriched fractions — would address this. Without it, the claim is indistinguishable from ‘we cannot measure Grk2 in the cilium under these conditions’."
+        },
+        {
+          "id": "methodology-2",
+          "text": "HARD — The conclusion that ‘Git1 loss reduces ciliary Grk2 independently of effects at the basal body’ is contradicted by the authors’ own data. Fig. 5D shows that basal-body Grk2 in unstimulated Git1-null cells is already lower than in WT unstimulated cells (the text says ‘slightly lower’ but the figure appears to show a difference comparable in magnitude to the ciliary difference). If Grk2 is reduced at the entry point of the cilium, its failure to accumulate in the cilium could reflect a smaller available pool rather than a specific translocation defect. The design does not distinguish these alternatives, and the claim that ‘Git1 does not mediate Grk2 localization to the basal body’ is not supported."
+        },
+        {
+          "id": "methodology-3",
+          "text": "SOFT — The proteomic hit list is presented as a discovery resource (450 and 576 candidates), but the filtering pipeline (removal of keratins, endogenously biotinylated proteins, then requiring detection in all six channels across three replicates, then eBayes P<0.05 and FC>1.5) is typical and not described with enough quantitative detail to assess false-discovery stringency. The TMT ratios are normalised but only one normalisation method is named (TMM), with a supplementary table referenced. A reviewer in my role cannot reconstruct what was excluded at each step, and the paper does not report FDR or a multiple-testing correction for the eBayes contrasts. This does not invalidate the resource, but it limits how much weight the reader can assign to any individual candidate."
+        },
+        {
+          "id": "methodology-4",
+          "text": "SOFT — The Grk2 rescue construct (Grk2-V5-DArl13b) targets Grk2 to the cilium, but the control used is ‘V5-DArl13b backbone’ (Fig. 6H). This does not control for the fact that the rescue cells express additional Grk2 (fused to a cilium-localising domain) while the control expresses only the Arl13b fragment. The improved signalling could therefore reflect increased Grk2 dosage rather than its ciliary location per se. A proper control would be Grk2-V5 fused to a non-ciliary membrane anchor, or Grk2-V5 without the DArl13b domain."
+        },
+        {
+          "id": "methodology-5",
+          "text": "Minor — The cyclopamine experiment (Fig. 3C–D) is used to argue that ‘inactive Smo cannot recruit PKA-C’. This is a known conclusion from earlier work (cited). The design is sound but the time course extends to 24 h without showing a positive control that the cyclopamine is active and the cells are still responsive — e.g., that Smo remains at the cilium across that interval. Without it, the flat PKA-C signal could equally mean loss of cyclopamine activity or drug toxicity by 24 h."
+        }
+      ],
+      "questions": [
+        "Fig. 5C–D reports Grk2 intensity at the basal body in Git1-null cells. What is the positive control that confirms the vehicle- and Shh-stimulated WT responses in the same experiment are within the dynamic range of the assay? A line graph at fixed time points cannot distinguish \"no increase\" from \"increase too small to resolve\" without that calibration.",
+        "For the TurboID proteomics (Fig. 2), what fraction of the 450 and 576 candidate proteins were identified in ≥2 of 3 replicates within each condition, and what was the overlap between the two time windows (15 min + 1 h + 4 h) after Shh? The current intersection of 112 proteins mixes all three time points; the design would be more informative disambiguated.",
+        "How many independent Git1-null clones (biallelic edits) were used for the key experiments in Figs. 4D–E, 5C–E, and 6A–F? The text says \"two cell clones\" were selected but does not state whether both were tested in each figure or only one representative clone is shown."
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The central alternative explanation that Git1 might not directly regulate Smo phosphorylation but instead control a general property of the ciliary compartment is only partially excluded; a specific confound remains: Git1 could affect Grk2 stability, expression, or general kinase activity rather than its spatial localization. Grk2 basal body intensity data partially addresses stability but kinase activity is not assessed."
+        },
+        {
+          "id": "novelty-2",
+          "text": "The claim that Git1 controls Grk2 transport into the cilium (rather than its turnover/retention) is not fully secured: the 1.2-fold increase in WT is modest, and without time-course measurements at earlier points or a Grk2 photoconversion/live-imaging approach, entry failure cannot be differentiated from accelerated exit."
+        },
+        {
+          "id": "novelty-3",
+          "text": "The Smo-TurboID proteomic resource claim is weakened because the full dataset is only presented as supplementary tables without mention of deposition in a public repository (ProteomeXchange, MassIVE, etc.), and the closest prior work (May et al. 2021, JCB) performing time-resolved ciliary Hedgehog proteomics is not directly compared."
+        },
+        {
+          "id": "novelty-4",
+          "text": "Because only one candidate (Git1) from >500 identified proteins was functionally validated, the resource's utility remains prospective rather than demonstrated."
+        },
+        {
+          "id": "novelty-5",
+          "text": "The rescue experiment targeting Grk2 to the cilium in Git1 KO cells uses a DArl13b fusion that could cause protein overaccumulation — a WT Grk2 control at matching expression level is needed to confirm the rescue is specific."
+        },
+        {
+          "id": "novelty-6",
+          "text": "The manuscript uses the phrase 'majority of known Smo-associated proteins' without citing which specific known interactors were recovered and which were missed."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "Missing mass spectrometry data and analysis code (HARD, load-bearing). The identification of Git1 as a Smo-associated protein – and all other protein candidates – depends on a custom pipeline (IP2, ProLuCID, Census, R-based normalization and eBayes). Neither the raw MS files (e.g., .raw, .mzML), the peak lists, the search results, nor the R scripts for normalization and statistical testing are deposited or available. The text describes parameters (50 ppm precursor tolerance, 500 ppm fragment tolerance) but the actual search and filtering decisions cannot be re-run without the search outputs and code. Without these, every claim about Smo-proximal proteins is untestable."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "Critical reagent sequences not provided (HARD, load-bearing). The knockdown experiments require shRNA sequences; the paper says \"shRNA against Git1\" but gives no sequence and does not cite a validated clone or deposit the construct. qPCR primer sequences for Gli1 and Git1 are not listed. The gRNA sequence used to generate Git1 knockout cells is only partially visible in Fig. S4A and not stated in the text. An independent group cannot produce the same reagents, and therefore cannot reproduce the Git1 loss-of-function and rescue experiments."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "Plasmid constructs not deposited (SOFT, but structural). While the vectors (pEF5/FRT/V5-DEST, FUGW) are named, the specific sequences of Smo-V5-TurboID, YFP-Git1, and Grk2-V5-DArl13b are not deposited in a public repository (Addgene, GenBank) and no accession numbers are given. For reproducibility of cell-line generation, a plasmid map or deposited sequence is needed."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "Imaging quantification lacks standardizable parameters (SOFT). Ciliary intensity quantification is described in prose (\"outline contour… drag to background region\") without specifying how cilia were identified (automated threshold, manual selection), what binning or pixel size was used, or whether any background subtraction method was applied to the reported arbitrary units. While this does not block reproduction, it adds friction."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "No statement of data availability at all (HARD, procedural). The manuscript contains no \"Data Availability\" section. The custom proteomics data and analysis code are not mentioned as available anywhere. This is a direct violation of reproducibility standards for any overlapping journal."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "Cell line selection criteria not fully replicable (SOFT). The Smo-TurboID clone was selected by \"screening over 50 colonies\" for lack of ciliary Smo without Shh and for near-endogenous expression. The selection pressure (zeocin? hygromycin?) is not stated, and no reference to the Flp-In system manual or a protocol is given. While the rationale is clear, a replicator would need to repeat the screen from scratch without guidance on passaging or clone isolation."
+        }
+      ],
+      "questions": [
+        "Will the raw mass spectrometry data be deposited in a public repository (e.g., PRIDE) and the custom R code for normalization and eBayes analysis be uploaded to a version-controlled repository before publication?",
+        "Can the shRNA sequences and qPCR primer sequences be provided, either in the manuscript or as supplementary material, with the source for the validated shRNA clones?",
+        "Is the gRNA sequence (single-guide RNA) used for Git1 knockout available in full, and can it be stated explicitly in the methods?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "The rescue does not isolate ciliary targeting as the operative variable. 'Selectively targeting Grk2 to the cilium is sufficient to restore Hh signaling' (Fig 6G-H) compares Grk2-V5-DArl13b against a V5-DArl13b backbone control, not against Grk2-V5 without the ciliary tag. As designed, the result shows that Grk2 expression rescues Gli1 in Git1-null cells; it does not show that ciliary localization specifically (rather than Grk2 presence anywhere) is what rescues. This matters because the paper's headline mechanistic conclusion is 'pinpoint the cilium as the primary site where this phosphorylation occurs.' The missing control — Grk2-V5 lacking DArl13b — would distinguish 'Grk2 anywhere restores signaling' from 'ciliary Grk2 is required,' and without it the 'primary site' claim is not established as worded."
+        },
+        {
+          "id": "rigor-2",
+          "text": "The claim that 'Git1 controls the cilium transport of Grk2' rests entirely on lentivirally overexpressed Grk2-V5 (endogenous ciliary Grk2 is below detection), and the WT effect is only a 'moderate but significant 1.2-fold increase' (Fig 5E). A 1.2-fold change in a tagged, overexpressed protein, contrasted with 'no detectable Grk2' in the KO, is thin support for a strong causal verb ('controls'); the result could reflect altered Grk2-V5 handling or retention rather than endogenous transport. The paper also asserts that a basal-body protein promotes Grk2 entry into the cilium without testing any transport mechanism — the mechanism is inferred, not isolated."
+        },
+        {
+          "id": "rigor-3",
+          "text": "The abstract's causal chain crosses systems: 'Loss of Git1 impairs Smo phosphorylation by Grk2... leading to attenuated Hh signaling and reduced cell proliferation in granule neuron precursors.' The Smo-phosphorylation and Hh-signaling data are all in NIH3T3 cells; the GNP experiments test only Git1 knockdown → reduced Gli1 and reduced EdU incorporation. Git1 has well-established pleiotropic functions (cell adhesion, migration, ArfGAP activity), so the reduced GNP proliferation is not shown to be Hh-mediated, and no rescue links the proliferation defect to the Smo/Grk2 mechanism. The 'leading to... reduced cell proliferation' wording overstates what the GNP data establish."
+        },
+        {
+          "id": "rigor-4",
+          "text": "Sweep: 'Git1 is essential for Hh signaling' (Fig 7) is over-strong given Gli1 is reduced to 15–30% of control, not abolished — 'essential' should be 'important' or 'required for full activation.'"
+        },
+        {
+          "id": "rigor-5",
+          "text": "Sweep: The Discussion's 'Git1 interacts with both Smo and Grk2 at the cilium base' overstates the evidence: Git1–Smo proximity is shown only by TurboID biotinylation of overexpressed YFP-Git1, and Git1–Grk2 interaction only by Co-IP of co-overexpressed proteins in 293T; neither demonstrates an endogenous ternary interaction at the cilium base."
+        },
+        {
+          "id": "rigor-6",
+          "text": "Sweep: The proteomic foundation (Tables S1–S5, the 1070-protein list, the 450/576 candidate sets) is not inspectable from the manuscript text, so I could not verify the dataset that motivates the Git1 candidate; this lowers my confidence in the discovery claim, not the functional characterization."
+        },
+        {
+          "id": "rigor-7",
+          "text": "Sweep: The 'primary site' conclusion also overreaches on the negative side — the paper shows basal-body Grk2 is retained in Git1-null cells and that ciliary Grk2 is sufficient, but 'the pool of Grk2 at the basal body is less likely contributing' is asserted from absence-of-effect rather than a direct test."
+        }
+      ],
+      "questions": [
+        "Can you add a rescue arm expressing Grk2-V5 without the DArl13b ciliary tag, and report whether it also restores Gli1 in Git1-null cells — this is the control that isolates ciliary localization as the operative variable?",
+        "For the Grk2-transport claim, can you report the endogenous Grk2 ciliary signal (or a Grk2-V5 titration) and the absolute magnitude of the WT increase, to show the 1.2-fold effect is not an artifact of overexpression?",
+        "In the GNP experiments, is the reduced EdU incorporation attributable to reduced Hh signaling specifically, or could it reflect Git1's known roles in adhesion/migration — is there any Hh-specific readout or rescue linking proliferation to the Smo/Grk2 pathway in GNPs?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "364e87c5db0e156f065ec0191f894f87067426c77d21b95341b714fc28b6c365",
+  "manuscript_file_sha256": "d469f27fbedf9909ecfa7933b7c574a2a519c3808ebfa3bb4fe21629987a7e96",
+  "prior_job_id": "",
+  "desk_rejected": false
+}

@@ -1,0 +1,206 @@
+{
+  "generated_at": "2026-08-14T19:00:46+00:00",
+  "pipeline": {
+    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "version": "0.3.0"
+  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 83216,
+    "section_source": "document",
+    "text_sha256": "364e87c5db0e156f065ec0191f894f87067426c77d21b95341b714fc28b6c365",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 28,
+        "preamble_share": 0.0106,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 83216,
+        "words": 11876,
+        "sentences": 644,
+        "blocks": 181,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 0,
+        "references_separable": false,
+        "main_text_words": null,
+        "reference_entries": 0
+      },
+      "density": {
+        "sentence_len_mean": 18.73,
+        "sentence_len_median": 17.0,
+        "sentence_len_p90": 29.0,
+        "long_sentence_share": 0.0174,
+        "numbers_per_1k": 93.55,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 3.28,
+        "boosters_per_1k": 1.35,
+        "mattr": 0.464,
+        "passive_per_sentence_approx": 0.3758,
+        "p_values_exact": 0,
+        "p_values_threshold": 21
+      },
+      "sections": {
+        "_preamble": {
+          "words": 121,
+          "sentences": 1,
+          "sentence_len_mean": 121.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 991,
+          "sentences": 46,
+          "sentence_len_mean": 21.54,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 2.02,
+          "boosters_per_1k": 2.02
+        },
+        "results": {
+          "words": 3098,
+          "sentences": 144,
+          "sentence_len_mean": 21.51,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 5.49,
+          "boosters_per_1k": 3.23
+        },
+        "discussion": {
+          "words": 3061,
+          "sentences": 193,
+          "sentence_len_mean": 15.86,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 6.21,
+          "boosters_per_1k": 0.65
+        },
+        "acknowledgements": {
+          "words": 245,
+          "sentences": 16,
+          "sentence_len_mean": 15.31,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "methods": {
+          "words": 4353,
+          "sentences": 245,
+          "sentence_len_mean": 18.52,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.23,
+          "boosters_per_1k": 0.46
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "d469f27fbedf9909ecfa7933b7c574a2a519c3808ebfa3bb4fe21629987a7e96"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 2.88,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.09836292529199998,
+  "cost_by_node": {
+    "debate_advocate": 0.002573,
+    "debate_skeptic": 0.002656,
+    "editor": 0.003588,
+    "journal_recommender": 0.002654,
+    "reviewer_rigor": 0.008263
+  },
+  "research_by_node": {
+    "reviewer_rigor": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2025.01.06.631593v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2025.01.06.631593v1.full.pdf",
+    "identifier": "10.1101/2025.01.06.631593",
+    "doi": "10.1101/2025.01.06.631593",
+    "title": "Proximity based proteomics reveals Git1 as a regulator of Smoothened signaling",
+    "authors": [
+      "Ge, X.",
+      "Zhang, J.",
+      "Baboo, S.",
+      "Myers, B.",
+      "Yates, J."
+    ],
+    "abstract": "The GPCR-like protein Smoothened (Smo) plays a pivotal role in the Hedgehog (Hh) pathway. To initiate Hh signaling, active Smo binds to and inhibits the catalytic subunit of PKA in the primary cilium, a process facilitated by G protein-coupled receptor kinase 2 (Grk2). However, the precise regulatory mechanisms underlying this process, as well as the events preceding and following Smo activation, remain poorly understood. To address this question, we leveraged the proximity labeling tool TurboID and conducted a time-resolved proteomic study of Smo-associated proteins over the course of Hh signaling activation. Our results not only confirmed previously reported Smo interactors but also uncovered new Smo-associated proteins. We characterized one of these new Smo interactors, Grk-interacting protein 1 (Git1), previously known to modulate GPCR signaling. We found that Git1 localizes to the base of the primary cilium, where it controls the cilium transport of Grk2, an early event in Hh signaling. Loss of Git1 impairs Smo phosphorylation by Grk2, a critical step for Smo-PKA interaction, leading to attenuated Hh signaling and reduced cell proliferation in granule neuron precursors. These results revealed a critical regulatory mechanism of Grk2 phosphorylation on Smo in the primary cilium. Our Smo-TurboID proteomic dataset provides a unique resource for investigating Smo regulations across different stages of Hh pathway activation.",
+    "published": "2025-01-07",
+    "version": "1",
+    "pdf_sha256": "d469f27fbedf9909ecfa7933b7c574a2a519c3808ebfa3bb4fe21629987a7e96",
+    "pdf_bytes": 16704112
+  }
+}

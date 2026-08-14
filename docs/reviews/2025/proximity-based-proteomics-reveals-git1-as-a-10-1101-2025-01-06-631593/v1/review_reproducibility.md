@@ -1,0 +1,21 @@
+# Reproducibility Reviewer
+
+## Summary
+From a reproducibility standpoint, the manuscript lacks the essential artifacts and procedural detail an independent group would need to rerun the work end-to-end. The two load-bearing claims – that Git1 is a Smo-associated regulator of Smo phosphorylation via Grk2, and that Git1 controls Grk2 ciliary translocation – rest on mass spectrometry and cell-biology experiments whose raw data, analysis code, and critical reagents are either absent or only available "on request." Without these, the conclusions cannot be independently verified. Major revision to deposit data, code, and sequence-level reagent information is required before the manuscript is publishable in its current form.
+
+## Strengths
+- The time-resolved TurboID approach is conceptually strong and the selection of Git1 for follow-up is well motivated.
+- The authors report Git1 knockout in two independent clones and validate the Grk2 rescue in Git1-null cells, which strengthens the causal argument.
+
+## Weaknesses
+- Missing mass spectrometry data and analysis code (HARD, load-bearing). The identification of Git1 as a Smo-associated protein – and all other protein candidates – depends on a custom pipeline (IP2, ProLuCID, Census, R-based normalization and eBayes). Neither the raw MS files (e.g., .raw, .mzML), the peak lists, the search results, nor the R scripts for normalization and statistical testing are deposited or available. The text describes parameters (50 ppm precursor tolerance, 500 ppm fragment tolerance) but the actual search and filtering decisions cannot be re-run without the search outputs and code. Without these, every claim about Smo-proximal proteins is untestable.
+- Critical reagent sequences not provided (HARD, load-bearing). The knockdown experiments require shRNA sequences; the paper says "shRNA against Git1" but gives no sequence and does not cite a validated clone or deposit the construct. qPCR primer sequences for Gli1 and Git1 are not listed. The gRNA sequence used to generate Git1 knockout cells is only partially visible in Fig. S4A and not stated in the text. An independent group cannot produce the same reagents, and therefore cannot reproduce the Git1 loss-of-function and rescue experiments.
+- Plasmid constructs not deposited (SOFT, but structural). While the vectors (pEF5/FRT/V5-DEST, FUGW) are named, the specific sequences of Smo-V5-TurboID, YFP-Git1, and Grk2-V5-DArl13b are not deposited in a public repository (Addgene, GenBank) and no accession numbers are given. For reproducibility of cell-line generation, a plasmid map or deposited sequence is needed.
+- Imaging quantification lacks standardizable parameters (SOFT). Ciliary intensity quantification is described in prose ("outline contour… drag to background region") without specifying how cilia were identified (automated threshold, manual selection), what binning or pixel size was used, or whether any background subtraction method was applied to the reported arbitrary units. While this does not block reproduction, it adds friction.
+- No statement of data availability at all (HARD, procedural). The manuscript contains no "Data Availability" section. The custom proteomics data and analysis code are not mentioned as available anywhere. This is a direct violation of reproducibility standards for any overlapping journal.
+- Cell line selection criteria not fully replicable (SOFT). The Smo-TurboID clone was selected by "screening over 50 colonies" for lack of ciliary Smo without Shh and for near-endogenous expression. The selection pressure (zeocin? hygromycin?) is not stated, and no reference to the Flp-In system manual or a protocol is given. While the rationale is clear, a replicator would need to repeat the screen from scratch without guidance on passaging or clone isolation.
+
+## Questions
+- Will the raw mass spectrometry data be deposited in a public repository (e.g., PRIDE) and the custom R code for normalization and eBayes analysis be uploaded to a version-controlled repository before publication?
+- Can the shRNA sequences and qPCR primer sequences be provided, either in the manuscript or as supplementary material, with the source for the validated shRNA clones?
+- Is the gRNA sequence (single-guide RNA) used for Git1 knockout available in full, and can it be stated explicitly in the methods?
