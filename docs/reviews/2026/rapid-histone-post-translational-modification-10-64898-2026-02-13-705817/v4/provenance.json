@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-14T18:32:38+00:00",
+  "generated_at": "2026-08-14T19:48:09+00:00",
   "pipeline": {
-    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "sha": "290ffb8702d63ee81ceb6e267511812c9e8a2821",
     "version": "0.3.0"
   },
   "provider": "openrouter",
@@ -13,7 +13,13 @@
   "desk_rejected": false,
   "round": 1,
   "revision": {
-    "round": 1
+    "round": 1,
+    "kind": "rerun",
+    "replaced": "v4",
+    "prior_decision": "major",
+    "prior_mean_score": 3.25,
+    "prior_pipeline_sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "prior_reviewed_at": "2026-08-14"
   },
   "submitter": "pgarrett-scripps",
   "submitter_is_author": "",
@@ -153,23 +159,28 @@
   },
   "panel": [
     {
-      "reviewer": "rigor",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
       "reviewer": "ethics",
       "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "data_analysis",
-      "score": 3.0,
-      "confidence": 3.0
+      "reviewer": "rigor",
+      "score": 2.0,
+      "confidence": 5.0
     },
     {
       "reviewer": "novelty",
-      "score": 4.0,
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
       "confidence": 4.0
     },
     {
@@ -183,366 +194,326 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "literature",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "reproducibility",
+      "reviewer": "data_analysis",
       "score": 3.0,
       "confidence": 4.0
     }
   ],
-  "mean_score": 3.25,
+  "mean_score": 3.0,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 0.093557031,
+  "total_cost_usd": 0.09389757184,
   "cost_by_node": {
-    "audit_citation_integrity": 0.012525,
-    "audit_methods_completeness": 0.00705,
-    "debate_advocate": 0.001257,
-    "debate_skeptic": 0.002868,
-    "desk_screen": 0.002191,
-    "editor": 0.001564,
-    "journal_recommender": 0.000751,
-    "reviewer_clarity": 0.008301,
-    "reviewer_data_analysis": 0.004741,
-    "reviewer_ethics": 0.007321,
-    "reviewer_literature": 0.012281,
-    "reviewer_methodology": 0.006561,
-    "reviewer_novelty": 0.0183,
-    "reviewer_reproducibility": 0.004036,
-    "reviewer_rigor": 0.003812
+    "audit_citation_integrity": 0.011009,
+    "audit_methods_completeness": 0.002221,
+    "debate_advocate": 0.001219,
+    "debate_skeptic": 0.001255,
+    "desk_screen": 0.002133,
+    "editor": 0.001478,
+    "journal_recommender": 0.000878,
+    "reviewer_clarity": 0.007063,
+    "reviewer_data_analysis": 0.007778,
+    "reviewer_ethics": 0.005375,
+    "reviewer_literature": 0.018574,
+    "reviewer_methodology": 0.004463,
+    "reviewer_novelty": 0.015887,
+    "reviewer_reproducibility": 0.006224,
+    "reviewer_rigor": 0.008341
   },
   "research_by_node": {
     "audit_citation_integrity": [
       {
-        "tool": "search_biomedical_literature",
-        "query": "Garcia Mollah Ueberheide Busby Muratore Shabanowitz Hunt 2007 chemical derivatization histones mass spectrometry Nature Protocols",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Ryzhaya P\u00edrek Zdr\u00e1hal Lochmanov\u00e1 2025 Arg-C Ultra simplifies histone preparation LC-MS/MS Analytical Chemistry",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Vai Noberini Graziadei Polasky Yu Nesvizhskii Bonaldi 2025 Breaking Boundaries Histone Modification MS Detection Molecular Cellular Proteomics",
-        "hits": 0
-      },
-      {
         "tool": "find_related_work",
-        "query": "Garcia BA Mollah S Ueberheide BM Busby SA Muratore TL Shabanowitz J Hunt DF Chemical Derivatization of Histones for Facilitated Analysis by Mass Spectrometry Nat Protoc 2007",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Ryzhaya P\u00edrek Zdr\u00e1hal Lochmanov\u00e1 Arg-C Ultra Simplifies Histone Preparation for LC-MS/MS Anal Chem 2025",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Vai Noberini Graziadei Polasky Yu Nesvizhskii Bonaldi Breaking Boundaries in Histone Modification MS-Based Detection Mol Cell Proteomics 2025",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "histone propionylation bottom-up mass spectrometry Garcia 2007 Nature Protocols",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Arg-C Ultra histone PTMs Ryzhaya 2025 Analytical Chemistry",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "HiP-Frag unrestrictive search histone modifications Vai Bonaldi 2025 Molecular Cellular Proteomics",
-        "hits": 5
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"Chemical Derivatization of Histones for Facilitated Analysis by Mass Spectrometry\" AND Garcia AND 2007",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"Arg-C Ultra\" AND histone AND 2025",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"HiP-Frag\" AND histone AND modification AND 2025",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"Tandem Mass Tags\" Thompson 2003 Analytical Chemistry quantification comparative analysis",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"Complete Workflow for Analysis of Histone Post-Translational Modifications Using Bottom-up Mass Spectrometry\" Sidoli 2016",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"Lysine Succinylation as a New Post-Translational Modification\" Zhang 2011 Nature Chemical Biology",
+        "query": "Garcia 2007 Chemical Derivatization of Histones for Facilitated Analysis by Mass Spectrometry Nature Protocols",
         "hits": 3
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "10.1038/nprot.2007.106",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "10.3791/54112",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "10.1021/acs.analchem.5c02238",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "10.1016/j.mcpro.2025.101080",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "nprot.2007.106 Garcia histone derivatization mass spectrometry",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "10.1074/mcp.O114.046573 Maile hybrid chemical labeling histone",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "10.1038/s41557-024-01500-5 Weyh succinylation glutarylation genetic code expansion",
-        "hits": 0
+        "query": "Garcia 2007 Chemical Derivatization of Histones for Facilitated Analysis by Mass Spectrometry Nature Protocols 2 933-938",
+        "hits": 1
       },
       {
         "tool": "find_related_work",
-        "query": "Garcia BA Mollah S Ueberheide BM \"Chemical Derivatization of Histones\" Nature Protocols 2007 2 4 933",
-        "hits": 5
-      }
-    ],
-    "reviewer_clarity": [
+        "query": "Garcia 2007 \"Chemical Derivatization of Histones\" DOI 10.1038/nprot.2007.106",
+        "hits": 3
+      },
       {
-        "tool": "",
-        "query": "",
-        "hits": 0,
-        "error": "tool loop returned no text"
+        "tool": "search_biomedical_literature",
+        "query": "Sidoli 2016 \"Complete Workflow for Analysis of Histone Post-Translational Modifications\" Journal of Visualized Experiments 2016 111",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Thompson 2003 \"Tandem Mass Tags\" Analytical Chemistry 75 1895-1904",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Ryzhaya 2025 \"Arg-C Ultra Simplifies Histone Preparation for LC-MS/MS\" Analytical Chemistry",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Vai 2025 \"Breaking Boundaries in Histone Modification MS-Based Detection\" Molecular Cellular Proteomics",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Adoni 2026 \"Enhanced Proteomics Analysis with a Novel Recombinant Chymotrypsin Analogue\" Journal Proteome Research",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "PMID:17446892 Garcia 2007 Nature Protocols chemical derivatization histones",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "PMID:17446892",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"10.1021/acs.analchem.5c02238\" Ryzhaya Arg-C Ultra histone",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"10.1016/j.mcpro.2025.101080\" Vai HiP-Frag histone modification",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"10.1021/jasms.3c00223\" Searfoss optimized histone propionylation DIA 2023",
+        "hits": 3
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Meert 2015 \"Pitfalls in Histone Propionylation\" Proteomics 15 2966-2971 PMID",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Zhang 2011 \"Identification of Lysine Succinylation as a New Post-Translational Modification\" Nature Chemical Biology 7 58-63 PMID",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Xie 2012 \"Lysine Succinylation and Lysine Malonylation in Histones\" Molecular Cellular Proteomics 11 100-107 PMID",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"10.1002/pmic.201600045\" Meert 2016 tackling aspecific side reactions histone propionylation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"10.1074/mcp.M114.046573\" Maile 2015 mass spectrometric quantification histone hybrid chemical labeling",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"10.1016/j.cmet.2014.03.014\" Tan 2014 lysine glutarylation SIRT5 Cell Metabolism",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"10.3791/54112\" Sidoli histone extraction workflow",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"10.1038/nprot.2007.106\" Garcia chemical derivatization histones",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"10.1021/ac0262560\" Thompson tandem mass tags 2003",
+        "hits": 0
       }
     ],
     "reviewer_literature": [
       {
         "tool": "find_related_work",
-        "query": "Arg-C Ultra histone post-translational modifications mass spectrometry",
+        "query": "histone post-translational modification mass spectrometry Arg-C alternative proteases TMT labeling",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Arg-C histone proteomics mass spectrometry post-translational modifications",
         "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "tandem mass tag TMT histone PTM underivatized proteomics",
-        "hits": 5
+        "query": "histone PTM mass spectrometry TMT labeling propionylation comparison alternative proteases",
+        "hits": 10
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "histone succinylation glutarylation mass spectrometry TMT label",
-        "hits": 2
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Ryzhaya Arg-C Ultra histone preparation LC-MS/MS",
+        "query": "TMT labeling histone lysine succinylation glutarylation mass spectrometry identification",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "histone PTM chymotrypsin alternative protease mass spectrometry",
-        "hits": 2
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "TMT histone propionylation comparison underivatized",
+        "query": "histone propionylation derivatization mass spectrometry Arg-C Ultra alternative protease comparison",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Maile hybrid chemical labeling histone TMT quantification",
-        "hits": 0
+        "query": "histone post-translational modification analysis tandem mass tag TMT proteomics",
+        "hits": 4
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "phenyl isocyanate PIC histone derivatization mass spectrometry",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "rChymoselect recombinant chymotrypsin proteomics",
+        "query": "Restellini alternative digestion approaches histone modification mapping mass spectrometry clinical samples 2019",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Sidoli automated sample preparation single-cell histone PTM 2025",
+        "query": "Vai improved mass spectrometry methods reveal abundant propionylation tissue-specific histone propionylation profiles 2024",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Vai HiP-Frag histone modification unrestricted identification 2025",
+        "query": "Ryzhaya Arg-C Ultra histone preparation LC-MS/MS 2025 Analytical Chemistry",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Adoni recombinant chymotrypsin enhanced proteomics cleavage specificity 2026 Journal Proteome Research",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "alternative proteases histone post-translational modification mass spectrometry clinical samples Restellini",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=alternative+proteases+histone+post-translational+modification+mass+spectrometry+clinical+samples+Restellini&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "histone PTM propionylation alternative chemical derivatization phenyl isocyanate PIC d6-acetic anhydride comparison",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Searfoss optimized high-throughput histone propionylation DIA 2023",
+        "query": "Adoni recombinant chymotrypsin rChymoselect Promega proteomics 2025",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "TMT label charge compensation acidic peptide ionization succinylation mass spectrometry",
+        "query": "Maile hybrid chemical labeling method histone post-translational modifications mass spectrometry 2015",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Maile hybrid chemical labeling method histone post-translational modifications TMT 2015 Molecular Cellular Proteomics",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "histone H3 middle-down TMT labeling mass spectrometry",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Maile hybrid chemical labeling histone TMT PIC 2015",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Maile 2015 \"mass spectrometric quantification of histone post-translational modifications by a hybrid chemical labeling method\"",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Challa 2021 \"damage-induced chromatome dynamics\" yeast histone TMT",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Whedon 2024 \"circular engineered sortase histone H3\" TMT middle-down",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "TMT reporter tertiary amine charge compensation acidic peptide ionization fragmentation",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "propionylation overpropionylation side reactions histone mass spectrometry 2015 2016 Meert",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "d6-acetic anhydride phenyl isocyanate histone derivatization",
+        "query": "histone succinylation mass spectrometry identification TMT labeling comparison propionylation",
         "hits": 0
       }
     ],
     "reviewer_novelty": [
       {
         "tool": "find_related_work",
-        "query": "Arg-C Ultra histone post-translational modifications mass spectrometry proteomics",
+        "query": "histone PTM analysis alternative proteases Arg-C Ultra tandem mass tags",
+        "hits": 7
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Arg-C Ultra histone post-translational modification mass spectrometry",
+        "hits": 4
+      },
+      {
+        "tool": "find_related_work",
+        "query": "RIPUP histone PTM rapid identification underivatized peptides",
         "hits": 10
       },
       {
         "tool": "find_related_work",
-        "query": "tandem mass tags TMT histone PTM charge compensation succinylation glutarylation",
+        "query": "TMT labeling histone PTM succinylation glutarylation mass spectrometry",
         "hits": 10
       },
       {
         "tool": "find_related_work",
-        "query": "RIPUP rapid histone PTM underivatized peptides alternative proteases",
+        "query": "Arg-C Ultra histone proteomics Promega alternative protease",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Ryzhaya Arg-C Ultra histone propionylation TMA trimethylacetic anhydride 2025",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Vai Noberini HiP-Frag unrestrictive search histone PTM 2025",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "histone underivatized peptide mass spectrometry alternative protease",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Ryzhaya 2025 \"Arg-C Ultra\" histone trimethylacetic anhydride Analytical Chemistry",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "TMT labeling histone PTM charge compensation tertiary amine ionization efficiency",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "histone PTM propionylation versus TMT labeling comparison bottom-up mass spectrometry",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Ryzhaya 2025 Analytical Chemistry \"Arg-C Ultra\" histone trimethylacetic TMA",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "histone PTM TMT labeling succinylation glutarylation charge compensation tertiary amine",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TMT histone PTM propionylation comparison alternative labeling mass spectrometry",
         "hits": 2
       },
       {
-        "tool": "search_preprints",
-        "query": "Arg-C Ultra histone PTM mass spectrometry",
-        "hits": 3
-      },
-      {
-        "tool": "search_preprints",
-        "query": "TMT labeling histone succinylation glutarylation mass spectrometry",
-        "hits": 1
-      },
-      {
-        "tool": "search_preprints",
-        "query": "alternative proteases histone post-translational modifications rapid workflow",
-        "hits": 8
-      },
-      {
         "tool": "find_related_work",
-        "query": "Ryzhaya Arg-C Ultra histone preparation LC-MS/MS 2025",
+        "query": "\"Arg-C Ultra\" \"histone\" \"trimethylacetic\" Ryzhaya 2025 Analytical Chemistry",
         "hits": 10
       },
       {
         "tool": "find_related_work",
-        "query": "Vai HiP-Frag histone modification unrestrictive search 2025",
+        "query": "Ryzhaya P\u00edrek Zdr\u00e1hal Lochmanov\u00e1 Arg-C Ultra histone preparation LC-MS/MS",
         "hits": 10
       },
       {
         "tool": "find_related_work",
-        "query": "histone PTM TMT labeling underivatized peptides alternative proteases workflow",
-        "hits": 10
+        "query": "\"Arg-C Ultra Simplifies Histone Preparation\" 2025 Analytical Chemistry",
+        "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "\"Arg-C Ultra\" histone propionylation trimethylacetic anhydride TMA Ryzhaya 2025",
-        "hits": 10
-      },
+        "query": "doi 10.1021/acs.analchem.5c02238 Arg-C Ultra histone",
+        "hits": 5
+      }
+    ],
+    "reviewer_rigor": [
       {
-        "tool": "find_related_work",
-        "query": "histone PTM charge compensation tertiary amine TMT succinylation glutarylation ionization",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"Arg-C Ultra Simplifies Histone\" Ryzhaya Analytical Chemistry 2025",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"Breaking Boundaries in Histone Modification\" Vai Bonaldi HiP-Frag 2025 Molecular Cellular Proteomics",
-        "hits": 10
-      },
-      {
-        "tool": "search_preprints",
-        "query": "\"Arg-C Ultra\" histone mass spectrometry 2025 Ryzhaya",
-        "hits": 0
-      },
-      {
-        "tool": "search_preprints",
-        "query": "histone succinylation glutarylation TMT labeling mass spectrometry detection charge compensation",
-        "hits": 1
-      },
-      {
-        "tool": "search_preprints",
-        "query": "Maille 2015 TMT hybrid chemical labeling histone post-translational modifications",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "histone succinylation mass spectrometry detection method comparison underivatized derivatized",
-        "hits": 10
-      },
-      {
-        "tool": "search_preprints",
-        "query": "histone succinyl glutaryl detection method charge state ionization mass spectrometry",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Maille Izrael-Tomasevic \"hybrid chemical labeling\" histone TMT PIC phenyl isocyanate 2015</\uff5cDSML\uff5cparameter<</invoke></think>\u2192 I already ran that query variant with no useful hits. Let me check directl",
+        "tool": "",
+        "query": "",
         "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+        "error": "tool loop returned no text"
       }
     ]
   },

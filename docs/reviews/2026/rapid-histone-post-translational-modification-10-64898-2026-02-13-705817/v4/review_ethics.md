@@ -1,20 +1,17 @@
 # Ethics & Compliance Reviewer
 
 ## Summary
-The only triggered ethics category is animal research, and the approval statement is complete: TSRI IACUC protocol #09-0006 is named alongside ARRIVE and the NIH Guide. Funding is fully disclosed with grant numbers, and raw data (ProteomeXchange PXD073683) and code (GitHub) are deposited, so the work is checkable. The one mandatory gap is the absence of any competing-interests statement, which is conspicuous in a manuscript that evaluates two commercial Promega enzymes and reaches strongly favorable conclusions about them. Adding a one-line declaration (or explicit "none") is the only change my remit requires.
+The compliance posture of this manuscript is largely sound: the rat work is covered by a properly cited IACUC approval with protocol number, no human-subjects obligations arise (established commercial cell line and rat tissue only), and funding is fully disclosed. The one required element missing is a competing interests declaration, which is a genuine gap given the manuscript's evaluation of specific commercial products, including a reagent obtained through a vendor's Early Access program. This is a one-line fix, not a substantive flaw.
 
 ## Strengths
-- Complete, protocol-numbered animal approval statement (IACUC #09-0006) naming both ARRIVE and the NIH Guide.
-- Full funding disclosure with grant identifiers in the Acknowledgements.
-- Data and code deposited with concrete identifiers (PXD073683; GitHub), satisfying the checkability requirement.
+- Animal research approval is explicitly stated with protocol number (IACUC #09-0006), ARRIVE reference, and NIH Guide compliance — the standard a reader needs.
+- Funding sources are fully disclosed in the acknowledgements.
+- Raw data and search results are deposited to ProteomeXchange (PXD073683), supporting transparency.
 
 ## Weaknesses
-- No competing-interests statement appears anywhere in the manuscript; the text contains no declaration of financial or non-financial interests for any author. This is a HARD gap because the paper's central contribution is a head-to-head evaluation of two commercial products (Promega Arg-C Ultra and r-Chymotrypsin) that concludes both outperform the conventional comparator, and the absence of a statement leaves the perceived-interest question unmanaged — the alternative to the authors' implicit position of no interests is a managed interest in favorable evaluation of these products, and nothing in the text distinguishes these because no statement exists at all. What would resolve it: a signed Competing Interests section for all authors, or the explicit sentence "The authors declare no competing interests."
-- The phrase "kept in accordance with the ARRIVE guidelines" is imprecise — ARRIVE is a reporting guideline, not a husbandry standard — and should be reworded so the housing standard is attributed to the NIH Guide, which is already cited.
-- Human-subjects approval is not triggered (HEK293T is a commercial immortalized line), but a one-line source/authentication statement (vendor, STR or Mycoplasma status) would close a standard reproducibility gap; this belongs to the methods reviewer's remit.
-- Dual-use and biosafety are not triggered: standard biochemical work on cultured cells and rodent tissue, no pathogens, toxins, or regulated genetic materials.
-- Restricted-consent data are not in play: rat tissue comes from the authors' own IACUC-covered colony, with no biobank or secondary-use samples.
+- No competing interests statement appears anywhere in the manuscript (HARD). This matters because the work evaluates specific commercial products — Promega's Arg-C Ultra, r-Chymotrypsin (obtained through the company's Early Access program, per the Practical Considerations section), and Trypsin Gold — and includes a per-sample cost analysis citing Promega pricing. A reader cannot determine whether any author has a material relationship with Promega (reagent provision, Early Access participation, consulting, honoraria). The absence of a statement is not evidence of a hidden conflict; it is a missing required declaration. The fix is a "Competing Interests" section declaring any relationships or explicitly stating none.
+- ARRIVE wording imprecision (SOFT). The methods state rats were "kept in accordance with the ARRIVE guidelines," but ARRIVE is a reporting checklist, not a husbandry standard; the substantive compliance basis is the cited IACUC approval and NIH Guide, which are properly stated. Suggest rewording to "reported in accordance with ARRIVE."
 
 ## Questions
-- Please provide a Competing Interests statement for all authors (financial and non-financial), or explicitly declare none — this is the one required item missing from the manuscript.
-- What is the source and authentication status of the HEK293T cells (vendor/catalog number, STR verification date)?
+- Do any authors have a financial or material relationship with Promega Corporation (e.g., provision of the r-Chymotrypsin Early Access reagent, consulting, honoraria) that should be declared in a competing interests statement?
+- Was the r-Chymotrypsin (rChymoselect) obtained free of charge under the Early Access program, and does the cost analysis in SI Table S5 account for this?

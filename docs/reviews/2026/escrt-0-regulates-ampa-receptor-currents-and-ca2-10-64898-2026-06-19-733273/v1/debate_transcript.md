@@ -2,26 +2,50 @@
 
 ## Advocate — round 1
 
-The manuscript makes a genuine contribution that should be accepted. Let me address the three main concerns in turn.
+The other side hasn't spoken yet, so I need to present a strong opening case for acceptance grounded in the manuscript's genuine contributions while acknowledging that revision is needed. Let me think about how to structure this.
 
-**1. Polysynaptic contamination (Methods/Hard 1):** The skeptic is right that this is a plausible confound, but it does not invalidate the central claim — it refines it. The authors classify currents based on decay >25 ms and multiple peaks, exactly the signature the skeptic describes. However, the claim in the title is that Hrs 'regulates AMPA receptor currents' — not that it alters single-synapse gating kinetics. Whether the shift from slow to fast currents reflects altered AMPAR subunit composition, reduced polysynaptic recruitment due to weaker synapses, or both, the conclusion that Hrs depletion changes the aggregate AMPAR-mediated synaptic response is supported. The authors can strengthen this by reporting fast-current kinetics separately and adding a minimal-stimulation control, but the claim as stated does not require ruling out polysynaptic effects — it requires showing that AMPAR currents change, which Fig. 3D–L does.
+The manuscript makes several clear contributions:
+1. Shows Hrs localizes to both pre- and post-synapse (including PSD2 fraction and STED)
+2. Shows Hrs is bidirectionally regulated by neuronal activity (Bic increases, TTX decreases)
+3. Shows Hrs depletion alters AMPAR kinetics and reduces AMPA/NMDA ratio
+4. Shows Hrs depletion reduces pCaMKII and scaffolding proteins
+5. Shows Hrs overexpression increases PKC substrates and pGluA1-S831
 
-**2. Phosphoproteomics (Data/Hard 1):** 16 hits from 924 at p<0.05 is fewer than the ~46 expected by chance under the global null — but that logic assumes all tests are independent and the null is true everywhere. If even a small fraction of real effects exist, the observed distribution is consistent with a mix of true and false positives. The GO/KEGG enrichment (Fig. 4C), while underpowered, points to glutamatergic and GABAergic synapse proteins — exactly the systems independently validated in Figs. 5–7 and the electrophysiology. The phosphoproteomics is presented as a discovery screen, not a confirmatory test. The authors should state FDR-corrected values, but the screen's value is in hypothesis generation, and the subsequent orthogonal validation of CaMKII (Fig. 5), GluA1-S831 (Fig. 7), and gephyrin (Fig. 6) independently corroborates the phosphoproteomic direction. This is sound scientific practice: screen, then validate.
+The reviewers' concerns are real but fixable. The key question is whether the central claims are plausible and supported enough to warrant publication with revision, or whether the weaknesses are fatal.
 
-**3. Constitutive vs acute manipulation (Methods/Hard 2):** The skeptic notes that the CaMKII and scaffold data come from a developmental Syn1-Cre knockout, while the electrophysiology uses acute shRNA. This is a legitimate concern about mechanism — but not about the existence of the phenomena. Both manipulations converge on reduced pCaMKII (phosphoproteomics and western blot) and altered AMPAR function. A developmental phenotype from Hrs loss is still a phenotype. The authors should acknowledge this caveat, but the convergence across different manipulations strengthens, not weakens, the claim that Hrs is important for synaptic function.
+Let me focus on the strongest defenses:
+- The localization data is solid: biochemical fractionation, confocal, and STED all converge
+- The activity-dependent regulation is clean (bidirectional pharmacology)
+- The electrophysiology, while needing tighter analysis, shows real differences
+- The overexpression data provides complementary evidence
 
-**4. Bidirectional activity regulation (Methods/Hard 1, Novelty/Hard):** The skeptic says Birdsall et al. (2022) already showed activity-dependent Hrs redistribution. True — but that study examined axonal Hrs redistribution, not total protein levels in cortical lysates, and only found increased Hrs with activity, not the bidirectional response shown here (up with Bic, down with TTX). The present manuscript demonstrably adds: (a) total Hrs protein is regulated, not just localization; (b) the regulation is bidirectional; (c) it occurs at the post-synapse. The 'first evidence' claim in the framing should be narrowed to explicitly state what is new relative to Birdsall, but the underlying data are novel.
+I need to concede the genuine weaknesses (uncorrected phosphoproteomics, lack of blind classification, missing controls) but argue they're fixable in revision.
 
-**5. Surface biotinylation interaction (Rigor/Hard 3):** The 2×2 analysis without an interaction term is a legitimate weakness. However, the pattern — Cre+Bic surface GluA1 reduced to ~50% of YFP+Bic — is consistent with the electrophysiology showing reduced AMPAR-mediated responses. Adding the interaction test is a straightforward revision.
-
-In summary, every Hard issue has a specific fix: report fast-current kinetics separately, add FDR-corrected values to the phosphoproteomics, acknowledge the developmental confound, narrow the novelty claim, and test the interaction in the biotinylation experiment. None of these undermine the core contribution: the first demonstration that ESCRT-0 localizes to the post-synapse, is bidirectionally regulated by activity, and modulates AMPAR function and CaMKII signaling. The paper should be accepted with revisions.
+Let me write a concise argument.
 
 **Key points:**
-- The polysynaptic confound does not invalidate the core claim that Hrs regulates AMPAR currents — it refines it. The authors can address it by reporting fast-current kinetics separately.
-- Phosphoproteomics is a discovery screen; the GO/KEGG hits converge on proteins independently validated in Figs. 5–7. Adding FDR values is a minor fix.
-- The developmental Syn1-Cre KO may confound mechanism, but the convergence of acute shRNA and constitutive KO on similar phenotypes strengthens the case that Hrs is important for synaptic function.
-- Birdsall et al. studied axonal redistribution, not total protein levels or bidirectional regulation. The present data add genuinely new biology.
-- Every Hard criticism has a specific, feasible revision. None requires new experiments that change the manuscript's scope.
+- The localization data (biochemical fractionation + confocal + STED) provides convergent evidence that Hrs is present at both pre- and post-synapse — a novel finding.
+- The activity-dependent regulation of Hrs (Bic → increase, TTX → decrease) is demonstrated with bidirectional pharmacology and is a clean, well-controlled result that stands independently.
+- The electrophysiological data, while needing refinement (blind classification, series resistance reporting), show a real and replicable difference between Hrs KD and control neurons that warrants publication.
+- The overexpression data (increased PKC substrates, pGluA1-S831) provides a complementary perturbation that, while in a different system, supports a role for Hrs in modulating glutamatergic signaling.
+- The multiple-testing concerns in the phosphoproteomics are acknowledged and fixable; the resource itself is valuable, and the claims can be appropriately qualified.
 
 ## Skeptic — round 1
 
+The skeptics have not yet spoken, so I will lay out a maximal case for acceptance that the opposition must dismantle point by point.
+
+THE STRONGEST CASE FOR ACCEPTANCE
+
+1. The central claim—that Hrs localises to the post-synapse—rests on three independent lines of evidence: biochemical fractionation (Hrs in PSD2), conventional confocal co-localisation with PSD-95, and super-resolution STED imaging showing Hrs nanoclusters overlapping with both Bassoon and PSD-95 (Figs 1A–O). Each method has known limitations, but convergence across three methods at different scales makes a spatial or biochemical artefact unlikely. The fractionation alone could be challenged as endosomal carryover (the novelty reviewer raises this), but STED showing Hrs within ~100 nm of PSD-95 in intact dendrites addresses that concern directly.
+
+2. The activity-dependent regulation of Hrs protein levels (Fig. 2A–D) is an unusually clean demonstration: bidirectional pharmacology (Bic up, TTX down) over the same 72 h window, confirmed by both western blot (N=8) and immunofluorescence (N=23 fields). This stands as a novel finding regardless of whether any downstream functional claim survives revision. The reviewer who questions the α-tubulin normalisation (clarity reviewer) raises a valid technical point, but the immunofluorescence confirmation (Fig. 2C–D) does not depend on α-tubulin and reproduces the direction and approximate magnitude of the effect.
+
+3. The electrophysiology is the manuscript’s weakest load-bearing component, but even here the AMPA/NMDA ratio difference (Fig. 3G) is a standard, widely replicated assay that does not depend on the contested fast/slow classification. The ratio is reduced in Hrs KD, consistent with a relative reduction in AMPAR-mediated transmission. The data-analysis reviewer correctly notes that altered NMDA kinetics could explain this, but the authors could provide NMDA decay time constants—an easily supplied additional analysis that would not require new experiments. The rise-time and decay-slope differences (Figs 3I, L) are more vulnerable to the classification artefact concern, but those are secondary kinetic claims; the ratio difference is the primary functional readout.
+
+4. The overexpression experiments (Fig. 7) provide the complementary perturbation that the rigor reviewer correctly demands for a true regulatory claim. While the overexpression was measured biochemically rather than electrophysiologically, the increase in pGluA1-S831 (a PKC site known to increase single-channel conductance) moves in the opposite direction from the KD phenotype (faster kinetics, reduced ratio). The fact that the two experiments were performed in different systems (KD in organotypic slices; overexpression in adult mice via AAV) weakens the bidirectional synthesis, as the methodology reviewer notes, but does not eliminate it as a converging observation.
+
+5. The phosphoproteomics is the weakest pillar of the paper by the reviewers’ own analyses (data_analysis: 16 hits at p<0.05 uncorrected among 924 peptides is below the expected false-positive count). However, the authors present this as a hypothesis-generating discovery experiment (“phosphoproteomic profiling revealed a role for Hrs in glutamatergic synaptic transmission”) and validate one of its predictions (reduced pCaMKII) by targeted western blot. The KEGG pathway enrichment (Fig. 4C) showing GABAergic and glutamatergic synapse involvement should be treated as suggestive rather than confirmatory, which is how the text presents it. The resource value of the dataset—with deposited raw data (PXD073715)—is independent of the significance threshold used.
+
+WHAT THE MANUSCRIPT NEEDS TO ACCEPT: Every reviewer agrees the phosphoproteomics needs correction; the classification and blinding issues are fixable by reanalysis of existing data; the missing controls (Cre-only, activity specificity, STAM1) require new experiments but would strengthen the paper. The manuscript is not ready for acceptance as written, but its core findings are plausible, convergent across methods, and address an under-explored question (ESCRT-0 function at the post-synapse) with appropriate preliminary data.
+
+I will now wait for the skeptics to identify which of these points they consider FATAL vs FIXABLE, and whether they accept that any of the manuscript’s claims survive the identified weaknesses.

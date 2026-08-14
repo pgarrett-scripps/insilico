@@ -1,12 +1,18 @@
 # Clarity & Presentation Reviewer
 
 ## Summary
-The central claims are stated explicitly and the narrative through-line (proteasome decline → cNLS modification → importin-α1 disruption → sALS pathology) is recoverable. However, several HARD presentation defects prevent a reader from determining exactly what was done: the fluorescent tag is described as N-terminal in one figure and C-terminal in two others; the inhibitor doses in the text (2 nM BTZ, 10 nM MRZ for ~50% inhibition) contradict the figure legends (20 nM BTZ, 100 nM MRZ) for the key experiments; and the lane layout in the central human-tissue figure is internally contradictory. All are fixable, but as written a careful reader cannot reconstruct the experiments.
-
-## Strengths
-- Quantitative claims are mostly given with actual quantities (4-fold nuclear reduction, ~50% decline, doubling of TDP-43 mRNA), not just direction.
-- The abstract states the central claim unambiguously and the results follow a clear motivation→mechanism→validation arc.
-- Figure legends are generally detailed enough to identify panels and conditions.
+This manuscript identifies acetylation of TDP-43 at lysine 82 as a trigger for its nuclear loss of function, presenting a plausible disease-initiating mechanism for TDP-43 proteinopathies. The narrative is logical and generally well-illustrated, but several presentation defects—figure-reference errors, inconsistent drug doses, an unsubstantiated quantitative claim, and missing methodological detail—undermine a reader's ability to follow the evidence without guessing. These issues are correctable, but they currently reduce clarity below the threshold for acceptance.
 
 ## Weaknesses
-- 1. Tag orientation is contradictory across figures (HARD). Fig 2D legend states "All proteins were tagged at the N terminus with Clover (a bright GFP variant) or mRuby, respectively," while Fig 3C says "C-terminally Clover tagged TDP-43-WT" and Fig 4A says "A Clover tag was placed at C-terminus of each variant." The same construct is named "Clover-TDP-43" (Fig 2E) and "TDP-43-Clover" (Fig S1G). Since the N-terminal domain mediates TDP-43 oligomerization — a mechanism the authors themselves invoke in Fig 2G-I — a reader cannot evaluate the import assays without knowing the tag position. The dangling "respectively" in the Fig
+- HARD – Figure reference error misleads the reader.
+The sentence: “confirmed that TDP-43, but not FUS, exhibited increased cytoplasmic mislocalization when proteasome activity was reduced (Fig. S2B; Fig. 1F,E)” cites Fig. 1F,E as evidence for cytoplasmic mislocalization, but those panels show nuclear proteome changes from mass spectrometry, not cytoplasmic fraction data. A reader cannot determine which figure supports which claim; one of these references is incorrect.
+- HARD – Inconsistent BTZ dose undermines a central result.
+The text states that 2 nM BTZ achieves ~50% proteasome inhibition, and this is used for the fractionation time course (Fig. 1B). Yet the immunofluorescence experiment (Fig. 1C) uses 20 nM BTZ without explanation, and the text then groups both doses under “proteasome inhibition by 50% for 24 hr with BTZ”. The reader cannot reconcile whether 20 nM also gives 50% inhibition or whether different degrees of inhibition were applied; the figure legend should state the effective inhibition at each dose.
+- HARD – Unsubstantiated quantitative claim.
+The text says “TDP-43-K82R … induced TDP-43 mislocalization (Fig. 4D,E) even when accumulated at only 25% the level of endogenous TDP-43 (Fig. S4A)”. Fig. S4A shows an immunoblot without any densitometry, fold-change labels, or error bars; the 25% value is not derivable from the panel as presented. The claim therefore cannot be verified.
+- SOFT – Long sentences impede readability.
+The 68‑word sentence beginning “While a proportion of importin‑α1, but not importin‑β2, was initially bound to TDP-43 …” is syntactically correct but unnecessarily dense. Splitting it would improve clarity.
+- SOFT – Vague mass spectrometry methods.
+The PTM detection methods section states that peptides were analysed “using either data-dependent or data-independent acquisition methods”. The choice matters for reproducibility and should be specified; “either” suggests indecision rather than a deliberate protocol.
+- SOFT – Missing protocol detail.
+The sequential siRNA knockdown followed by lentiviral transduction (used in multiple figures) is described only in figure legends, not in the Methods section. Including it in Methods is needed for reproducibility.

@@ -1,13 +1,15 @@
 # Ethics & Compliance Reviewer
 
 ## Summary
-Compliance in this manuscript is essentially in order: the mouse and rat work is covered by a stated IACUC approval, funding is disclosed with grant numbers, and competing interests are explicitly declared as none. The only gaps in my remit are a missing IACUC protocol identifier and an unstated biosafety-oversight line for the recombinant AAV work, both soft fixes. No human-subjects, clinical-trial, dual-use, or restricted-consent categories are triggered. I take the approval statement at face value, as is standard.
+No unresolved ethics or compliance issues in my remit. Animal work is covered by an explicit UCSD IACUC approval statement with adherence to the NIH Guide; funding (specific NIH grant numbers and a Chan Zuckerberg Initiative DAF award) and competing interests are both disclosed. Human-subjects, clinical-trial, restricted-consent, and dual-use categories are not triggered by this rodent and cell-culture work. The only gap in my lane is a missing IACUC protocol identifier, which is a routine soft request.
 
 ## Strengths
-- Animal welfare approval is stated explicitly, naming the IACUC and the University of California, San Diego.
-- Funding is fully disclosed with specific grant identifiers.
-- A competing-interests declaration is present ("The authors declare no competing financial interests").
+- The animal welfare statement is explicit, names the institution and committee (IACUC, UCSD), and cites the NIH Guide, so the compliance posture is verifiable rather than silent.
+- Funding disclosure is specific (grant numbers with recipients) and a competing-interests statement ("The authors declare no competing financial interests") is present in the manuscript header.
 
 ## Weaknesses
-- The IACUC statement ("approved by the Institutional Animal Care and Use Committee (IACUC) at the University of California, San Diego") names the committee but gives no protocol number or animal welfare assurance identifier; adding it for the specific protocol(s) covering the mouse work and the rat pup harvest would close the only real compliance gap here. [Soft]
-- Biosafety oversight for the recombinant AAV work (production and retro-orbital injection into mice) is not stated; an IBC approval line would complete the record if the institution's recombinant-DNA policy requires one. [Soft]
+- The IACUC approval is named but lacks its protocol identifier — a soft request: the authors should add the UCSD animal protocol number to the Methods.
+- (For the rigor/methods reviewer, one line) Animal sex is reported per experiment but is not consistent across experiments (mixed sexes for PSD purification; female-only for Hrsf/f cohorts; male-only for AAV transduction), with no stated rationale.
+
+## Questions
+- What is the UCSD IACUC protocol number covering the mouse breeding, AAV transduction, and organotypic slice recordings described in the Methods?

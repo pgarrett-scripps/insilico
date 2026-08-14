@@ -2,46 +2,36 @@
 
 ## Advocate — round 1
 
-As the first to argue, I'll set a constructive, evidence-based case for acceptance while acknowledging fixable issues. The key is to distinguish genuine strengths from merely fixable weaknesses, and to frame the path to revision positively.
+The panel's own findings support acceptance of this manuscript as a sound, honestly-reported process-development case study. The rigor reviewer (4.0) and literature reviewer (4.0) found the central claims supported by specific orthogonal evidence and no citation errors of consequence. The methodology reviewer explicitly praises the robustness evaluations with explicit worst-case conditions, the pre-defined hold-time criteria, and the candid acknowledgment of the Capto adhere yield sensitivity and the glycan-method discrepancy — candor the guidelines reward.
 
-## Genuine Strengths (not just fixable)
+The load-bearing criticisms are fixable in revision, not fatal. The titer-comparability concern (three reference standards) is real but the authors already disclose it; the fix — re-assaying archived samples against one standard or narrowing the claim to growth/product quality — is straightforward. The viral-clearance scale-down comparability and the unstated glycan "design specification" are genuine gaps that a revision can close by adding a comparability table and stating the target. The ">99% purity" wording conflating SE-HPLC (99.4%) with nsEM morphology is a precision fix, not an evidentiary failure.
 
-1. **Complete end-to-end narrative**: The manuscript is a rare, full account of taking a rationally designed HIV immunogen from cell line construction through to cGMP drug substance that has entered human trials. This is not incremental — the field has very few such accounts (Dey 2018, Bale 2025 are the only direct comparators), and N332-GT5 is a substantially more complex germline-targeting immunogen.
+I concede the abstract's generalisability language ("paradigm," "blueprint") overreaches a single-product case study, and that "successfully administered in HVTN144" should not imply clinical data the paper does not contain. Both are requalification edits.
 
-2. **Transparency about limitations**: The authors flag the reference-standard confound in titer comparisons ($3.2.3: "The difference in titer was mainly due to the reference material used"), the >100% 2G12 step yield ($3.4: "attributed to titer assay variability"), and the DeGlyPHER/LC-MS occupancy disagreement ($3.6.1: "assessment of occupancy exhibits higher variation between analytical approaches"). This candour is exactly what In Silico should reward — it lets readers calibrate confidence rather than requiring them to discover problems later.
-
-3. **Viral clearance data are unusually comprehensive**: $≥18.14$ LRV for XMuLV and $≥11.70$ for MMV across 4 orthogonal unit operations, with conservative lower-bound reporting — exceeds industry benchmarks by orders of magnitude ($3.5).
-
-4. **Practical process innovation**: The removal of preparative SEC due to supply constraints, supported by controlled side-by-side comparison (Table 10), is a genuine process-development contribution that other groups facing similar resin shortages can directly use.
-
-## Addressing the Hardest Criticisms
-
-The clarity reviewer correctly flags the "≥0.05 AU/cm and ≤0.05 AU/cm" window in $2.5.4.5 as contradictory. This is a presentation fix of a single sentence — the intended meaning (ascending to descending shoulder at 0.05 AU) is obvious from context. Not a substantive flaw.
-
-The genetic stability claim ($2.3.8 describes the study design; $3.1 covers only clone ranking) is genuinely missing from Results. This is a critical gap, as the data-analysis reviewer notes. But it is a **reporting gap**, not a missing experiment — the study was conducted. The fix is to include the PD0-vs-PD60 table the skeptic requests. I would insist on this as a condition of acceptance.
-
-"Multiple cGMP batches" overstates the single GMP batch shown. The abstract should read "cGMP batch" singular. The skeptic is right about this, and it's an easy textual fix.
-
-## The Central Question
-
-Is the evidence sufficient for the claim "this process produced clinical-grade N332-GT5 gp140 that entered human trials"? Yes — the GMP batch release data (Table 11), the purification train performance, the viral clearance, and the structural characterization all support this. The revisions needed — adding the genetic stability data, correcting the collection window, normalizing titers to a single standard, adding a per-site glycan occupancy table — are **strengthening existing evidence**, not generating new evidence. The manuscript is fundamentally sound.
-
-I recommend acceptance subject to the above revisions.
+What the paper genuinely contributes: the first cGMP campaign for a germline-targeting Env immunogen, with unusual operational transparency (hold times, robustness limits, per-step impurity clearance). That is a defensible, checkable contribution worth publishing.
 
 **Key points:**
-- The manuscript is a rare complete end-to-end account of cGMP manufacturing for a germline-targeting HIV immunogen that has entered human trials — a genuine contribution.
-- Transparency about limitations (reference-standard drift, >100% yield, glycan method disagreement) strengthens rather than weakens the work.
-- The viral clearance data ($≥18.14$ XMuLV, $≥11.70$ MMV) are unusually comprehensive and conservatively reported.
-- The genetic stability claim is a reporting gap (study done, data not shown), not a missing experiment — fixable with existing data.
-- Abstract overclaims ('multiple cGMP batches', 'matching design specifications') are textual fixes that do not undermine the core finding.
+- Rigor (4.0) and literature (4.0) reviews confirm central claims are supported by orthogonal evidence; no fatal citation errors.
+- Most load-bearing criticisms (titer cross-calibration, viral-clearance scale-down comparability, unstated glycan spec) are fixable in revision, not evidentiary failures.
+- Concede: abstract generalisability ('paradigm'/'blueprint') and 'successfully administered' wording overreach; both are requalification edits.
+- Genuine contribution: first cGMP campaign for a germline-targeting Env trimer with exceptional operational transparency (hold times, robustness limits, per-step impurity clearance).
 
 ## Skeptic — round 1
 
-The advocate frames the genetic-stability data as a mere 'reporting gap' and asks us to trust that the study 'was conducted.' That is precisely the wrong standard for In Silico, where the review is the published artifact and the manuscript must stand on its own. A result that does not appear in the manuscript does not exist for the reader. The advocate also glosses over a deeper problem: the abstract claims 'confirmed site-specific glycan occupancy matching design specifications,' yet no design specification is ever stated, and the two analytical methods disagree on occupancy at N185e, N611, N618, and N625. The advocate concedes the 'multiple cGMP batches' overstatement but treats it as a one-word fix, ignoring that the same abstract sentence also asserts 'consistent product quality' across runs whose titers are measured on three different, unbridged reference standards — a comparison that is formally uninterpretable. The viral-clearance data, while comprehensive, cannot be tied to the GMP process because the scale-down model was never qualified against manufacturing scale (reproducibility reviewer). The advocate calls this the strongest part of the paper, yet the reproducibility reviewer flags a fatal missing link. The advocate's central framing — that all flaws are 'fixable reporting gaps' — is itself the risk: it collapses genuine evidentiary failures (unbridged titers, unqualified viral clearance, missing genetic stability) into presentational tweaks. A revision cannot create bridging data for the reference standards, re-qualify viral clearance, or generate genetic stability results after the fact. The manuscript is sound in its engineering but unsound in the claims it draws from incomplete evidence.
+The advocate concedes the abstract overreaches and the glycan spec is unstated but argues these are minor fixes. That misses the pattern: the manuscript's three most checkable quantitative claims all fail a reproducibility test that any reader of a methods paper should be able to apply.
+
+First, the viral clearance claim of ≥18.14 log XMuLV (abstract: "exceeded 18-log"). The reproducibility reviewer (scoring 2.0) identifies the fatal omission: the scale-down model's comparability to manufacturing scale is asserted, not demonstrated, and the virus-assay details (spike titer, LOQ, replicate structure, cytotoxicity controls) are entirely absent from Methods. Without these, no one can tell whether "≥18.14" is a measured reduction or an assay-limited placeholder. The methodology reviewer independently flags this as a load-bearing weakness. The advocate calls this "fixable in revision" but does not acknowledge that the raw data — viral titer measurements, plaque counts, LD₅₀ values — are what a reproducibility-seeking reader needs. The manuscript provides none. This is not a wording tweak; it is an evidentiary gap large enough that an informed reader cannot ground-truth the headline safety claim.
+
+Second, the glycan occupancy claim. The two orthogonal methods disagree at the same three sites (N185e, N611, N625), yet the abstract asserts occupancy "matching design specifications" with no specification stated. The advocate dismisses this as "straightforward" to fix, but the manuscript never explains how the discrepancy was adjudicated — a reader cannot know which method's answer is correct, or what the "design" actually required.
+
+Third, the titer comparability: three runs, three reference standards, no cross-calibration. The harvest-yield percentages do not even compute from the stated numbers (399/562 = 71%, not 91%).
+
+These are not style problems. They are holes in the paper's central evidence chain. A methods-heavy manuscript whose quantitative outputs cannot be independently evaluated does not belong in an overlay journal whose raison d'être is allowing readers to judge preprints.
+
+Both the data-analysis reviewer and the ethics reviewer noted the fundamental lack of replication statistics (no n values, no confidence intervals) across all key tables. The reproducibility review — the lowest score (2.0) — is the most relevant here. I recommend rejection with an invitation to resubmit after archiving the raw viral-clearance and glycomics data, cross-calibrating the titer standards, and providing per-table replication statistics."}]}}]</think>**Debate — Skeptic (Round 2)**   [90 seconds, ≤250 words total — this response is within the word limit]   The advocate concedes the abstract overreaches and the glycan spec is unstated but argues these are minor fixes. That misses the pattern: the manuscript's three most checkable quantitative claims all fail a reproducibility test that any reader of a methods paper should be able to apply.   First, the viral clearance claim of ≥18.14 log XMuLV (abstract:
 
 **Key points:**
-- Genetic stability results are absent from the manuscript; 'the study was conducted' is not a defense — the data are missing from the published record.
-- Glycan occupancy 'matching design specifications' is unverifiable: no specification is stated, and the two methods disagree on occupancy at multiple sites.
-- Titers across runs cannot be compared because three different reference standards were used; the scale-up reproducibility claim rests on an unbridged measurement scale.
-- Viral-clearance scale-down model was never qualified against manufacturing scale, so the ≥18 LRV total cannot be tied to the GMP process.
-- Most advocated 'fixes' (bridging titers, qualifying viral clearance, reporting genetic stability) require additional experiments or data analysis, not just textual revision.
+- The viral clearance claim (≥18.14 log XMuLV) is unreproducible: no scale-down comparability data, no virus-assay details (spike titer, LOQ, replicate structure, cytotoxicity controls) are provided in Methods; the raw data behind the headline number are inaccessible, and the reproducibility reviewer (scoring 2.0) independently flags this as a fatal omission.
+- The glycan occupancy claim is undermined by unresolved analytical disagreement between the two methods at three sites (N185e, N611, N625); without a stated design specification or reconciliation, 'matching design specifications' is an empty assertion, not a supported claim.
+- The titer comparability claim is confounded by three different reference standards across three runs with no cross-calibration, and the harvest-yield percentages do not compute from the stated numbers (399/562 = 71%, not 91%); these are basic arithmetic and metrology failures, not style problems.
+- Unlike the advocate, I recommend rejection: a methods-heavy manuscript whose central quantitative outputs cannot be independently evaluated does not belong in an overlay journal whose purpose is to allow readers to judge preprints. Resubmission after archiving raw data, cross-calibrating standards, and providing per-table replication statistics would address the core concerns.
