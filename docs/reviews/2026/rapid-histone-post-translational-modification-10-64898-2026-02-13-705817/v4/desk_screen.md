@@ -1,6 +1,0 @@
-# Editorial Desk Screen
-
-**Outcome:** Passed Desk Screen
-
-## Rationale
-This manuscript presents a comprehensive methodological study on histone post-translational modification (PTM) analysis using mass spectrometry. The work systematically evaluates alternative proteases (Arg-C Ultra and recombinant Chymotrypsin) and chemical labeling strategies (TMT vs. propionylation) against the established Trypsin-based workflow. The authors introduce RIPUP, a streamlined dual-protease approach that reduces sample preparation time to ~3 hours while improving PTM coverage, particularly for negatively charged acylations (succinylation and glutarylation). The manuscript is well-written, methodologically rigorous, includes appropriate controls and statistical analysis, and demonstrates practical applicability through proof-of-concept experiments in both cultured cells and tissue samples. The work addresses a genuine gap in the field regarding PTM detection bias and provides mechanistic insights into why TMT labeling enhances detection of acidic modifications through charge compensation. Data are deposited in ProteomeXchange, and custom code is made available. While the study is primarily methodological rather than discovery-focused, it makes solid technical contributions with clear biological relevance and should proceed to full peer review.

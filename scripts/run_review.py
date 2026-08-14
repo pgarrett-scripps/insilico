@@ -106,9 +106,6 @@ BUNDLE_FILES = [
     "summary.md",
     "decision_letter.md",
     "desk_screen.md",
-    "panel_gaps.md",
-    "meta_review.md",
-    "author_rebuttal.md",
     "debate_transcript.md",
     "journal_recommendations.md",
     "manuscript_stats.md",
@@ -996,7 +993,14 @@ def _run(args, workdir: Path) -> int:
 
     # Only pass what was explicitly asked for. Anything omitted falls through
     # to ./peerreview.toml, which is where the [models.*] tables live.
-    overrides = {"output_dir": str(workdir / "reports")}
+    overrides = {
+        "output_dir": str(workdir / "reports"),
+        # Survives ordinary local reruns and records each successful agent
+        # atomically. The key includes manuscript content + semantic config,
+        # so unrelated papers or model settings never share outputs.
+        "checkpoint_dir": str(RUNS / ".checkpoints"),
+        "resume": True,
+    }
     if args.provider:
         overrides["provider"] = args.provider
     if args.model:
@@ -1111,6 +1115,7 @@ def _run(args, workdir: Path) -> int:
     # through the observability bus; drain it so cost decisions can be made
     # from a breakdown instead of an inference.
     graph = PeerReviewGraph(config)
+    state: dict = {}
     try:
         with _telemetry_recorder(graph.run_id) as telemetry:
             # The PDF, not a conversion of it. The pipeline converts it to
@@ -1118,7 +1123,11 @@ def _run(args, workdir: Path) -> int:
             # converter that did not read this file, and would change the
             # manuscript cache key that the next round re-derives to recover
             # this draft.
-            state = graph.review(str(pdf))
+            # Keep the latest accumulated snapshot. If a later graph node
+            # fails, the completed reviewer/auditor results and their exact
+            # errors remain available instead of disappearing with invoke().
+            for _node, snapshot in graph.stream(str(pdf)):
+                state = snapshot
     except ManuscriptUnreadable as exc:
         # No bundle, no verdict, nothing published. A scanned or image-only
         # PDF is the usual cause, and docs/submit.md already tells authors we
@@ -1135,6 +1144,23 @@ def _run(args, workdir: Path) -> int:
                 fh.write("unreadable=true\n")
                 fh.write(f"unreadable_reason={reason}\n")
         return 3
+
+    # A valid-looking editor verdict is not enough. Older PRA versions could
+    # continue after a reviewer failed and issue a decision from seven of the
+    # requested eight specialists. The graph now stops before synthesis, and
+    # this independent boundary check prevents a degraded or older graph from
+    # ever becoming a publishable bundle.
+    if not state.get("desk_rejected") and not state.get("panel_complete"):
+        errors = "; ".join(state.get("errors") or []) or "required panel did not complete"
+        print(f"review failed: {errors}", file=sys.stderr)
+        return 1
+
+    if not state.get("desk_rejected") and not state.get("publication_ready"):
+        errors = "; ".join(state.get("errors") or []) or str(
+            state.get("run_status") or "review never became publishable"
+        )
+        print(f"review failed: {errors}", file=sys.stderr)
+        return 1
 
     decision = state.get("decision")
     if decision not in VERDICT_LABEL:

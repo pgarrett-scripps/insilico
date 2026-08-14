@@ -1,85 +1,152 @@
 {
-  "generated_at": "2026-08-02T08:34:42+00:00",
+  "generated_at": "2026-08-14T07:02:41+00:00",
   "pipeline": {
-    "sha": "",
-    "version": "0.1.0"
+    "sha": "367bdb8f8146e3a3aae95d18b9255ebdc5dc5e27+dirty",
+    "version": "0.3.0"
   },
-  "provider": "anthropic",
-  "model": "claude-sonnet-5",
-  "models": {
-    "audit": {
-      "model": "claude-haiku-4-5"
-    },
-    "debate": {
-      "model": "claude-sonnet-5"
-    },
-    "reviewer": {
-      "model": "claude-haiku-4-5"
-    },
-    "synthesis": {
-      "model": "claude-opus-5"
-    }
-  },
-  "agent_models": {
-    "author_rebuttal": {
-      "model": "claude-sonnet-5"
-    },
-    "journal_recommender": {
-      "model": "claude-haiku-4-5"
-    }
-  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v3.2",
+  "models": {},
+  "agent_models": {},
   "debate_rounds": 1,
   "decision": "major",
   "desk_rejected": false,
-  "round": 2,
+  "round": 1,
   "revision": {
-    "round": 2,
-    "prior_bundle": "v1",
-    "prior_decision": "major",
-    "prior_round": 1,
-    "prior_required_revisions": 10,
-    "author_statement": false,
-    "kind": "revision",
-    "statement_source": "",
-    "statement_path": "",
-    "only_reviewers": [],
-    "baseline": {
-      "restored": true,
-      "reason": "",
-      "verified": true
-    },
-    "response_published": false
+    "round": 1
   },
-  "submitter": "insilico-test",
-  "submitter_is_author": "no",
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.1.1",
+    "caveman": null,
+    "chars": 95273,
+    "section_source": "headings",
+    "text_sha256": "6cd283d0e3031016179194a8c041676aa0ba56ddf13e6ec9940aa01c05757f70",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.08,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 15,
+        "preamble_share": 0.023,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 95273,
+        "words": 12324,
+        "sentences": 401,
+        "blocks": 174,
+        "display_math": 1,
+        "table_rows": 17,
+        "reference_words": 914,
+        "references_separable": true,
+        "main_text_words": 11410,
+        "reference_entries": 36
+      },
+      "density": {
+        "sentence_len_mean": 30.73,
+        "sentence_len_median": 29.0,
+        "sentence_len_p90": 55.0,
+        "long_sentence_share": 0.2519,
+        "numbers_per_1k": 102.4,
+        "citations": 38,
+        "citation_style": "numeric",
+        "citations_per_1k": 3.08,
+        "hedges_per_1k": 2.11,
+        "boosters_per_1k": 1.46,
+        "mattr": 0.5207,
+        "passive_per_sentence_approx": 0.212,
+        "p_values_exact": 1,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 290,
+          "sentences": 7,
+          "sentence_len_mean": 41.43,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "introduction": {
+          "words": 685,
+          "sentences": 22,
+          "sentence_len_mean": 31.14,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 1.46,
+          "boosters_per_1k": 0.0
+        },
+        "results": {
+          "words": 4194,
+          "sentences": 118,
+          "sentence_len_mean": 35.54,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 2.38,
+          "boosters_per_1k": 2.15
+        },
+        "discussion": {
+          "words": 1653,
+          "sentences": 49,
+          "sentence_len_mean": 33.73,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 4.23,
+          "boosters_per_1k": 3.02
+        },
+        "methods": {
+          "words": 2033,
+          "sentences": 88,
+          "sentence_len_mean": 23.1,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.49,
+          "boosters_per_1k": 0.0
+        },
+        "supplementary": {
+          "words": 2541,
+          "sentences": 80,
+          "sentence_len_mean": 31.76,
+          "citations_per_1k": 0.79,
+          "hedges_per_1k": 2.75,
+          "boosters_per_1k": 1.57
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "248f8d949330dd3d0c886baac332746e90a0a848ead087724e045c8074663ad2"
+  },
   "screens": {
-    "desk_screen_mode": "gate",
-    "injection_screen": true,
-    "injection_screen_action": "reject"
+    "desk_screen_mode": "gate"
   },
   "panel": [
-    {
-      "reviewer": "clarity",
-      "score": 4.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "data_analysis",
-      "score": 4.0,
-      "confidence": 4.0
-    },
     {
       "reviewer": "ethics",
       "score": 5.0,
       "confidence": 5.0
     },
     {
-      "reviewer": "literature",
-      "score": 4.0,
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
       "confidence": 3.0
     },
     {
       "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "clarity",
       "score": 3.0,
       "confidence": 4.0
     },
@@ -89,23 +156,159 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "reproducibility",
-      "score": 4.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "rigor",
+      "reviewer": "literature",
       "score": 3.0,
       "confidence": 4.0
     }
   ],
-  "mean_score": 3.88,
-  "total_cost_usd": 2.3750129999999996,
+  "mean_score": 3.38,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.23813841000000002,
   "cost_by_node": {
-    "audit_citation_integrity": 0.206556,
-    "reviewer_literature": 0.154365,
-    "reviewer_novelty": 0.160789,
-    "unattributed": 1.853303
+    "audit_citation_integrity": 0.044049,
+    "audit_methods_completeness": 0.007016,
+    "debate_advocate": 0.005666,
+    "debate_skeptic": 0.011772,
+    "desk_screen": 0.006857,
+    "editor": 0.006633,
+    "journal_recommender": 0.015003,
+    "reviewer_clarity": 0.005508,
+    "reviewer_data_analysis": 0.008603,
+    "reviewer_ethics": 0.007702,
+    "reviewer_literature": 0.051621,
+    "reviewer_methodology": 0.005298,
+    "reviewer_novelty": 0.047413,
+    "reviewer_reproducibility": 0.008371,
+    "reviewer_rigor": 0.006626
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"Neurodegenerative diseases target large-scale human brain networks\" Seeley 2009",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"Default-mode network activity distinguishes alzheimer's disease from healthy aging\" Greicius 2004",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"Resting state functional connectivity in preclinical alzheimer's disease\" Sheline 2013",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"Opportunities and limitations of intrinsic functional connectivity MRI\" Buckner 2013",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"Resting-state networks link invasive and noninvasive brain stimulation\" Fox 2014",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"Predicting human resting-state functional connectivity from structural connectivity\" Honey 2009",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"Emerging concepts for the dynamical organization of resting-state activity in the brain\" Deco 2011",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "\"The virtual brain: a simulator of primate brain network dynamics\" Sanz Leon 2013",
+        "hits": 0
+      }
+    ],
+    "reviewer_literature": [
+      {
+        "tool": "find_related_work",
+        "query": "personalized brain stimulation target computational model network control Alzheimer",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"virtual lesion\" brain stimulation personalized target",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Cornblath virtual lesion brain network stimulation",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "personalized transcranial magnetic stimulation target Alzheimer computational model",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Stiso network control theory brain stimulation personalized",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Gu controllability of brain networks Nature Communications 2015",
+        "hits": 2
+      },
+      {
+        "tool": "find_related_work",
+        "query": "reservoir computing echo state network whole brain dynamics fMRI",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "transcranial alternating current stimulation Alzheimer theta alpha frequency",
+        "hits": 5
+      }
+    ],
+    "reviewer_novelty": [
+      {
+        "tool": "find_related_work",
+        "query": "reservoir computing personalized brain models Alzheimer's disease functional connectivity stimulation targets",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "personalized brain stimulation targets Alzheimer's disease reservoir model functional connectivity",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"reservoir computing\" fMRI functional connectivity Alzheimer's disease",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "echo state network brain model stimulation targeting Alzheimer's disease",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"reservoir computing\" \"functional connectivity\" brain model",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "network model stimulation targeting Alzheimer's disease functional connectivity",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "\"pathology site\" \"therapeutic target\" dissociation Alzheimer's disease stimulation",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "closed-loop brain stimulation Alzheimer's disease functional connectivity model",
+        "hits": 0
+      }
+    ]
   },
   "errors": [],
   "preprint": {

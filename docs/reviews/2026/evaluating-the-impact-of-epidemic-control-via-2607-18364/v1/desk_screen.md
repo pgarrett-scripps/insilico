@@ -1,6 +1,0 @@
-# Editorial Desk Screen
-
-**Outcome:** Passed Desk Screen
-
-## Rationale
-This manuscript presents a mathematically rigorous stochastic framework for finite-population SIR epidemics with state-dependent Markovian regime switching. The work is technically sound, makes a clear methodological contribution (joint distributional analysis of extinction time and infection burden via recursive formulas), and includes an empirical illustration using mpox data from Luxembourg. The paper is complete, clearly written, and makes checkable claims supported by proofs and numerical results. While the empirical application is intentionally limited (conditional comparisons rather than causal inference), this is transparently acknowledged. The work is in scope for In Silico as original research with sound methods and verifiable claims. The mathematical development and computational approach are novel relative to prior Markov-modulated epidemic models. No fundamental flaws or threshold problems are evident that would warrant desk rejection.

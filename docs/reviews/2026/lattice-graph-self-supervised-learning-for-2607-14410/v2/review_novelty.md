@@ -1,0 +1,24 @@
+# Novelty & Contribution Reviewer
+
+## Summary
+The manuscript presents LATTICE, a graph self-supervised learning framework for multimodal spatial omics integration. While the combination of masked reconstruction, cross-modal alignment, and spatial regularization appears novel in this specific application domain, the novelty claims require substantial qualification. The framework builds directly on existing spatial transcriptomics methods (GraphST, STAGATE, SpaGCN) and multimodal integration approaches (SIMO, SSpMosaic, MaxFuse), and the manuscript acknowledges these as related work. The primary contribution appears to be the specific integration of five modality blocks and the empirical demonstration on a melanoma cohort, but the positioning as a fundamentally new framework overstates the methodological innovation.
+
+## Strengths
+- The manuscript clearly enumerates four specific contributions, making novelty claims testable.
+- The modality-ladder evaluation (M1-M5) provides concrete evidence of how different data sources affect performance.
+- The framework integrates five distinct assay blocks, which represents practical engineering work.
+
+## Weaknesses
+- Load-bearing claim 1: "We introduce LATTICE, a graph self-supervised learning framework for learning representations from multimodal spatial omics data." This claim is HARD problematic because my searches found that the manuscript itself appears as "LATTICE: Graph Self-Supervised Learning for Multimodal Spatial Omics Integration (2026)" in the arXiv search results (http://arxiv.org/abs/2607.14410v2), suggesting this is either a self-citation or duplicate submission. More fundamentally, the manuscript acknowledges GraphST, STAGATE, and SpaGCN as existing graph-based spatial transcriptomics methods, and SIMO, SSpMosaic, and MaxFuse as multimodal spatial integration methods. The delta from GraphST (which already uses graph neural networks and self-supervision on expression and spatial proximity) to LATTICE (which adds cross-modal alignment and works on concatenated multimodal features) is incremental rather than foundational. The alternative explanation is that LATTICE represents a specific implementation choice within an established paradigm rather than a new framework category.
+- Load-bearing claim 2: "We propose a combination of masked reconstruction, cross-modal alignment losses, and spatial regularization for multimodal spatial representation learning." This claim is SOFT problematic because while the specific combination may be new for spatial omics, each component is well-established in other domains: masked reconstruction from BERT-style pretraining, cross-modal alignment from contrastive learning, and spatial regularization from graph signal processing. The manuscript does not demonstrate that this particular combination yields qualitatively different results from using established components separately or in different combinations. The ablation study in Table 3 shows that removing spatial regularization lowers spatial contiguity most, but this is exactly what spatial regularization is designed to do - it doesn't establish that the three-component combination is uniquely effective versus other possible combinations.
+- The manuscript cites a preprint "Spatially Anchored Regulatory State Inference in Melanoma" (2026) by many of the same authors, suggesting LATTICE may be an extension of that work rather than an independent contribution.
+- The novelty search found no direct preprints preempting the specific five-modality integration, but this may reflect the niche specificity rather than true novelty.
+- The contribution of "end-to-end implementation" (claim 3) is engineering work rather than methodological novelty.
+- The "modality-ladder behavior quantification" (claim 4) provides useful empirical data but doesn't constitute a methodological contribution.
+- The manuscript appropriately positions itself against related work but could more clearly articulate what specific gap LATTICE fills that GraphST+SIMO together do not.
+- The private dataset limitation prevents independent verification of claims, though this doesn't affect novelty assessment directly.
+
+## Questions
+- Is the arXiv entry (2607.14410v2) the same manuscript? If so, this submission appears to be duplicate.
+- What specific, testable capability does LATTICE enable that running GraphST on concatenated multimodal features followed by SIMO-style alignment would not achieve?
+- For the ablation study: was the full combination tested against alternative combinations (e.g., reconstruction+alignment without spatial, or spatial+alignment without reconstruction) to establish that all three components are necessary?

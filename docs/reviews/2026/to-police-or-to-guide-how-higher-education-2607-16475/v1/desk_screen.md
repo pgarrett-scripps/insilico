@@ -1,6 +1,0 @@
-# Editorial Desk Screen
-
-**Outcome:** Passed Desk Screen
-
-## Rationale
-This manuscript presents a qualitative interview study examining how CS instructors design and implement generative AI policies in their courses. The work is in scope for In Silico: it is original research with a clear research question, employs a defensible methodology (reflexive thematic analysis of 13 semi-structured interviews), and makes checkable claims about instructor perspectives and policy design. The authors acknowledge limitations (US-only sample, self-reported data without independent validation, no empirical evidence of policy effectiveness) and position their findings as exploratory rather than generalizable. The manuscript does not fall into out-of-scope categories—it is not clinical guidance, does not rely on inaccessible evidence, and is a genuine research manuscript making substantive claims about education practice. While the work is qualitative and preliminary in nature, these are not grounds for desk rejection under In Silico's scope. The contribution—distinguishing learning-oriented from assessment-oriented AI policies and their effects on instructor-student relationships—addresses a gap in the literature and is relevant to researchers in CS education and adjacent fields. Proceed to full review.

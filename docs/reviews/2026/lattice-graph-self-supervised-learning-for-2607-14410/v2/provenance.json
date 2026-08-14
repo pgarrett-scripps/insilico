@@ -1,0 +1,187 @@
+{
+  "generated_at": "2026-08-14T07:10:46+00:00",
+  "pipeline": {
+    "sha": "367bdb8f8146e3a3aae95d18b9255ebdc5dc5e27+dirty",
+    "version": "0.3.0"
+  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v3.2",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.1.1",
+    "caveman": null,
+    "chars": 51747,
+    "section_source": "headings",
+    "text_sha256": "ccc6f88b479aa768de56b94fcd03adc892b0a60e4513a89f6daa4c6ae0056379",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 52,
+        "preamble_share": 0.009,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 51747,
+        "words": 6054,
+        "sentences": 327,
+        "blocks": 216,
+        "display_math": 22,
+        "table_rows": 33,
+        "reference_words": 2985,
+        "references_separable": true,
+        "main_text_words": 3069,
+        "reference_entries": 20
+      },
+      "density": {
+        "sentence_len_mean": 18.86,
+        "sentence_len_median": 17.0,
+        "sentence_len_p90": 32.0,
+        "long_sentence_share": 0.0498,
+        "numbers_per_1k": 48.4,
+        "citations": 54,
+        "citation_style": "numeric",
+        "citations_per_1k": 8.92,
+        "hedges_per_1k": 4.29,
+        "boosters_per_1k": 0.5,
+        "mattr": 0.5684,
+        "passive_per_sentence_approx": 0.156,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 60,
+          "sentences": 1,
+          "sentence_len_mean": 60.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 228,
+          "sentences": 9,
+          "sentence_len_mean": 25.33,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 13.16,
+          "boosters_per_1k": 4.39
+        },
+        "introduction": {
+          "words": 832,
+          "sentences": 43,
+          "sentence_len_mean": 20.8,
+          "citations_per_1k": 4.81,
+          "hedges_per_1k": 4.81,
+          "boosters_per_1k": 0.0
+        },
+        "related work": {
+          "words": 1740,
+          "sentences": 96,
+          "sentence_len_mean": 18.71,
+          "citations_per_1k": 9.2,
+          "hedges_per_1k": 3.45,
+          "boosters_per_1k": 0.0
+        },
+        "conclusion": {
+          "words": 203,
+          "sentences": 7,
+          "sentence_len_mean": 29.0,
+          "citations_per_1k": 9.85,
+          "hedges_per_1k": 4.93,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "dd3a6b59389184800ee109fe11d4b4b990464d066ca3697cb4801d0518175ec9"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.25,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.14723179595000002,
+  "cost_by_node": {
+    "editor": 0.008348,
+    "journal_recommender": 0.00942
+  },
+  "research_by_node": {},
+  "errors": [],
+  "preprint": {
+    "url": "https://arxiv.org/abs/2607.14410",
+    "source": "arxiv",
+    "pdf_url": "https://arxiv.org/pdf/2607.14410v2",
+    "identifier": "2607.14410",
+    "doi": "10.48550/arXiv.2607.14410",
+    "title": "LATTICE: Graph Self-Supervised Learning for Multimodal Spatial Omics Integration",
+    "authors": [
+      "Jagan Mohan Reddy Dwarampudi",
+      "Veena Kochat",
+      "Suresh Satpati",
+      "Hien Van Nguyen",
+      "Kunal Rai",
+      "Tania Banerjee"
+    ],
+    "abstract": "Spatially resolved omics studies increasingly combine transcriptomic and epigenomic assays, yet downstream analysis is often still performed using single-modality pipelines. We present LATTICE (Latent Alignment of Tissue-level and Transcriptomic Information for Cross-modal Embedding), a graph-based self-supervised framework that learns spot-level representations from harmonized multimodal features. LATTICE integrates five aligned modality blocks per Visium spot: Visium RNA, scMultiome RNA, scMultiome ATAC, spatial ATAC, and spatial CUT\\&Tag. These modalities capture spatial transcriptomic measurements, single-cell inferred regulatory activity, and in situ chromatin and histone states within a unified lattice representation. LATTICE constructs a spatial neighborhood graph and trains a TransformerConv encoder using masked reconstruction, cross-modal alignment, and spatial smoothness objectives. On a private 11-sample melanoma cohort from an anonymized clinical collaborator comprising 54{,}912 total spots, LATTICE demonstrated stable optimization behavior, reproducible embeddings across analysis seeds, and complete multimodal integration across all samples. Adding scMultiome RNA to Visium RNA alone substantially improved concordance with Space Ranger clusters across 11 runs (adjusted Rand index [ARI] +0.157, normalized mutual information [NMI] +0.143, and spatial contiguity +0.174). Additional modalities further improved spatial contiguity and multimodal utility score (MUS), although they sometimes reduced agreement with RNA-derived reference labels, likely because the learned embeddings captured chromatin and regulatory structure beyond transcriptomic similarity alone. These results position LATTICE as a practical and empirically grounded framework for multimodal spatial omics integration, while also highlighting the need for stronger supervision and broader external benchmarking.",
+    "published": "2026-07-15",
+    "version": "2",
+    "pdf_sha256": "dd3a6b59389184800ee109fe11d4b4b990464d066ca3697cb4801d0518175ec9",
+    "pdf_bytes": 4186683
+  }
+}

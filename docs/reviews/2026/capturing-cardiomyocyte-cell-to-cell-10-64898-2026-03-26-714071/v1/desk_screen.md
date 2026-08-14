@@ -1,6 +1,0 @@
-# Editorial Desk Screen
-
-**Outcome:** Passed Desk Screen
-
-## Rationale
-This manuscript presents a novel single-cell top-down proteomics (SC-TDP) approach applied to cardiomyocytes, demonstrating technical advancement and biological insight into proteoform heterogeneity. The work is methodologically sound, with clear experimental design, appropriate controls (protein standards, bulk tissue validation), and reproducible results across 13 individual cells. The identification of 165 distinct proteoforms from 57 proteins, including novel modifications (e.g., MLC-2 trimethylation and concurrent phosphorylation, Qcr7 succinylation), represents a meaningful contribution to single-cell proteomics. The manuscript is well-written, properly acknowledges limitations, and the findings have clear relevance to cardiac biology and disease mechanisms. While the sample size is modest and functional consequences of identified modifications remain to be determined, these are appropriate topics for discussion rather than grounds for desk rejection. The work advances the field and meets the standards for a selective peer-reviewed journal.

@@ -1,34 +1,29 @@
 # Journal Recommendations
 
 ## As-is (current quality)
-- **bioRxiv**
-  - Fit: This manuscript can remain on bioRxiv as a preprint to establish priority. The preprint format accepts manuscripts undergoing revision at peer-reviewed venues. bioRxiv is appropriate for computational neuroscience work that makes reproducible claims, though it does not provide formal peer review.
-  - Realism: Posting as-is will draw attention, but the current blocking issues (untested title claim in Fig. 6, abstract anchored to leaky analysis) mean any serious downstream venue will require the revisions the editor has already specified. bioRxiv serves as a holding venue, not a final destination.
-- **arXiv q-bio.NC**
-  - Fit: The cs.LG or q-bio.NC category would accept this computational neuroscience work with honest reporting of modest classification accuracy (0.66–0.70 AUROC), reproducible methods (reservoir computing), and in-silico validation. The preprint servers explicitly host work under revision.
-  - Realism: arXiv posting is immediate and suitable for visibility during revision. It does not constitute peer review but provides a dated, citable version and does not preclude later journal publication.
+_No headline venue is realistic at the current quality — see Alternative._
 
 ## After required revisions
-- **Nature Communications**
-  - Fit: Once the blocking items are resolved (hypergeometric test on Fig. 6C overlap, abstract re-anchored to LOPO ~78% net cure, claims qualified as in-silico/model-specific, reproducibility gaps closed), this becomes a solid contribution to computational approaches to neurodegenerative disease. The dissociation between pathology sites and therapeutic targets, validated via honest cross-validation and closed-loop dose-reduction, fits the scope of methods-heavy biology papers at this journal.
-  - Realism: Nature Communications would likely accept after revisions address the title-level claim, LOPO results are prominent, and the in-silico scope is clearly stated. The paper's candid reporting of modest diagnostic accuracy (vs 0.84 structural benchmark) and honest validation are strengths. Acceptance odds after revision: ~45–55%, contingent on whether the hypergeometric test on Fig. 6 remains significant.
-- **PLoS Computational Biology**
-  - Fit: Excellent fit once revisions are complete. This journal explicitly accepts computational methods papers, reproducible workflows, and applications to biology. The reservoir-based generative model, LOPO validation, and in-silico perturbation framework align perfectly with the journal's scope for methodological and computational biology papers. The authors' provision of code and the honest AUROC reporting are strengths.
-  - Realism: After revision, acceptance odds are high (~60–70%). The journal values transparency and reproducibility, both of which the authors are addressing. The modest classification AUROC is not a barrier for a methods paper focused on perturbability rather than diagnosis.
-- **eLife**
-  - Fit: After revision, eLife's scope for 'computational tools and frameworks' would accommodate this work. The subject-specific modeling pipeline, LOPO validation, and closed-loop controller design are methodological contributions. The honest cross-validation and physiological-amplitude diagnostics fit eLife's expectations for rigorous, self-critical work.
-  - Realism: Acceptance odds after revision: ~40–50%. eLife is selective for computational neuroscience but receptive to work that combines novelty with transparency. The main challenge is positioning this as a general tool (not just AD-specific). The dissociation result, once tested statistically and qualified as model-specific, would strengthen the case.
+- **NeuroImage**
+  - Fit: This journal specializes in computational neuroscience and neuroimaging methods, with a strong focus on novel analytical approaches to brain connectivity and network modeling—perfect for the reservoir-computing framework applied to Alzheimer's disease fMRI.
+  - Realism: With major revisions addressing the methodological concerns and toning down overstated claims, this would be a realistic target given the technical sophistication.
+- **PLOS Computational Biology**
+  - Fit: Excellent fit for computational modeling of brain disorders, with emphasis on methodological innovation and clear presentation of limitations—the journal's scope aligns with the paper's computational framework and Alzheimer's disease application.
+  - Realism: After addressing the statistical and validation concerns, this is a realistic venue given PLOS CB's acceptance of methodologically sound but not necessarily groundbreaking computational work.
+- **Journal of Neural Engineering**
+  - Fit: Focuses on neural engineering approaches including computational models for neuromodulation and brain stimulation—directly relevant to the paper's central question about optimal stimulation targets.
+  - Realism: With revisions clarifying the distinction between model-based targeting and actual therapeutic intervention, this specialized journal would be appropriate.
 
 ## Alternative outlets
-- **NeuroImage**
-  - Fit: Specialized neuroimaging methods journal with strong track record for computational and modeling work in fMRI. The subject-specific reservoir model, identifiability validation, and systematic perturbation design fit the methods focus. If top-tier computational-biology venues decline, NeuroImage remains a solid home for the modeling framework and its application to AD.
-  - Realism: Acceptance odds if unable to reach Nature Communications/PLoS CB: ~65–75%. NeuroImage is receptive to sound methodological work with reproducible code and honest reporting of limitations. The modest classification accuracy is not a barrier for a methods paper. The paper's rigor in separating in-silico simulation from clinical claims would be valued here.
-- **Human Brain Mapping**
-  - Fit: Methods-focused computational neuroscience venue with established interest in personalized brain models and network-level interventions. The per-patient identifiability result, discriminant-aligned targeting, and closed-loop controller design align with the journal's scope for brain imaging and computational modeling methods.
-  - Realism: If Nature Communications or eLife decline: ~60–70%. The journal values reproducibility and detailed methods disclosure, which the authors are addressing. The modest AUROC and in-silico scope would not be problematic for a methods paper.
-- **Journal of Neuroscience Methods**
-  - Fit: Methods-focused venue explicitly welcoming novel computational and analytical frameworks. The reservoir-based subject-specific model, cross-validated identifiability, and in-silico perturbation testbed are methodological contributions of independent interest beyond AD application. The reproducible pipeline (code deposition, versioned environment) meets journal standards.
-  - Realism: If mid-tier computational venues decline: ~70–75%. This journal has a high acceptance threshold for methods and reproducibility, which favors the authors' honest LOPO validation and closed-loop framework. Positioning as a generalizable personalized-modeling approach (not disease-specific) would strengthen fit.
+- **arXiv (q-bio.NC or cs.LG)**
+  - Fit: Preprint server for quantitative biology/neuroscience or machine learning—allows dissemination while addressing the reproducibility concerns through open code/data deposition.
+  - Realism: Immediate acceptance as a preprint; serves as a foundation for community feedback and eventual journal submission after revisions.
+- **Frontiers in Computational Neuroscience**
+  - Fit: Specialized open-access journal with moderate selectivity, accepting computational modeling studies with clear methodological contributions to neuroscience.
+  - Realism: Realistic fallback option even with current limitations, though revisions would strengthen the submission.
+- **Brain Informatics**
+  - Fit: Interdisciplinary journal focusing on computational approaches to brain data analysis, with scope including network modeling and Alzheimer's disease biomarkers.
+  - Realism: Moderate selectivity venue that would accept the methodological framework even with some of the identified limitations.
 
 ## Notes
-The editor's verdict is 'major' with explicit guidance that this is round 2 of 3 revisions. The blocking issues are bounded and require no new experiments: (1) hypergeometric test on Fig. 6C 'largely disjoint' claim (the title's premise); (2) re-anchor abstract and Results to LOPO ~78% net cure (leakage-free) rather than the transductive 100% result; (3) qualify in-silico/model-specific language in abstract; (4) close reproducibility gaps (random seed, versioned code DOI, parameter details). Once these are addressed, the paper's strengths — honest LOPO validation, physiological-amplitude diagnostics, closed-loop dose-reduction, candid Discussion — position it well for mid-tier computational neuroscience venues. The 'as_is' bucket reflects the current state; the paper is not yet journal-ready but is on a clear path to acceptance with focused revisions. The target journal 'In Silico' (an overlay preprint-review model) could eventually publish this, but even its explicit tolerance for preliminary work and LLM reviews would likely flag the untested title claim; waiting for the major revisions to be addressed first is recommended.
+The manuscript sits at the intersection of computational neuroscience, network modeling, and Alzheimer's disease biomarkers. The major revision verdict suggests it's not ready for top-tier venues (Nature Communications, Science Advances) even after revision, but solid mid-tier computational neuroscience journals are appropriate targets.

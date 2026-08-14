@@ -1,6 +1,0 @@
-# Editorial Desk Screen
-
-**Outcome:** Passed Desk Screen
-
-## Rationale
-This manuscript presents a comprehensive spatial proteomics study of Alzheimer's disease using subcellular fractionation combined with quantitative mass spectrometry in human postmortem hippocampi and an AD mouse model. The work is methodologically rigorous, addresses an important biological question about how subcellular localization influences AD pathogenesis, and reveals novel insights (e.g., retromer complex mislocalization, nuclear transport dysfunction) that would be obscured by conventional unfractionated analyses. The integration of human tissue data with temporal degradation measurements in mice strengthens the findings. While the manuscript is lengthy and dense, the experimental design is sound, the data appear comprehensive, and the conclusions are well-supported by multiple complementary analytical approaches (WGCNA, ANOVA, correlation analyses). The work makes a clear contribution to understanding AD biology and would be of interest to the neuroscience and proteomics communities. The manuscript merits full peer review.

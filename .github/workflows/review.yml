@@ -307,6 +307,7 @@ jobs:
         if: >-
           steps.run.outputs.unreadable != 'true'
           && steps.run.outputs.bad_command != 'true'
+          && steps.run.outputs.already_reviewed != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}
@@ -386,6 +387,7 @@ jobs:
           github.event_name == 'issue_comment'
           && steps.run.outputs.unreadable != 'true'
           && steps.run.outputs.bad_command != 'true'
+          && steps.run.outputs.already_reviewed != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           DECISION: ${{ steps.run.outputs.decision }}
@@ -432,4 +434,6 @@ jobs:
           gh issue comment "${{ github.event.issue.number }}" --body \
             "The referee panel failed. See the [run log](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).
 
-          Common causes: the URL isn't a supported preprint source, the PDF is scanned or image-only, or the source is paywalled."
+          The log names the failed reviewer, auditor, provider request, or
+          pipeline stage. Incomplete panels are stopped before an editor
+          decision is produced and are safe to re-run."
