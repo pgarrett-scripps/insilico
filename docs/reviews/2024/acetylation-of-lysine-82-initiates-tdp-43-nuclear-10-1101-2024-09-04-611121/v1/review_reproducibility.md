@@ -1,0 +1,25 @@
+# Reproducibility Reviewer
+
+## Summary
+The paper's three load-bearing claims — that partial proteasome inhibition drives TDP-43 nuclear depletion, that K82 acetylation within the cNLS disrupts importin-α1 binding, and that K82 acetylation is elevated in sALS motor cortex — rest on mass spectrometry data, plasmid reagents, and antibodies that are not deposited or obtainable, and on a knock-in cell line whose generation is not described. The procedural detail that is present (MS acquisition parameters, peptide binding assay, differentiation timeline) is genuinely good. But the load-bearing artifacts are gated behind publication promises or vendor discretion, which is a HARD reproducibility failure as the manuscript stands.
+
+## Strengths
+- Mass spectrometry acquisition and search parameters (instrument, gradient, resolution, tolerances, FDR filter) are specified in unusual detail, which is exactly what a replicator needs.
+- The peptide–importin-α1 binding assay is described step-by-step with concentrations, washes, and detection, sufficient to repeat without contacting the authors.
+- The mislocalization claim is supported by multiple independent readouts (fractionation, immunofluorescence, live imaging, TMT MS), which strengthens confidence in the biological finding even where individual datasets are not yet available.
+
+## Weaknesses
+- The TMT nuclear proteome and PTM identification rest on mass spectrometry data that are not deposited. The claim that TDP-43 is the protein whose nuclear localization is most perturbed by proteasome inhibition (Fig. 1E–F) and the identification of acetylation/ubiquitination at K79/K82/K84 (Fig. 3A–B) are the foundation of the paper. No accession number (PRIDE, MassIVE, or similar) is given for either dataset, and the manuscript contains no data-availability statement at all. An independent group cannot check the quantification, the PTM assignments, or the peptide-level evidence for K82 acetylation. This is a HARD flag: raw and processed MS data must be deposited with a working accession before these claims can be evaluated.
+- The TDP-43 variant plasmids are load-bearing reagents promised only "at the time of publication." The K82Q/K82R, 6KR, PY-NLS, and double-lysine variants are the evidence for the central claim that K82 is the gatekeeper of TDP-43 nuclear import (Figs. 3C–E, 4). The methods state "All plasmids in this manuscript will be deposited to Addgene at the time of publication" — a promise, not availability. Per the reproducibility standard, this is a HARD flag for load-bearing artifacts. The variants need a resolvable, versioned location (Addgene accession or archived DOI) now.
+- The acetylation-specific antibodies are not available, and the sALS claim cannot be reproduced without them. The sALS result (Fig. 5B–C) rests entirely on three polyclonal antibodies raised by Sanyou Inc. against TDP-43aa77–90 acetylated at K82. No catalog number, clone identifier, or deposition is given. Without the antibodies, the sALS finding cannot be independently verified. (The additional question of whether the antibodies cross-react with K79- or K84-acetylated TDP-43 or with unrelated acetylated proteins is a specificity-validation issue for methods_completeness, but the unavailability is squarely mine.)
+- The TDP-43-Clover homozygous knock-in SH-SY5Y line — the source of all PTM data — is not described. The methods state this line exists and was used for affinity purification (Fig. 3A, S3A), but give no targeting strategy, guide sequences, donor design, or validation. A replicator cannot generate or obtain this line, and the PTM identification depends entirely on it.
+- Software versions for the MS analysis pipeline (RawConverter, DTASelect2, Census2) are not given, and the TMT six-plex labelling scheme is deferred to a Supplementary Table not provided — which sample received which tag is unrecoverable from the text.
+- The live-cell imaging quantification (nuclear vs. whole-cell fluorescence, Figs. 2G–H, 4E) is described without software, thresholding, or cell-count criteria.
+- Access conditions for the UCSD ALS tissue repository samples are not stated, and Supplementary Table S2 (case demographics) is referenced but not provided.
+- The "three forward labelling groups and three reverse labelling groups" for the TMT experiment are not specified beyond that sentence; the normalization and ratio-calculation steps are described only in prose.
+
+## Questions
+- What is the accession (PRIDE/MassIVE) for the TMT nuclear proteome and the TDP-43 PTM identification datasets?
+- What is the Addgene accession or archived DOI for the TDP-43 variant plasmids?
+- Can the K82-acetylation antibodies be obtained (catalog number or deposition), and is there validation against K79- and K84-acetylated peptides?
+- How was the TDP-43-Clover homozygous knock-in SH-SY5Y line generated — targeting strategy, guide sequences, and validation?

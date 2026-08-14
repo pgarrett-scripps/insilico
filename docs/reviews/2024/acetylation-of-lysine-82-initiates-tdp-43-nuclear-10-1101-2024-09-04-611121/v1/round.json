@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260814-121347-acetylation-of-lysine-82-initiates-tdp-43-nuclear-",
+  "manuscript_title": "Acetylation of lysine 82 initiates TDP-43 nuclear loss of function by disrupting its nuclear import",
+  "manuscript_cache_key": "560d7e2f9601042f00120939f4fcb3301152cd12c377eddb1bf874cd9487f61b",
+  "decision": "major",
+  "weighted_score": 2.875,
+  "required_revisions": [],
+  "minor_suggestions": [],
+  "reviewer_reports": [
+    {
+      "reviewer": "clarity",
+      "score": 2.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "1. Tag orientation is contradictory across figures (HARD). Fig 2D legend states \"All proteins were tagged at the N terminus with Clover (a bright GFP variant) or mRuby, respectively,\" while Fig 3C says \"C-terminally Clover tagged TDP-43-WT\" and Fig 4A says \"A Clover tag was placed at C-terminus of each variant.\" The same construct is named \"Clover-TDP-43\" (Fig 2E) and \"TDP-43-Clover\" (Fig S1G). Since the N-terminal domain mediates TDP-43 oligomerization — a mechanism the authors themselves invoke in Fig 2G-I — a reader cannot evaluate the import assays without knowing the tag position. The dangling \"respectively\" in the Fig"
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "Unadjusted p-values across 5202 proteins do not support the \"most sensitive\" ranking claim (Fig 1E). The legend states \"Unadjusted P values were calculated using a one-sample two-sided Student's t-test\" across the nuclear proteome. With n=3 biological replicates (three forward + three reverse labelling groups), each t-test has 2 degrees of freedom, and at an unadjusted p<0.05 threshold ~260 false positives are expected by chance. The claim that TDP-43 is \"the protein whose nuclear localization is most sensitive\" is a genome-wide ranking and requires FDR control with hits reported against the corrected threshold. The companion claim that nuclear clearance is \"selective for TDP-43\" (Fig 1F) is a null claim from an underpowered comparison: with n=3, failure of other ALS-linked RBPs to reach significance is not evidence of no change. Report the FDR-corrected q-value for TDP-43 and the number of proteins passing a 5% FDR threshold."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "The sALS vs control acetylation comparison (Fig 5B) lacks a test, a defined denominator, and matching information. The claim \"all six of six sALS patients\" positive with \"no signal in four controls\" is a binary outcome that should be tested (Fisher's exact test gives p=0.0048 for a 6/6 vs 0/4 split), but no test is reported. The \"varying levels\" across sALS and the correlation with pTDP-43 are asserted without quantification or test. Critically, the ac-K82 signal is not stated to be normalized to total TDP-43 per sample. Since sALS motor cortex accumulates TDP-43, a raw ac-K82 signal could track total TDP-43 abundance rather than increased acetylation per molecule. The claim requires ac-K82/total TDP-43 ratios per sample, and controls must be matched to sALS for age and postmortem interval if the difference is to be attributed to disease rather than sample quality. Additionally, the antibody was validated against unmodified peptide but not against K79- or K84-acetylated peptides, which the manuscript itself shows are also modified (Fig 3B); cross-reactivity would inflate the ac-K82 signal."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The imaging quantifications (Fig 1D, 3D, 4E, 4G, 2G-I) have undefined n structure. The methods state \"Each data point represents an independent biological replicate (distinct wells of independently treated cells),\" but the number of cells averaged per well, the number of wells per condition, and the test applied are not stated in the text. If plotted points are individual cells, this is pseudo-replication — cells within a well are not independent. The claim that K82Q \"eliminated its nuclear import\" (Fig 3D) needs the n and the test supporting \"eliminated\" rather than \"reduced,\" as does the \"complete cytosolic localization\" claim for TDP-43-6KR (Fig 4B)."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "The peptide binding assay (Fig 3F) — n and replicate structure not stated. The claim that K82-acetylated peptides \"did not bind to importin-α1\" is a null claim. With what n? Is this a single experiment? The binding curves need replicate structure and error bars to distinguish \"no binding\" from \"below detection,\" and the \"reduced binding\" claims for K79-acetylated, K84-acetylated, and S92-phosphorylated peptides need a test with stated n."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "Sweep: Fig 1A: n per dose not stated; the \"~50% inhibition\" point — how was it derived from the dose-response, and what is its precision? Fig S1A: mouse proteasome activity — n per age group not stated; the \"~50% decline by one year\" claim has no reported test. Fig S1C: \"viability unaffected\" — non-significance in a small sample is not evidence of no effect; an equivalence test is needed. Fig 1G: stathmin-2 RT-PCR — n and test not stated. SEM is used throughout with small n (n=4–6); error bars are undefined per figure, and SEM on small samples can imply false precision. Fig 5C: soluble vs insoluble acetylation is n=1 per group; the \"earlier event than phosphorylation\" claim is unsupported by n=1. Exact p-values are not reported anywhere in the text; only threshold symbols (e.g., *P<0.05), which prevents readers from assessing marginal results."
+        }
+      ],
+      "questions": [
+        "For Fig 1E, what is the FDR-corrected q-value for TDP-43, and how many proteins pass a 5% FDR threshold?",
+        "For Fig 5B, is the ac-K82 signal normalized to total TDP-43 per sample, and what are the ac-K82/total TDP-43 ratios for each of the 10 samples?",
+        "For the imaging quantifications (Fig 1D, 3D, 4E, 4G), what is the n per condition — wells or cells — and how many cells were averaged per well?",
+        "For Fig 3F, how many independent replicates of the peptide binding assay were performed, and what do the error bars represent?"
+      ]
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "methodology-1",
+          "text": "Mass spectrometry cannot distinguish acetylation from ubiquitination at the identified lysines (HARD). The manuscript states that \"acetylation and/or ubiquitination of lysines 79, 82, and 84 were identified.\" Acetylation (+42.0106 Da) and ubiquitination (di-glycine remnant, +114.0429 Da) are distinguishable by mass, yet the authors do not report which modification was present at each site. The paper's central claim is specifically about acetylation, but the mass spec evidence is ambiguous. The K82Q mimic and the acetylated-peptide binding assay support acetylation, and the ac-K82 antibody is the direct in-cell evidence — but the antibody's validation is incomplete (see weakness 3). The authors should report the specific modification identified at each lysine, or explicitly acknowledge the ambiguity and rest the acetylation claim on the antibody and peptide data alone."
+        },
+        {
+          "id": "methodology-2",
+          "text": "Co-immunoprecipitation evidence is confounded by compartmentalization (SOFT-to-HARD). The co-IP showing loss of importin-α1 binding after 24 hr of BTZ (Fig 2A) is interpreted as disruption of the binding interface. But at 24 hr, TDP-43 is already mislocalized to the cytoplasm. If acetylation occurs in the cytoplasm after mislocalization from another cause, the reduced co-IP would be a consequence, not a cause. The in vitro peptide assay (Fig 3F) is the direct test and supports the interface-disruption model, so the conclusion is probably right — but the co-IP alone cannot distinguish cause from consequence. Performing the co-IP at an earlier time point before mislocalization is detectable, or explicitly hedging the co-IP interpretation, would resolve this."
+        },
+        {
+          "id": "methodology-3",
+          "text": "sALS tissue data lacks a competition control and stated blinding (SOFT). The ac-K82 signal in sALS motor cortex (Fig 5B) is the key clinical evidence. The antibody is validated by ELISA against the peptide, but there is no competition control showing the tissue signal is competed by the acetylated peptide and not the unacetylated one. Without this, specificity of the tissue signal is not fully established. The comparison of 6 sALS vs 4 controls also does not state whether the immunoblot analysis was blinded. A competition control on a subset of sALS samples would settle both concerns."
+        },
+        {
+          "id": "methodology-4",
+          "text": "In vivo causal claim outruns the evidence (SOFT, overclaiming). The Discussion states acetylation \"initiates and drives TDP-43 proteinopathy.\" The design shows acetylation can disrupt nuclear import in vitro and in cultured cells, and that ac-K82 is elevated in sALS tissue. It does not test whether acetylation initiates proteinopathy in vivo; the tissue data support association, not causation. The claim should be scaled to \"acetylation can initiate\" unless in vivo causal evidence is added."
+        },
+        {
+          "id": "methodology-5",
+          "text": "Replication not stated (SOFT). The number of independent differentiations for the iPSC-derived neuron experiments is not reported. For a paper whose key effects rest on cultured neuron phenotypes, this should be stated."
+        },
+        {
+          "id": "methodology-6",
+          "text": "K82Q is a mimic, not actual acetylation (SOFT). The cellular \"sufficient\" claim rests on the glutamine substitution. The peptide assay covers actual acetylation, but the cellular experiments use the mimic; this is standard practice but should be acknowledged as a limitation."
+        }
+      ],
+      "questions": [
+        "Can the mass spectrometry data distinguish acetylation from ubiquitination at K79/K82/K84, and what was the specific modification at each site?",
+        "Was a competition control (pre-incubating the ac-K82 antibody with the acetylated peptide) performed on sALS tissue lysates?",
+        "How many independent differentiations were used for the iPSC-derived neuron experiments?",
+        "Was the sALS versus control immunoblot analysis blinded?"
+      ]
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 3.0,
+      "weaknesses": [
+        {
+          "id": "literature-1",
+          "text": "The manuscript's central claim — that modification of a lysine within the TDP-43 cNLS controls its nuclear import — omits the directly competing \"Genetically encoded lysine photocage for spatiotemporal control of TDP-43 nuclear import\" (Shadish et al., *Biophysical Chemistry* 2024, PMID 38290242), which already demonstrated lysine-dependent control of TDP-43 nuclear import. This is directly competing work bearing on the same mechanism, and its absence inflates the apparent novelty of the K82-acetylation finding. (HARD)"
+        },
+        {
+          "id": "literature-2",
+          "text": "The manuscript's importin-α1 mechanism and its therapeutic framing omit \"Nuclear import receptors are recruited by FG-nucleoporins to rescue hallmarks of TDP-43 proteinopathy\" (2022), a directly competing line showing that nuclear-import-receptor engagement rescues TDP-43 proteinopathy — directly relevant to the claim that disrupted importin engagement drives the phenotype. (HARD)"
+        },
+        {
+          "id": "literature-3",
+          "text": "The manuscript states that acetylation at K82 \"is sufficient to abolish TDP-43 binding to importin-α1 and subsequent nuclear import\" as a finding, but Ko et al. 2024 (ref 30) already established the K82Q-mimic disruption of importin-α1/β signaling. The manuscript acknowledges this in one clause but never states what it adds beyond Ko et al. (the endogenous PTM detection in sALS tissue, the proteasome-inhibition trigger) — the novelty reviewer's verdict, but the citation record should make the incremental contribution explicit rather than leaving it implicit."
+        },
+        {
+          "id": "literature-4",
+          "text": "Ref 34 (Kametani et al. 2016) is cited for \"K82 acetylation in one out of two ALS postmortem samples\"; I could not verify the residue and count from metadata alone — please confirm the exact finding."
+        },
+        {
+          "id": "literature-5",
+          "text": "The reference list as parsed contains garbled entries (e.g., ref 24 trailing \"39\", ref 26 lowercase journal name), so I could not confirm every entry resolves; please confirm no fabricated or mis-typed entries survive the conversion."
+        },
+        {
+          "id": "literature-6",
+          "text": "Citations are reasonably current (2022, 2024 present), so currency is not a concern."
+        },
+        {
+          "id": "literature-7",
+          "text": "The aging-proteasome-decline and passive-export attributions are accurate and appropriately primary-sourced."
+        }
+      ],
+      "questions": [
+        "In Kametani et al. 2016, what exactly is reported — which residue(s) and how many of how many ALS samples — that supports the \"one out of two\" K82-acetylation claim?",
+        "Were the Shadish et al. 2024 photocage paper and the 2022 FG-nucleoporin import-receptor rescue paper considered, and if so why are they not cited?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The claim that K82 acetylation initiates TDP-43 proteinopathy (\"sufficient to initiate TDP-43 nuclear loss of function,\" \"acetylation as a plausible initiator\") rests on the human data in Fig. 5, which are correlative: K82 acetylation is detected in sALS motor cortex alongside, and in the same samples as, phosphorylated TDP-43. The temporal ordering (acetylation \"may be an earlier event than phosphorylation\") is inferred from the presence of ac-K82 in the soluble fraction while phospho-TDP-43 is insoluble-only, but soluble-vs-insoluble partitioning is not a direct chronology. The alternative — that K82 acetylation is a consequence or correlate of an already-initiated proteinopathy rather than its initiator — is not excluded by the presented data. What would settle it: a time-course in a model where acetylation is shown to precede nuclear depletion and aggregation, or evidence that blocking K82 acetylation (e.g., deacetylase manipulation) prevents the downstream cascade."
+        },
+        {
+          "id": "novelty-2",
+          "text": "The novelty of the K82Q-mimic result specifically is partly preempted by Ko et al. 2024 (\"Single acetylation-mimetic mutation in TDP-43 NLS disrupts importin α1/β signaling\"), which the authors cite and which reported that a single acetylation-mimetic mutation disrupts importin-α1/β signaling. The authors' delta is the endogenous-acetylation detection and the full mechanistic chain, which is real — but the paper should state more explicitly that the K82Q-mimic observation itself is confirmatory of Ko et al., not novel, so the reader can see exactly what the new increment is."
+        },
+        {
+          "id": "novelty-3",
+          "text": "The claim that TDP-43 is \"the protein whose nuclear localization is most sensitive to reduced proteasome activity\" (Fig. 1E-F) is a strong, specific priority-adjacent claim. It rests on a single TMT experiment (nuclear proteome, one BTZ condition) whose statistical basis I cannot fully verify from the text (the volcano plot and P-value method are described but the underlying data are not deposited in a form I can inspect). If the nuclear-proteome dataset is not deposited, this \"most sensitive\" claim is not independently checkable. What would settle it: deposition of the TMT dataset (e.g., in a public repository) so the ranking and its significance can be audited."
+        },
+        {
+          "id": "novelty-4",
+          "text": "The \"first to\" framing is appropriately hedged (\"plausible initiator,\" \"evidence supporting\"), which is good, but the abstract's \"sufficient to initiate\" is stronger than the correlative human evidence supports — a wording mismatch between abstract and discussion."
+        },
+        {
+          "id": "novelty-5",
+          "text": "The claim that K82 acetylation is \"found in all sALS postmortem motor cortices examined\" (6/6) is a small-n observation; the authors do flag variability, but the n=6/4 sample sizes should be stated as a limitation in the novelty framing rather than implied as general."
+        },
+        {
+          "id": "novelty-6",
+          "text": "The paper does not discuss whether the K82 acetylation it detects is the same modification previously reported by Kametani et al. 2016 (1/2 ALS samples) or a distinct finding — a head-to-head comparison of detection methods would sharpen the delta."
+        },
+        {
+          "id": "novelty-7",
+          "text": "The therapeutic-implication claim (deacetylase targeting, ref 32) is asserted rather than demonstrated; the paper shows no experiment where inhibiting deacetylation rescues TDP-43 nuclear import, so the \"so what\" for therapy outruns the demonstrated use case."
+        },
+        {
+          "id": "novelty-8",
+          "text": "No preempting preprint was found in my searches (bioRxiv/medRxiv/arXiv); the only matching preprint is the manuscript itself, so the priority claim survives a genuine search."
+        }
+      ],
+      "questions": [
+        "Is the TMT nuclear-proteome dataset (Fig. 1E-F) deposited in a public repository, and if so where, so the \"most sensitive\" ranking can be independently verified?",
+        "Can the authors state explicitly which of their results are confirmatory of Ko et al. 2024 (K82Q-mimic) versus novel, so the increment is unambiguous?",
+        "Is there any experiment (e.g., deacetylase inhibition or K82-acetylation blockade) that would test whether K82 acetylation precedes, rather than accompanies, nuclear depletion in a time-course?"
+      ]
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "rigor-1",
+          "text": "HARD — title and Discussion causal claim. \"Acetylation of lysine 82 initiates TDP-43 nuclear loss of function\" (title) and \"acetylation initiates and drives TDP-43 proteinopathy\" (Discussion) assert that K82 acetylation is the causal mediator of the proteasome-inhibition phenotype. The evidence establishes sufficiency (K82Q mimic, Fig 3C-E; acetylated K82 peptide fails to bind importin-α1, Fig 3F) and co-occurrence (mass spec under BTZ), but no experiment prevents K82 acetylation and shows mislocalization is blocked. The same mass spec identifies ubiquitination at K79/82/84 — an equally plausible mediator that the abstract itself acknowledges (\"driven by ubiquitination or acetylation\") but the title drops. What would settle it: block K82 acetylation (acetyltransferase inhibition or deacetylase overexpression) and show BTZ-induced mislocalization is prevented, or show a non-acetylatable K82 variant that retains import resists it — noting K82R is confounded because it fails import on its own."
+        },
+        {
+          "id": "rigor-2",
+          "text": "HARD — sALS antibody specificity. The ac-K82 antibodies are validated only against unmodified vs K82-acetylated peptide (Fig 5A), not against K79-acetylated or K84-acetylated peptides, which the same mass spec shows are also acetylated under BTZ. The increased signal in BTZ-treated lysates (Fig S5) is therefore consistent with K79/K84 cross-reactivity, and the abstract's claim \"we detected acetylation of lysine 82 in the motor cortex of sporadic ALS patients but not control subjects\" inherits this. What would settle it: ELISA of each antibody against K79-ac and K84-ac peptides, plus competition with the K82-ac peptide."
+        },
+        {
+          "id": "rigor-3",
+          "text": "SOFT-to-HARD — \"TDP-43 was the protein whose nuclear localization was the most sensitive to a reduction in proteasome activity.\" The mass spec, immunofluorescence and stathmin-2 experiments use 20 nM BTZ, while 2 nM is stated as achieving ~50% inhibition (Fig 1A); if 20 nM gives substantially more than 50%, the \"partial reduction\" framing of the headline experiments is not supported. The mass spec also measures nuclear content, which is equated with localization. State the % inhibition at 20 nM, or repeat the proteomics at 2 nM."
+        },
+        {
+          "id": "rigor-4",
+          "text": "SOFT — aging link. \"Red"
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The TMT nuclear proteome and PTM identification rest on mass spectrometry data that are not deposited. The claim that TDP-43 is the protein whose nuclear localization is most perturbed by proteasome inhibition (Fig. 1E–F) and the identification of acetylation/ubiquitination at K79/K82/K84 (Fig. 3A–B) are the foundation of the paper. No accession number (PRIDE, MassIVE, or similar) is given for either dataset, and the manuscript contains no data-availability statement at all. An independent group cannot check the quantification, the PTM assignments, or the peptide-level evidence for K82 acetylation. This is a HARD flag: raw and processed MS data must be deposited with a working accession before these claims can be evaluated."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "The TDP-43 variant plasmids are load-bearing reagents promised only \"at the time of publication.\" The K82Q/K82R, 6KR, PY-NLS, and double-lysine variants are the evidence for the central claim that K82 is the gatekeeper of TDP-43 nuclear import (Figs. 3C–E, 4). The methods state \"All plasmids in this manuscript will be deposited to Addgene at the time of publication\" — a promise, not availability. Per the reproducibility standard, this is a HARD flag for load-bearing artifacts. The variants need a resolvable, versioned location (Addgene accession or archived DOI) now."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "The acetylation-specific antibodies are not available, and the sALS claim cannot be reproduced without them. The sALS result (Fig. 5B–C) rests entirely on three polyclonal antibodies raised by Sanyou Inc. against TDP-43aa77–90 acetylated at K82. No catalog number, clone identifier, or deposition is given. Without the antibodies, the sALS finding cannot be independently verified. (The additional question of whether the antibodies cross-react with K79- or K84-acetylated TDP-43 or with unrelated acetylated proteins is a specificity-validation issue for methods_completeness, but the unavailability is squarely mine.)"
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "The TDP-43-Clover homozygous knock-in SH-SY5Y line — the source of all PTM data — is not described. The methods state this line exists and was used for affinity purification (Fig. 3A, S3A), but give no targeting strategy, guide sequences, donor design, or validation. A replicator cannot generate or obtain this line, and the PTM identification depends entirely on it."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "Software versions for the MS analysis pipeline (RawConverter, DTASelect2, Census2) are not given, and the TMT six-plex labelling scheme is deferred to a Supplementary Table not provided — which sample received which tag is unrecoverable from the text."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "The live-cell imaging quantification (nuclear vs. whole-cell fluorescence, Figs. 2G–H, 4E) is described without software, thresholding, or cell-count criteria."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "Access conditions for the UCSD ALS tissue repository samples are not stated, and Supplementary Table S2 (case demographics) is referenced but not provided."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "The \"three forward labelling groups and three reverse labelling groups\" for the TMT experiment are not specified beyond that sentence; the normalization and ratio-calculation steps are described only in prose."
+        }
+      ],
+      "questions": [
+        "What is the accession (PRIDE/MassIVE) for the TMT nuclear proteome and the TDP-43 PTM identification datasets?",
+        "What is the Addgene accession or archived DOI for the TDP-43 variant plasmids?",
+        "Can the K82-acetylation antibodies be obtained (catalog number or deposition), and is there validation against K79- and K84-acetylated peptides?",
+        "How was the TDP-43-Clover homozygous knock-in SH-SY5Y line generated — targeting strategy, guide sequences, and validation?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 3.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "**Load‑bearing: animal ethics missing.** The mouse data (Figure S1A, “Using lysates prepared from fresh frozen cortex of mice of different ages”) are used to support the claim that proteasome activity declines during aging, a premise of the entire study. No statement of institutional animal care and use committee (IACUC) approval or animal welfare oversight is provided anywhere in the manuscript. Without this, the provenance and ethical conduct of those experiments cannot be verified, weakening the foundation of the argument. The missing approval number is the single specific remedy required."
+        },
+        {
+          "id": "ethics-2",
+          "text": "**Funding and competing interests not disclosed.** The manuscript contains no funding acknowledgement or competing‑interests declaration. For a journal that requires these statements, this is a HARD omission. The authors must either state them explicitly or declare that none exist."
+        },
+        {
+          "id": "ethics-3",
+          "text": "**iPSC line ethical provenance not explicitly stated.** While the WTC11 line is widely used and its derivation is published, the manuscript does not cite or mention the original ethical approval for its generation. A one‑sentence statement confirming that the iPSCs were derived under an approved protocol (or are a commercial line with appropriate consent) would resolve this."
+        }
+      ],
+      "questions": []
+    }
+  ],
+  "manuscript_text_sha256": "2f5a4834cce5bd673ef90f1629caafd0a1a369512718988a26cef1fa222e8652",
+  "manuscript_file_sha256": "fe4f7496169767814cf696ceab5003cc7b98840e24967f144cf61c4306ecef09",
+  "prior_job_id": "",
+  "desk_rejected": false
+}

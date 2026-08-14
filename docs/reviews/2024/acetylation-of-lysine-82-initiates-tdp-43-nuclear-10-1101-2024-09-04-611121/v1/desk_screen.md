@@ -1,0 +1,6 @@
+# Editorial Desk Screen
+
+**Outcome:** Passed Desk Screen
+
+## Rationale
+This manuscript is an original basic-science research paper investigating the molecular mechanism by which lysine 82 acetylation within the TDP-43 classical nuclear localization sequence disrupts importin-α1-mediated nuclear import and initiates TDP-43 cytoplasmic mislocalization in ALS. It falls squarely within In Silico's scope: it is an empirical, mechanistic study whose central claims (proteasome inhibition → K82 acetylation → disrupted importin binding → nuclear depletion; K82 acetylation in sALS motor cortex) can be evaluated from the manuscript itself and its figures, methods, and cited literature. It is not a clinical trial, diagnostic/treatment guidance, or dosing recommendation, and the central evidence is presented in sufficient detail to be inspected. The work is substantial, internally coherent, and well above the venue's bar, with appropriate controls (PY-NLS rescue, K-to-R mutagenesis, peptide binding assays, antibody validation, patient and control tissue). No threshold problem warranting desk rejection is evident on its face; any concerns about interpretation, statistics, or the strength of the human-tissue evidence are matters for the full review panel rather than for a desk screen.

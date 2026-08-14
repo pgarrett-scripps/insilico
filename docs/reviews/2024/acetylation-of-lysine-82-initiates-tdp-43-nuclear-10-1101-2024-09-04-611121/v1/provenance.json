@@ -1,0 +1,180 @@
+{
+  "generated_at": "2026-08-14T19:13:47+00:00",
+  "pipeline": {
+    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "version": "0.3.0"
+  },
+  "provider": "openrouter",
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "models": {},
+  "agent_models": {},
+  "debate_rounds": 1,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 66530,
+    "section_source": "document",
+    "text_sha256": "2f5a4834cce5bd673ef90f1629caafd0a1a369512718988a26cef1fa222e8652",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 6,
+        "preamble_share": 0.2706,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 66530,
+        "words": 9171,
+        "sentences": 468,
+        "blocks": 92,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 736,
+        "references_separable": true,
+        "main_text_words": 8435,
+        "reference_entries": 38
+      },
+      "density": {
+        "sentence_len_mean": 21.63,
+        "sentence_len_median": 17.0,
+        "sentence_len_p90": 44.0,
+        "long_sentence_share": 0.1156,
+        "numbers_per_1k": 116.78,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 1.53,
+        "boosters_per_1k": 0.44,
+        "mattr": 0.4341,
+        "passive_per_sentence_approx": 0.5,
+        "p_values_exact": 0,
+        "p_values_threshold": 5
+      },
+      "sections": {
+        "_preamble": {
+          "words": 2491,
+          "sentences": 72,
+          "sentence_len_mean": 34.6,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 3.21,
+          "boosters_per_1k": 0.8
+        },
+        "discussion": {
+          "words": 465,
+          "sentences": 15,
+          "sentence_len_mean": 31.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 10.75,
+          "boosters_per_1k": 2.15
+        },
+        "methods": {
+          "words": 5475,
+          "sentences": 263,
+          "sentence_len_mean": 21.22,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.18,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "fe4f7496169767814cf696ceab5003cc7b98840e24967f144cf61c4306ecef09"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "clarity",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 3.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 3.0,
+      "confidence": 5.0
+    }
+  ],
+  "mean_score": 2.88,
+  "scored_count": 8,
+  "panel_size": 8,
+  "total_cost_usd": 0.06256333384,
+  "cost_by_node": {
+    "debate_advocate": 0.002077,
+    "debate_skeptic": 0.000956,
+    "editor": 0.001313,
+    "journal_recommender": 0.002061,
+    "reviewer_ethics": 0.002665
+  },
+  "research_by_node": {},
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2024.09.04.611121v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2024.09.04.611121v1.full.pdf",
+    "identifier": "10.1101/2024.09.04.611121",
+    "doi": "10.1101/2024.09.04.611121",
+    "title": "Acetylation of lysine 82 initiates TDP-43 nuclear loss of function by disrupting its nuclear import",
+    "authors": [
+      "Zhang, S.",
+      "Vazquez-Sanchez, S.",
+      "Lu, S.",
+      "Baughn, M. W.",
+      "Lim, J.",
+      "Oung, S.",
+      "Gao, L.",
+      "Diedrich, J. K.",
+      "Yates, J. R.",
+      "Yu, H.",
+      "Ravits, J.",
+      "Cleveland, D. W."
+    ],
+    "abstract": "The hallmark of a spectrum of age-dependent neurodegenerative diseases, including Amyotrophic Lateral Sclerosis (ALS), is a TDP-43 proteinopathy that includes nuclear loss of function and cytoplasmic aggregation. Here, reduced proteasome activity, as naturally occurs during aging, is shown to inhibit nuclear import of TDP-43. Quantitative mass spectrometry is used to determine that TDP-43 is the protein whose nuclear localization is most perturbed upon reduction in proteasome activity, culminating in elevated cytoplasmic TDP-43. Interaction of importin-1 with the bipartite classical nuclear localization sequence (cNLS) of TDP-43 is shown to be disrupted by partial proteasome inhibition but maintained by replacement with a PY-NLS that is recognized by importin-{beta}2. Mechanistically, this nuclear depletion of TDP-43 is shown to be driven by ubiquitination or acetylation of lysines 79, 82, and 84 within the cNLS when proteasome activity is reduced in human neurons. Specifically, acetylation at lysine 82 is sufficient to abolish TDP-43 binding to importin-1 and subsequent nuclear import of TDP-43. Moreover, using acetylation-specific TDP-43 antibodies, we detected acetylation of lysine 82 in the motor cortex of sporadic ALS patients but not control subjects. Our findings demonstrate that post-translational acetylation at lysine 82 of TDP-43 drives disruption of its importin-1-mediated nuclear import and is sufficient to initiate TDP-43 nuclear loss of function and cytoplasmic accumulation, evidence supporting acetylation as a plausible initiator of TDP-43 proteinopathies.",
+    "published": "2024-09-07",
+    "version": "1",
+    "pdf_sha256": "fe4f7496169767814cf696ceab5003cc7b98840e24967f144cf61c4306ecef09",
+    "pdf_bytes": 2240252
+  }
+}

@@ -1,0 +1,9 @@
+# Ethics & Compliance Reviewer
+
+## Summary
+The manuscript’s central claims about acetylation of TDP‑43 K82 are supported by appropriate human tissue consent and cell‑line work, but critical ethics‑related documentation is missing. Two required disclosures – animal ethics approval for the mouse data and a funding/competing‑interests statement – are absent from the submitted text, which makes the current version incomplete for publication. The human tissue consent is well described and correctly attributed to specific IRB numbers; that part is compliant.
+
+## Weaknesses
+- **Load‑bearing: animal ethics missing.** The mouse data (Figure S1A, “Using lysates prepared from fresh frozen cortex of mice of different ages”) are used to support the claim that proteasome activity declines during aging, a premise of the entire study. No statement of institutional animal care and use committee (IACUC) approval or animal welfare oversight is provided anywhere in the manuscript. Without this, the provenance and ethical conduct of those experiments cannot be verified, weakening the foundation of the argument. The missing approval number is the single specific remedy required.
+- **Funding and competing interests not disclosed.** The manuscript contains no funding acknowledgement or competing‑interests declaration. For a journal that requires these statements, this is a HARD omission. The authors must either state them explicitly or declare that none exist.
+- **iPSC line ethical provenance not explicitly stated.** While the WTC11 line is widely used and its derivation is published, the manuscript does not cite or mention the original ethical approval for its generation. A one‑sentence statement confirming that the iPSCs were derived under an approved protocol (or are a commercial line with appropriate consent) would resolve this.
