@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-16T02:56:41+00:00",
+  "generated_at": "2026-08-16T03:29:35+00:00",
   "pipeline": {
-    "sha": "cd05a2bc1553aacb386aac91e7bf9545ef83bbac+dirty",
+    "sha": "3a4cf2951002e96065f14facfbdae5e73b13d7a0",
     "version": "0.3.0"
   },
   "provider": "openrouter",
@@ -17,9 +17,9 @@
     "kind": "rerun",
     "replaced": "v4",
     "prior_decision": "major",
-    "prior_mean_score": 3.25,
-    "prior_pipeline_sha": "c71c823b71b3072b8cdf02a13547084036f11e1f",
-    "prior_reviewed_at": "2026-08-15"
+    "prior_mean_score": 2.88,
+    "prior_pipeline_sha": "8496d506cf14f9c82fd5168b62d9be40ff9ece43",
+    "prior_reviewed_at": "2026-08-16"
   },
   "submitter": "pgarrett-scripps",
   "submitter_is_author": "",
@@ -88,7 +88,7 @@
       },
       "caveman": null
     },
-    "file_sha256": "d77e689551f2dc5162104e35d68be90911d84dd4ab86e949e7746b0c1b2b924e"
+    "file_sha256": "ce0fbea1d5e26a6a5256cc3835313b0419e8056d408ba87f21eb57562e60ced2"
   },
   "screens": {
     "desk_screen_mode": "gate"
@@ -100,7 +100,12 @@
       "confidence": 5.0
     },
     {
-      "reviewer": "data_analysis",
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "rigor",
       "score": 2.0,
       "confidence": 4.0
     },
@@ -110,7 +115,12 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "clarity",
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
       "score": 4.0,
       "confidence": 4.0
     },
@@ -120,104 +130,137 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "rigor",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "reproducibility",
+      "reviewer": "data_analysis",
       "score": 2.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "novelty",
-      "score": 3.0,
       "confidence": 4.0
     }
   ],
-  "mean_score": 3.0,
+  "mean_score": 3.12,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 0.034664677219999995,
+  "total_cost_usd": 0.030107985120000003,
   "cost_by_node": {
-    "advocate": 0.002158,
-    "audit_citation_integrity": 0.001542,
-    "audit_methods_completeness": 0.001494,
-    "desk_screen": 0.001038,
-    "editor": 0.005693,
-    "journal_recommender": 0.002061,
-    "reviewer_clarity": 0.001301,
-    "reviewer_data_analysis": 0.001349,
-    "reviewer_ethics": 0.001371,
-    "reviewer_literature": 0.001458,
-    "reviewer_methodology": 0.002711,
-    "reviewer_novelty": 0.003063,
-    "reviewer_reproducibility": 0.002617,
-    "reviewer_rigor": 0.00293,
-    "skeptic": 0.003877
+    "advocate": 0.003357,
+    "audit_citation_integrity": 0.003315,
+    "audit_methods_completeness": 0.002228,
+    "desk_screen": 0.002275,
+    "editor": 0.005595,
+    "journal_recommender": 0.000647,
+    "reviewer_clarity": 0.000546,
+    "reviewer_data_analysis": 0.001803,
+    "reviewer_ethics": 0.002508,
+    "reviewer_literature": 0.000491,
+    "reviewer_methodology": 0.001329,
+    "reviewer_novelty": 0.000443,
+    "reviewer_reproducibility": 0.001324,
+    "reviewer_rigor": 0.000526,
+    "skeptic": 0.003723
   },
   "research_by_node": {
-    "reviewer_novelty": [
+    "audit_citation_integrity": [
       {
-        "tool": "find_related_work",
-        "query": "patch-clamp single-cell proteomics acute brain slices",
+        "tool": "search_biomedical_literature",
+        "query": "Patch-seq electrophysiological transcriptomic morphologic profiling single neurons",
         "hits": 5
       },
       {
-        "tool": "find_related_work",
-        "query": "patch-clamp mass spectrometry single neuron proteomics",
-        "hits": 5
-      },
-      {
-        "tool": "search_preprints",
-        "query": "patch-clamp single-cell proteomics neuron",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "patch-clamp proteomics retrieval gigaseal soma capacitance protein identifications",
-        "hits": 5
-      },
-      {
-        "tool": "search_preprints",
-        "query": "aspiration patch proteomics single neuron intact tissue",
+        "tool": "search_biomedical_literature",
+        "query": "Patch-Clamp Proteomics of Single Neurons in Tissue Using Electrophysiology and Subcellular Capillary Electrophoresis Mass Spectrometry",
         "hits": 1
       },
       {
-        "tool": "find_related_work",
-        "query": "patch-seq single neuron transcriptomics electrophysiology retrieval",
-        "hits": 5
-      },
-      {
-        "tool": "search_preprints",
-        "query": "patch-clamp proteomics soma retrieval gigaseal preservation neuron",
-        "hits": 1
-      },
-      {
-        "tool": "find_related_work",
-        "query": "single neuron proteomics locus coeruleus patch clamp sex differences",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "patch-clamp single-cell proteomics human iPSC neurons Alzheimer's",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Choi patch clamp proteomics single neurons tissue capillary electrophoresis",
-        "hits": 5
-      },
-      {
-        "tool": "search_preprints",
-        "query": "whole soma retrieval versus aspiration patch proteomics neuron",
+        "tool": "search_biomedical_literature",
+        "query": "Sex differences single neuron function proteomics patch-clamp mass spectrometry locus coeruleus mouse",
         "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Single-Cell Patch-Clamp Proteomics Human Alzheimer's Disease iPSC-Derived Excitatory Neurons",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "SynGO Evidence-Based Expert-Curated Knowledge Base for the Synapse",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lee sex differences locus coeruleus noradrenergic neurons proteomics patch clamp",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Ghatak single cell patch clamp proteomics Alzheimer iPSC excitatory neurons",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Koopmans SynGO synapse gene ontology 2019 Neuron",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Koopmans SynGO 2019 Neuron 103 217-234 synapse ontology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Demichev DIA-NN neural networks interference correction deep proteome coverage high throughput",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Concise Guide to PHARMACOLOGY 2023/24 G protein-coupled receptors British Journal of Pharmacology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "SynGO expert-curated knowledge base synapse gene ontology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "DIA-NN data-independent acquisition proteomics Demichev Nature Methods 2020",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Concise Guide PHARMACOLOGY 2019/20 ion channels Alexander British Journal Pharmacology",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Choi Polter Nemes patch clamp proteomics single neurons tissue capillary electrophoresis",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lee sex differences proteomics locus coeruleus patch clamp noradrenergic",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Ghatak single cell patch clamp proteomics Alzheimer iPSC excitatory neurons Advanced Science",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Koopmans SynGO synapse ontology Neuron 2019 volume 103",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "SynGO Koopmans 2019 Neuron synapse gene ontology expert curated",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Wu method comprehensive proteomic analysis membrane proteins Nature Biotechnology 2003",
+        "hits": 1
       }
     ]
   },
-  "errors": [
-    "editor degraded: major verdict was preserved, but no required-revision bullets could be extracted from the Markdown letter"
-  ],
+  "errors": [],
   "preprint": {
     "url": "https://www.biorxiv.org/content/10.1101/2025.09.15.675920v1",
     "source": "biorxiv",
@@ -240,7 +283,7 @@
     "abstract": "Single-cell proteomics (SCP) is a powerful method for interrogating the molecular composition of neurons, yet its application to acute brain slices has remained limited. Patch-clamp electrophysiology provides direct information on neuronal excitability, synaptic inputs, and ion channel function, making it a natural partner for SCP. However, combining these techniques introduces unique challenges. For instance, after patch-clamping a neuron, its soma must be physically retrieved, and variability during extraction from the brain slice may influence how well proteomic measurements reflect in situ physiology. Here, we introduce a framework for contextualizing patch-SCP outcomes, with an emphasis on retrieval quality (material yield and soma-enriched synaptic content). We used an indiscriminate shotgun strategy in which all patched neurons were collected regardless of electrophysiological outcome to assess soma retrieval in an exploratory dataset of rat medial prefrontal cortex pyramidal neurons. Capacitance during gigaseal-preserved retrieval correlated with protein identifications, suggesting that proteome yield could be linked to soma size. Preservation of neuronal spiking during relocation tended to be associated with broader synaptic enrichment and recovery of transmembrane proteins. By comparison, torn or aspirated neurons produced small proteomes with poor synaptic representation and neurons with little to no characterization displayed more variable outcomes. These results demonstrate that patch-SCP can be used to assess soma retrieval and they provide a framework for interpreting how electrophysiological context and soma retrieval quality shape single-neuron proteomic measurements in semi-intact circuits.",
     "published": "2026-03-18",
     "version": "4",
-    "pdf_sha256": "d77e689551f2dc5162104e35d68be90911d84dd4ab86e949e7746b0c1b2b924e",
+    "pdf_sha256": "ce0fbea1d5e26a6a5256cc3835313b0419e8056d408ba87f21eb57562e60ced2",
     "pdf_bytes": 7216146
   }
 }

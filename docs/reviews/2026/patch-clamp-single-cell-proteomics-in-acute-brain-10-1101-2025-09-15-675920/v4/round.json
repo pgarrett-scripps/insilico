@@ -1,56 +1,173 @@
 {
   "schema_version": 1,
   "round": 1,
-  "job_id": "20260815-195641-patch-clamp-single-cell-proteomics-in-acute-brain-",
+  "job_id": "20260815-202935-patch-clamp-single-cell-proteomics-in-acute-brain-",
   "manuscript_title": "Patch-Clamp Single-Cell Proteomics in Acute Brain Slices: A Framework for Recording, Retrieval, and Interpretation",
-  "manuscript_cache_key": "0a53ca976aa0fb9fbb1b62c657c15d78381bd92d8dc0f5891dbb34856f1bbf86",
+  "manuscript_cache_key": "4cf69442c68e2eda55779e82078ef889eacfc2d977a8a574825eca02397aac71",
   "decision": "major",
-  "weighted_score": 3.0606,
-  "required_revisions": [],
-  "minor_suggestions": [],
+  "weighted_score": 3.1818,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Recalibrate the capacitance–yield claim.** Remove \"links soma size to proteome yield\" and equivalent statements from the abstract, results, and conclusions. Report the three individual data points (capacitance and protein counts) with confidence intervals on the slope, and present this explicitly as a hypothesis-generating observation from n = 3, not a demonstrated relationship. State in plain terms that the correlation cannot be distinguished from a near-perfect fit expected at this sample size. If the authors wish to retain it as a relationship, the alternative: report the regression on the entirety of the gigaseal-preserved cohort (i.e., new data).",
+      "source_reviewer": "clarity",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Resolve the spike-integrity / soma-size confound in the text.** Neuron #6 had both the worst spiking and the smallest capacitance. Either (a) acknowledge explicitly that the reduced synaptic enrichment could be a size effect rather than a retrieval effect and temper the claim accordingly, or (b) add quantitative spike-integrity metrics (mean amplitude, spike count during depolarization) for neurons #4, #6, and #7 and show that the relationship to SynGO enrichment persists independent of capacitance. Do the same for the Figure 7 ion-channel comparisons — normalize channel recovery to total identifications, since the claim \"gigaseal neurons recovered broader diversity\" is contradicted by the authors' own text for several cases.",
+      "source_reviewer": "clarity",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Reproducibility closure (HARD for a methods paper).**",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Provide a named GitHub repository (or Zenodo DOI) with a commit hash for the analysis scripts, keyed to figures, and specify the SynGO run (version, minimum gene-set size, background, BH/FDR method, per-sample input).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Report full DIA-NN settings: precursor FDR, mass tolerance, MBR precision, quantification mode; the exact UniProt release (not just \"2024\").",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "Specify: reduction/alkylation steps (or state none), digestion buffer (beyond 0.02% DDM), quench details, exact LC mobile phase composition (%B at the gradient shape) and column temp.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Electrophysiology: report the liquid-junction potential correction (or its absence), sampling rate and filter, series resistance/access resistance criteria, and the holding/step parameters for the current-clamp protocol. Report the number of animals, number of slices per animal, and per-animal neuron counts, and whether retrieval categories were assigned blind to the MS results.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Operationalize the \"torn\"/\"gigaseal-lost\" categories.** Define a priori the criteria separating torn from gigaseal-lost from preserved (e.g., visible membrane breakage, suction artifact, loss of capacitive transient). The current post-hoc visual assignment cannot be reproduced and is not blinded.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Citation hygiene.** Remove or relocate and justify ref [31]. Confirm the attributions to refs [8] and [9] against the primary texts, and note where NeuroExpress (ref [15]) is publicly accessible (or provide version and export settings if not).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**Fix internal inconsistencies.** (a) The abstract's \"thousands of proteins\" should be the actual range across samples (1,400–2,300) or qualified by the torn-neuron outliers. (b) Replace \"demonstrate\" with \"hypothesis-generating\" in the Conclusions where the results only support the weaker form. (c) State the denominator — the total number of patch attempts and how many yielded no detectable proteome at all.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "The \"shotgun\" label, while evocative, risks colliding with \"shotgun proteomics\"; consider defining \"indiscriminate collection\" terminology at first use.",
+    "Test the framework's claims against a threshold-exclusion comparator in discussion (the authors note the value of this strategy over cutoffs but do not directly compare).",
+    "Address the contamination alternative in the synapse-dense mPFC (adherent tissue fragment confounding), and the 25–50% soma-loss estimate should be shown as calculation (capacitance before/after? imaging?).",
+    "Add the foundational SCP sample-preparation citations (nanoPOTS, SCOPE2, isobaric-carrier approaches) for context of the DDM-based digestion with which DIA builds."
+  ],
   "reviewer_reports": [
     {
       "reviewer": "ethics",
       "score": 5.0,
       "confidence": 5.0,
-      "weaknesses": [],
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "No load-bearing weaknesses in my dimension. The manuscript triggers only the animal-research category, and the required statement is present and complete. No sweep items arise: no human subjects, no clinical trial, no dual-use or biosafety risk, no restricted-consent data, and no internal contradiction between described procedures and stated approvals."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "**The claim that \"gigaseal preservation links neuron size to proteome recovery\" (Figure 3D) is not supported by the evidence presented.** The correlation between log-transformed capacitance and protein identifications is based on n=3 neurons, and the reported F-statistic (F=1577, p<0.05, adjusted R²=0.998) is implausibly high for a biological dataset of this size — an adjusted R² of 0.998 with three points is essentially a perfect linear fit, which is more consistent with overfitting or a coincidental alignment than a meaningful relationship. The manuscript does not report the raw data points or confidence intervals, so a reader cannot assess whether this correlation is robust or an artifact of the small sample. What would settle this: report the individual data points, the 95% confidence intervals for the slope, and ideally a permutation-based p-value or a bootstrap estimate of the correlation, given the tiny n. The claim as stated outruns the evidence."
+        },
+        {
+          "id": "clarity-2",
+          "text": "**The claim that \"preservation of active properties during retrieval is associated with recovery of synaptic proteins\" (Figure 4) is not established by the evidence.** The manuscript shows that neuron #4 (stable spiking) had the greatest diversity of enriched SynGO terms, neuron #7 (reduced spike amplitude) had fewer unique terms, and neuron #6 (single spike) lacked enrichment for synaptic signaling. But this is a comparison of three individual neurons, not a statistical association. The manuscript does not report any quantitative measure of \"spike integrity\" (e.g., spike amplitude, number of spikes, or a composite score) that could be correlated with synaptic enrichment across the three neurons. The claim is presented as a finding but is really an anecdotal observation from n=3. What would settle this is a quantitative metric of spike integrity (e.g., mean spike amplitude or number of spikes during depolarization) reported for each neuron, alongside the number of enriched SynGO terms, so the reader can see whether the relationship holds beyond the three examples shown."
+        },
+        {
+          "id": "clarity-3",
+          "text": "**The claim that \"retrieval loss decouples proteomic measurements from electrophysiology recordings\" (Figure 5) is supported by the data, but the presentation of the negative control is unclear.** The manuscript states that torn neurons (#11 and #12) \"produced the fewest detected proteins of all categories,\" but the figure (Figure 5A) does not show the actual protein counts for each neuron — it shows a bar chart with categories but no individual values or error bars. The reader cannot determine from the figure whether the difference between torn neurons and other categories is large or small, or whether the \"fewest\" claim is based on a meaningful difference. What would settle this is a table or figure with the actual protein identification counts for each of the 12 neurons, with the category labels clearly marked."
+        },
+        {
+          "id": "clarity-4",
+          "text": "**Figure 3D and 3E: the axes are not labeled with units** — the x-axis is labeled \"log-transformed C\" and \"log-transformed RM\" without specifying the units (pF and MΩ, presumably), and the y-axis is labeled \"Protein identifications\" without specifying whether this is the total number of protein groups or something else. A reader cannot determine the scale of the effect from the figure alone."
+        },
+        {
+          "id": "clarity-5",
+          "text": "**The abstract claims \"we detected thousands of proteins from single neuronal soma\" but does not state the range or median** — the reader cannot tell whether \"thousands\" means 1,500 or 5,000, which matters for assessing the sensitivity of the workflow. The manuscript later reports \"at least 1700 total proteins\" for the gigaseal-preserved neurons, but this is not in the abstract."
+        },
+        {
+          "id": "clarity-6",
+          "text": "**The term \"shotgun patch-SCP\" is introduced in the abstract and used throughout, but is never defined** — the reader must infer that it means \"indiscriminate collection of all patch attempts,\" which is not stated until the Results section. This is a SOFT issue but it affects the abstract's standalone intelligibility."
+        },
+        {
+          "id": "clarity-7",
+          "text": "**The Discussion repeats the Results** — the paragraph beginning \"We found that measurements of somal capacitance made during retrieval were associated with protein identifications\" restates the finding from Figure 3D without adding new interpretation. This could be condensed."
+        },
+        {
+          "id": "clarity-8",
+          "text": "**The manuscript uses \"gigaseal-preserved\" and \"gigaseal preserved\" interchangeably** — this is a minor terminology inconsistency that could confuse a reader scanning the figures."
+        }
+      ],
       "questions": [
-        "None — my dimension is fully satisfied by the manuscript as written."
+        "For Figure 3D, what are the actual capacitance values (in pF) and protein counts for each of the three neurons? The regression is reported but the raw data points are not shown.",
+        "For Figure 5, what are the exact protein identification counts for neurons #11 and #12 (torn) versus the other categories? The figure shows categories but not individual values.",
+        "In the abstract, \"thousands of proteins\" — what is the actual range across all neurons? The manuscript reports \"at least 1700\" for the gigaseal-preserved neurons, but the range across all 12 is not stated.",
+        "Is the \"shotgun\" term defined anywhere in the methods or a glossary? If not, it should be defined at first use."
       ]
     },
     {
-      "reviewer": "data_analysis",
+      "reviewer": "rigor",
       "score": 2.0,
       "confidence": 4.0,
       "weaknesses": [],
-      "questions": [
-        "Were the three gigaseal-preserved neurons (#4, #6, #7) from the same animal or different animals? If the same, what is the justification for treating them as independent replicates?",
-        "Was a blank pipette or empty-well sample processed through the same workflow to establish the background protein identification rate?",
-        "For the capacitance–protein correlation, can the authors report the raw values (C, RM, protein IDs) for the three neurons, and state explicitly whether they are making an inferential claim from n=3?",
-        "What was the multiple-testing correction applied across the SynGO enrichment analyses for the 12 individual neurons — was the family of 12 analyses treated as a single experiment?"
-      ]
+      "questions": []
     },
     {
       "reviewer": "methodology",
       "score": 2.0,
       "confidence": 4.0,
       "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
       "questions": [
-        "For the capacitance–protein identification correlation (Figure 3D), can you report the raw data points and the fit with and without neuron #6, which was partially aspirated?",
-        "Were the three gigaseal-preserved neurons recorded on the same day and by the same operator, and was the internal solution from the same batch?",
-        "For the SynGO analyses, what multiple-testing correction was applied across the 53 biological processes and 24 cellular components tested per neuron?",
-        "Can you report the number of proteins detected in each neuron alongside the PCA loadings, to show that the clustering is not driven primarily by total protein count?"
+        "For the capacitance–protein identification regression (Figure 3D), can you report the three individual data points (capacitance values and protein counts) and state whether this is intended as a descriptive observation or a statistical claim?",
+        "Can you provide the specific GitHub repository name and commit hash for the custom analysis scripts, or deposit them in an archived repository (e.g., Zenodo) with a DOI?",
+        "For the SynGO analysis, can you specify the exact software version, the gene list input format, and the \"stringent conditions\" parameters (e.g., minimum gene set size, FDR method)?",
+        "Can you describe the reduction/alkylation steps (if any) in the digestion protocol, and the exact mobile phase composition and gradient shape for the LC-MS run?",
+        "For the PCA in Figure 6A, can you report the variance explained by the first two principal components and the top contributing proteins, to confirm the clustering is not driven by a few outlier features?"
       ]
     },
     {
-      "reviewer": "clarity",
+      "reviewer": "novelty",
       "score": 4.0,
       "confidence": 4.0,
       "weaknesses": [],
       "questions": [
-        "In Figure 5A, can the color legend be added directly to the figure caption so the reader does not have to cross-reference the text to identify outcome categories?",
-        "For the capacitance–protein-identification correlation (Figure 3D), what is the 95% confidence interval on the slope, and would the correlation survive if neuron #6 (the smallest) were excluded?",
-        "In the Methods, when the pipette tip is \"snapped in the well plate,\" is the pipette still positioned vertically in the well, or is it removed and snapped at the rim? A one-sentence clarification would make the procedure reproducible."
+        "For the capacitance-protein identification correlation (n=3), what are the individual data points and the 95% confidence interval on the slope? A three-point regression with R²=0.998 is sensitive to a single point; the raw values would allow assessment of robustness.",
+        "Can the authors separate the effects of soma size from spike integrity on synaptic enrichment? Specifically, is there a neuron in their dataset (or could one be added) with large capacitance but compromised spiking that would test whether the synaptic enrichment difference in neuron #6 is attributable to size or to retrieval damage?",
+        "How was the 25-50% soma loss estimate derived? The text references Figure 3C but does not explain the calculation."
       ]
     },
     {
@@ -60,80 +177,86 @@
       "weaknesses": [
         {
           "id": "literature-1",
-          "text": "The reference to Choi et al. (2022) [7] as an example of cytoplasmic patch-SCP in brain slices is accurate, but the manuscript does not engage with the more recent work by the same group on patch-clamp proteomics in tissue, which would strengthen the positioning of the present contribution (SOFT)."
+          "text": "The claim that \"patch-SCP in the locus coeruleus of mice revealed sex-specific differences\" (ref 8) should be verified against the actual findings of Lee et al. 2024 — the abstract I can access describes sex differences in both proteomes and excitability, which is consistent, but the authors should confirm the specific attribution about \"molecular drivers... difficult to identify\" matches the source's own framing."
         },
         {
           "id": "literature-2",
-          "text": "The claim that \"early efforts combined patch-clamp electrophysiology with targeted transcript detection using single-cell RT-PCR\" is attributed to Lambolez et al. (1992) [5], which is the correct primary source; however, the manuscript does not cite the more recent Patch-seq methodological reviews that would contextualize the current state of the field (SOFT)."
+          "text": "The manuscript cites ref 9 (Ghatak et al. 2024) for the claim that \"a lack of compartment-specific synaptic and membrane proteins raised the question of whether local synaptic activity could be adequately captured\" — this is a fair characterization of that paper's limitations discussion, but the authors should confirm the specific wording matches."
         },
         {
           "id": "literature-3",
-          "text": "The reference to Ghatak et al. (2024) [9] as an example of patch-SCP in hiPSC-derived neurons is accurate, but the manuscript does not acknowledge that this work also reported challenges with compartment-specific protein recovery, which is directly relevant to the present framework's motivation (SOFT)."
+          "text": "The reference list contains an apparent error: ref 31 (Guo et al., \"Scalable total synthesis of saxitoxin and related natural products,\" Nature 2025) appears unrelated to patch-clamp or proteomics and is not cited in the manuscript text I can see — this looks like a citation-hygiene defect (a garbled or misplaced entry)."
         },
         {
           "id": "literature-4",
-          "text": "The citation of Gatto et al. (2023) [13] for methodological guidelines is appropriate, but the manuscript could also cite the more recent single-cell proteomics benchmarking literature that has emerged since 2023 (SOFT)."
+          "text": "The manuscript cites ref 15 (Szücs, \"NeuroExpress program for analyzing patch-clamp data,\" ResearchGate 2022) for the analysis software — a ResearchGate-hosted citation without a DOI is acceptable for software but should be flagged as a SOFT currency issue if a peer-reviewed version exists."
         },
         {
           "id": "literature-5",
-          "text": "The reference to Bernaerts et al. (2025) [25] for the Patch-seq modeling work is current and appropriate; however, the manuscript does not cite the earlier Patch-seq papers that established the transcriptomic-electrophysiological correlation approach, which would help position the proteomic contribution (SOFT)."
+          "text": "The reference list does not include any work on single-cell proteomics from the Mann group's or the Slavov group's SCP pipelines (e.g., SCOPE2, nanoPOTS), which are foundational to the field's sample-preparation methodology — consider whether these should be cited for context on the DDM-based digestion approach."
         },
         {
           "id": "literature-6",
-          "text": "The self-citation pattern is proportionate; the authors cite their own prior work on mPFC electrophysiology (e.g., [10], [26-31]) where it is genuinely relevant (no issue)."
+          "text": "The claim that \"DIA workflows augmented with parallel reaction monitoring (PRM)\" would enhance sensitivity is presented without citation — this is a reasonable methodological suggestion but should be supported by a reference to a published hybrid acquisition approach."
         },
         {
           "id": "literature-7",
-          "text": "The reference list is generally resolvable, but several entries lack DOIs (e.g., [15], [16], [17], [18]), which would be a minor improvement for reproducibility (SOFT)."
-        },
-        {
-          "id": "literature-8",
-          "text": "The claim that \"patch-SCP in the locus coeruleus of mice revealed sex-specific differences\" [8] is accurately attributed, but the manuscript does not acknowledge that this work also used a selection strategy (only neurons with stable recordings were analyzed), which is directly relevant to the present framework's contrast with that approach (SOFT)."
+          "text": "The manuscript's use of \"shotgun\" to describe indiscriminate collection is potentially confusing given the established use of \"shotgun proteomics\" to mean bottom-up proteomics — consider whether this terminology could mislead readers."
         }
       ],
       "questions": [
-        "For the capacitance–protein identification correlation (Figure 3D), can the authors report the same analysis with a larger sample of gigaseal-preserved retrievals, or state the minimum effect size their current n = 3 could detect?",
-        "Can the authors confirm whether the SynGO enrichment differences between neurons #4, #6, and #7 persist when the analysis is restricted to proteins detected in at least two of the three neurons, to control for single-neuron stochasticity?",
-        "For the claim that in situ recordings do not predict proteome recovery, can the authors report the power of their n = 6 comparison to detect a meaningful correlation, or provide a confidence interval for the correlation coefficient?"
+        "Can the authors confirm that ref 31 (Guo et al., saxitoxin synthesis) is correctly placed in the reference list, and if so, where it is cited in the text?",
+        "For the capacitance–protein identification correlation (Figure 3D), what are the raw data points for all three neurons, and would the correlation survive if any single neuron were removed?",
+        "Did the authors consider using the neurons without gigaseals (n=6) as an additional test of whether in situ capacitance predicts protein yield, and if so, what was the result?",
+        "Can the authors confirm that the SynGO enrichment analysis was performed on the full protein list per neuron rather than a filtered subset, and that the Q-value threshold of 0.05 was applied uniformly across all samples?"
       ]
     },
     {
-      "reviewer": "rigor",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [],
-      "questions": [
-        "For the capacitance–protein identification regression (Figure 3D), what are the 95% confidence intervals on the slope and intercept, and does the relationship hold if the torn neurons (#11, #12) are included in the analysis?",
-        "Can you report the top 20 protein loadings for PC1 and PC2 in Figure 6A, and show whether the clustering persists after normalizing each neuron’s proteome to total protein count?",
-        "What is the quantitative relationship between spike integrity (e.g., number of spikes, mean amplitude) and the number of enriched SynGO terms across all neurons where spiking was assessed — is there a correlation, and what is its magnitude?",
-        "How was the “25–50% soma loss” estimate derived from the capacitance measurements in Figure 3C — what conversion factor was used, and what assumptions does it rest on?"
-      ]
-    },
-    {
-      "reviewer": "reproducibility",
+      "reviewer": "data_analysis",
       "score": 2.0,
       "confidence": 4.0,
-      "weaknesses": [],
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "**The central claim—that capacitance correlates with protein identifications—is based on a linear regression of n=3 data points.** The reported p-value (p<0.05) is not meaningful with such a small sample size, and the adjusted R² of 0.998 is a statistical artifact of overfitting. The claim that this \"links soma size to proteome yield\" is a HARD overstatement. The authors must report the raw data for all three points and provide a clear justification for how a correlation from n=3 can be considered evidence for a biological relationship, or temper the claim to a hypothesis-generating observation. The same applies to the non-significant finding for RM, which is used to claim a \"more direct role\" for capacitance, a claim not supported by a non-significant p-value in a tiny sample."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "**The central qualitative claim—that \"preservation of active properties during retrieval is associated with recovery of synaptic proteins\"—is not supported by any statistical test.** The paper states that neuron #6 \"lacked significant enrichment for synaptic signaling,\" but no statistical comparison is made between the neurons. The claim appears to rest on a visual inspection of a heatmap (Figure 4C) and a list of enriched GO terms. To make this claim, the authors need to perform a formal statistical test for differential enrichment between the neurons (e.g., a Fisher's exact test or a GSEA-style comparison) and report the resulting p-values. As it stands, the conclusion is an interpretation of the data, not a finding."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The \"shotgun\" strategy of including all samples is sound, but the paper does not report a power analysis or any justification for the final sample size, making it impossible to know if the study was adequately powered to detect the effects of interest."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "The PCA in Figure 6A is used to support the claim that \"comprehensive analysis can distinguish between high- and low-context retrievals,\" but this is a post-hoc interpretation of a clustering result with no quantitative support; a PERMANOVA or similar test would be needed to support this claim."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "The paper does not report any correction for multiple testing when discussing the \"consistently enriched\" GO terms across neurons, which could lead to an overestimation of the consistency of the findings."
+        },
+        {
+          "id": "data_analysis-6",
+          "text": "The claim that \"torn samples still showed impressive protein recovery\" is based on a comparison to what, exactly? A formal statistical comparison of the number of proteins identified in \"torn\" vs. \"gigaseal-preserved\" neurons is missing, and the high variance within the \"no gigaseal\" group (1,400-2,300 proteins) suggests the analysis is underpowered to detect a difference even if one exists."
+        },
+        {
+          "id": "data_analysis-7",
+          "text": "The paper does not report the number of biological replicates (animals) used, only the number of neurons, so it is impossible to assess the impact of inter-animal variability on the results."
+        },
+        {
+          "id": "data_analysis-8",
+          "text": "The paper claims that \"the recovery of ion channel subunits could vary widely,\" but this is presented without any statistical measure of variance or a formal test for differences between the groups, making it impossible to know if this variability is meaningful or just noise."
+        }
+      ],
       "questions": [
-        "For Figure 3D, what exact statistical test was used to obtain p<0.05 with n=3, and can the authors provide the raw capacitance and protein-identification values for each of the three neurons?",
-        "Can the authors provide the PCA input matrix (e.g., normalized intensities vs. binary presence/absence) and the exact preprocessing steps, along with a versioned code repository (commit hash or archived DOI)?",
-        "For the SynGO enrichment, what were the exact GSEA parameters (ranking metric, minimum gene set size, permutation count), and can the authors provide the full gene lists used for the ion channel, GPCR, and transporter annotations as supplementary files?",
-        "What operational criteria were used to classify neurons as \"torn,\" \"aspirated,\" or \"intact\" during retrieval, and were these classifications made blind to the proteomic results?"
-      ]
-    },
-    {
-      "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [],
-      "questions": [
-        "Can you name and directly differentiate against the Johnson et al. 2026 aspiration-patch-proteomics preprint, which addresses the same whole-soma-retrieval question from the opposite position? What does your gigaseal-preservation approach provide that aspiration sampling does not, and vice versa?",
-        "For the capacitance→yield correlation (Figure 3D), can you report the same analysis with retrieval difficulty (e.g., spike-amplitude loss during retrieval) as a covariate, or with a larger n, to distinguish soma size from retrieval integrity as the driver?"
+        "What is the exact p-value and 95% confidence interval for the slope of the regression line in Figure 3D, and what is the biological justification for treating this relationship as linear?",
+        "Can you provide the results of a formal statistical test (e.g., a permutation test or a Mann-Whitney U test) comparing the enrichment of SynGO terms between neuron #4 and neuron #6, rather than relying on a qualitative comparison of a heatmap?"
       ]
     }
   ],
   "manuscript_text_sha256": "572f2a47e48f63d415ef3294c9d7f771818b97b2ef23d439c0483771b4223f0f",
-  "manuscript_file_sha256": "d77e689551f2dc5162104e35d68be90911d84dd4ab86e949e7746b0c1b2b924e",
+  "manuscript_file_sha256": "ce0fbea1d5e26a6a5256cc3835313b0419e8056d408ba87f21eb57562e60ced2",
   "prior_job_id": "",
   "desk_rejected": false
 }
