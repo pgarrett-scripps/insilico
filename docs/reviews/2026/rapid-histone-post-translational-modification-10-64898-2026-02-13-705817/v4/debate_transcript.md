@@ -2,46 +2,32 @@
 
 ## Advocate — round 1
 
-The reviewer findings are thorough and identify several legitimate weaknesses. I need to build the strongest case FOR acceptance, engaging with the panel's criticisms where they are valid, conceding where justified, and showing how the manuscript's genuine contributions withstand scrutiny.
+**Advocate’s Opening Statement**
 
-Let me parse the key findings:
+This manuscript earns acceptance because it delivers a practical, field-ready advance with a mechanistically grounded discovery, and its weaknesses are precisely the kind that revision—not rejection—can resolve.
 
-1. **Clarity**: The RIPUP/TMT ambiguity is a real framing problem. But the core experimental data — the 10-condition comparison, the IHP definition, the mechanistic explanation for TMT — are all clearly presented. The abstract can be fixed.
+**The core contribution is real and defensible.** The systematic 10-condition comparison (Figure 1) is exactly the benchmarking the histone PTM field needs. The dual-protease RIPUP workflow demonstrably achieves complementary coverage: r-Chymotrypsin uniquely captures H2A.Z (72% proteotypic coverage vs. <6% for Arg-C/Trypsin) and linker histone H1 variants (Figure 2D, SI Figure S1). This is the most defensible claim in the paper, and it is fully supported by the data.
 
-2. **Data analysis**: The dark epigenome claim confounds enzyme with label (Arg-C + TMT pooled vs Trypsin + Prop). This is a valid criticism. But the authors DO show the clean comparison: Arg-C Ultra + TMT vs Arg-C Ultra + Prop is performed; Figure 5B includes TMT-labeled Arg-C and Prop-labeled Arg-C. The reviewer's concern about the succinylation counts being driven by coverage rather than label is partially addressed by Supplementary Figures S3-S6 which show specific succinylated peptides and their spectra. The mechanism (charge compensation vs. improved fragmentation/scoring) is conflated, but both are interesting and mechanistically related to TMT chemistry.
+**The TMT charge-compensation finding is genuinely novel.** The mechanistic hypothesis—that TMT’s tertiary amine sequesters a mobile proton, enhancing b-ion series and rescuing ionization of acidic acylations—is plausible and testable. The detection of 58 succinylation and 31 glutarylation sites in HEK293T histones (Figure 5B) is a striking observation that warrants the “dark epigenome” framing, *provided* the authors add the matched comparison the reviewers request. This is a revision-level fix, not a fatal flaw.
 
-3. **Methodology**: The "exceeds Trypsin-based approaches" claim uses the Garcia 2007 protocol as comparator. The reviewer says this is a strawman because optimized propionylation exists. But the Garcia protocol IS the field standard with 291 citations. The paper's value is showing that alternative approaches can match or exceed even an imperfect gold standard in a shorter time. The authors CAN restrict the claim as suggested, but it's not a fatal flaw.
+**The NAM experiment, while confounded, is honestly handled.** The authors explicitly identify the missed-cleavage redistribution problem and choose peptidoform-level analysis over the artifactually biased peptide-family approach. This is exactly the design thinking that should be standard. The 112 significant peptidoforms claim is statistically valid as stated; the biological interpretation can be requalified in revision.
 
-4. **Rigor**: The succinylation/glutarylation claims lack orthogonal validation (synthetic peptides, antibody enrichment). This is the most serious criticism. However, the claim is not "we have definitively proven these exist" but "TMT reveals a dark epigenome largely undetected by other methods" — and the evidence shows they ARE detected preferentially with TMT, regardless of whether every site is validated. The HiP-Frag framework was designed for discovery with FDR control.
+**The reviewers’ demands are all addressable.** The protease confound in the TMT comparison (Clarity, Methodology, Rigor) is settled by adding Arg-C Ultra + Prop counts side-by-side. The NCE confound (Data Analysis) is settled by running TMT samples at fixed 30% NCE. The biological-replicate question (Data Analysis) is settled by one explicit sentence in Methods. The missing limma specification (Reproducibility) is settled by a commit hash and design matrix.
 
-5. **Reproducibility**: The charge-compensation claim isn't isolated from labeling efficiency. TMT is ~99% efficient vs 33-71% for propionylation. This is fair — but the manuscript does show the same succinylated peptide with and without TMT (Figure 6), providing evidence beyond identification counts.
-
-6. **Literature**: The Ryzhaya 2025 paper is cited and discussed. The Restellini 2019 omission is minor.
-
-Let me structure the best acceptance argument:
-
-- **Genuine contributions**: (a) Systematic 10-condition comparison with 4 replicates is a resource; (b) TMT for acidic acylation detection is novel and mechanistically plausible; (c) RIPUP reduces time to ~3h; (d) Dual protease orthogonal coverage is new and useful; (e) Application to frozen brain tissue demonstrates real-world utility.
-
-- **Defensible against criticisms**: The Garcia protocol IS the field standard. The dark epigenome claim is discovery-level (consistent with HiP-Frag philosophy). The mechanism is supported by multiple lines of evidence (charge-state observations, fragmentation pattern changes, identification counts).
-
-- **Concessions**: Some abstract claims need qualification; the quantitative NAM analysis has residual confounds; the mechanism argument conflates ionization and fragmentation effects.
-
-Let me write the 250-word argument.
+This is a sound, useful paper whose claims modestly outrun its evidence in two places—both fixable with targeted additions. Accept with minor revision.
 
 ## Skeptic — round 1
 
-The advocate's case rests on a false equivalence: that the manuscript's evidence withstands scrutiny because the problems are "fixable in revision." But for the paper's two load-bearing claims — the "dark epigenome" and the quantitative superiority of RIPUP — the gap between what is claimed and what is demonstrated is structural, not cosmetic.
+# Skeptic's Rebuttal — Round 1
 
-The charge-compensation mechanism for TMT is stated as established in the abstract and conclusions, yet the evidence is entirely correlational. The advocate points to Figure 5B, but that figure pools TMT-labeled Arg-C Ultra AND r-Chymotrypsin against propionylated Trypsin — enzyme and label are fully confounded. The clean comparison (Arg-C Ultra + TMT vs Arg-C Ultra + Prop) IS NOT presented as a side-by-side succinylation count anywhere in the paper. The reviewer's central objection remains unanswered: we cannot tell whether the 58 succinylation sites reflect TMT chemistry or the r-Chymotrypsin coverage that captures H1.4, a region Trypsin cannot reach. This is FATAL without a controlled comparison.
+The advocate's case rests on the premise that the manuscript's weaknesses are "precisely the kind that revision—not rejection—can resolve." I agree that *some* are. But two are not merely fixable gaps in presentation; they are confounds that undermine the paper's two headline claims, and the advocate has not engaged with the strongest form of either objection.
 
-The 112 significant NAM peptidoforms are attributed to RIPUP in the abstract, but the Results section attributes them to Arg-C Ultra alone. The advocate has not addressed this numerical mismatch — it is not a formatting issue but a direct contradiction between the abstract and the evidence. The r-Chymotrypsin arm found 16 significant peptidoforms. Attributing 112 to "RIPUP" inflates the result by 7×.
+**The TMT "dark epigenome" claim is confounded by the protease comparison, not just the missing denominator.** The advocate says the fix is "adding Arg-C Ultra + Prop counts side-by-side." But the methodology reviewer identified a deeper problem: the manuscript compares TMT-labeled Arg-C Ultra against *Trypsin* + Prop — differing in *two* variables. The paper's own numbers show "Arg-C Ultra + Prop" yields 254 fully cleaved peptides, closer to the TMT number (416) than to Trypsin (179). The protease, not the label, may be driving the improvement. The succinylation/glutarylation counts for the propionylated Arg-C Ultra condition are never reported. Without that matched comparison, the charge-compensation mechanism is inferred, not demonstrated. This is not a missing table — it is an untested alternative hypothesis.
 
-Finally, the unvalidated succinylation/glutarylation sites. Sixty-nine previously unreported sites inferred from an unrestrictive search, without synthetic validation, orthogonal enrichment, or comparison to published HEK293T succinylomes. The advocate says this is "discovery-level" — but the paper presents it as a resolved finding ("TMT reveals"), not a hypothesis. That is overclaiming, and it is FATAL in the absence of validation.
+**The NAM experiment's "112 significant peptidoforms" may rest on pseudo-replication.** The data-analysis reviewer flagged that the three "replicates" appear to be aliquots from a single split culture ("divided into 3 x 5 mL aliquots"). If so, the effective n is 1, and the entire limma analysis collapses. The advocate calls this "settled by one explicit sentence in Methods" — but a sentence cannot retroactively create biological replication that did not occur. This is potentially fatal, not cosmetic.
 
-These are not fixable by rewording. Each requires an experiment the manuscript does not contain.
+**The "quantitative accuracy" claim in the abstract is unsupported by any validation experiment.** No spike-in, no known-ratio control, no orthogonal method comparison. The rigor reviewer correctly identifies this as HARD. The advocate did not address it.
 
-**Key points:**
-- The TMT vs propionylation comparison confounds enzyme and label — the clean Arg-C+Prop vs Arg-C+TMT comparison is not presented, so the charge-compensation claim is unsubstantiated.
-- The abstract attributes 112 significant peptidoforms to RIPUP; the Results attribute them to Arg-C Ultra alone — a 7× inflation that is a factual error, not a framing issue.
-- Fifty-eight succinylation and 31 glutarylation sites from an unrestrictive search without orthogonal validation is overclaiming — the paper presents a discovery as a resolved finding.
-- These are structural gaps requiring new experiments, not cosmetic fixes.
+**Collective blind spot:** No reviewer tested whether the stepped NCE (30/40/50) used for TMT samples — versus fixed 30% for unlabeled — alone explains the enhanced b-ion coverage and succinylation detection. This is the cheapest control in the paper and it is absent.
+
+The workflow is useful. The claims outrun it.

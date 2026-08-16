@@ -1,168 +1,124 @@
 {
   "schema_version": 1,
   "round": 1,
-  "job_id": "20260814-132629-acetylation-of-lysine-82-initiates-tdp-43-nuclear-",
+  "job_id": "20260815-194532-acetylation-of-lysine-82-initiates-tdp-43-nuclear-",
   "manuscript_title": "Acetylation of lysine 82 initiates TDP-43 nuclear loss of function by disrupting its nuclear import",
-  "manuscript_cache_key": "0bebf04e12a5a14987d898fbafc4ea4f015875e4f0c5625ac80a5ed2fcd8e563",
+  "manuscript_cache_key": "565b2335f609bec510ec36cdd203f33c082c5211ee26fd2d33d754a1f885ce9b",
   "decision": "major",
-  "weighted_score": 2.5312,
+  "weighted_score": 3.125,
   "required_revisions": [
     {
       "id": "R1-01",
-      "text": "1. Soften causal claims throughout. Replace 'initiates' in the title, abstract, and discussion with language reflecting correlation and sufficiency (e.g., 'triggers', 'is sufficient to disrupt', 'is associated with'). Explicitly state in the Discussion that the human tissue data are cross-sectional and cannot distinguish initiation from consequence.",
-      "source_reviewer": "novelty",
+      "text": "**Distinguish acetylation from ubiquitination at K82.** The mass spectrometry identified both modifications at K79/K82/K84, but the manuscript concludes acetylation is the driver without testing ubiquitination. Provide one of: (a) a ubiquitinated-K82 peptide in the importin-α1 binding assay (Fig. 3F), (b) a K82E (charge-neutral, non-acetyl-mimicking) comparison in the nuclear-import assays, or (c) quantitative MS showing acetylation occupancy is substantially higher than ubiquitination occupancy at K82 under proteasome inhibition. Without this, the claim that acetylation *specifically* initiates the effect is unsupported.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-02",
-      "text": "2. Address the multiple‑testing problem in the nuclear proteome screen (Fig. 1E). Re‑analyse the TMT data with an appropriate FDR correction (e.g., Benjamini‑Hochberg q<0.05) and report the number of proteins that survive correction and the rank/adjusted p‑value of TDP‑43. If few or no proteins survive, state this limitation and adjust the claim accordingly.",
-      "source_reviewer": "data_analysis",
-      "blocking": false
-    },
-    {
-      "id": "R1-03",
-      "text": "3. Provide densitometric quantification for the claim that 'TDP‑43‑K82R … induced TDP‑43 mislocalization even when accumulated at only 25% the level of endogenous TDP‑43 (Fig. S4A)'. Show the individual values, error bars, and the calculation supporting the 25% figure.",
+      "text": "**Provide the mass spectrometry evidence for the PTM identifications.** Show the modified peptides, their sequences, modification-site localization probabilities (e.g., Ascore or equivalent), and representative annotated MS2 spectra for the K82-acetylated peptide. Report whether K79, K82, and K84 carry acetylation, ubiquitination, or both, and the relative abundance of each modification in BTZ-treated versus untreated cells. The claim that proteasome inhibition \"induces\" these modifications requires a quantitative comparison, not just identification.",
       "source_reviewer": "clarity",
       "blocking": false
     },
     {
+      "id": "R1-03",
+      "text": "**Establish biological specificity for the ac-K82 antibody.** Show that the antibody signal in the immunoblot format used for Fig. 5B disappears or is markedly reduced (a) in cells expressing K82R TDP-43, (b) after TDP-43 knockdown, and (c) after pre-incubation with the acetylated peptide (peptide competition). Without these controls, the sALS versus control difference could reflect total TDP-43 load or cross-reactivity.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
       "id": "R1-04",
-      "text": "4. Provide annotated MS/MS spectra for all reported post‑translational modifications within the TDP‑43 cNLS (acetylation at K79, K82, K84; ubiquitination; phosphorylation at S91/92) and deposit the raw mass spectrometry data in a public repository (e.g., PRIDE or MassIVE) with an accession number included in the manuscript.",
-      "source_reviewer": "reproducibility",
+      "text": "**Requalify the causal and temporal language throughout.** The title, abstract, and discussion use \"initiates\" and \"induces\" in ways that outrun the evidence. Change to \"can initiate\" or \"is sufficient to initiate\" for the title claim. The statement that acetylation is \"an earlier event than phosphorylation\" (based on Fig. 5C) must be explicitly hedged as a single-case observation that is suggestive but not demonstrative of temporal order. The Discussion's \"acetylation initiates and drives TDP-43 proteinopathy\" should be requalified to distinguish sufficiency in cell models from initiation in human disease.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-05",
-      "text": "5. Repeat the key mislocalization experiments (immunofluorescence and live‑cell imaging) at the dose that produces ~50% proteasome inhibition (2 nM BTZ) in Figures 1C–D and 1E, or clearly state in the figure legends and Results that the 20 nM dose was used and provide evidence that it also yields partial (~50%) inhibition at that dose in your system.",
-      "source_reviewer": "methodology",
+      "text": "**State the biological replication for the TMT nuclear proteomics (Fig. 1E–F).** State whether the \"three forward labelling groups and three reverse labelling groups\" are biological replicates (independent differentiations) or technical replicates (aliquots of one differentiation). If the latter, the claim that TDP-43 is \"the protein whose nuclear localization is most perturbed\" must be downgraded to a single observation. Report the degrees of freedom for the t-test and the fold-changes with confidence intervals for the ALS-linked RNA-binding proteins in Fig. 1F.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-06",
-      "text": "6. Add a quantified, statistical comparison of the ac‑K82 immunoblot signals from the human motor cortex samples (Fig. 5B), including densitometry normalized to total TDP‑43, individual values, effect size, and a test (e.g., Mann‑Whitney U). Limit the conclusion to what the sample size (6 sALS, 4 controls) supports, and discuss the cross‑sectional, correlative nature of the data.",
-      "source_reviewer": "data_analysis",
+      "text": "**Add statistical analysis to the human tissue data (Fig. 5B).** Provide densitometric quantification of the ac-K82 and phospho-TDP-43 bands normalized to total TDP-43 or a loading control, with a stated test (e.g., Mann-Whitney U) and exact p-values. The current presentation as a binary \"detectable/not detectable\" observation without quantification is not sufficient for the claim.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-07",
-      "text": "7. Provide quantification of the stathmin‑2 cryptic splicing results (Fig. 1G) as qRT‑PCR data with statistics, or as a quantified gel with error bars, to support the claim of TDP‑43 loss of function.",
-      "source_reviewer": "methodology",
+      "text": "**Add statistics to the peptide-binding assay (Fig. 3F).** State the number of independent experiments, whether curves are means ± SEM or representative, and provide a statistical comparison between modified and unmodified peptides (e.g., IC50 values with confidence intervals, or a two-way ANOVA).",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-08",
-      "text": "8. For all co‑immunoprecipitation experiments, include a negative control IP (e.g., IgG or beads alone) and provide quantification across biological replicates (e.g., band intensity ratios) with appropriate statistical tests.",
-      "source_reviewer": "data_analysis",
+      "text": "**Add n's, tests, and error-bar definitions to the key cell-based quantifications.** Specifically: Fig. 1B (time course), Fig. 1G (stathmin-2 splicing — provide densitometry), Fig. 2E, Fig. 3C–D (K82Q versus WT with a stated test, e.g., one-way ANOVA with Dunnett's), and Fig. 4E. State whether n refers to biological or technical replicates.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-09",
-      "text": "9. Provide an IACUC approval statement (with protocol number) for the mouse experiments in Fig. S1A, or a statement that the tissue was obtained from an approved source.",
-      "source_reviewer": "ethics",
+      "text": "**Address the dose discrepancy between experiments.** The PTM mass spectrometry (Fig. 3A–B) and the nuclear proteomics (Fig. 1E) used 20 nM BTZ, while the functional mislocalization assays (Fig. 1B–D) and the PTM-mimic experiments used 2 nM. State explicitly which dose was used for which experiment, and confirm that the PTM identifications were made at a dose that produces the ~50% inhibition used in the functional assays, or justify the higher dose.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-10",
-      "text": "10. Provide a funding disclosure and a competing‑interests declaration.",
-      "source_reviewer": "ethics",
-      "blocking": false
-    },
-    {
-      "id": "R1-11",
-      "text": "11. Document the generation of the TDP‑43‑Clover homozygous knock‑in cell line: parental line, editing strategy (gRNA sequences, Cas variant), number of clones screened, validation of homozygosity (e.g., PCR, sequencing), and mycoplasma testing status.",
-      "source_reviewer": "reproducibility",
-      "blocking": false
-    },
-    {
-      "id": "R1-12",
-      "text": "12. Provide full, uncropped immunoblots for all key figures (including molecular weight markers) as a supplementary file, and deposit source data for blots and micrographs in a public repository (e.g., Figshare).",
-      "source_reviewer": "reproducibility",
-      "blocking": false
-    },
-    {
-      "id": "R1-13",
-      "text": "13. State the software versions used for RawConverter, DTASelect2, Census2, MaxQuant/Proteome Discoverer, the R package used for the volcano plot, and image‑quantification software.",
+      "text": "**Provide the missing procedural identifiers for reproducibility.** At minimum: (a) antibody vendor/catalog/RRID/dilution for all antibodies (currently only in unreproduced supplementary tables — either reproduce the tables or deposit them); (b) gRNA sequences and validation for the TDP-43-Clover knock-in line; (c) siRNA target sequences or vendor; (d) qRT-PCR primer sequences; (e) mass spectrometry repository accessions (PRIDE or MassIVE) for both the TMT and PTM datasets; (f) versions for DTASelect2, Census2, RawConverter, and the UniProt database; (g) image-analysis software and version; (h) mouse strain, source, n per group, and IACUC protocol number.",
       "source_reviewer": "",
-      "blocking": false
-    },
-    {
-      "id": "R1-14",
-      "text": "14. Provide the target sequences for the human TDP‑43 siRNAs used.",
-      "source_reviewer": "reproducibility",
-      "blocking": false
-    },
-    {
-      "id": "R1-15",
-      "text": "15. Provide strain, source, sex, and group sizes for the mice used in Fig. S1A.",
-      "source_reviewer": "reproducibility",
-      "blocking": false
-    },
-    {
-      "id": "R1-16",
-      "text": "16. State the vehicle (e.g., DMSO) and its final concentration for all drug treatments.",
-      "source_reviewer": "",
-      "blocking": false
-    },
-    {
-      "id": "R1-17",
-      "text": "17. Provide a data‑availability statement.",
-      "source_reviewer": "reproducibility",
-      "blocking": false
-    },
-    {
-      "id": "R1-18",
-      "text": "18. Discuss and differentiate the findings from Ko et al. (2024) explicitly in the Discussion, stating what the present work adds over that prior report.",
-      "source_reviewer": "novelty",
       "blocking": false
     }
   ],
   "minor_suggestions": [
-    "Figure 1C-D: state the effective proteasome inhibition at the dose actually used for imaging (20 nM BTZ) or repeat the experiment at 2 nM.",
-    "Peptide-binding assay (Fig. 3F): provide number of replicates and a statistical comparison (e.g., AUC or endpoint binding at a high concentration) across conditions.",
-    "Overlay individual data points on all bar graphs (Figs. 1D, 3D, 4E, 4G, and related supplementary panels).",
-    "Specify the choice between data-dependent and data-independent acquisition in the PTM mass spectrometry methods.",
-    "Add the sequential siRNA+transduction protocol to the Methods section rather than only in figure legends.",
-    "Add a biosafety approval statement for lentiviral work if applicable.",
-    "Provide the number of cells/fields imaged per condition and the number of independent differentiations for all quantification of TDP-43 nuclear fluorescence.",
-    "Cite the original derivation or consent status of the WTC11 iPSC line.",
-    "Shorten the 68‑word sentence beginning 'While a proportion of importin‑α1…' for readability."
+    "**Reposition the novelty framing.** The abstract and introduction lead with the K82-acetylation-disrupts-import finding, which was already reported by Ko et al. 2024 (ref 30, cited). Lead instead with the genuinely novel contributions: the proteasome-trigger link and the antibody-based detection of endogenous K82 acetylation in sALS tissue with its soluble/insoluble distribution. State the delta over Ko et al. explicitly in the Discussion.",
+    "**Add a control for pathway-wide importin-α1 effects.** The FUS control (Fig. 2B–C) shows that importin-β2–mediated import is unaffected, but this does not rule out a general effect on importin-α1–mediated import. Testing a second cNLS-dependent importin-α1 cargo under identical conditions would strengthen the specificity claim.",
+    "**Add a K82R rescue experiment.** Expressing K82R TDP-43 (acetylation-dead) under proteasome inhibition and showing rescue of nuclear localization and stathmin-2 splicing would provide the epistasis evidence needed to support the causal claim. This is listed as a minor suggestion because the required revision items above already address the specificity question; this experiment would further strengthen the manuscript.",
+    "**Clarify the PTM enrichment workflow.** The Methods state that peptides were \"enriched using titanium dioxide chromatography,\" which is a phosphopeptide enrichment method. Clarify whether acetylation/ubiquitination identifications came from the same enriched fraction or a separate analysis, and state the search parameters for variable modifications (acetyl, ubiquitin remnant, phospho).",
+    "**Report the efficiency of siRNA depletion.** State the residual endogenous TDP-43 level after the 48-hr siRNA pre-treatment, as this could confound the nuclear-localization measurements of the expressed variants.",
+    "**Clarify the Fig. 2G–I co-expression experiment.** State whether the mRuby-TDP-43 signal was verified to be free of spectral bleed-through from the Clover channel, and whether the co-IP in Fig. 2F directly tests heterodimer formation between the PY-NLS and cNLS constructs.",
+    "**Add a funding statement and competing-interests declaration.** These are absent and are required for this venue.",
+    "**Verify the cited statistics.** Please confirm that ref 1 (Neumann 2006) contains the \"97% of ALS cases\" figure, that ref 7 (Nelson 2019) contains the \"20–50% of people older than 80 years\" and \"100-fold\" figures, and that ref 34 (Kametani 2016) reports K82 acetylation in \"one out of two\" ALS samples. If these figures originate from other sources, cite those sources.",
+    "**Clarify the tissue-handling description.** The Methods describe the repository as using formalin-fixed tissue, but the study uses fresh frozen motor cortex. Clarify whether the fresh frozen samples were collected under the same IRB protocol or a separate one.",
+    "**Add a data-availability statement.** State where the raw mass spectrometry data, image quantifications, and any custom analysis scripts can be accessed."
   ],
   "reviewer_reports": [
     {
       "reviewer": "data_analysis",
       "score": 2.0,
       "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "data_analysis-1",
-          "text": "HARD – Uncorrected multiple testing in the nuclear proteome screen\nThe claim that TDP‑43 is the protein whose nuclear localization is most sensitive to reduced proteasome activity rests on a TMT mass‑spec experiment comparing nuclear fractions of BTZ‑treated vs. untreated neurons. The volcano plot (Fig. 1E) is plotted with *unadjusted p‑values* (stated in the legend), and the text reports that “unadjusted P values were calculated using a one‑sample two‑sided Student’s t‑test.” With 5,202 proteins tested, no multiple‑testing correction (e.g., FDR) is applied or mentioned. Consequently, the top‑ranked protein under raw p‑values is not distinguished from what could arise by chance. This is a **HARD** issue: the authors must report the number of proteins remaining significant after an appropriate correction (e.g., Benjamini‑Hochberg at q<0.05) and confirm that TDP‑43 remains the most strongly reduced nuclear protein under that threshold. If few or no proteins survive correction, the claim is unsupported."
-        },
-        {
-          "id": "data_analysis-2",
-          "text": "HARD – Missing statistical information for quantification of TDP‑43 localization\nIn Figures 3D, 4E, 4G, and the corresponding supplementary panels, the authors quantify nuclear fluorescence of TDP‑43 variants and present bar plots with error bars. The figure legends do **not** specify: (a) the sample size (n = number of cells? independent differentiations?); (b) the statistical test used for pairwise comparisons (t‑test? ANOVA?); or (c) whether multiple comparisons were controlled when many mutants are compared against wild‑type. The Methods describe general statistical procedures, but each quantitative panel must state the test, the exact n, and the correction applied (if any). Without these, the reader cannot verify that the reported differences (e.g., K82Q abolishing nuclear import) are statistically significant rather than arising from biological or technical variability. Overlaying individual data points on the bars would further aid transparency."
-        },
-        {
-          "id": "data_analysis-3",
-          "text": "Soft – Insufficient qualification of the proteasome activity and viability curves\nFigure 1A and Supplementary S1B,C show dose‑response curves for proteasome activity and cell viability. The text does not state the number of independent experiments or whether any statistical test was applied to define the 50% inhibition point (e.g., a comparison of the chosen dose to the control). Error bars are present but their definition and what they represent (SD or SEM) should be included in the legend."
-        },
-        {
-          "id": "data_analysis-4",
-          "text": "Soft – ac‑TDP‑43(K82) detection in patient samples lacks statistical comparison\nFigure 5B presents immunoblots of motor cortex lysates from 4 controls and 6 sALS patients, with a qualitative claim that acetylation is increased in all sALS samples. A quantitative measure (e.g., band intensity normalized to total TDP‑43) and a comparison (e.g., Mann‑Whitney U test) would strengthen the claim. The sample size is small, and the conclusion would benefit from stating effect size and uncertainty."
-        },
-        {
-          "id": "data_analysis-5",
-          "text": "Soft – Peptide‑importin binding assay reported without statistical summary\nFigure 3F shows concentration‑response curves for a series of modified TDP‑43 peptides binding to importin‑α1. The text states that “peptides acetylated at K82 did not bind to importin‑α1,” but no statistical comparison is provided (e.g., area under the curve, signal at a fixed concentration, or fitted binding parameters with confidence intervals). Replicate number is not given. A quantitative comparison, even a simple t‑test on endpoint binding at a high concentration, would make the claim testable."
-        },
-        {
-          "id": "data_analysis-6",
-          "text": "Soft – Representative immunoblots are the sole evidence for several interaction claims\nCo‑immunoprecipitation experiments (Fig. 2A, 3E, 4C) and the stathmin‑2 rescue (Fig. S2E) are shown as single blots without quantification across biological replicates. While such blots are often supportive, the central claim that proteasome inhibition disrupts the TDP‑43–importin‑α1 interaction would be strengthened by replicate quantification (e.g., band intensity ratios) with an appropriate test."
-        }
-      ],
+      "weaknesses": [],
       "questions": [
-        "For the mass spectrometry nuclear proteome (Fig. 1E), what was the FDR threshold used in DTASelect2 for peptide‑spectrum matches? Was any correction applied to the protein‑level TMT ratios? Please provide the number of proteins that remain significantly changed after FDR correction, and the specific rank and adjusted p‑value of TDP‑43.",
-        "For all quantification of TDP‑43 nuclear fluorescence (Figs. 1D, 3D, 4E, 4G, and related supplementary panels), please state: the exact number of cells or fields imaged per condition, the number of independent differentiations, the statistical test used (and whether it was one‑ or two‑sided), and whether a multiple‑comparison correction was applied (if so, which). Overlay individual data points on the bar graphs.",
-        "For the peptide binding assay (Fig. 3F), how many independent experiments were performed? Can the authors provide a statistical comparison of binding at a saturating concentration (e.g., 1 μM) across the peptides, or fitted dissociation constants with confidence intervals?",
-        "For the antibody specificity validation (Fig. 5A), what metric and statistical criterion were used to define that the antibody recognizes only the acetylated peptide? Please show the raw data and number of replicates."
+        "For the TMT experiment (Fig. 1E), how many independent neuronal differentiations were used, and were the three forward/reverse labelling groups biological or technical replicates?",
+        "For Figure 5B, can you provide densitometric quantification of the ac-K82 and phospho-TDP-43 bands with a stated test (e.g., Mann-Whitney U) and exact p-values?",
+        "For Figure 3F, how many independent binding experiments were performed, and what are the error bars and statistical comparisons between the modified and unmodified peptides?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Please add a funding statement and a competing-interests declaration (even if “none”) to the manuscript.",
+        "Please confirm that the fresh frozen motor cortex samples used in Fig. 5 were collected under the same IRB protocol as the fixed tissue, or state the separate approval.",
+        "Please state whether the WTC11 iPSC line’s original donor consent covers the differentiation and molecular analyses performed here."
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "What is the relative abundance of K82 acetylation versus K82 ubiquitination in the mass spectrometry data, and does a ubiquitination-mimicking mutation (e.g., K82E) also abolish importin-α1 binding?",
+        "Can the authors provide a control experiment showing that another importin-α1–dependent protein (e.g., a second cNLS cargo) is *not* mislocalized under the same proteasome-inhibition conditions, to rule out a pathway-wide effect?",
+        "In the sALS cohort, is there a correlation between the degree of K82 acetylation and the extent of phosphorylated TDP-43 or cytoplasmic aggregation across all six cases, or is the association only qualitative?"
       ]
     },
     {
@@ -172,340 +128,110 @@
       "weaknesses": [
         {
           "id": "clarity-1",
-          "text": "HARD – Figure reference error misleads the reader.\nThe sentence: “confirmed that TDP-43, but not FUS, exhibited increased cytoplasmic mislocalization when proteasome activity was reduced (Fig. S2B; Fig. 1F,E)” cites Fig. 1F,E as evidence for cytoplasmic mislocalization, but those panels show nuclear proteome changes from mass spectrometry, not cytoplasmic fraction data. A reader cannot determine which figure supports which claim; one of these references is incorrect."
+          "text": "**The PTM mass spectrometry data — the foundation of the paper — is not inspectable.** Figure 3A–B describes the workflow and lists the modifications found (acetylation/ubiquitination at K79, K82, K84; phosphorylation at S91/S92), but no spectra, no peptide-level identifications, no localization scores, and no confidence metrics are shown anywhere in the main text or supplementary material. The reader cannot determine whether the K82 acetylation assignment is unambiguous (e.g., whether the modification could be mislocalized to a neighboring lysine, or whether the ubiquitination and acetylation calls are distinguished with the appropriate mass offsets). The claim that \"acetylation and/or ubiquitination of lysines 79, 82, and 84 were identified\" is the load-bearing evidence for the entire mechanistic story, and it is presented as a summary with no underlying data. I could not verify this from the text. What would settle it: a supplementary table listing the modified peptides, their sequences, the modification site localization probability (e.g., Ascore or phosphoRS-equivalent), and representative annotated MS2 spectra for the K82-acetylated peptide."
         },
         {
           "id": "clarity-2",
-          "text": "HARD – Inconsistent BTZ dose undermines a central result.\nThe text states that 2 nM BTZ achieves ~50% proteasome inhibition, and this is used for the fractionation time course (Fig. 1B). Yet the immunofluorescence experiment (Fig. 1C) uses 20 nM BTZ without explanation, and the text then groups both doses under “proteasome inhibition by 50% for 24 hr with BTZ”. The reader cannot reconcile whether 20 nM also gives 50% inhibition or whether different degrees of inhibition were applied; the figure legend should state the effective inhibition at each dose."
+          "text": "**The quantitative claims in Figure 1E–F are not quantified in the text.** The volcano plot shows TDP-43 as the most depleted nuclear protein, and the text says \"reduced by more than 4 fold\" — good — but the comparison to other ALS-linked RNA-binding proteins (Fig. 1F) is described only as \"not (or barely) affected.\" A reader cannot tell from the text whether FUS, TAF15, EWSR1, etc., were depleted by 1.1-fold or 1.8-fold, which matters for the specificity claim. Similarly, Figure 3D quantifies nuclear TDP-43 variant levels but the text gives no numbers for the K82Q effect (\"eliminated its nuclear import\" is qualitative). What would settle it: report the actual fold-changes and confidence intervals for the proteins in Fig. 1F, and the mean ± SEM nuclear/cytoplasmic ratios for the K82Q variant versus WT in Fig. 3D."
         },
         {
           "id": "clarity-3",
-          "text": "HARD – Unsubstantiated quantitative claim.\nThe text says “TDP-43-K82R … induced TDP-43 mislocalization (Fig. 4D,E) even when accumulated at only 25% the level of endogenous TDP-43 (Fig. S4A)”. Fig. S4A shows an immunoblot without any densitometry, fold-change labels, or error bars; the 25% value is not derivable from the panel as presented. The claim therefore cannot be verified."
+          "text": "**Figure 5C is referenced but its experimental logic is under-explained.** The text says acetylation was found in \"both soluble and insoluble fractions\" of sALS cortex, implying acetylation precedes phosphorylation, but the fractionation protocol (NP-40 soluble/insoluble) is not described in Methods, and the reader cannot tell whether the soluble fraction includes nuclear TDP-43 or only cytoplasmic. The claim that acetylation is \"an earlier event\" outruns what this single time-point postmortem experiment can show."
         },
         {
           "id": "clarity-4",
-          "text": "SOFT – Long sentences impede readability.\nThe 68‑word sentence beginning “While a proportion of importin‑α1, but not importin‑β2, was initially bound to TDP-43 …” is syntactically correct but unnecessarily dense. Splitting it would improve clarity."
+          "text": "**The peptide binding assay (Fig. 3F) is described in Methods but the figure legend does not define the axis units or the negative/blank controls.** The legend says \"conducted across a range of concentrations\" but does not state what the x-axis is (peptide concentration? importin concentration?), nor what \"random peptides\" means. A reader cannot interpret the figure from the caption alone."
         },
         {
           "id": "clarity-5",
-          "text": "SOFT – Vague mass spectrometry methods.\nThe PTM detection methods section states that peptides were analysed “using either data-dependent or data-independent acquisition methods”. The choice matters for reproducibility and should be specified; “either” suggests indecision rather than a deliberate protocol."
+          "text": "**Terminology inconsistency: \"cNLS\" vs \"NLS.\"** The manuscript uses \"cNLS\" (classical NLS) in most places but \"NLS\" in Figure 4A and in the text around it (\"Replacing all 6 lysines in the TDP-43 cNLS\" vs. \"TDP-43-6KR\"). This is minor but could confuse a reader tracking the distinction between the classical NLS and the PY-NLS."
         },
         {
           "id": "clarity-6",
-          "text": "SOFT – Missing protocol detail.\nThe sequential siRNA knockdown followed by lentiviral transduction (used in multiple figures) is described only in figure legends, not in the Methods section. Including it in Methods is needed for reproducibility."
-        }
-      ],
-      "questions": []
-    },
-    {
-      "reviewer": "ethics",
-      "score": 2.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "ethics-1",
-          "text": "(HARD) Animal research without approval statement. Fig. S1A reports chymotrypsin-like proteasome activity in \"fresh frozen cortex of mice of different ages\" (3–24 months), and the Materials and Methods describe mouse tissue use, but no IACUC or animal welfare approval is stated anywhere in the manuscript. Per the venue's rule that silence is not compliance, this is a hard gap. The one thing that would settle it: an explicit statement of the institutional animal care and use committee approval (with protocol number) covering the mouse tissue collection, or a statement that the tissue was obtained from an approved source."
+          "text": "**The abstract claims \"reduced proteasome activity, as naturally occurs during aging\" but the aging data (Fig. S1A) shows a decline in mouse cortex by 1 year, not in human aging.** The human data in Fig. S1A is from sALS patients, not aged controls. The framing slightly overstates the aging link; the claim should be scoped to \"age-related decline in mice and reduced activity in sALS.\""
         },
         {
-          "id": "ethics-2",
-          "text": "(HARD) No funding disclosure. The manuscript contains no funding statement; the venue requires funding to be disclosed. The one thing that would settle it: a funding statement listing all sources of support."
+          "id": "clarity-7",
+          "text": "**Figure 2G–H quantifications are described in the text but the time points (0–6 hr) are not justified.** The text says \"0-6 hr\" but the earlier experiments used 12–48 hr. A reader cannot tell whether 6 hr was chosen because the effect saturates, or because the experiment was shorter. A one-sentence justification would resolve this."
         },
         {
-          "id": "ethics-3",
-          "text": "(HARD) No competing-interests declaration. The manuscript contains no competing-interests statement, not even an explicit declaration of none. The one thing that would settle it: a statement declaring competing interests or explicitly declaring none."
-        },
-        {
-          "id": "ethics-4",
-          "text": "(SOFT) iPSC donor consent not documented. The iPSCs are described as \"a kind gift of Michael Ward\" in the WTC11 background, but no donor consent statement or citation to the line's derivation is given. WTC11 is a widely distributed line with documented consent, so this is a soft request: cite the original derivation or state the consent status."
-        },
-        {
-          "id": "ethics-5",
-          "text": "(SOFT) Biosafety statement. Lentiviral production and infection are described; an institutional biosafety approval statement is commonly required for recombinant DNA work and should be added if applicable."
-        }
-      ],
-      "questions": []
-    },
-    {
-      "reviewer": "methodology",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "methodology-1",
-          "text": "Dose mismatch between activity measurement and imaging/proteomics undermines the central claim. The activity curve (Fig 1A) shows that 2 nM BTZ gives ~50% inhibition, but the immunofluorescence images (Fig 1C,D) use 20 nM, and the nuclear proteome data (Fig 1E) also use 20 nM. The fractionation immunoblot (Fig 1B) uses 2 nM and supports the claim, but the imaging and proteomics – which are presented as the primary evidence for sensitivity – do not match the dose of the activity measurement. The conclusion that 50% inhibition triggers mislocalisation is therefore not supported by the images or the proteomics, which use a stronger insult. The authors should either repeat the imaging and proteomics at 2 nM BTZ or clearly state that higher doses were used and discuss the threshold."
-        },
-        {
-          "id": "methodology-2",
-          "text": "Human tissue data (Fig 5) lack quantification and statistical rigour. The claim that K82 acetylation is increased in sALS motor cortex rests on immunoblots of 6 sALS and 4 controls, with no densitometry, error bars, or statistical test. The blot shows variable signal among sALS samples, and the single sALS/control comparison for insoluble fractions (Fig 5C) cannot support the conclusion that acetylation precedes phosphorylation. The sample size is too small to generalise; at a minimum, quantify the signals, report a p‑value, and acknowledge the limited cohort. Additional cases would strengthen the claim."
-        },
-        {
-          "id": "methodology-3",
-          "text": "Post‑translational modification mapping was performed in a cancer cell line, not in neurons. The mass spectrometry identification of K79/K82/K84 acetylation (Fig 3A,B) used SH‑SY5Y cells with homozygous TDP‑43‑Clover knock‑in, not iPSC‑derived cortical neurons. While the acetyl‑K82 antibody detects increased signal in BTZ‑treated neurons (Fig S5), the exact modification sites and their stoichiometry in neurons remain unconfirmed by mass spectrometry. The authors should either provide mass spectrometry data from treated neurons or explicitly limit the claim to the cell line and note that the antibody data are supportive."
-        },
-        {
-          "id": "methodology-4",
-          "text": "Live‑cell competition experiment (Fig 2G–I) does not exclude a dominant‑negative or trapping mechanism. The observation that Clover‑TDP‑43‑PY‑NLS prevents mislocalisation of mRuby‑TDP‑43 is consistent with the model, but it could also arise if dimerisation with PY‑NLS‑containing molecules retains mRuby‑TDP‑43 in the nucleus irrespective of importin‑α1 function. The authors show that PY‑NLS binds importin‑β2, but they do not demonstrate that the mRuby‑TDP‑43 in co‑expressing cells is actually being imported through importin‑β2. An importin‑β2 knockdown or inhibitor would address this alternative."
-        },
-        {
-          "id": "methodology-5",
-          "text": "The stathmin‑2 cryptic splicing result (Fig 1G) is presented only as a gel image without quantification. The claim that TDP‑43 loss of function occurs after proteasome inhibition needs either qRT‑PCR data with statistics or a representative blot accompanied by a quantification panel. The immunoblot in Fig S2E provides protein‑level confirmation for the PY‑NLS rescue, but the key functional readout in Fig 1G requires quantification."
-        },
-        {
-          "id": "methodology-6",
-          "text": "Co‑immunoprecipitation experiments lack a negative control IP (e.g., IgG) to rule out non‑specific binding. While the signal for importin‑α1 is absent in the BTZ condition, the background binding to beads alone is not shown. This is a minor but standard control."
-        },
-        {
-          "id": "methodology-7",
-          "text": "The claim that acetylation at K82 is “sufficient to initiate TDP‑43 nuclear loss of function” (Abstract/Discussion) is not supported by a kinetic or dose‑response experiment. The K82Q mutant shows complete mislocalisation at a single time point, but whether acetylation is the *initiating* event (rather than an early one) is not directly tested. A time‑course of acetylation appearance relative to mislocalisation would strengthen this temporal claim."
+          "id": "clarity-8",
+          "text": "**The Methods section for the PTM mass spectrometry is incomplete.** It says \"TDP-43 was digested using trypsin and chymotrypsin independently, and then peptides were combined and enriched using titanium dioxide chromatography\" — but the enrichment step is for phosphopeptides, not acetylated or ubiquitinated peptides. The reader cannot determine whether acetylation/ubiquitination identifications came from the same enriched fraction or a separate analysis, and no search parameters for variable modifications (acetyl, ubiquitin remnant, phospho) are given."
         }
       ],
       "questions": [
-        "For the imaging in Fig 1C, were the same doses (2 nM BTZ, 50 nM MG132, 10 nM MRZ) ever used? If so, are those data available? If not, why was a higher dose chosen for the imaging?",
-        "Was the acetyl‑K82 antibody signal in the human tissue quantified and normalised to total TDP‑43? Can the authors provide the individual values and a statistical comparison?",
-        "Could the authors provide mass spectrometry data identifying acetylation at K79, K82, or K84 in iPSC‑derived cortical neurons treated with 2 nM BTZ?"
+        "Can the authors provide the MS2 spectra and localization scores for the K82-acetylated peptide, and clarify whether the titanium dioxide enrichment was applied to all PTM identifications or only phosphorylation?",
+        "What are the actual nuclear/cytoplasmic ratios (mean ± SEM, n) for the K82Q variant versus WT in Figure 3D, and the fold-changes for the other ALS-linked RBPs in Figure 1F?",
+        "In Figure 5C, what fractionation protocol was used, and does the \"soluble\" fraction include nuclear TDP-43? How does the presence of acetylation in the soluble fraction support the claim that acetylation precedes phosphorylation, given that both could occur in different subcellular pools?"
       ]
-    },
-    {
-      "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 3.0,
-      "weaknesses": [
-        {
-          "id": "novelty-1",
-          "text": "The causal sequence claim — that K82 acetylation \"initiates\" TDP-43 proteinopathy — is not established by the evidence presented. The title and abstract assert that acetylation of K82 \"initiates TDP-43 nuclear loss of function\" and \"is sufficient to initiate TDP-43 proteinopathies.\" The supporting data are: (a) K82Q (acetylation-mimic) blocks import in cultured neurons; (b) ac-K82 signal is detectable in sALS motor cortex but not controls; (c) ac-K82 appears in both soluble and insoluble fractions whereas pS409/410 is only in the insoluble fraction, which the authors interpret as acetylation preceding phosphorylation. None of these establish initiation. The proteasome-inhibition time course (Fig. 1B, S1G) shows mislocalization beginning by 12 h of BTZ treatment, but no time-resolved measurement of K82 acetylation is reported. The sALS tissue data are cross-sectional and correlative. An equally plausible alternative is that acetylation is a downstream consequence of TDP-43 mislocalization, occurring on cytoplasmic TDP-43 after import failure from another cause. To distinguish these, the authors would need to show that acetylation precedes mislocalization (e.g., by blocking acetylation and showing nuclear retention is preserved under proteasome inhibition), or demonstrate that a non-acetylatable K82R mutant is resistant to BTZ-induced mislocalization."
-        },
-        {
-          "id": "novelty-2",
-          "text": "The specific link between partial proteasome inhibition and K82 acetylation is mechanistically undefined. The manuscript shows that 50% proteasome inhibition triggers TDP-43 mislocalization and that K82 acetylation is detectable by MS after BTZ treatment (Fig. 3A–B) and by immunoblot (Fig. S5). But it does not identify the acetyltransferase(s) or deacetylase(s) that regulate K82, nor does it demonstrate that proteasome inhibition directly elevates K82 acetylation levels (the S5 blot is not quantified and uses a single BTZ dose at one time point). The model in the Discussion invokes \"competing activities of acetyltransferases and deacetylases\" without testing whether inhibiting the relevant acetyltransferase blocks the mislocalization. Without this, reduced proteasome activity and K82 acetylation are co-occurring events in the same experiment, not a demonstrated causal chain. A minimal addition would be to measure K82 acetylation quantitatively over the BTZ time course and test whether the N-terminal acetyltransferase or HDAC inhibitors modify the phenotype."
-        },
-        {
-          "id": "novelty-3",
-          "text": "The prioritisation relative to Ko et al. (2024) is incompletely stated. The manuscript cites Ko et al. (*J Mol Biol*, 2024) as \"consistent with a recent report\" showing that \"single acetylation-mimetic mutation in TDP-43 Nuclear Localization Signal disrupts importin α1/β signaling.\" That paper already demonstrated that K82Q (the same acetylation-mimic used here) disrupts importin binding and nuclear localisation. The present work clearly adds: (a) identification of the modification in the context of proteasome stress by MS; (b) peptide-binding assays with *bona fide* acetylated (not K82Q) peptides; (c) demonstration that K82 acetylation is present in sALS tissue. These are meaningful extensions, but the core finding — K82 acetylation-mimetic disrupts import — was in print before this preprint. The current framing (\"acetylation of lysine 82 initiates TDP-43 nuclear loss of function\") reads as a priority claim and should explicitly state what is added over Ko et al. The Discussion does not name or differentiate the Ko et al. findings; it only cites the paper in parentheses."
-        },
-        {
-          "id": "novelty-4",
-          "text": "The claim that \"TDP-43 is the protein whose nuclear localization is most sensitive to reduced proteasome activity\" (Fig. 1E–F) relies on a single time point (24 h) and a single BTZ dose (20 nM); different doses or durations might identify other sensitive proteins, and this should be noted as a limitation."
-        },
-        {
-          "id": "novelty-5",
-          "text": "The Kametani et al. (2016, *Sci Rep*) mass spectrometry study identified K82 acetylation in 1/2 ALS samples; the present manuscript cites this but does not discuss how the current 6/6 detection rate differs in method or cohort (different antibodies, different tissue fractionation, different disease stage)."
-        },
-        {
-          "id": "novelty-6",
-          "text": "The evidence that PY-NLS swap \"prevented\" nuclear loss of function is based on stathmin-2 protein levels (Fig. S2E); the stathmin-2 mRNA splicing data shown in Fig. 1G are for the endogenous TDP-43 mislocalization, not for the rescue experiment — a side-by-side comparison would strengthen the functional rescue claim."
-        },
-        {
-          "id": "novelty-7",
-          "text": "The ac-K82 antibodies are validated only by ELISA against the cognate peptide (Fig. 5A); cross-reactivity against other acetyl-lysine TDP-43 peptides (e.g., K136ac, K145ac) is not reported, which is relevant since Cohen et al. showed K145ac is enriched in pathological TDP-43."
-        },
-        {
-          "id": "novelty-8",
-          "text": "The 4 control vs. 6 sALS sample size for human tissue (Fig. 5B–C) is small; the observation that ac-K82 is present in all 6 sALS and 0/4 controls is suggestive but should be expanded in larger cohorts, and the authors should report whether the sALS cases had confirmed TDP-43 pathology."
-        },
-        {
-          "id": "novelty-9",
-          "text": "The \"initiator\" model in the Discussion proposes that nuclear depletion precedes cytoplasmic aggregation, but the manuscript does not test whether K82 acetylation promotes aggregation or phase separation — the Garcia Morato et al. (2022) work on K136ac shows how such a test could be done."
-        }
-      ],
-      "questions": []
     },
     {
       "reviewer": "literature",
       "score": 4.0,
-      "confidence": 3.0,
+      "confidence": 4.0,
       "weaknesses": [
         {
           "id": "literature-1",
-          "text": "The independent human-tissue corroboration of the central finding rests on an attribution I could not verify. The Discussion states: \"Our observation is supported by a mass spectrometry analysis of TDP-43 post translational modifications which found K82 acetylation in one out of two ALS postmortem samples34\" (Kametani et al., Sci Rep 2016, PMID 26980269). I confirmed the paper exists and is a mass-spec analysis of accumulated TDP-43 in ALS brains, but I could not confirm from its metadata that it specifically identified acetylation at K82 (rather than another lysine) in one of two samples. Because this is the only independent human-tissue corroboration of the paper's central claim, please confirm the specific residue and sample count, or soften the sentence to match what Kametani actually reported."
+          "text": "The claim that \"proteasome activity declines during aging of metazoans\" cites refs 20-22, but the mouse data in Fig. S1A showing ~50% decline by one year is the authors' own data — the citation support for the general claim is fine, but the specific aging-neuron link is only partially supported by the cited literature (ref 20 is spinal cord, ref 21 is Drosophila, ref 22 is mouse brain)."
         },
         {
           "id": "literature-2",
-          "text": "The manuscript presents \"TDP-43 mislocalization is triggered by reduced proteasome activity\" as a new finding without, as far as I can see, citing prior reports of proteasome-inhibitor-induced TDP-43 cytoplasmic redistribution/aggregation. If any directly competing report already showed this, it should be cited and distinguished. I could not complete the verification search (tool errors), so I flag this as a question rather than a demonstrated omission."
+          "text": "The manuscript cites ref 30 (Ko et al., 2024) for the K82Q effect on importin-α1/β signaling, which is appropriate and current; good that this directly competing recent work is acknowledged."
+        },
+        {
+          "id": "literature-3",
+          "text": "Ref 34 (Kametani et al., 2016) is cited for prior MS detection of K82 acetylation in ALS — this is correctly attributed and appropriately acknowledged as prior evidence."
+        },
+        {
+          "id": "literature-4",
+          "text": "The claim that \"TDP-43 is the protein whose nuclear localization is most perturbed upon reduction in proteasome activity\" (Fig. 1E) is a strong claim resting on a single TMT experiment; the manuscript does not report whether the nuclear proteome changes were validated for a subset of proteins by orthogonal methods (e.g., immunoblot of fractionated lysates for a few of the most- and least-affected proteins)."
+        },
+        {
+          "id": "literature-5",
+          "text": "The manuscript does not cite work on TDP-43 acetylation at other lysines (e.g., K136, K145, K192) in the introduction or discussion of the acetylation cascade — refs 9 and 35 are cited in the discussion, which is adequate, but the introduction could better situate the acetylation field."
+        },
+        {
+          "id": "literature-6",
+          "text": "The reference list appears to have a formatting issue: ref 24 (Melamed et al.) and ref 25 (Klim et al.) are both cited for stathmin-2 loss, which is correct, but the reference list shows \"Nat. Neurosci. 22, 180-190 (2019). 39.\" — the \"39\" appears to be a stray artifact of the PDF conversion, not a real citation issue."
+        },
+        {
+          "id": "literature-7",
+          "text": "The manuscript's claim that \"nuclear export of TDP-43 is thought to be achieved by passive diffusion\" cites refs 16-18, which is accurate — these papers (Ederle 2018, Archbold 2018, Pinarbasi 2018) do support this claim."
+        },
+        {
+          "id": "literature-8",
+          "text": "The authors should verify that ref 19 (Doll et al., 2022) actually demonstrates importin-α1/β recognition of the TDP-43 cNLS as claimed — this is a recent and directly relevant citation, and the attribution appears correct from the title."
         }
       ],
       "questions": [
-        "Can you confirm that Kametani et al. 2016 specifically reports K82 acetylation in one of two ALS samples (residue and count), since I could not verify this from the abstract alone?",
-        "Which prior reports of proteasome-inhibitor-induced TDP-43 mislocalization were considered, and why are they not cited or distinguished from the present finding?"
+        "In the MS analysis (Fig. 3B), can you report whether K79, K82, and K84 carry acetylation, ubiquitination, or both, and the relative abundance of each modification at each site?",
+        "Did you test a ubiquitinated K82 peptide in the importin-α1 binding assay (Fig. 3F), and if so, what was the result?",
+        "For the sALS tissue immunoblots (Fig. 5B), was the ac-K82 signal competed by pre-incubation with the acetylated peptide, and was ac-K82 localization examined by immunohistochemistry in TDP-43 inclusions?",
+        "Given that K82R (charge-preserving) also disrupts importin binding, do you interpret acetylation as mechanistically distinct from other K82 perturbations, or is K82 a gatekeeper whose modification of any type disrupts import?",
+        "Was the nuclear proteome change (Fig. 1E) validated for a subset of proteins by orthogonal methods (e.g., immunoblot of fractionated lysates)?"
       ]
-    },
-    {
-      "reviewer": "reproducibility",
-      "score": 2.0,
-      "confidence": 5.0,
-      "weaknesses": [
-        {
-          "id": "reproducibility-1",
-          "text": "Missing explicit drug concentration and time of treatment in Fig. 1; data for the proteasome-activity time course are not shown in full, and the partial-inhibition criterion is therefore not reproducible."
-        },
-        {
-          "id": "reproducibility-2",
-          "text": "Fig 2, panel labels: The manuscript text at line 123 refers to 'Fig. 2(D)' for 'co-IP' but the figure legend describes panels E-G as 'endogenous' Co-IP. Ensure that the letter callouts in the text match the experimental data in the corresponding panels."
-        },
-        {
-          "id": "reproducibility-3",
-          "text": "Quantification of nucleocytoplasmic ratio (Fig. 1D/E) requires specifying the number of cells and fields counted, and whether the automated image analysis included cytoplasmic vs nuclear segmentation at the single-cell level using e.g. DAPI or Hoechst in the same channel — no nuclear stain was indicated in the Methods (the 'Hoechst 33342' used for live-cell imaging in Fig. 1C is mentioned, but not the methods for the fixed-cell images in Fig. 1D)."
-        },
-        {
-          "id": "reproducibility-4",
-          "text": "Fig. 3A: In the schematic of the MS workflow, mention what portion of the proteomics data includes information on protein abundance; the schematic and its legend might detail whether the experiment is single or multi-replicate. Detection of endogenous acetylated-K82 is the manuscript's core claim, but only 2 of the 3 replicates are shown in Fig. 3D-H (the HP1γ panel appears missing), with no accession number for public deposition. The authors should provide a public repository (e.g., PRIDE/MassIVE) with the search engine output and localized spectra for the acetylated and ubiquitinated lysines (K84 passage), so an independent MS expert can assess the assignment; the current evidence is not enough for a qualified review."
-        },
-        {
-          "id": "reproducibility-5",
-          "text": "The term 'proteasome inhibitors BTZ, MG132, and MRZ' – MRZ (Mrz) is presented in Fig 1 legend but no concentration response experiment is presented for any of the other inhibitors beyond the BTZ data shown; Fig. 1A legend refers to 'dose response' but for MRZ only a single concentration is assayed? Further, the IC50 values for bortezomib and MG132 in this cellular context are not disclosed. These values could be reported to allow the field to titrate partial inhibition conditions across labs."
-        },
-        {
-          "id": "reproducibility-6",
-          "text": "The co-immunoprecipitation data (Fig. 5G/H) were not completely visible: please provide the full co-IP blots with all molecular weight markers, including the IgG light chain region and input controls, as the current panels appear cropped in the text file."
-        },
-        {
-          "id": "reproducibility-7",
-          "text": "The claim 'acetylation of K82 is sufficient to drive TDP-43 nuclear loss of function and cytoplasmic accumulation' — the statement 'nuclear loss of function' is inferred from decreased nuclear TDP-43 but 'loss of function' implies measurement of a phenotype such as alternative splicing, or loss of TDP-43's known splicing activity, or its interaction with certain RNA targets. A claim of \"loss of function\" is stronger than \"mislocalization\" and requires functional evidence through splicing assays or mRNA targets. The manuscript currently presents data on nucleocytoplasmic ratio and, in supplement (not shown in main text), a splicing assay for the TDP-43 target, but does not show the full exon skipping data. For the reproducibility review, I ask: provide the counts for the PSTL2/minisplicing assay and the assay's differential-splicing statistics. This is in the lineage of data/code availability as well."
-        },
-        {
-          "id": "reproducibility-8",
-          "text": "The figures and main text have several unsupported subtle claims: (1) 'Clover-tagged TDP-43 with a C-terminal epitope' — if the epitope was used for affinity purification, its exact sequence and position should be given in Methods. (2) 'micro-dialysis of brain homogenates' — is not a plausible technique and is not described in Methods. (3) In Fig. 3A and Fig. S2, the use of heatmaps with no defined color scale is not reproducible."
-        },
-        {
-          "id": "reproducibility-9",
-          "text": "The manuscript claims (in Fig. 1A panel) that partial inhibition of proteasome activity to '70±5% control' was maintained for 24 h, yet the paper does not report how the inhibition level was verified at the endpoint (the assay shown uses purified 20S proteasome, not the living cells being used in the assay). Including the endpoint proteasome activity in Fig. 1 would strengthen (or correct) the model—currently, the dose curve is for purified proteasome only."
-        },
-        {
-          "id": "reproducibility-10",
-          "text": "The statistical question of whether TDP-43 mislocalization at '24 hr exposure' (Fig 1E) is driven by small proportional changes of TDP-43 in thousands of cells, or by a smaller number of cells that have fully lost nuclear TDP-43, is of key mechanistic relevance to the claim in the title ('loss of function'). What is the distribution of TDP-43 nucleocytoplasmic ratio among individual cells in Fig. 1E? If the manuscript reports the mean ratio, the authors should also report the % of TDP-43 that is cytoplasmic and the fraction of cells with 'fully cytoplasmic' TDP-43 (e.g., the proportion of cells for which the mean cytoplasmic TDP-43 intensity exceeds the nuclear intensity) across the conditions and controls."
-        },
-        {
-          "id": "reproducibility-11",
-          "text": "The methods for the ImageStream imaging flow cytometry and the CellProfiler pipeline referenced in the Methods are not available; the parameters used to segment the nucleus and cytoplasm are therefore not described."
-        },
-        {
-          "id": "reproducibility-12",
-          "text": "Given the absence of annotated mass spectra or a proteomics repository, the acetylated/ubiquitinated peptides in Fig. 3 are not verifiable. Please provide the peptide-spectrum matches (PSM) for the reported acetylated and ubiquitinated K79/K82/K84 peptides and raw files, or raw peptide-spectrum matches with annotated spectra, e.g., as a PRIDE or MassIVE repository ID for the project, and cite it in the manuscript."
-        },
-        {
-          "id": "reproducibility-13",
-          "text": "The figure legend for Fig. 3B (Ub-peptide) would need to name the cell line and whether 24h BTZ or not. Under 'methods' it is specified that cells were modified with endogenous gene editing to have Clover inserted, but I could not find the exact cell line and its provenance."
-        },
-        {
-          "id": "reproducibility-14",
-          "text": "The time-course analysis shown in Fig. 3A, which shows integrated density of the TDP-43 signal per cell is the central evidence for nuclear exclusion after 12-24h inhibitor treatment, but no threshold for 'loss' is justified. What is the threshold that defines 'loss of nuclear TDP-43' in imaging experiments?"
-        },
-        {
-          "id": "reproducibility-15",
-          "text": "[HARD] Fig. S2B: no source data file. The manuscript should provide the source data for blots and micrographs. Ideally, these should be stored in a repository like Figshare or a generalist repository with CC-BY license. Also, include the raw scans as a supplement (as a PDF/SI) so that the immunoblotting threshold of 'cropped representative immunoblots' (which the authors describe only with the phrase 'representative immunoblots' in the Methods) can be confirmed; I would like to see the molecular-weight markers from the original blots to confirm the identity of the bands at 43kDa vs 25kDa."
-        },
-        {
-          "id": "reproducibility-16",
-          "text": "Specific protocols — exact catalogue numbers and lot numbers of the antibodies against TDP-43 (both total TDP-43 and phospho-TDP-43), and importantly, for the anti-K82Ac-TDP-43 antibody which the authors raise in-house (I could not find the generation method in the Methods section beyond 'immunized rabbits with a peptide acetylated on lysine 82'), and for which the paper lacks a peptide competition or specificity blot. Given that a central claim of the manuscript rests on this in-house antibody, the characterization data must be publicly available from the source or included as supplementary figures."
-        },
-        {
-          "id": "reproducibility-17",
-          "text": "Because this is a cell line manuscript rather than a patient cohort study: the use of human iPSC-derived cortical neuron cultures is not accompanied by any authentication data (STR/karyotype), which is normally not required in nontumor cell lines, but for the panel, please provide lot numbers and how they were maintained."
-        },
-        {
-          "id": "reproducibility-18",
-          "text": "Methods/statistics: The manuscript refers to statistical tests as 'appropriate' (statistical methods). While the number of replicates per condition is not stated for any of the figure panels in the main text or figure legends, the associated figure legends indicate N=3 biological replicates. Please confirm the statistical tests used for each figure panel with exact Ns in the corresponding figure legends; current legends state only that 'data represent mean ± SEM of N=3 independent experiments,' with no test name."
-        },
-        {
-          "id": "reproducibility-19",
-          "text": "The first paragraph of the introduction cites proteasome activity declines with age (line). Provide the citation for this claim in the intro."
-        },
-        {
-          "id": "reproducibility-20",
-          "text": "Figure 1 legend and panel A require a statement of the number of independent batches of human iPSC-derived cortical neurons."
-        },
-        {
-          "id": "reproducibility-21",
-          "text": "In the TDP-43-Clover line generation section (a major source of artifacts for the conclusions in the title), the manuscript needs the exact number of clones examined and the editing strategy; whether a homozygous edited allele was screened regardless of off-target indels; how the edited line was maintained (FK506, Mycoplasma testing)."
-        },
-        {
-          "id": "reproducibility-22",
-          "text": "Note co-IP experiments: pulldown conditions and whether the same edited lines were also used in the co-IP that is used to make the functional connections claimed in Fig. 2 (e.g., did the RNA-binding mutants still bind with high affinity to importin, or not, which would be a direct test that the acetylation is acting through nucleocytoplasmic shuttling rather than mere RNA-binding change)."
-        },
-        {
-          "id": "reproducibility-23",
-          "text": "Proteomics raw data and annotated spectra. The acetylated (K82) and ubiquitinated (K79/K82/K84) peptide identifications supporting Fig. 3 are central to the mechanistic claim, and they are only presented as summary PTM calls. The MS raw data, peak lists, annotated spectra, and localization scores for these PTM sites are not deposited (no PRIDE/MassIVE/ProteomeXchange accession) and not available as a supplement; this is a HARD reproducibility gap, since the modifications are novel and are the paper's central claim. The manuscript states the data 'will be made available upon request,' which is not acceptable under the target journal's guidelines."
-        },
-        {
-          "id": "reproducibility-24",
-          "text": "MS data cannot usually distinguish acetylation vs ubiquitination (+42.0106 Da vs +114.0429 Da) from single MS2 scans. The loss of a Gly-Gly remnant (114.0429 Da, +0.0323 Da vs acetylation) is sometimes separable by high-resolution mass spectrometry, but the manuscript does not report the mass accuracy of the instrument, the FDR at the PSM level, the search database (species = human, reviewed only, and any isoforms), the enzyme (trypsin?) to explain the missed cleavages which might be relevant if the NLS lysines were modified, or how they discriminated acetyl and Ub-GG (di-Gly) remnants of similar masses. In the absence of the MS/MS evidence, the manuscript presents only a conclusion. Until data is provided, the claim that K82 acetylation is found specifically in the cNLS only in ALS patients and not controls (Fig. 4) is unverifiable."
-        },
-        {
-          "id": "reproducibility-25",
-          "text": "The TDP-43 K82R/Q data (Fig. 3I,J) show nuclear mislocalization for K82Q but not for K82R — and that is the predicted pattern for mimicking an acetylation (Q) vs a neutral substitution (K82R), both are needed to strengthen the claim that it's the acetylation specifically (and not, e.g., the charge of the aliphatic side chain) that drives the phenotype. The authors don't show or cite the actual statistics comparing the two localizations."
-        },
-        {
-          "id": "reproducibility-26",
-          "text": "For the Fig. 4 human tissue data, I have no way to confirm from the manuscript that a 'motor cortex from sporadic ALS patients' (n=?) and 'normal control subjects' (n=?) with 12 possible TDP-43 proteinopathy cases stained positive as cited. The tissue samples were reported to be fixed with 10% NBF and paraffin-embedded — but the reference to the ethics statement for the use of postmortem tissues is provided only in the Methods. If the review is double-blind, this may not matter, but the exact institutional approval code was omitted from the main text for the human tissue work (which should be stated in the Methods)."
-        },
-        {
-          "id": "reproducibility-27",
-          "text": "The statement in the methods that 'unbiased proteomics screens' in soluble fractions were performed to identify modifications in an unbiased fashion. It also states that the observed peptide modifications were 'quantified as ratios [peptide counts mutated to unmodified and read out as apparently elevated in disease]' — these sites (K82/K84) were detected in WT and M337V as well, without mention of the allele-specific origin of the NLS."
-        },
-        {
-          "id": "reproducibility-28",
-          "text": "Mass spectrometry data: The authors provide no data repository number for the mass spectrometry, RNA-Seq, or ribosome profiling — and the report is not yet available as a preprint, so independent reviewers cannot check the underlying evidence for the claimed post-translational modifications at K82. No raw files, no annotated MS/MS spectra, no database search config files, no quant tables. The results section states that proteomics identified K84 ubiquitination and K82 acetylation but does not show how peptides were distinguished whether 'K82ac' vs 'K82-ub' vs K82-methyl or cross-talk of modifications at neighboring; the evidence is not present. Minimal fix: provide annotated MS/MS spectra for the key peptides and a repository ID whose content matches the claim in the text."
-        },
-        {
-          "id": "reproducibility-29",
-          "text": "Reporting of time-course in Fig. 1: The description says cells were treated with 2 nM BTZ every 24h for 72h, yet the reader is never told when imaging or lysis was performed relative to the last dose, nor whether the cells were kept in BTZ-containing medium. The manuscript's claim 'TDP-43 mislocalization was evident 2h after BTZ addition' is not accompanied by the time course of expression changes after 2h, and figures showing this time course are absent from main or supplements."
-        },
-        {
-          "id": "reproducibility-30",
-          "text": "Experimental evidence for the claim that proteasome inhibition by BTZ at 20 nM is 'partial': The authors have not shown a partial inhibition of proteasome activity at this concentration. The only data quantifying proteasome activity in human iPSC-derived neurons was a chymotrypsin-like activity assay done at one concentration or one condition display, whose exact values were reported only relative and only for the mixed glial/neuronal mixture, not separated. The claim 'partial' is key, and must be substantiated either by a dose-response curve of proteasome activity for BTZ at 0-100 nM (showing approximately 50% inhibition at 20 nM), or by stating that 'the concentration was chosen to avoid general proteotoxicity.'"
-        },
-        {
-          "id": "reproducibility-31",
-          "text": "The arguments made in the final paragraph, in which the authors claim the acetylated K82 may cause cytoplasmic aggregation (because acetylated K82Ac, K84Ac, and K79Ac are found in cytoplasmic inclusion in sALS) rely on data from fixed tissue. The authors assert that P62-associated degradation is compromised by inhibition; however, p62 bodies may occur as a consequence of the experimental system (overexpression of TDP-43 in non-neuronal cells), and generalize to neurons only with the caveat that primary neurons – which express p62 at much higher levels – would need to be tested."
-        },
-        {
-          "id": "reproducibility-32",
-          "text": "(HARD) Provide a summary table AND the annotated MS/MS spectra for the key modified NLS peptides (K82Ac, K84Ac, K79/82 ubiquitination) deposited in a public repository (PRIDE/MassIVE) or as supplementary tables. The authors report 'immunoblotting of TDP-43 and mass spectrometry identified ubiquitination at K79, K82, K84 and acetylation at K84,' but the MS evidence is not visible. If the spectra cannot be shown, the claim that these events increase 'when proteasome activity is partially inhibited' is unverifiable."
-        },
-        {
-          "id": "reproducibility-33",
-          "text": "(HARD) Clarify the stoichiometry claim 'protein levels of TDP-43 were unchanged' in Fig. 1 legend vs the statement in Results on 'proteasome 20S activity' in Fig. S1A/B, and provide the uncropped immunoblot panels as supplements, with molecular weight markers."
-        },
-        {
-          "id": "reproducibility-34",
-          "text": "(SOFT) Provide an explication of the term 'aged' in the context of the aging experiments with differentiation of the human iPSC-derived NGN2 neurons (which the authors describe as 'aged' in culture) - to clarify whether it is just days in culture or their 'aging' method."
-        },
-        {
-          "id": "reproducibility-35",
-          "text": "Which cell line is used to generate the cortical neurons shown in use in all Figures, and is it an allelic series on the same background? Were male and female lines used? This should be stated once in the methods."
-        }
-      ],
-      "questions": []
     },
     {
       "reviewer": "rigor",
-      "score": 2.0,
-      "confidence": 5.0,
-      "weaknesses": [
-        {
-          "id": "rigor-1",
-          "text": "**LOAD-BEARING: Causal claims in title and abstract outrun the evidence.** The authors state that K82 acetylation 'initiates TDP-43 nuclear loss of function' (title), 'drives disruption of its importin-α1-mediated nuclear import' and 'is sufficient to initiate TDP-43 nuclear loss of function and cytoplasmic accumulation' (abstract). The evidence for a causal, initiating role comprises: (i) partial proteasome inhibition leads to TDP-43 mislocalization and K82 acetylation (detected by mass spec and by acetylation-specific antibodies); (ii) an acetylation-mimicking K82Q point mutant abolishes importin-α1 binding and causes mislocalization. A K82Q substitution is not acetylation — it removes the positive charge and replaces it with a neutral, sterically distinct residue that may also disrupt hydrogen bonding differently from an acetyl group. Acetylation is reversible and chemically specific; a glutamine substitution provides a sufficiency argument for *charge neutralisation at that position* but does not demonstrate that acetylation per se is the initiator. Moreover, the mass spectrometry identifies ubiquitination and acetylation of K79, K82, and *and* phosphorylation of S91/92 — several modifications co-occur. The claim that K82 acetylation 'initiates' the cascade, rather than being one of several modifications whose combined effect produces the phenotype, is not established. There is no experiment that manipulates acetylation specifically (e.g., by inhibiting the relevant acetyltransferase or activating a deacetylase) and shows that this alone blocks the mislocalisation upon proteasome inhibition. The title and abstract should be rephrased to reflect what the data actually show: that K82 acetylation (or charge neutralisation) is sufficient to block nuclear import, and correlates with mislocalization in cells and disease tissue."
-        },
-        {
-          "id": "rigor-2",
-          "text": "**LOAD-BEARING: The human tissue data are cross-sectional and do not demonstrate initiation.** The abstract states that 'acetylation of lysine 82 in the motor cortex of sporadic ALS patients' was detected and that this 'evidence supporting acetylation as a plausible initiator of TDP-43 proteinopathies'. However, the data in Fig. 5B and 5C are immunoblots of postmortem tissue at a single timepoint (end-stage disease), showing that K82-acetylated TDP-43 is present in ALS samples (six of six) but not in controls (0/4). This is a cross-sectional, correlative observation. Acetylation could be a consequence of cellular stress or proteasome dysfunction that is itself secondary to the disease process, rather than an initiator. The claim that it is 'plausibly an initiator' is not contradicted by the data, but neither is it supported by them — any bystander modification that accumulates in sick neurons would show the same pattern. To distinguish initiation from consequence, one would need longitudinal data, or an experimental system where acetylation is manipulated independently of proteasome inhibition. The authors should explicitly acknowledge that the tissue data are correlative and consistent with, but do not establish, an initiating role."
-        },
-        {
-          "id": "rigor-3",
-          "text": "**LOAD-BEARING: The mechanistic claim rests on a correlational chain, not a direct test of the proposed sequence.** The proposed sequence is: reduced proteasome activity → K82 acetylation → disrupted importin-α1 binding → nuclear import failure → mislocalization → loss of function. The only direct evidence for each step is: step 1 (proteasome inhibition → mislocalization) is solid (Fig. 1). Step 2 (proteasome inhibition → K82 acetylation) is supported by mass spec (Fig. 3A-B) and by the acetylation-specific antibodies (Fig. S5, Fig. 5B-C) — but note that the mass spec identifies K82 acetylation after 24 h of proteasome inhibition, at which point TDP-43 is already mislocalized. The authors have not shown whether acetylation precedes mislocalization or is a consequence of it (e.g., because cytoplasmic TDP-43 encounters different acetyltransferases). Step 3 (K82 acetylation → disrupted importin-α1 binding) is demonstrated only for the K82Q mimic, not for endogenous acetylated TDP-43. The peptide-binding assay (Fig. 3F) shows that an acetylated K82 peptide cannot bind importin-α1, which is a strong argument for sufficiency — but even this is not a direct demonstration that the endogenous, full-length, acetylated protein cannot bind importin-α1. The entire chain from proteasome inhibition to mislocalization via K82 acetylation is inferred from correlations and from substitution mutants, not from an experiment in which K82 acetylation is the only variable. An experiment that blocks K82 acetylation (e.g., by knocking down the relevant acetyltransferase or overexpressing a deacetylase) and tests whether proteasome inhibition still causes mislocalization would directly test the causal sequence. Without it, the claim that this is the *initiating* event remains an untested inference."
-        }
-      ],
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
       "questions": [
-        "Can the authors provide the quantified group data (mean ± SEM, individual points) for the nucleocytoplasmic ratio of TDP-43 across all cells and conditions in Fig. 1D, alongside the representative images?",
-        "For the TMT-MS nuclear proteome experiment (Fig. 1E, F): what is the number of biological replicates, the FDR threshold applied, and were the comparisons done with correction for multiple hypotheses (e.g., BH-adjusted q-values)?",
-        "For the live-cell imaging in Fig. S2C and Fig. 2G–I: were the cells counted blinded? How many cells per condition were tracked? Was the 'partial proteasome inhibition' condition (2 nM BTZ) confirmed to produce ~50% inhibition in these specific experiments?",
-        "For the acetylation-mimicking variants: do the K82Q, K79Q, and K84Q substitutions lead to the same loss of importin-α1 binding in a cell-free system with purified proteins, or could the effect be indirect (e.g., altered localization causing reduced association after lysis)?",
-        "In Fig. 5B, is the signal for ac-TDP-43(K82) in the sALS lanes also present when the blot is probed with the same antibody pre-adsorbed with the acetylated peptide (to confirm specificity in tissue lysates, where background can differ from peptide ELISA)?",
-        "What is the total TDP-43 protein level in the sALS vs. control motor cortices? The claim that K82 acetylation is 'increased' in sALS requires normalization to total TDP-43 protein, not just GAPDH."
+        "Can you show the mass spectrometry quantification of K82 acetylation occupancy in BTZ-treated versus untreated cells, rather than only the identification of the modification?",
+        "Does the ac-K82 antibody signal disappear in cells expressing K82R TDP-43 or after TDP-43 knockdown, in the same immunoblot format used for Fig. 5B?",
+        "In Fig. 2G–I, is the mRuby-TDP-43 signal quantified in cells that also express Clover-PY-NLS verified to be free of spectral bleed-through from the Clover channel?"
       ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": []
     }
   ],
   "manuscript_text_sha256": "2f5a4834cce5bd673ef90f1629caafd0a1a369512718988a26cef1fa222e8652",
-  "manuscript_file_sha256": "993cd7385d77d900c9dc38a3e7434f6410024c45c71c67ec2112a4724fd84622",
+  "manuscript_file_sha256": "1bf13d25702ea03e1d079ae404075dc4987b9c3a80e96d8dd476cdae37936734",
   "prior_job_id": "",
   "desk_rejected": false
 }

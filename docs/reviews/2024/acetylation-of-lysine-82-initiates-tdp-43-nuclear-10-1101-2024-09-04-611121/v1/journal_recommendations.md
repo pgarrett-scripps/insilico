@@ -1,13 +1,43 @@
-# Journal Recommendations
+## Venue Recommendations
 
-## As-is (current quality)
-_No headline venue is realistic at the current quality — see Alternative._
+### as_is
 
-## After required revisions
-_No higher-tier venue identified post-revision; the as-is venues remain the realistic targets._
+Given the editor's verdict of "major" revision with required new data, this manuscript is **not** ready for submission to a peer-reviewed journal in its current form. The panel's core objections — particularly the failure to distinguish acetylation from ubiquitination as the specific driver, and the lack of biological antibody controls — are substantive enough that most journals would send it back without review or with a similar major-revision decision. I would not recommend submitting this manuscript anywhere as-is except to a preprint server (see alternative).
 
-## Alternative outlets
-_(none suggested)_
+### after_revision
 
-## Notes
-The editor's verdict is 'major revision' and the decision letter is unusually detailed (18 required revisions, including statistical corrections, reproducibility gaps, and causal-framing changes). The aggregate panel score (2.53/5) and the 4/8 reject votes indicate the manuscript is not ready for the authors' intended target (In Silico). The chain of mechanistic evidence is plausible and the topic is important, but the required revisions are concrete and checkable—none demand new experiments of a different scope. Once those are addressed, the paper could be suitable for In Silico or comparable overlay/peer-reviewed venues. The as_is bucket is empty because no venue would accept the manuscript in its current state given the panel's verdict. The after_revision bucket includes In Silico (the intended target) plus two alternatives that match the neurodegenerative-disease / molecular-cell-biology topic. The alternative bucket includes a preprint server and a mid-tier journal that may be more lenient on the rigor concerns if a subset of revisions are completed. I do not have a lookup tool and work from model knowledge; In Silico and Acta Neuropathologica Communications are both real, established venues. I am slightly less certain about 'Molecular Neurodegeneration' being precisely the right fit for the methodology emphasis, but it is a well-known specialty journal in the field. I flag this in notes. The as_is bucket is empty because the panel's verdict (major revision with 4/8 reject votes) means the manuscript as submitted is not acceptable at any peer-reviewed venue—it would be desk-rejected or sent for major revision at every outlet of similar or higher tier. I have considered specialty journals like 'Journal of Biological Chemistry' or 'Molecular Biology of the Cell' for the after_revision bucket but chose the three listed as more topic-precise. For alternative, I listed bioRxiv (preprint) and a mid-field journal. I considered but did not include a workshop or narrow-format venue because the paper is a full-length molecular biology study incompatible with short formats.
+If the authors complete the required revisions — particularly the ubiquitinated-peptide binding assay, biological antibody controls, MS evidence for PTM localization, and quantitative human tissue data — this manuscript would be competitive at the following venues:
+
+**Acta Neuropathologica**
+- **Fit:** This is the premier specialty journal for neurodegenerative disease pathology. The manuscript's central contribution — detection of K82 acetylation in sALS motor cortex and its soluble/insoluble distribution — is squarely within the journal's scope. The mechanistic cell biology (proteasome → acetylation → import failure) is exactly the kind of disease-mechanism work the journal publishes.
+- **Odds:** Moderate-to-good after full revision. The novelty of the proteasome-trigger link and the human tissue data are strong selling points. However, the journal has high standards for quantitative rigor, and the panel's concerns about statistics and antibody validation would need to be fully resolved. Competition is stiff; the Ko et al. 2024 overlap must be clearly positioned as confirmation with a new upstream trigger.
+
+**Brain**
+- **Fit:** Publishes mechanistic studies of neurodegenerative disease with a translational angle. The aging-proteasome-acetylation axis connecting to ALS pathogenesis fits the journal's interest in disease mechanisms with therapeutic implications. The human tissue component strengthens fit.
+- **Odds:** Moderate. Similar considerations to Acta Neuropathologica. The journal favors comprehensive, multi-level studies; the breadth here (proteomics, cell biology, human tissue) is a plus. The single-case soluble/insoluble observation would need to be strengthened or clearly hedged.
+
+**Nature Communications**
+- **Fit:** Publishes mechanistically complete studies across biology. The combination of quantitative proteomics, systematic mutagenesis, and human tissue validation is the kind of multi-technique package the journal favors. The aging link to TDP-43 proteinopathy is of broad interest beyond the ALS specialty.
+- **Odds:** Moderate-to-low. The journal's bar for "conceptual advance" is high, and the K82-acetylation-disrupts-import finding is already published (Ko et al. 2024). The manuscript's genuine novelty — the proteasome trigger and the endogenous acetylation detection in sALS — would need to be framed as the headline. The panel's concerns about replication and statistics would need complete resolution.
+
+### alternative
+
+If the manuscript cannot reach the above venues after revision, or if the authors prefer faster dissemination:
+
+**bioRxiv (preprint server)**
+- **Fit:** The manuscript is already written in preprint format. Posting here (if not already posted) would establish priority for the proteasome-acetylation axis and the ac-K82 antibody, and would invite community feedback before journal submission.
+- **Odds:** Not applicable — posting is unconditional. This is the appropriate immediate step regardless of journal strategy.
+
+**Neurobiology of Disease**
+- **Fit:** Publishes mechanistic studies of neurological disease mechanisms. The proteasome-acetylation-import axis is well within scope. Less competitive than the top-tier venues above, with somewhat more tolerance for single-model studies.
+- **Odds:** Good after revision. The journal would likely accept the manuscript with the required revisions, though the statistical and antibody-validation issues must still be addressed.
+
+**Journal of Biological Chemistry (JBC)**
+- **Fit:** The mechanistic biochemistry — importin-α1 binding, peptide assays, PTM effects on protein-protein interaction — is squarely within JBC's scope. The journal values rigorous biochemical dissection, which is the manuscript's strength.
+- **Odds:** Good after revision. JBC would be receptive to the peptide-binding data and mutagenesis analysis, though the human tissue component is less central to the journal's focus. The journal's emphasis on mechanistic completeness aligns well with the required revisions.
+
+### Notes on fit uncertainty
+
+- The distinction between Acta Neuropathologica and Brain is fine; both are appropriate, and the choice depends on whether the authors frame the work primarily as pathology (first) or disease mechanism (second).
+- I have moderate confidence in the fit for all suggested venues based on their general scope; I have not verified current submission guidelines or editorial preferences.
+- The authors should consider whether the Ko et al. 2024 overlap weakens the novelty claim enough that a specialty journal (Neurobiology of Disease, JBC) is more realistic than the top-tier venues. The editor's letter suggests the work is publishable but requires repositioning; the authors should calibrate ambition accordingly.

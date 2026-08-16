@@ -2,36 +2,32 @@
 
 ## Advocate — round 1
 
-The reviewers converge on a genuine, well-executed contribution: a time-resolved Smo-TurboID proteomic resource plus the identification of Git1 as a regulator of Grk2-dependent Smo phosphorylation. The novelty reviewer found no prior Git1–Hh work; the literature reviewer confirmed fair attribution. The core causal chain is tested at multiple independent points — pSmo loss with normal Smo accumulation (Fig. 4D–G), reduced ciliary PKA-C (Fig. 4H–I), Gli1/Gli3/Gli2 readouts (Fig. 6), and a Grk2-ciliary rescue (Fig. 6G–H). That convergence is the paper's strength and should anchor the decision.
+# Advocate's Opening Statement
 
-The most serious objections are fixable rather than fatal. The rescue lacking a non-ciliary Grk2 control (rigor, methodology) and the 1.2-fold Grk2 translocation effect (rigor, methodology) are both addressed by one added arm and one orthogonal readout — revision, not rejection. The reproducibility gaps (raw MS, code, shRNA/gRNA/primer sequences, Data Availability) are procedural and explicitly requested by the reproducibility reviewer; depositing them is standard practice and does not touch the validity of the conclusions.
+This manuscript deserves acceptance. The core claim — that Git1 regulates Smo signaling by controlling Grk2 translocation into the cilium — is novel, mechanistically coherent, and supported by convergent evidence across multiple orthogonal assays.
 
-I concede the abstract overreaches: "leading to reduced cell proliferation in GNPs" crosses systems, since Smo phosphorylation was not measured in GNPs (clarity, rigor). That is a wording fix, not a claim collapse.
+**The central finding is genuinely new.** As the novelty reviewer confirms: "The central novelty claim — that Git1 is a previously unknown regulator of Smo signaling, acting by controlling Grk2's translocation into the primary cilium — survives my searches." No prior work links Git1 to Hedgehog signaling. The Smo-TurboID time-resolved interactome is likewise a new resource.
 
-The strongest case for acceptance: the central claim — Git1 enables Grk2 entry into the cilium to phosphorylate Smo — is provisionally supported by converging evidence, and every substantive gap has a named, feasible remedy. This is sound, useful, incremental science that belongs in the record after revision.
+**The causal chain is tested at both ends.** The rigor reviewer correctly notes the rescue experiment (Fig. 6G–H) is "a strong causal test that directly supports the proposed mechanism." The methodology reviewer agrees: "The ciliary-targeted Grk2 rescue experiment is a well-designed test." While the middle links (Grk2 entry → Smo phosphorylation → PKA inhibition) are inferred from correlation, the authors themselves acknowledge this gap and the inference is reasonable given the convergent data: Git1 loss reduces ciliary Grk2 (Fig. 5E), reduces pSmo (Fig. 4E), and reduces PKA-C recruitment (Fig. 4I).
 
-**Key points:**
-- Time-resolved Smo-TurboID resource and Git1 identification are genuinely novel (novelty reviewer found no prior Git1–Hh work).
-- Core causal claim is tested at multiple independent points (pSmo, PKA-C, Gli1/3/2, rescue), not a single assay.
-- Most serious objections are fixable: add non-ciliary Grk2 control, orthogonal Grk2-transport readout, deposit data/code/reagent sequences.
-- Concede abstract overreach crossing NIH3T3 and GNP systems; this is a wording fix.
-- Every substantive gap has a named, feasible remedy — revision, not rejection.
+**The "primary site" claim is defensible with re-hedging.** The rigor reviewer's HARD objection — that basal-body phosphorylation followed by Smo transport is not excluded — is fair, but the fix is linguistic, not experimental. The data show ciliary Grk2 is *sufficient* for signaling; the claim should be softened to "Grk2 entry into the cilium is required for Smo phosphorylation." This does not undermine the paper's contribution.
+
+**The reproducibility gaps are fixable in revision.** The proteomics pipeline needs deposited code and raw data — a legitimate HARD issue — but the authors already provide Table S1–S5 and describe the pipeline in prose. Depositing the R script and PRIDE accession is a mechanical fix, not a scientific one.
+
+**The statistical concerns are addressable.** Pseudo-replication in microscopy quantifications (n=90 cells from 3 replicates) is a real issue, but the fix — reporting per-replicate means — is standard practice and does not require new experiments.
+
+This is sound, novel, and buildable work. Accept with revision.
 
 ## Skeptic — round 1
 
-The advocate's "everything is fixable" framing understates where the load-bearing claims actually sit. The paper's headline conclusion — "pinpoint the cilium as the primary site where this phosphorylation occurs" — rests on two links, and both are the weakest in the manuscript, not cosmetic gaps.
+The advocate's case rests on the claim that the manuscript's flaws are "fixable in revision" and that the core biology is sound. I disagree on the most load-bearing point: the central mechanistic claim is not merely under-hedged — it is materially untested at its midpoint.
 
-First, the Grk2-translocation claim (Fig. 5C–E) is a 1.2-fold increase in lentivirally overexpressed Grk2-V5, at the limit of detection, with no stated threshold and no positive control showing the imaging system can resolve 1.2-fold from noise. The methodology reviewer is blunt: "the claim is indistinguishable from 'we cannot measure Grk2 in the cilium under these conditions.'" This is the central mechanistic step, and it is FATAL to the claim as worded — an orthogonal readout is not a polish, it is the evidence that does not yet exist.
+**The causal chain is tested at its two ends, but the middle is inferred, not demonstrated.** The advocate concedes this, calling it "a reasonable inference." It is not. The manuscript claims Git1 controls Grk2 *translocation into the cilium* (Abstract, Fig. 5E). But the Grk2 localization data come from lentivirally overexpressed Grk2-V5, and the WT ciliary increase is only 1.2-fold — near the detection floor. As the methodology reviewer notes: "the absence of signal in Git1-null cilia could reflect a sensitivity floor rather than a true absence of translocation." The authors never show that Grk2-V5 is functional (can rescue Smo phosphorylation in a Grk2-null background), nor do they report its expression level relative to endogenous Grk2. Without that positive control, "no translocation" versus "below detection" is unresolved. This is a FATAL gap in the central claim as stated — not a wording fix.
 
-Second, the "primary site" conclusion is not established by the rescue (Fig. 6G–H), which compares Grk2-V5-DArl13b against a V5-DArl13b backbone — not against Grk2-V5 without the ciliary tag. As designed it shows Grk2 expression rescues Gli1, not that ciliary localization is the operative variable. The rigor reviewer is right: this is a missing control, not a wording fix.
+**The "primary site" claim is not a linguistic issue.** The rigor reviewer's objection is substantive: the data show ciliary Grk2 is *sufficient* for signaling, not that it is the *physiological* site. The Git1-null phenotype is equally consistent with Git1 acting at the basal body to enable phosphorylation *en route* to the cilium. The advocate's proposed re-hedging ("Grk2 entry is required") is an admission that the paper's headline claim outruns its evidence.
 
-Third, the GNP proliferation claim is not shown to be Hh-mediated at all — Git1 has known adhesion/migration roles, and no Hh-specific readout or rescue links EdU to the Smo/Grk2 pathway.
+**The proteomics resource is not yet a resource.** The reproducibility reviewer identifies a HARD failure: no raw data deposit, no accession, no executable analysis code. The advocate calls this "mechanical." It is not — the TMT normalization pipeline is described in prose that a competent reader cannot reproduce (the clarity reviewer could not determine whether TMM was per-channel or per-replicate). A resource that cannot be inspected is not a resource.
 
-These are not three independent fixable nits; they are the three load-bearing pillars, each currently supported by evidence that does not reach the claim. That is the case against acceptance.
+**The panel's collective blind spot:** every reviewer focused on the Git1 biology, but none independently verified that the pSmo antibody signal is phosphorylation-specific in Git1-null cells. The methodology reviewer flagged this; no one resolved it. If the pSmo signal reflects Smo conformation rather than phosphorylation, the entire downstream chain collapses.
 
-**Key points:**
-- The central Grk2-translocation claim rests on a 1.2-fold signal at the detection limit with no threshold or positive control — FATAL to the claim as worded, not a polish.
-- The 'primary site' conclusion is not established: the rescue lacks a non-ciliary Grk2 control, so it shows Grk2 expression rescues Gli1, not that ciliary localization is the operative variable.
-- The GNP proliferation claim is not shown to be Hh-mediated; Git1's known adhesion/migration roles are an untested confound.
-- These are the three load-bearing pillars, each under-supported — not three independent fixable nits.
-- Concede: the abstract overreach and data-deposition gaps are genuinely fixable, but they are not the decisive objections.
+The manuscript is promising, but the central claim — Git1 controls Grk2 *entry into the cilium* — is not established by the evidence presented. That is FATAL as written, though fixable with the Grk2-V5 functional control and per-replicate statistics.

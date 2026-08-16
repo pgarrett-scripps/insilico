@@ -1,59 +1,212 @@
-# Methods Completeness & Reagent Traceability Auditor
+# Methods Completeness & Reagent Traceability Audit
 
-## Summary
-This manuscript uses iPSC-derived human cortical neurons, SH-SY5Y and HEK293T cell lines, fresh-frozen human motor cortex samples, and mice, with extensive immunodetection (WB/IF/IP/co-IP/ELISA), chemical proteasome-inhibitor dosing, plasmid/siRNA manipulation, TMT quantitative mass spectrometry and PTM mass spectrometry, and confocal/live-cell microscopy. Cross-cutting items (n, replicate definition, statistical tests, error bars) are largely present; software versions, data-availability and code-availability statements are incomplete. The dominant reproducibility gap is that nearly all key resources (antibodies, plasmids, primers, human-sample demographics) are deferred to Supplementary Tables S1-S5 that are not present in the manuscript text, so they are unverifiable from the manuscript alone. Several HARD identifiers (cell-line authentication/mycoplasma, siRNA/gRNA sequences, mass-spec repository accession, mouse strain/IACUC, image-analysis software) are absent. No score or accept/reject judgment is rendered.
+**Manuscript:** "Acetylation of lysine 82 initiates TDP-43 nuclear loss of function by disrupting its nuclear import"
 
-## Categories checked
-- Antibodies/immunodetection
-- Cell lines/primary cells
-- Model organisms / in vivo
-- Human subjects/clinical
-- Chemicals/drugs/dosing
-- Oligos/plasmids/constructs
-- Mass spec (proteomics/metabolomics)
-- Microscopy/imaging/flow
-- Computational/ML/modeling
-- Protocol provenance
+**Auditor role:** Methods Completeness & Reagent Traceability Auditor — checking enumerable identifiers only, not scientific merit.
 
-**HARD gaps (blocking): 9** · SOFT gaps: 4 · unverifiable: 6
+---
 
-## HARD gaps — reproduction blockers
-- **[Cross-cutting] Software/tool/instrument versions** — Prism 8 (GraphPad) and CQ1 software v.1.05.01.02 are versioned; but versions are absent for RawConverter, DTASelect2, Census2, MaxQuant/Proteome Discoverer, R package for volcano plot, and image-quantification software.
-- **[Cell lines/primary cells] Authentication (STR) and mycoplasma testing** — No STR authentication or mycoplasma-testing statement is provided for HEK293T, SH-SY5Y, or iPSC lines.
-- **[Model organisms / in vivo] Mouse strain/source/RRID, genotype/background** — Fig. S1A uses mice of 3-24 months for proteasome-activity decline, but no strain, source, or background is stated.
-- **[Model organisms / in vivo] Mouse sex, n per group, IACUC protocol #** — No sex, group size, or IACUC/animal-welfare protocol number is stated for the mouse experiments.
-- **[Human subjects/clinical] Inclusion/exclusion criteria** — No explicit inclusion/exclusion criteria for control vs sALS cases are stated (only '4 control cases, 6 sALS cases').
-- **[Chemicals/drugs/dosing] Vehicle + final concentration** — The vehicle/solvent (e.g., DMSO) and its final concentration for BTZ/MG132/MRZ treatments are not stated.
-- **[Oligos/plasmids/constructs] siRNA/shRNA/gRNA target sequences** — Human TDP-43 siRNAs are used (48 hr pre-treatment) but no target sequences are given; the endogenous TDP-43-Clover knock-in editing (both alleles) is described without gRNA sequence, Cas variant, or edit validation details.
-- **[Mass spec (proteomics/metabolomics)] Repository accession (PRIDE/MassIVE)** — No mass-spectrometry data repository accession (PRIDE/MassIVE) is provided for either the TMT nuclear-proteome or the PTM datasets.
-- **[Microscopy/imaging/flow] Analysis/quantification software + version** — Image quantification (nucleocytoplasmic ratios, nuclear fluorescence intensities in Figs. 1D, 3D, 4E/G, 2G/H) is described but the analysis software and version are not stated.
+## Categories in play (trigger detected)
 
-## Unverifiable (raise as questions)
-- **[Antibodies/immunodetection] Antibody vendor/catalog/clone/RRID/application+dilution/host-clonality** — Methods state 'Antibodies and dilutions are provided in Supplementary Table S3' (IF), 'Supplementary Table S4' (WB), and 'Supplementary Table S5' (IP beads); these tables are not present in the manuscript text, so the identifiers cannot be confirmed. Only Anti-6*His-HRP (Proteintech HRP-66005) and Anti-rabbit-HRP (Proteintech SA00001-2) are given inline.
-- **[Human subjects/clinical] Participant demographics** — Demographics are deferred to 'Supplementary Table S2', which is not present in the manuscript text.
-- **[Oligos/plasmids/constructs] Plasmid source/description** — Methods state 'all plasmids used in this paper is listed in Supplementary Table S1' and 'will be deposited to Addgene at the time of publication'; the table is not present in the manuscript text and deposition is prospective.
-- **[Oligos/plasmids/constructs] Primer/probe sequences** — qRT-PCR/RT-PCR primers are deferred to 'Supplementary Table S5', not present in the manuscript text.
-- **[Protocol provenance] iPSC NGN2 differentiation 'as previously engineered... WTC11 background37'** — Delegated to ref 37 (Fernandopulle et al., Curr Protoc Cell Biol 79, e51, 2018), a resolvable citation that plausibly contains the protocol; contents cannot be confirmed from the manuscript alone.
-- **[Protocol provenance] Claims supported by cited work (refs 30, 33, 34)** — Statements 'consistent with a recent report30', 'challenges an earlier hypothesis33', and 'supported by a mass spectrometry analysis...34' cite references whose contents cannot be verified from the manuscript alone.
+The following checklist categories are triggered by the manuscript content:
 
-## SOFT gaps — recommended
-- **[Cross-cutting] Data-availability statement** — No data-availability statement is present anywhere in the manuscript.
-- **[Cross-cutting] Code availability (custom analysis)** — Volcano plot 'was generated using the R package' but no code, package name, or repository is provided.
-- **[Human subjects/clinical] COI/funding statement** — No funding or conflict-of-interest statement is present in the manuscript.
-- **[Computational/ML/modeling] Analysis tool + version / code availability** — Volcano plot generated with an unnamed 'R package'; no version or code provided. No ML/modeling is performed, so no architecture/hyperparameter items apply.
+1. **Cross-cutting items** (applies to all manuscripts)
+2. **Antibodies/immunodetection** (WB, IF, IP, ELISA all used)
+3. **Cell lines/primary cells** (iPSC-derived neurons, SH-SY5Y, HEK293T)
+4. **Chemicals/drugs/dosing** (BTZ, MG132, MRZ, doxycycline, etc.)
+5. **Oligos/plasmids/constructs** (lentiviral vectors, siRNAs, CRISPR-edited cells)
+6. **Mass spec (proteomics)** (TMT quantitative proteomics; PTM identification)
+7. **Microscopy/imaging** (confocal, live-cell imaging)
+8. **Human subjects** (postmortem motor cortex samples)
+9. **Model organisms** (mouse tissue used for proteasome activity assay)
+10. **Computational/ML** (not triggered — no custom computational model or ML pipeline; standard proteomics data analysis only)
 
-## Documented (for the record)
-- **[Cross-cutting] Sample size n stated with what n represents** — Figure legends state n=4 control and n=6 sALS (Fig. S1A, Fig. 5B); statistics section states 'Each data point represents an independent biological replicate (distinct wells of independently treated cells or individual tissue donors).'
-- **[Cross-cutting] Named statistical test** — Statistics section: two-tailed Student's t-tests; one-way ANOVA with Tukey's correction; Chi-squared with Yates' correction; one-sample two-sided t-test for MS volcano plot.
-- **[Cross-cutting] Error bars meaning (SD/SEM/CI)** — Statistics section: 'Error bars represent SEM unless stated otherwise.'
-- **[Antibodies/immunodetection] Ac-K82 TDP-43 polyclonal antibody generation/validation** — Methods describe generation by Sanyou Inc. against TDP-43 aa77-90 acetylated at K82, KLH conjugation, rabbit immunization, affinity enrichment, and ELISA validation (Fig. 5A).
-- **[Cell lines/primary cells] Cell line source + RRID/CVCL** — HEK293T (ATCC CRL-11268) and SH-SY5Y (ATCC CRL-2266) given; iPSCs are a gift of Michael Ward, WTC11 background with NGN2 at AAVS1 (ref 37).
-- **[Cell lines/primary cells] Media/supplements** — Detailed media formulations given (E8, N2, i3Neuron/Neurobasal+B27, DMEM/F12) with catalog numbers.
-- **[Human subjects/clinical] IRB approval + informed consent** — Methods: HIPAA-compliant informed consent; IRB# 10058 (Benaroya) and IRB# 120056 (UCSD).
-- **[Chemicals/drugs/dosing] Identity traceable to vendor+catalog/CAS** — BTZ (ApexBio A2614), MG132 (Selleckchem S2619), MRZ (Selleckchem S7504), doxycycline (Sigma D9891), Y-27632 (Selleckchem S1049), and many media reagents carry catalog numbers.
-- **[Chemicals/drugs/dosing] Dose/concentration per experiment** — Doses given: BTZ 2 nM (and 20 nM in some figures), MG132 100 nM, MRZ 10 nM/100 nM; doxycycline 2 ug/ml; ROCK inhibitor 10 uM.
-- **[Mass spec (proteomics/metabolomics)] Instrument + acquisition mode** — Orbitrap Eclipse with nLC 1200; data-dependent mode, MS3 SPS multi-notch; MS1 at 120k resolution; 3 s cycle time; 120 min gradient.
-- **[Mass spec (proteomics/metabolomics)] Sample prep/digestion/enrichment** — Trypsin/lys-C digestion, TMT six-plex labeling, C18 desalting; PTM MS uses trypsin+chymotrypsin and TiO2 enrichment.
-- **[Mass spec (proteomics/metabolomics)] Search engine + version, database + version, FDR, modifications, tolerances** — DTASelect2/Census2 (quant), UniProt human database, FDR <=1%, carbamidomethylation + TMT (+229.162932 Da) static mods, 50 ppm precursor / 500 ppm CID / 20 ppm HCD tolerances. PTM analysis cites 'MaxQuant or Proteome Discoverer' without versions.
-- **[Microscopy/imaging/flow] Instrument model, objective+NA+detector+settings** — Yokogawa X1 on Nikon Ti2 with 100x oil NA 1.45 and 60x oil NA 1.4 objectives; CQ1 benchtop spinning-disk with 40x/60x dry objectives; DAPI, ProLong Gold mounting.
-- **[Protocol provenance] Kit-based protocols (Abcam Nuclear Extraction, Proteasome-Glo, CellTiter-Glo, TransIT X2, ATCC guidelines)** — These are self-contained commercial kit protocols with catalog numbers and manufacturer instructions, not delegated to external citations.
+---
+
+## 1. Cross-cutting items
+
+| Item | Status | Finding |
+|---|---|---|
+| Sample size n stated, with what n represents | **present** | n values are given in figure legends (e.g., "n=4 non-neurological control individuals and n=6 sporadic ALS patients" in Fig. S1A). However, for many cell-based experiments (Figs. 1B–D, 2, 3, 4), n is not explicitly stated in the main text or figure legends — it is unclear whether n refers to biological replicates (independent differentiations/wells) or technical replicates. **Partially missing.** |
+| Named statistical test | **present** | Tests named: two-tailed Student's t-test, one-way ANOVA with Tukey's correction, Chi-squared with Yates' correction, one-sample Student's t-test (for TMT). |
+| Error bars defined (SD/SEM/CI) | **missing** | The Materials and Methods states "Error bars represent SEM unless stated otherwise" — this is present. However, it is not stated which figure panels show SEM vs. SD vs. CI, and several figure legends do not define error bars at all. **Partially present.** |
+| Software/tool/instrument versions | **partially missing** | Some versions given (e.g., "CQ1 software v.1.05.01.02", "Prism 8"), but many are absent: no version for ImageJ/Fiji (if used), no version for the R package used for the volcano plot, no version for MaxQuant or Proteome Discoverer (mentioned in Methods), no version for DTASelect2 or Census2. **HARD missing for the unnamed/versionless analysis tools.** |
+| Data-availability statement | **missing** | No data-availability statement is present in the manuscript. **SOFT missing.** |
+| Code availability | **missing** | No code-availability statement. The volcano plot was "generated using the R package" — no script or repository is provided. **SOFT missing.** |
+
+---
+
+## 2. Antibodies / immunodetection
+
+**Trigger:** WB, IF, IP, co-IP, ELISA all used extensively.
+
+| Item | Status | Finding |
+|---|---|---|
+| Vendor + catalog # for all primary antibodies | **missing** | Antibodies are listed in Supplementary Tables S3 and S4, but the tables are not reproduced in the manuscript text. From the main text, antibodies to TDP-43, FUS, importin-α1, importin-α5, importin-β2, Lamin B1, GAPDH, and the three custom anti-acetyl-K82 TDP-43 antibodies are used — but no vendor or catalog numbers are given in the main text. The supplementary tables are referenced but their contents cannot be verified from the manuscript alone. **HARD missing (unverifiable from manuscript).** |
+| Clone / RRID | **missing** | No clone names or RRIDs are provided for any antibody in the main text. **HARD missing.** |
+| Application + dilution | **missing** | Dilutions are not stated in the main text for any antibody. The Methods state "Antibodies and dilutions are provided in Supplementary Table S3" — again unverifiable from the manuscript alone. **HARD missing (unverifiable).** |
+| Host species / clonality | **missing** | Not stated in main text. **HARD missing.** |
+| Custom antibody generation (anti-acetyl-K82) | **present** | Generation described: "Polyclonal antibodies to TDP-43 acetylated at K82 were generated by Sanyou. Inc." — peptide (aa77–90, K82-acetylated), KLH conjugation, rabbit immunization, affinity enrichment. Validation by ELISA shown in Fig. 5A. **Present.** |
+| Secondary antibodies | **missing** | HRP-conjugated secondaries mentioned generically; no vendors or catalog numbers. **HARD missing.** |
+
+---
+
+## 3. Cell lines / primary cells
+
+**Trigger:** iPSC-derived cortical neurons, SH-SY5Y, HEK293T.
+
+| Item | Status | Finding |
+|---|---|---|
+| Source of iPSC line | **present** | "kind gift of Michael Ward" — WTC11 background, NGN2 under doxycycline-inducible promoter at AAVS1. |
+| RRID / CVCL for iPSC line | **missing** | No RRID given. **SOFT missing.** |
+| Authentication (STR) | **missing** | No statement of STR authentication for any cell line. **HARD missing.** |
+| Mycoplasma testing | **missing** | No statement of mycoplasma testing for any cell line. **HARD missing.** |
+| SH-SY5Y and HEK293T source | **present** | ATCC catalog numbers given (CRL-11268, CRL-2266). |
+| Media/supplements | **present** | Detailed media formulations given for iPSC maintenance, neuronal differentiation, and i3Neuron culture medium. **Present.** |
+| CRISPR-edited SH-SY5Y (TDP-43-Clover knock-in) | **partially missing** | The line is described as "homozygous knock-in of TDP-43-Clover at both endogenous TDP-43 alleles" — but no guide RNA sequences, Cas9 delivery method, or validation data are provided. **HARD missing for the editing reagents.** |
+
+---
+
+## 4. Chemicals / drugs / dosing
+
+**Trigger:** BTZ, MG132, MRZ, doxycycline, Y-27632, puromycin, blasticidin, neomycin, etc.
+
+| Item | Status | Finding |
+|---|---|---|
+| Vendor + catalog # for inhibitors | **present** | BTZ (ApexBio A2614), MG132 (Selleckchem S2619), MRZ (Selleckchem S7504), doxycycline (Clontech 631311), Y-27632 (Selleckchem S1049). **Present.** |
+| Dose/concentration per experiment | **present** | Concentrations given: BTZ 2 nM (partial inhibition) and 20 nM (full inhibition); MG132 100 nM; MRZ 10 nM and 100 nM. **Present.** |
+| Route/mode of administration | **present** | Added to culture medium. **Present.** |
+| Vehicle + final concentration | **missing** | Vehicle (DMSO? water?) and final solvent concentration are not stated. **SOFT missing.** |
+| Schedule | **present** | Exposure times stated (12, 24, 48 hr; 1 week). **Present.** |
+
+---
+
+## 5. Oligos / plasmids / constructs
+
+**Trigger:** Lentiviral vectors, siRNAs, CRISPR-edited cells.
+
+| Item | Status | Finding |
+|---|---|---|
+| Plasmid descriptions | **partially present** | "All plasmids in this manuscript will be deposited to Addgene at the time of publication" — but no Addgene IDs are given yet, and the entry vector pST001 is named but not fully described. Supplementary Table S1 is referenced but not reproduced. **Partially missing (unverifiable).** |
+| siRNA sequences | **missing** | "human TDP-43 siRNAs" are mentioned but no target sequences, vendor, or catalog numbers are given. **HARD missing.** |
+| gRNA sequences for CRISPR knock-in | **missing** | No gRNA sequences, Cas9 variant, delivery method, or off-target assessment are provided for the TDP-43-Clover knock-in line. **HARD missing.** |
+| Edit validation | **missing** | No validation data (genotyping, sequencing) for the knock-in line is shown. **HARD missing.** |
+| Selection markers | **missing** | Selection markers for lentiviral constructs are mentioned (neomycin, blasticidin, puromycin) with concentrations, but which construct carries which marker is not stated. **SOFT missing.** |
+| Primer/probe sequences for qRT-PCR | **missing** | "primers/probes detailed in Supplementary Table S5" — not reproduced; cannot verify. **HARD missing (unverifiable).** |
+
+---
+
+## 6. Mass spectrometry (proteomics)
+
+**Trigger:** TMT quantitative nuclear proteome; PTM identification on TDP-43.
+
+| Item | Status | Finding |
+|---|---|---|
+| Instrument + acquisition mode | **present** | Orbitrap Eclipse; data-dependent mode; MS2 (CID) and MS3 (SPS3) described. **Present.** |
+| Sample prep / digestion | **present** | Trypsin + Lys-C digestion described; TMT six-plex labeling described. **Present.** |
+| Search engine + version | **partially missing** | DTASelect2 and Census2 are named but no versions are given. RawConverter is named without version. **HARD missing (versions).** |
+| Database + version | **missing** | "complete human protein database downloaded from UniProt" — no release date or version identifier. **HARD missing.** |
+| FDR threshold | **present** | "false-detection rate of ≤1% at a PSM level." **Present.** |
+| Modifications searched | **present** | Carbamidomethylation (Cys), TMT on Lys and N-termini stated. **Present.** |
+| Precursor/fragment tolerances | **present** | 50 ppm precursor; 500 ppm CID; 20 ppm HCD. **Present.** |
+| Repository accession (PRIDE/MassIVE) | **missing** | No repository accession for the TMT proteomics data or the PTM mass spec data. **HARD missing.** |
+| PTM identification details | **partially missing** | The PTM workflow mentions "titanium dioxide chromatography" for enrichment and "MaxQuant or Proteome Discoverer" — but it is unclear which software was actually used, and no version, database, or FDR is given for the PTM analysis specifically. **HARD missing.** |
+| Quant method / replicates | **partially present** | "three forward labelling groups and three reverse labelling groups" — replicates described. **Present.** |
+
+---
+
+## 7. Microscopy / imaging
+
+**Trigger:** Confocal microscopy, live-cell imaging.
+
+| Item | Status | Finding |
+|---|---|---|
+| Instrument model | **present** | Spinning-disk confocal: "Yokogawa X1 confocal scanhead mounted to a Nikon Ti2 microscope"; live-cell: "CQ1 benchtop spinning-disk confocal high-content analysis system (Yokogawa)." **Present.** |
+| Objective + NA | **present** | "Plan apo lambda 100 × oil NA 1.45 objective and Plan apo lambda 60 × oil na 1.4 objective" for fixed imaging; "×40 or ×60 dry objective" for live-cell. **Present.** |
+| Detector + settings | **missing** | No detector type (camera model), gain, exposure, or laser settings are given. **SOFT missing.** |
+| Fluorophore ↔ marker panel | **partially present** | Clover (GFP variant), mRuby, DAPI are named; secondary antibody fluorophores are not specified. **Partially missing.** |
+| Analysis software + version | **missing** | No image-analysis software is named (no ImageJ/Fiji/CellProfiler version, no quantification algorithm description). **HARD missing.** |
+| Gating strategy (flow) | **not applicable** | No flow cytometry used. |
+
+---
+
+## 8. Human subjects
+
+**Trigger:** Postmortem motor cortex samples from sALS patients and controls.
+
+| Item | Status | Finding |
+|---|---|---|
+| IRB approval + informed consent | **present** | "created following HIPAA-compliant informed consent procedures approved by Institutional Review Boards (either Benooya Research Institute, Seattle, WA IRB# 10058 or University of California San Diego, San Diego, CA IRB# 120056)." **Present.** |
+| Inclusion/exclusion criteria | **missing** | No inclusion/exclusion criteria for sALS or control cases are stated. **SOFT missing.** |
+| Participant demographics | **missing** | No age, sex, or postmortem interval data are given for the human cases (Supplementary Table S2 is referenced but not reproduced). **SOFT missing.** |
+| Trial registration | **not applicable** | Not an interventional study. |
+| COI/funding | **missing** | No funding or conflict-of-interest statement is present in the manuscript. **SOFT missing.** |
+
+---
+
+## 9. Model organisms (mouse)
+
+**Trigger:** Mouse cortex used for proteasome activity assay (Fig. S1A).
+
+| Item | Status | Finding |
+|---|---|---|
+| Species + strain + source | **missing** | "mice of different ages" — no strain, source, or RRID given. **HARD missing.** |
+| Genotype/background | **missing** | Not stated. **HARD missing.** |
+| Sex | **missing** | Not stated. **SOFT missing.** |
+| Age | **present** | Ages given: 3, 6, 12, 18, 24 months. **Present.** |
+| n per group | **missing** | Not stated. **HARD missing.** |
+| IACUC protocol # | **missing** | Not stated. **HARD missing.** |
+| Randomization/blinding | **missing** | Not stated. **SOFT missing.** |
+| Housing | **missing** | Not stated. **SOFT missing.** |
+
+---
+
+## 10. Protocol-provenance check (delegated methods)
+
+The following methods are delegated by reference:
+
+| Delegated method | Reference given | Status |
+|---|---|---|
+| iPSC differentiation ("as previously engineered... in the WTC11 background") | Fernandopulle et al., 2018 (Curr Protoc Cell Biol 79, e51) — full citation given | **delegated-resolvable** (DOI resolvable; protocol plausibly contained) |
+| Lentivirus production ("Detailed guides and protocols posted can be found on the Addgene website") | Addgene URL given | **delegated-resolvable** (URL is specific and live) |
+| Nuclear extraction ("following the protocol of Abcam Nuclear Extraction Kit") | abcam cat. no. ab113474 | **delegated-resolvable** (kit protocol is standard and vendor-provided) |
+| TMT labeling ("following the manufacturer's instructions") | Thermo Scientific 90061 | **delegated-resolvable** (kit protocol) |
+| Proteasome activity assay ("performed using the Proteasome-Glo™ reagent... according to the manufacturer's instructions") | Promega G8621 | **delegated-resolvable** |
+| Cell viability assay ("performed according to the manufacturer's instructions") | Promega G9241 | **delegated-resolvable** |
+| Silver staining ("following the kit's standard protocol") | Sigma PROTSIL1 | **delegated-resolvable** |
+
+No **delegated-dead** references were found. However, the supplementary tables (S1–S5) that contain antibody details, plasmid details, primer sequences, and human case information are referenced but **not reproduced in the manuscript** — their contents cannot be verified from the manuscript alone. These are marked **unverifiable** above.
+
+---
+
+## Summary of HARD missing items
+
+1. **Antibody identifiers** — vendor, catalog #, clone, RRID, dilution, host species for all antibodies (only in unreproduced supplementary tables).
+2. **Cell line authentication** — no STR or mycoplasma statements for any cell line.
+3. **CRISPR reagents** — no gRNA sequences, Cas9 variant, delivery, or validation for the TDP-43-Clover knock-in line.
+4. **siRNA sequences** — no target sequences or vendor for human TDP-43 siRNAs.
+5. **qRT-PCR primers/probes** — sequences only in unreproduced Supplementary Table S5.
+6. **Mass spec versions** — no versions for DTASelect2, Census2, RawConverter, MaxQuant/Proteome Discoverer; no UniProt database version.
+7. **Mass spec repository accessions** — no PRIDE/MassIVE accession for either TMT or PTM datasets.
+8. **Image-analysis software** — no software named or versioned for quantification of fluorescence images.
+9. **Mouse strain/source** — no strain, source, or IACUC protocol number.
+10. **Mouse n per group** — not stated.
+
+## Summary of SOFT missing items
+
+1. Data-availability statement.
+2. Code availability (R script for volcano plot).
+3. Vehicle/solvent for drug treatments.
+4. Detector settings for microscopy.
+5. Human case demographics (age, sex, PMI).
+6. Inclusion/exclusion criteria for human cases.
+7. Funding/COI statement.
+8. Mouse sex, randomization, housing.
+9. Selection markers per lentiviral construct.
+10. Off-target assessment for CRISPR/siRNA.
+
+## Items marked unverifiable (questions to authors)
+
+1. Contents of Supplementary Tables S1–S5 (antibody details, plasmid details, primer sequences, human case metadata) — are these available in a deposited version of the manuscript or supplement?
+2. Whether the "MaxQuant or Proteome Discoverer" statement in the PTM section reflects actual software used — which one was used, and with what version and parameters?
+3. Whether the Addgene deposition of plasmids has been completed and what the accession IDs are.

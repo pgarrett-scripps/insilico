@@ -1,147 +1,173 @@
 {
   "schema_version": 1,
   "round": 1,
-  "job_id": "20260814-111105-the-effects-of-alcohol-dependence-on-the-csf",
+  "job_id": "20260815-123008-the-effects-of-alcohol-dependence-on-the-csf",
   "manuscript_title": "The effects of Alcohol Dependence on the CSF",
-  "manuscript_cache_key": "0e3dbcd09f3d3bb7a8d7fa4eaad54cea7ae8722d125860851090bb9a775279e1",
+  "manuscript_cache_key": "6b4c358c67beba2a4597aabeeebd8f3695099ed338b983c47ceaa750a94685ff",
   "decision": "major",
-  "weighted_score": 3.0312,
+  "weighted_score": 3.0303,
   "required_revisions": [
     {
       "id": "R1-01",
-      "text": "Resolve the BBB-disruption vs. collection-artifact question with a measured metric. Report per-sample hemoglobin and/or albumin concentration (CSF vs. serum ratio) and show whether it correlates with the Dep-specific protein detection pattern. If a blood-sparing collection method (e.g., Lourbopoulos 2025) is used, state this explicitly. Without this, the 'BBB breakdown' claim cannot stand as written.",
-      "source_reviewer": "clarity",
+      "text": "Replace the qualitative presence/absence differential analysis with a quantitative comparison of the shared proteins between groups (e.g., MaxLFQ intensities from diann_maxlfq), reporting a named statistical test, effect sizes, and multiple-testing correction across the ~600 proteins. Report the expected number of proteins that would pass the ≥2/4 vs ≤1/5 detection threshold by chance alone, and state the false-discovery rate of that threshold.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-02",
-      "text": "Scale the causal and interpretive language to the evidence. Replace 'dichotomous/qualitative transition,' 'transition to alcohol dependence,' and 'BBB breakdown/dysfunction' with 'dependence-associated' and 'preliminary evidence consistent with' throughout the abstract, title, and discussion. State explicitly that the design cannot separate dependence from cumulative ethanol dose, route (vapor + i.p. injection vs. oral), and withdrawal stress, and that the dichotomy extends (rather than establishes) the authors' own companion transcriptomic work (Hashimoto 2025).",
+      "text": "Test whether the 'group-specific' proteins are genuinely bimodal in abundance (quantitative distributions) rather than a continuous gradient that falls below the detection limit in one group; reconcile the one Non-dep animal that clusters within the Dep group in Figure 1c (state whether it was excluded and whether exclusion was pre-specified).",
       "source_reviewer": "rigor",
       "blocking": false
     },
     {
       "id": "R1-03",
-      "text": "Resolve the immunoglobulin/immune-surveillance interpretation. Because the injected rat anti-IL-6R antibody (IGG2B, DILLISQNAK) was detected in every CSF sample, the KV5AB/LV1C/HVM02/03 detection patterns cannot be read as a clean measure of endogenous adaptive immunity. Either remove the 'loss of immune surveillance' claim or explicitly requalify it as entangled with the administered antibody and BBB permeability state.",
-      "source_reviewer": "rigor",
+      "text": "Rule out blood contamination as the source of the Dep-specific pattern: report a per-sample blood-marker quantification (e.g., quantitative hemoglobin or a blood/CNS abundance ratio) and show that the Dep-specific proteins (MMP2, BIP, complement components, immunoglobulins) do not track it. The Lourbopoulos citation alone does not exclude the contamination alternative.",
+      "source_reviewer": "literature",
       "blocking": false
     },
     {
       "id": "R1-04",
-      "text": "Make all load-bearing artifacts accessible at submission. Make the GitHub repository public with a commit hash/tag (or deposit an archived copy, e.g., Zenodo DOI), and confirm the MassIVE accession is live, in the correct format (MSV0000xxxxx), and released at submission rather than 'upon publication.'",
-      "source_reviewer": "reproducibility",
+      "text": "Re-scale the temporal and dichotomous claims to what the cross-sectional design supports. Remove or requalify 'transition', 'sustained', 'beginnings', and 'dichotomous' from the abstract and conclusions; replace with 'differences between dependent and non-dependent mice consistent with...'. Hedge 'protective mechanisms lost' to 'consistent with reduced abundance of proteins associated with...' given non-detection is an abundance threshold, not absence.",
+      "source_reviewer": "rigor",
       "blocking": false
     },
     {
       "id": "R1-05",
-      "text": "Add a sensitivity analysis for the detection threshold. Report the 140-vs-67 protein counts at ≥1 and ≥3 replicates and show that the biological interpretation survives threshold variation. Define the 'top 10' selection criterion for Figure 2.",
-      "source_reviewer": "data_analysis",
+      "text": "Address the IL-6R antibody confound: state the hypothesis the antibody was testing (one sentence in Introduction or Methods), and discuss whether IL-6R blockade is expected to attenuate the neuroimmune proteins interpreted (GFAP, CHI3L1, CX3CL1, LAG3, immunoglobulin variable regions), and how that affects the dependence-specificity claim. State whether any untreated or control-antibody group was run.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-06",
-      "text": "Add a quantitative comparison of the 404 shared proteins (DIA provides quantitative peak areas). This is the analysis that could most strengthen or weaken every claim and serves as a partial control for the presence/absence framework.",
-      "source_reviewer": "methodology",
+      "text": "Separate dependence status from cumulative ethanol exposure: provide an analysis (e.g., correlation of protein detection with blood ethanol levels or total intake) or explicitly acknowledge that dependence and exposure magnitude are confounded in this design and requalify the 'dependence-specific' claims accordingly.",
+      "source_reviewer": "novelty",
       "blocking": false
     },
     {
       "id": "R1-07",
-      "text": "Resolve the load-bearing citation questions. Confirm that ref 32 (Gaither 2025) actually reports BIP/GRP78 correlating with alcohol consumption grade in human liver biopsies (the cited title concerns drug-metabolizing enzymes/transporters) or correct the citation; and confirm that ProteomeXchange dataset PXD053568 (Lourbopoulos 2025) contains the Hb and keratin identifications claimed.",
+      "text": "Resolve the BIP-in-liver attribution: confirm the specific BIP/GRP78 claim is actually made in Gaither et al. 2025, or cite the primary source that established it. Acknowledge the directly contradicting MMP2 finding (Madro et al. 2012, PMID 21908153) reporting the opposite direction of association with cirrhosis stage.",
       "source_reviewer": "literature",
       "blocking": false
     },
     {
       "id": "R1-08",
-      "text": "Add the missing methods details: animal age (weeks/months), a randomization/blinding statement, and a statement on MS precursor/fragment tolerances (or confirmation that DIA-NN handles these internally).",
-      "source_reviewer": "",
+      "text": "Make the analysis code and data accessible: make the GitHub repository public or deposit an archived version (e.g., Zenodo DOI) with a stated commit/tag at the time of preprint posting, and confirm the MassIVE accession C5GX4573B is public and resolvable with stated access conditions.",
+      "source_reviewer": "reproducibility",
       "blocking": false
     },
     {
       "id": "R1-09",
-      "text": "Report the sex composition of each group explicitly (the current sentence is ambiguous) and state whether any of the 140 Dep-specific proteins are driven predominantly by one sex; note the n=2-per-sex limitation in the Dep group.",
-      "source_reviewer": "",
+      "text": "Specify the power-analysis method (which test, what effect-size model, what assumptions produced 38% for 75% vs 20% detection) so it can be recomputed.",
+      "source_reviewer": "reproducibility",
       "blocking": false
     },
     {
       "id": "R1-10",
-      "text": "Report total protein per CSF sample (or otherwise normalize detection for the 4-fold CSF volume range, 5–20 µL) to distinguish biological signal from sample-load technical variation.",
-      "source_reviewer": "clarity",
+      "text": "Add the missing methods details: animal age, randomization/blinding statement, injection vehicle for the i.p. treatments, mass-tolerance values for the DIA-NN search, and fix the broken reference numbering for the CIE-2BC and FASP protocol-provenance citations so the delegated protocols are resolvable.",
+      "source_reviewer": "",
       "blocking": false
     }
   ],
   "minor_suggestions": [
-    "State explicitly that the study extends a dichotomy already established in the same CIE-2BC model at the astrocyte transcriptome level (Hashimoto 2025), rather than presenting the dichotomy as this paper's own discovery.",
-    "Name a nearest-neighbor CSF proteomics study and state the delta over it, given that the individual markers (GFAP, MMP2, CHI3L1, UCHL1) are established biomarkers in other contexts.",
-    "Flag the single-peptide identification of the IL-6R antibody (DILLISQNAK) as a limitation in the main text, not merely in the supplement.",
-    "Add an RRID for the mouse strain and consider reporting confidence intervals for detection rates rather than (or in addition to) the post-hoc power analysis, which is circular.",
-    "Consider whether the anti-IL-6R antibody (150 kDa, present in CSF) itself alters BBB permeability, and integrate this into the BBB interpretation rather than treating it only as a methodological validation."
+    "Fix the inconsistent labeling of the 140/67 counts: state in one sentence the exact threshold that produced them (unique vs preferred), and reconcile with the Venn diagram and Tables 1-2.",
+    "State the sex counts per group (how many males/females in Non-dep vs Dep) so the PCA sex-segregation claim is checkable.",
+    "Fix the garbled Table 1/Table 2 column header ('Evidence Detection Detection Strength') and the Figure 1 legend ambiguity.",
+    "Add an explicit competing-interests statement (or state that none exist).",
+    "Report quantitative comparison of the IGG2B/IL-6R antibody peptide across groups rather than presence alone, and temper the 'crosses the BBB' claim to what the abundance data support.",
+    "State the STRING web-tool version and provide an environment capture (lockfile/conda env/container) for the R analysis.",
+    "Confirm the final bibliography is clean and resolvable (several entries appear to run together in the parsed reference list).",
+    "Position the contribution against the nearest human CSF-AUD biomarker studies (e.g., Azuar et al. 2021) and the mouse CSF method paper (Lourbopoulos et al. 2025) in one head-to-head paragraph."
   ],
   "reviewer_reports": [
     {
       "reviewer": "novelty",
-      "score": 4.0,
+      "score": 3.0,
       "confidence": 4.0,
       "weaknesses": [
         {
           "id": "novelty-1",
-          "text": "The central novelty claim — \"alcohol exposure and alcohol dependence are dichotomous\" — is a conceptual claim that outruns what this paper's evidence establishes, and it is partly preempted by the authors' own cited companion work. The dichotomy (dependence-specific neuroimmune activation vs. homeostatic response to moderate drinking) is already reported in the same CIE-2BC model at the astrocyte transcriptome level in Hashimoto et al. 2025, which the manuscript cites. The genuinely new delta here is the CSF proteomic evidence for that dichotomy, not the dichotomy itself. As framed (\"This work provides novel protein-level evidence that...\"), the claim is defensible, but the paper should state explicitly that it extends a dichotomy already established in this model rather than presenting the dichotomy as its own discovery. This is a SOFT positioning issue, not a HARD preemption — the CSF proteome comparison itself appears to be new."
+          "text": "The \"dichotomous\" transition claim (dependence = qualitatively distinct proteome): the manuscript's central framing — \"alcohol exposure and alcohol dependence are dichotomous\" — rests on the 140 Dep-specific vs 67 Non-dep-specific proteins. But with n=4–5 per group and a detection-based (present/absent) analysis, \"not detected\" is an abundance threshold, not an absence. A protein present in all 4 Dep mice and 0 of 5 Non-dep mice could be a true qualitative difference or simply a protein whose level in Non-dep CSF sits just below the DIA detection limit. The authors acknowledge this (\"missing values are likely to represent protein levels below the lower limit of detection\") but then build the entire dichotomous narrative on it. What would distinguish the two accounts: quantitative comparison of the shared 404 proteins between groups, and a demonstration that the \"Dep-specific\" proteins are genuinely absent rather than low-abundance in Non-dep CSF. As written, the qualitative/dichotomous claim outruns the evidence; the data support a graded difference with a high-abundance tail in the Dep group."
         },
         {
           "id": "novelty-2",
-          "text": "The magnitude of the contribution is overstated relative to the evidence base for the \"dichotomous\" framing. The dichotomy rests on a qualitative detection-based analysis (present/absent at 1% FDR) in n=4–5 mice, with the authors' own power analysis conceding only 38% power for moderate effect sizes. A claim of qualitative dichotomy — that dependence produces a categorically different proteome rather than a quantitative escalation — is a strong inference from a design that cannot distinguish \"not detected\" from \"below detection limit\" and cannot resolve moderate effect sizes. The authors acknowledge this in the Limitations, which is to their credit, but the abstract and conclusions still assert the dichotomy more firmly than the evidence supports. The framing should be scaled to \"preliminary evidence consistent with a qualitative shift,\" which is what the data actually support. (The statistical adequacy of this is rigor's call; I flag it only as a magnitude/positioning issue.)"
+          "text": "The claim that BBB disruption and neuroinflammation are specific to dependence: the evidence is MMP2, GFAP, CHI3L1, CX3CL1 detected in Dep but not Non-dep. The alternative account: the Dep group received ethanol vapor exposure plus escalated drinking, while Non-dep received only moderate voluntary drinking — so the difference could be driven by total ethanol dose/exposure magnitude rather than by \"dependence\" as a distinct state. The two are confounded in this design. The manuscript does not offer any analysis separating dependence status from cumulative exposure (e.g., correlation of protein detection with blood ethanol levels or total intake). The claim that these signatures are dependence-specific rather than high-exposure-specific is therefore not established by the data presented. This is the differentiation issue at the heart of the contribution."
         },
         {
           "id": "novelty-3",
-          "text": "Differentiation from the nearest competing work is thin. The manuscript cites human CSF studies in AUD (Azuar et al. 2021) and the mechanistic BBB literature but never names a nearest-neighbor CSF proteomics study and explains the delta over it. Given that the individual markers (GFAP, MMP2, CHI3L1, UCHL1) are all established biomarkers in other contexts, the paper's contribution is specifically the co-detection in CSF of dependent mice in this model — that should be stated as the differentiation, and a head-to-head against the closest human CSF proteomics work offered where feasible."
-        }
-      ],
-      "questions": []
-    },
-    {
-      "reviewer": "rigor",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "rigor-1",
-          "text": "1. HARD — The causal attribution to \"dependence\" is confounded by the vapor procedure. The two groups differ in more than dependence status: Dep mice received ethanol vapor, ethanol+pyrazole injections, and repeated withdrawal cycles; Non-dep received only pyrazole and 2BC. The abstract's \"dichotomous\" framing and the conclusion's \"transition to alcohol dependence\" attribute the proteomic differences to the dependence state, but a design comparing vapor-exposed vs. non-vapor-exposed mice cannot isolate dependence from the vapor/withdrawal procedure itself. The alternative — that the differences reflect repeated ethanol exposure, withdrawal stress, or the injection regimen — is equally consistent with the data. This is partly methodology's call, but it bears directly on claim wording: \"dependence-associated\" is licensed; \"dependence causes\" or \"transition to dependence\" is not."
+          "text": "The framing (\"a fundamental question remains unanswered\") implies priority that should be stated explicitly and checked against the human CSF-AUD literature (e.g., Azuar et al. 2021) and the recent mouse CSF method paper (Lourbopoulos et al. 2025), neither of which is cited for differentiation."
         },
         {
-          "id": "rigor-2",
-          "text": "2. HARD — The immunoglobulin variable regions interpreted as \"maintained adaptive immune surveillance\" are confounded by the injected antibody. The authors themselves detected the rat anti-IL-6R antibody (IGG2B, peptide DILLISQNAK) in all CSF samples. The presence of immunoglobulin-derived peptides in CSF is therefore not a clean readout of endogenous adaptive immunity — it is entangled with the administered antibody and with BBB permeability state. Interpreting KV5AB/LV1C/HVM02/03 detection in Non-dep as evidence of intact immune surveillance, and their absence in Dep as \"loss\" of it, is not licensed. Differential antibody passage, clearance, or binding across groups would produce the same pattern. The authors flag the antibody's presence in a limitation but do not connect it to the immune-surveillance claim they make in the Abstract and Discussion."
+          "id": "novelty-4",
+          "text": "The nearest competing work — human CSF biomarker studies in AUD — is not named or positioned against; a one-paragraph head-to-head would sharpen the contribution."
         },
         {
-          "id": "rigor-3",
-          "text": "3. SOFT — BBB disruption is inferred from protein identity, not measured. MMP2, BIP, VE-cadherin, and VCAM1 in CSF are consistent with barrier compromise, but no BBB permeability assay, tight junction quantification, or functional test is performed. MMP2 also participates in normal ECM turnover, and VE-cadherin could reflect endothelial shedding without frank barrier failure. The Abstract's \"signatures of\" is defensible; the Discussion's \"BBB compromise\" and \"BBB dysfunction\" are not. A functional assay (Evans blue or dextran permeability) or tight junction protein measurement would distinguish barrier breakdown from other release mechanisms."
+          "id": "novelty-5",
+          "text": "The translational \"so what\" (MMP2/BIP as peripheral biomarkers, linking to human serum/liver studies) is asserted as a downstream use case the present study does not demonstrate; this is a SOFT inflation, not a HARD failure."
+        },
+        {
+          "id": "novelty-6",
+          "text": "The IL-6R antibody treatment is a confound for interpreting immune-related proteins (LAG3, immunoglobulin variable regions); the manuscript addresses it for the antibody itself but not for the possibility that IL-6R blockade attenuated the very neuroimmune signature being interpreted."
         }
       ],
       "questions": [
-        "1. Was there any cohort that did not receive anti-IL-6R whose CSF could be compared, to test whether the immunoglobulin signal and any group differences depend on the antibody?",
-        "2. Can the authors report the detection analysis restricted to proteins whose absence in the comparison group is not attributable to the injected antibody or to detection sensitivity limits?",
-        "3. What functional evidence (BBB permeability assay, tight junction staining) could be added to support the BBB disruption interpretation, and would the authors consider softening the Discussion's \"BBB breakdown\" language until such evidence exists?"
+        "Can you state explicitly whether this is the first CSF proteomic comparison of dependent vs non-dependent mice in the CIE-2BC model, and cite the closest human CSF-AUD and mouse CSF-method papers for differentiation?",
+        "What analysis would you offer to separate dependence status from cumulative ethanol exposure (e.g., correlating protein detection with BELs or total intake)?",
+        "Is the IL-6R antibody treatment expected to attenuate the neuroimmune proteins you interpret (GFAP, CHI3L1, CX3CL1), and if so, does that strengthen or weaken your dependence-specificity claim?"
       ]
     },
     {
-      "reviewer": "clarity",
+      "reviewer": "reproducibility",
       "score": 3.0,
       "confidence": 4.0,
       "weaknesses": [
         {
-          "id": "clarity-1",
-          "text": "The BBB-disruption claim is not distinguished from a collection artifact. The central claim — that Dep-specific vascular proteins (MMP2, VE-cadherin, VCAM1, LAMB2, fibulins) evidence in vivo BBB breakdown — rests on CSF drawn by cisterna magna puncture with a pulled pipette, a method that can introduce blood. The paper detects hemoglobin and keratins in Dep samples and dismisses them as trace contamination, but the same reasoning applies to the very proteins anchoring the BBB claim: if Dep vasculature is fragile (as the paper argues), the puncture could differentially contaminate Dep CSF with endothelial and blood proteins. The paper's own hypothesis predicts this confound and does not exclude it. Reporting a blood-marker ratio (hemoglobin or albumin normalized per sample) or using a blood-sparing collection method (e.g., the Lourbopoulos 2025 method the paper itself cites) would separate in vivo BBB leak from collection artifact."
+          "id": "reproducibility-1",
+          "text": "The analysis code is not available, and it is load-bearing. The R scripts that filter the DIA-NN output, apply the detection criteria, run the enrichment and power analyses, and generate Figures 1–5 are at a GitHub repository described as \"private until published.\" Per the manuscript's own account, the code is gated behind publication, which for a preprint under review means it is not accessible now. An independent group could not reproduce the figures or the exact analysis pipeline without reconstructing the R code from the prose description. The fix is concrete: make the repository public or deposit an archived version (e.g., Zenodo DOI) at submission, and state the commit/tag."
         },
         {
-          "id": "clarity-2",
-          "text": "The 'dichotomous/qualitative' framing outruns the detection-based evidence. The abstract's 'clear molecular transition' and the title's 'Evidence for Blood-Brain Barrier Dysfunction' state the dependence transition as qualitatively distinct, but the evidence is presence/absence at 1% FDR in n=4–5. A protein 'not detected' in DIA-MS is below the detection limit, not absent; the data support 'detectably different at this threshold,' not 'qualitatively distinct mechanisms.' The limitations acknowledge this ('minimum estimates'), but the abstract and title state it more strongly than the evidence allows."
+          "id": "reproducibility-2",
+          "text": "The MassIVE data accession cannot be verified, and it carries the raw MS data and sample annotations. The manuscript states the data \"have been uploaded\" with identifier C5GX4573B, but I cannot confirm from the text that this accession resolves and is public. If the identifier is live and open, this is fine; if it is a placeholder or gated, the underlying data for every load-bearing claim are unavailable. I could not verify this either way — please confirm the accession is public and resolvable, and note any access conditions."
         },
         {
-          "id": "clarity-3",
-          "text": "The 'preserved protective mechanisms' reading of Non-dep proteins rests on unexamined technical variation. The interpretation of CALB1, SUMO2/3, TAGL3, and immunoglobulin regions as maintained protective mechanisms depends on detection asymmetry that could reflect sample load. CSF volumes ranged 5–20 µL (a 4-fold range); the paper does not report total protein per sample or normalize detection for it. If Non-dep samples carried higher protein load, more low-abundance proteins would be detected regardless of biology. Reporting total protein per sample or quantifying (not merely detecting) these proteins would distinguish a biological signal from a technical one."
+          "id": "reproducibility-3",
+          "text": "The power-analysis method is not specified (which test, what effect-size model, what assumptions produced 38% for 75% vs 20% detection) — a replicator cannot recompute it."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "No environment capture for the R analysis (no lockfile, conda env, or container), and the STRING web-tool version is not stated — SOFT, since the core pipeline is versioned."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "Supplementary Files 1–4 (filtered quantitative data, IGG2B peptides, Skyline exports, peak-area histograms) are referenced but not visible in the manuscript text provided, so I could not confirm their contents or format."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "Compute/hardware for the LC-MS runs is not noted — minor for this analysis, but relevant if the 15 spd method's performance is load-bearing for the detection-based comparison."
         }
       ],
       "questions": [
-        "What is the sex composition of each group (Dep n=4, Non-dep n=5)? The methods sentence is ambiguous as written.",
-        "Which color corresponds to which group in Figure 1c — the text and legend disagree.",
-        "What was the total protein amount per CSF sample, and was detection normalized for it?"
+        "Can you confirm the MassIVE accession C5GX4573B is public and resolvable now, and state whether any access conditions apply?",
+        "Will the GitHub repository be made public (or archived with a DOI) at the time of preprint posting rather than at journal publication, and can you state the commit/tag?",
+        "What test and assumptions underlie the reported post-hoc power figures (38% for 75% vs 20% detection rates)?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "The manuscript does not include an explicit competing-interests statement; the authors should declare whether any exist or state that none exist."
+        },
+        {
+          "id": "ethics-2",
+          "text": "The manuscript does not state whether the anti-IL-6R antibody administration or the CSF collection procedure caused any animal distress beyond what is described, though the IACUC approval covers this."
+        }
+      ],
+      "questions": [
+        "Do the authors have any competing interests to declare, financial or otherwise?",
+        "Was any additional animal welfare monitoring performed during the CSF collection procedure beyond standard IACUC-approved protocols?"
       ]
     },
     {
@@ -151,165 +177,163 @@
       "weaknesses": [
         {
           "id": "data_analysis-1",
-          "text": "The central detection-rate comparisons are never tested statistically: no test is applied to any detection-rate difference (e.g., MMP2 at 4/4 Dep vs 0/5 Non-dep, GFAP at 3/4 vs 0/5, or the 140-vs-67 protein counts). A Fisher's exact test on the MMP2 table gives p = 0.0079 (two-sided); with ~600 proteins screened, even a single uncorrected comparison at this level is marginal, and none would survive any reasonable multiple-testing correction."
+          "text": "LOAD-BEARING: The differential claim (140 Dep-specific vs 67 Non-dep-specific proteins) is a qualitative detection analysis with no statistical test and no multiple-testing correction across ~600 proteins. The threshold (≥2/4 vs ≤1/5) has no stated error rate, and the authors' own power analysis shows only 38% power for the moderate effects that dominate their lists — so the 'distinct proteome' conclusion is not supported by any inferential statistic, only by descriptive counts."
         },
         {
           "id": "data_analysis-2",
-          "text": "The 'Strong'/'Moderate' evidence classification in Tables 1–2 is an arbitrary detection-rate threshold, not a statistical result; the claim that 140 proteins are 'Dep-specific' is a descriptive observation, not a tested finding."
+          "text": "LOAD-BEARING: The 'protective mechanisms lost in dependence' claim (CALB1, SUMO2/3, TAGL3, immunoglobulin variable regions) is inferred from proteins detected in Non-dep but not Dep mice. But with n=4-5 and a detection threshold, absence of detection is not evidence of absence — a protein below the detection limit in one group is treated as 'lost,' and the paper's own power analysis concedes this is exactly the regime where false negatives dominate. The claim that these mechanisms are 'lost' rather than merely undetected is unsupported."
         },
         {
           "id": "data_analysis-3",
-          "text": "The detection threshold is arbitrary and the headline counts are threshold-dependent: the 140 vs 67 counts depend on the ≥2-replicate detection rule, and the asymmetry between the Dep criterion (≥3/4 = 75%) and Non-dep criterion (≥4/5 = 80%) means the two counts are not directly comparable."
+          "text": "LOAD-BEARING: The BBB-disruption claim rests on MMP2, BIP, VE-cadherin, VCAM1, ACTA, LAMB2, fibulins — but these are presence/absence calls in 9 animals with no quantitative abundance comparison. The paper never reports whether these proteins are more abundant in Dep CSF, only that they were detected there; a protein detected at trace levels in 2/4 Dep mice (VCAM1, CX3CL1, CADH5) is treated as equivalent evidence to one detected in 4/4. The detection-rate threshold conflates effect size with detection probability."
         },
         {
           "id": "data_analysis-4",
-          "text": "No sensitivity analysis is reported — the counts at ≥1 replicate, or at ≥3 replicates, would likely change substantially, and the manuscript does not show that the biological interpretation survives threshold variation."
+          "text": "The PCA plot (Figure 1c) is described as showing Dep clustering, but with n=4-5 and no stated variance decomposition, the separation is not quantified; one Non-dep animal clusters within the Dep group and is not discussed as a potential outlier or excluded."
         },
         {
           "id": "data_analysis-5",
-          "text": "The 'top 10' selection for Figure 2 is undefined as a criterion."
+          "text": "The IGG2B/IL-6R antibody detection is reported as a single peptide (DILLISQNAK) identified in all samples, but no quantitative comparison is made between groups, and the claim that it 'crosses the BBB' is not supported by any abundance data — only by presence in CSF."
         },
         {
           "id": "data_analysis-6",
-          "text": "Missing values are assumed to be 'below limit of detection' without verification: no spike-in controls, no technical replicates, no QC metrics (e.g., coefficient of variation across replicates, ion injection time distributions) support the MNAR assumption; in DIA-MS, missing values arise from ion suppression, co-elution, and technical variability as well as true absence."
+          "text": "Sweep: no exact p-values, effect sizes, or confidence intervals are reported anywhere; every quantitative claim is a detection count."
         },
         {
           "id": "data_analysis-7",
-          "text": "The contamination question is not resolved for the specific claim it threatens: keratins (K2C5, K1C10, K2C1B) and hemoglobin are concentrated in the Dep group, and the cited methodological defense addresses whether these proteins can appear in clean CSF, not whether differential contamination occurred between groups; if BBB disruption makes CSF collection more difficult in Dep mice, the contamination signature would concentrate exactly where the manuscript reports it, and the 'BBB disruption' claim would be partly an artifact of the collection process."
+          "text": "Sweep: the 'sex segregation along PC2' observation in Non-dep mice is made from n=2-3 per sex and is not statistically testable at this n."
         },
         {
           "id": "data_analysis-8",
-          "text": "Post-hoc power analysis is circular — it uses observed detection rates to claim the study was underpowered, which is always true for non-significant results; report confidence intervals for detection rates instead."
-        },
-        {
-          "id": "data_analysis-9",
-          "text": "The 404 shared proteins are never compared quantitatively, despite DIA providing quantitative peak areas — a missed opportunity and a partial control for the presence/absence framework."
-        },
-        {
-          "id": "data_analysis-10",
-          "text": "Enrichment analyses (EnrichR, STRING, KEGG) inherit the arbitrary detection threshold and are not corrected for the hundreds of pathways/terms tested."
-        },
-        {
-          "id": "data_analysis-11",
-          "text": "Sex is a potential confound: PCA shows Non-dep separates by sex along PC2 but Dep does not — with n=2 per sex in the Dep group, this could be a power artifact rather than a biological signal."
-        },
-        {
-          "id": "data_analysis-12",
-          "text": "The IL-6R antibody treatment is a confound for all comparisons; the claim that it 'did not ameliorate' Dep effects is unsupported by any data shown (no vehicle control is reported)."
-        },
-        {
-          "id": "data_analysis-13",
-          "text": "The single-peptide identification of the IL-6R antibody (DILLISQNAK) is weak evidence; the manuscript discloses this but should flag it as a limitation rather than presenting it as confirmation."
+          "text": "Sweep: the enrichment analyses (EnrichR, STRING, KEGG) are run on the group-specific protein lists, but the lists themselves are unadjusted for multiple testing, so the pathway enrichments inherit the same unquantified error rate."
         }
       ],
       "questions": [
-        "What are the 140-vs-67 protein counts at detection thresholds of ≥1 and ≥3 replicates, and does the biological interpretation survive?",
-        "What is the per-sample hemoglobin concentration (or equivalent contamination metric), and does it correlate with the Dep-specific protein detection pattern?",
-        "Were any technical replicates or QC metrics (e.g., peptide CVs, injection time distributions) collected to support the MNAR assumption for missing values?",
-        "What is the sex breakdown of the 140 Dep-specific proteins — are any driven predominantly by one sex?"
+        "What is the false-discovery rate of the ≥2/4 vs ≤1/5 detection threshold across ~600 proteins? Please report the expected number of proteins that would pass this threshold by chance alone.",
+        "For the BBB-disruption proteins (MMP2, BIP, VE-cadherin, VCAM1), can you report quantitative abundance (e.g., MaxLFQ intensities) with a stated test and n, rather than presence/absence only?",
+        "For the 'protective mechanisms lost' claim (CALB1, SUMO2/3, TAGL3), what evidence distinguishes true loss from detection-limit effects given the 38% power for moderate effects?",
+        "How was the one Non-dep animal that clusters within the Dep group in Figure 1c handled — was it excluded, and if so, was the exclusion pre-specified?"
       ]
     },
     {
       "reviewer": "methodology",
-      "score": 2.0,
+      "score": 3.0,
       "confidence": 4.0,
       "weaknesses": [
         {
           "id": "methodology-1",
-          "text": "Dose and dependence are confounded; the qualitative-transition claim is not testable with this design (HARD). The Dep group differs from Non-dep in three variables simultaneously: total ethanol dose, route of administration (vapor + 1.75 g/kg i.p. injection vs oral 2BC), and the dependence phenotype. The manuscript frames its central question as whether dependence is a 'quantitative progression' or involves 'qualitatively distinct pathophysiological mechanisms,' but this design cannot separate those — the Dep group has both higher exposure and dependence. Any proteomic difference could reflect cumulative ethanol dose rather than the dependent state. A matched-exposure control (e.g., vapor-exposed mice that do not escalate drinking, or a group yoked for blood ethanol levels) would be required to attribute the signature to dependence per se. As written, the conclusion that the proteome reflects 'the transition to alcohol dependence' is not earned."
+          "text": "The IL-6R antibody treatment is a confound for the generalizable claim. All mice in this study received the anti-IL-6R antibody (200 μg/day for 7 days); no untreated or control-antibody group is reported. The stated conclusion — 'the effects of alcohol dependence on the CSF proteome' — is therefore conditional on IL-6R blockade."
         },
         {
           "id": "methodology-2",
-          "text": "The BBB-disruption interpretation lacks a positive control for barrier integrity (HARD). Detection of MMP2, VE-cadherin, ACTA, and LAMB2 in Dep CSF is interpreted as BBB breakdown. Two alternative explanations are not excluded. First, blood contamination during cisterna magna collection: the manuscript's own data show hemoglobin and multiple keratins in the Dep-specific list, and the argument that 'MS detects trace amounts below ELISA limits' cuts both ways — trace blood contamination would produce exactly this pattern. Second, the anti-IL-6R antibody (150 kDa, administered i.p. to all mice) could itself alter BBB permeability or CSF composition; the finding that the antibody is present in CSF is evidence of permeability to large molecules that is not integrated into the BBB interpretation. A blood-borne tracer excluded from CSF in intact-barrier conditions (e.g., Evans blue, or a quantitative hemoglobin/albumin ratio) would distinguish true barrier breakdown from collection artefact or treatment effect. Without it, 'BBB disruption' is an interpretation, not a finding."
+          "text": "Blood contamination is not ruled out as a source of the Dep-specific protein pattern; no hemoglobin or other blood-marker quantification is reported to exclude this alternative explanation."
         },
         {
           "id": "methodology-3",
-          "text": "The 'protective mechanisms' interpretation of Non-dep-specific proteins outruns the evidence (SOFT–HARD). CALB1, SUMO2/3, and TAGL3 detected in Non-dep CSF are interpreted as 'maintained protective mechanisms' lost in dependence. These are presence/absence differences with no functional validation; the alternative — that these proteins are simply below the detection limit in Dep CSF, or present at different abundance for reasons unrelated to protection — is not addressed. The functional labels (calcium homeostasis, neuroprotection) are imported from the literature and applied to detection patterns. This is a reasonable hypothesis-generating observation, but the discussion presents it as a mechanism."
-        },
-        {
-          "id": "methodology-4",
-          "text": "The analysis is entirely presence/absence; no quantitative comparison of shared proteins is reported, which would substantially strengthen (or weaken) every claim."
-        },
-        {
-          "id": "methodology-5",
-          "text": "Sex is a potential confound that cannot be examined at n=4–5; the PCA shows Non-dep mice segregating by sex along PC2, which is acknowledged but not addressed."
-        },
-        {
-          "id": "methodology-6",
-          "text": "All mice received anti-IL-6R antibody; the study cannot separate dependence effects from dependence-plus-IL6R-blockade effects, and this is underweighted relative to its importance."
-        },
-        {
-          "id": "methodology-7",
-          "text": "The 'preferred' threshold (≥2/4 vs ≤1/5) is permissive, and no statistical test or multiple-testing correction is applied to detection-rate differences between groups."
-        },
-        {
-          "id": "methodology-8",
-          "text": "The detection of the IL-6R antibody in CSF is presented as a methodological validation but is equally evidence relevant to BBB permeability; this internal inconsistency is not reconciled."
+          "text": "The binary detection analysis cannot support the 'dichotomous' claim of qualitatively distinct mechanisms; presence/absence calls at n=4–5 cannot distinguish a true qualitative difference from a quantitative one that fell below the detection threshold."
         }
       ],
       "questions": [
-        "Was any independent measure of BBB integrity collected (e.g., Evans blue extravasation, quantitative hemoglobin or albumin ratio in CSF vs serum)?",
-        "Were CSF samples screened for blood contamination (e.g., hemoglobin ELISA) prior to MS, and if so, what were the results?",
-        "Does the cohort include any vapor-exposed animals that did not escalate drinking, which could serve as a matched-exposure control?"
+        "Was any untreated or control-antibody group run, and if so why is it not reported?",
+        "Can the authors quantify hemoglobin or other blood markers to rule out blood contamination as the source of the Dep-specific pattern?",
+        "How would the conclusions change if the binary detection analysis were replaced with quantitative abundance comparisons?"
       ]
     },
     {
-      "reviewer": "reproducibility",
-      "score": 1.0,
+      "reviewer": "rigor",
+      "score": 3.0,
       "confidence": 4.0,
       "weaknesses": [
         {
-          "id": "reproducibility-1",
-          "text": "The analysis code is inaccessible (HARD). The manuscript states: \"All R scripts used for data analysis and figure generation can be found at the GitHub repository https://github.com/NataliePTurner/MouseCSF (private until published).\" A private repository is not availability. These scripts generate the PCA, the heatmap, the enrichment analyses, and the power calculations — the core artifacts of the paper. An independent group cannot reproduce the figures or the protein-list generation from the raw data without them. This is precisely the \"to be deposited upon publication with no accession\" case the mandate flags as HARD for load-bearing artifacts. The fix: make the repo public with a commit hash/tag, or deposit an archived copy (e.g., Zenodo DOI) at submission."
+          "id": "rigor-1",
+          "text": "HARD — The \"dichotomous\" claim is not licensed by detection-threshold analysis. Abstract: \"alcohol exposure and alcohol dependence are dichotomous.\" The evidence is 140 proteins detected in ≥2/4 Dep and ≤1/5 Non-dep animals (and 67 the reverse), plus PCA clustering. But presence/absence calls are made at the limit of detection: a protein moderately more abundant in Dep mice but present in both groups is scored \"Dep-specific\" if its Non-dep levels fall below the threshold. The authors acknowledge this (\"missing values are likely to represent protein levels below the lower limit of detection\") and that the lists are \"minimum estimates,\" then build the dichotomy narrative on exactly these calls. The alternative — a quantitative continuum (e.g., graded BBB permeability) producing apparent qualitative differences through detection thresholds — is not excluded. The authors hold quantitative data (diann_maxlfq) and could test whether the \"group-specific\" proteins are genuinely bimodal in abundance; they do not. The PCA also shows one Non-dep mouse clustering within the Dep group, acknowledged but never reconciled with the dichotomy claim. To license \"dichotomous,\" the authors need to show the quantitative distributions are bimodal, not continuous, and account for the overlapping animal."
         },
         {
-          "id": "reproducibility-2",
-          "text": "The raw-data accession is unverifiable and in a non-standard format (HARD). The manuscript states the MS data are at MassIVE \"with the dataset identifier C5GX4573B.\" MassIVE accessions follow the pattern MSV0000xxxxx; \"C5GX4573B\" does not match this format, and I could not verify it resolves. The raw MS data is the primary input to the entire analysis chain — if the accession is incorrect or the data is not yet released, the chain breaks at its first link. The fix: confirm the accession is live, in the correct format, and accessible without author intervention."
+          "id": "rigor-2",
+          "text": "HARD — Temporal claims outrun the cross-sectional design. Abstract: \"a clear molecular transition from maintained protective mechanisms to vascular damage, BBB breakdown, and sustained neuroinflammation\"; Conclusions: \"during the transition to dependence\"; abstract: \"the beginnings of endothelial damage.\" CSF was collected once per animal. A two-group, single-time-point comparison cannot establish a \"transition\" (which requires observing change over time) or a \"sustained\" state (which requires at least two time points). The design supports \"differences between dependent and non-dependent mice consistent with…\" — not \"transition\" or \"sustained.\" This is a wording fix, but it must be applied to the abstract and conclusions, where the temporal language currently carries the paper's interpretive weight."
         },
         {
-          "id": "reproducibility-3",
-          "text": "The processed-data-to-figure mapping cannot be confirmed. Supplementary file 1 (filtered quantitative data) is referenced, but I cannot inspect it, and the scripts that produce each figure are behind the private repo. The manuscript states which thresholds produce the heatmap and tables, but the full mapping (which script → which figure) is not verifiable. This is partly a consequence of weakness #1."
+          "id": "rigor-3",
+          "text": "SOFT — BBB dysfunction and complement activation interpretations have unexcluded alternatives. Title: \"Evidence for Blood-Brain Barrier Dysfunction.\" The Dep-specific detection of MMP2, VE-cadherin, VCAM1, ACTA, LAMB2, C1QA and C6 is interpreted as BBB breakdown and complement activation. Two alternatives are not excluded: (a) serum leakage — C6 is primarily liver-derived and abundant in serum; its presence in CSF is more parsimoniously explained by barrier leakage than by local complement activation, which would undercut the \"complement system activation\" signature; (b) local production — MMP2 and GFAP are produced by brain-resident cells, so their presence in CSF does not require barrier failure. The body hedges (\"suggestive of vascular compromise\"), but the title asserts the dysfunction claim without the hedge. A panel of abundant serum proteins not expected in CSF, measured across both groups, would help distinguish barrier leakage from local production."
+        },
+        {
+          "id": "rigor-4",
+          "text": "SOFT — \"Loss of protective mechanisms\" is inferred from non-detection. Conclusions: \"protective mechanisms… are lost or diminished during the transition to dependence.\" Non-detection in Dep mice means below the detection limit, not absent; the same threshold artifact that makes the Dep list a minimum estimate applies symmetrically to the Non-dep list. Hedge to \"consistent with reduced abundance of proteins associated with…\""
+        },
+        {
+          "id": "rigor-5",
+          "text": "\"Unique to alcohol dependence\" (Introduction) overstates: there is no alcohol-naïve control group, and the CIE vapor/withdrawal procedure is confounded with the dependent phenotype; the data support \"unique to the dependent group in this model.\""
+        },
+        {
+          "id": "rigor-6",
+          "text": "The anti-IL-6R antibody (administered to all animals) is disclosed in Limitations but absent from the title/abstract framing; if the antibody acts group-specifically, the headline \"effects of Alcohol Dependence\" could be partly antibody-dependent — flag for the methodology reviewer."
+        },
+        {
+          "id": "rigor-7",
+          "text": "The interpretation of Non-dep-specific immunoglobulin variable regions as preserved \"immune surveillance\" sits awkwardly with the BBB narrative: a leakier barrier in Dep mice would predict more, not fewer, Ig-derived peptides in Dep CSF; the authors do not address whether these peptides track the contamination markers (keratins, hemoglobin) they discuss elsewhere."
+        },
+        {
+          "id": "rigor-8",
+          "text": "The \"novel\" claim in the abstract is a priority claim outside my remit — flag for the novelty reviewer."
         }
       ],
-      "questions": [
-        "Can the MassIVE accession be confirmed as live and in the correct format (MSV0000xxxxx), with the raw data released at submission rather than \"upon publication\"?",
-        "Will the GitHub repository be made public with a commit hash/tag, or deposited as an archived DOI, at submission?"
-      ]
+      "questions": []
     },
     {
       "reviewer": "literature",
-      "score": 4.0,
-      "confidence": 3.0,
+      "score": 3.0,
+      "confidence": 4.0,
       "weaknesses": [
         {
           "id": "literature-1",
-          "text": "The contamination defense rests on a citation I could not verify. The Limitations section rebuts the blood-contamination alternative to the Dep-specific protein list by citing Lourbopoulos 2025 and its ProteomeXchange dataset PXD053568 as containing Hb and keratin identifications despite undetectable Hb by ELISA. This is the entire citation-based answer to the alternative that the Dep-specific proteins (MMP2, complement C1QA, immunoglobulins, GFAP, hemoglobin — all abundant blood proteins) reflect blood contamination rather than BBB breakdown. I could not confirm the dataset identifier or that it contains those identifications. If the attribution is wrong, the central interpretation loses its only external support. The authors should confirm the identifier and the specific claim."
+          "text": "The central claim that Dep-specific proteins reflect CNS pathology rather than blood contamination is not established by the evidence offered. The manuscript acknowledges hemoglobin and multiple keratins in the Dep group and defends their presence via Lourbopoulos, arguing that these appear even in clean CSF. But the alternative explanation — that the Dep CSF samples were more blood-contaminated than the Non-dep samples, whether from a genuinely leakier BBB or from collection — predicts exactly the same protein pattern, since MMP2, BIP, complement components, and immunoglobulins are all blood-abundant. The Lourbopoulos citation shows these proteins are not reliable contamination indicators, but it does not establish that the Dep-specific proteins are CNS-derived. What would distinguish the two accounts: report a per-sample blood-contamination marker (e.g., quantitative hemoglobin or a blood/CNS abundance ratio) and show the Dep-specific proteins do not track it. This is a HARD gap in the evidence chain for the paper's headline claim."
         },
         {
           "id": "literature-2",
-          "text": "Ref 32 (Gaither 2025) appears mismatched to the claim it supports. The text states \"increased BIP levels were found to be positively correlated with alcohol consumption grade and reflected the degree of alcohol-induced damage in human liver biopsy samples 32,\" but the cited paper's title concerns the ensemble of drug-metabolizing enzymes and transporters in human liver. Nothing in the title or metadata indicates it reports BIP/GRP78 correlation with consumption grade. Either the claim or the citation is wrong; the authors should confirm which."
+          "text": "The BIP-in-liver attribution is questionable. The manuscript states \"increased BIP levels were found to be positively correlated with alcohol consumption grade and reflected the degree of alcohol-induced damage in human liver biopsy samples,\" citing Gaither et al. 2025 (J Xenobiot). The cited paper's stated scope — \"Effects of Chronic Alcohol Intake on the Composition of the Ensemble of Drug-Metabolizing Enzymes and Transporters in the Human Liver\" — does not obviously support a claim about BIP/GRP78 correlation with consumption grade. I could not verify this from the abstract/metadata. Please confirm the specific claim is actually made in that source, or cite the primary source that established it."
         },
         {
           "id": "literature-3",
-          "text": "The central claim — that Dep-specific proteins indicate BBB breakdown and neuroinflammation — is not distinguished from the contamination alternative by the evidence presented, and the only citation-based rebuttal is the unverifiable Lourbopoulos claim above. The design aspects (sample-purity controls, blood-marker quantitation) belong to the methods reviewer; from the citation record alone, the rebuttal is a single unverified source."
+          "text": "A directly contradicting prior finding on MMP2 and cirrhosis is silently omitted. The manuscript cites Prystupa 2015 (verified: PMID 26094532) for \"elevated levels of MMP2... correlate with the development of liver cirrhosis,\" but the literature also contains Madro et al. 2012, \"The decrease of serum MMP-2 activity corresponds to alcoholic cirrhosis stage\" (PMID 21908153), which reports the opposite direction of association. A contradicting finding bearing directly on the translational bridge claim must be acknowledged, not ignored. This is a HARD completeness issue."
+        },
+        {
+          "id": "literature-4",
+          "text": "The reference list as parsed contains several entries that run together (entries 10–15, 16–17, 31–32, 46–47, 61–62) — likely a PDF-conversion artifact, but please confirm the final bibliography is clean and resolvable."
         }
       ],
-      "questions": [
-        "Confirm that ProteomeXchange dataset PXD053568 (Lourbopoulos 2025) contains the Hb and keratin identifications claimed, and that the identifier is correct.",
-        "Confirm that Gaither 2025 (ref 32) actually reports BIP/GRP78 levels correlating with alcohol consumption grade in human liver biopsies; the cited title concerns drug-metabolizing enzymes and transporters.",
-        "Is the Hashimoto 2025 bioRxiv preprint the correct and current source for the astrocyte immune-activation claim, and does a published version exist?"
-      ]
+      "questions": []
     },
     {
-      "reviewer": "ethics",
-      "score": 5.0,
-      "confidence": 5.0,
-      "weaknesses": [],
+      "reviewer": "clarity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "clarity-1",
+          "text": "The central quantitative claim is labeled inconsistently, so the reader cannot determine what the 140/67 numbers mean. The Results say \"140 proteins preferentially detected in alcohol-dependent mice and 67 proteins preferentially detected in Non-dep mice (Figure 1b),\" but the Figure 1b legend calls these \"Dep unique = 140; Non-dep unique = 67,\" and the Classification section defines \"Dep-preferred\" with different thresholds (≥3/4 vs ≤1/5 for strong; ≥2/4 for moderate). \"Unique\" (0 in the opposite group) is a stricter set than \"preferred\" (≤1/5 in the opposite group), yet the same numbers are attached to both labels. Table 1 then lists proteins such as BIP (4/4 vs 1/5) that are \"preferred\" but not \"unique,\" so the relationship between the 140, the Venn diagram, and the tables is never stated. A reader cannot tell whether the 140 includes proteins detected in one Non-dep animal or not. One sentence stating the exact threshold that produced the 140/67 counts would settle this."
+        },
+        {
+          "id": "clarity-2",
+          "text": "The sex composition of the experimental groups is unrecoverable. The Animals section reads \"The male and female C57BL/6J mice (n = 4 and 5; 29.2±1.63 g and 22.4±0.55 g, respectively)\" — presumably 4 males and 5 females, but the reader cannot determine how many of each sex are in Non-dep (n=5) versus Dep (n=4). This matters directly for the PCA claim that \"Dep mice show clustering regardless of sex, whereas control mice... segregate by sex along the PC2 axis,\" and for the stated need for future sex-stratified work. State the sex counts per group."
+        },
+        {
+          "id": "clarity-3",
+          "text": "The anti-IL-6R antibody treatment is never motivated. The abstract and Methods state that all mice received the InVivoMAb anti-mouse IL-6R antibody (200 μg/day × 7 days), and the Limitations section concedes it \"might have attenuated some general IL-6 related mechanisms,\" but no sentence anywhere states why the antibody was given. A reader cannot evaluate whether the design is appropriate or what the treatment's presence means for interpreting the CSF proteome. One sentence in the Introduction or Methods stating the hypothesis the antibody was testing would resolve this."
+        },
+        {
+          "id": "clarity-4",
+          "text": "Table 1 and Table 2 headers are garbled. The final column header reads \"Evidence Detection Detection Strength\" — the column structure is unparseable, and the reader must infer from the data rows that the values are \"Strong\"/\"Moderate.\""
+        },
+        {
+          "id": "clarity-5",
+          "text": "Figure 1 reuses the same"
+        }
+      ],
       "questions": []
     }
   ],
   "manuscript_text_sha256": "254cc80e0588b71bdd66530be22a8d37288bb7b2123642729cad6575be1b3305",
-  "manuscript_file_sha256": "52787bcafca395c3b3783ff136aa49d253d170f63245f510d4449b6778369c75",
+  "manuscript_file_sha256": "53b217317fdd0fa8542f443fb6193c5829225ac0aba9501e503b16b03ad18189",
   "prior_job_id": "",
   "desk_rejected": false
 }

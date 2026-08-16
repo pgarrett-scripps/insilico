@@ -1,25 +1,41 @@
 # Statistics & Data-Analysis Reviewer
 
+SCORE: 2  
+CONFIDENCE: 4  
+
 ## Summary
-This is a proof-of-concept patch-SCP study whose framework is genuinely useful, and the shotgun collection strategy (analyzing all retrieval outcomes rather than selecting on success) is a real strength that avoids selection bias. But the three load-bearing quantitative claims all rest on evidence too weak or too confounded to carry them: an n = 3 correlation whose interpretation is confounded by retrieval damage, a "decoupling" conclusion drawn from a null result in an unpowered sample, and an association between spike integrity and synaptic protein recovery that is descriptive rather than tested. The claims are fixable by reframing and additional analysis, but as presented they outrun the data.
+
+This is a proof-of-concept study with n=12 neurons, of which only 3 were recorded during retrieval. The central quantitative claims — that capacitance correlates with protein identifications, that spike integrity during retrieval predicts synaptic enrichment, and that retrieval loss decouples proteomics from electrophysiology — are each supported by at most 3 data points, with no statistical test that can bear the weight assigned to it. The framework is sensible and the indiscriminate-collection design is a genuine strength, but the paper's headline findings are not established by the evidence presented. The manuscript is honest about its limitations, which is to its credit, but the gap between the claims and the evidence is too wide for the current form.
 
 ## Strengths
-- The indiscriminate shotgun collection of all patch outcomes is a principled design choice that avoids the selection bias common in single-cell workflows.
-- The authors honestly disclose the small sample size and proof-of-concept scope throughout.
-- The framework explicitly maps retrieval outcomes to interpretability, which is a useful conceptual contribution for the field.
+
+1. The indiscriminate collection of all patch outcomes, including torn neurons as negative controls, is a thoughtful design choice that enables the qualitative clustering analysis.
+2. The authors explicitly acknowledge the compartmental bias of soma retrieval and the risk of false negatives for membrane proteins.
+3. The framework's distinction between quantitative yield (capacitance) and qualitative integrity (spike preservation) is conceptually useful.
 
 ## Weaknesses
-- The capacitance–protein-count correlation (n = 3) is confounded by retrieval damage, and the reported precision is misleading. The three neurons differ in retrieval integrity: neuron #6 was partially aspirated, neuron #7 had compromised spiking, neuron #4 was the ideal retrieval. The capacitance used in the correlation is the during-retrieval value (Figure 3C), measured after the aspiration for neuron #6. Partial aspiration reduces both the measured capacitance (membrane lost) and the protein count, so the reported correlation (F = 1577, adjusted R² = 0.998, n = 3) is equally consistent with 'retrieval damage reduces both capacitance and protein recovery' as with 'soma size predicts recovery.' The authors interpret it as the latter, but the design cannot distinguish them. With n = 3, the line is defined by three points and adjusted R² = 0.998 is misleadingly precise. What would settle it: report the change in capacitance from in situ to during-retrieval for each neuron (a direct measure of damage) alongside the correlation, or restrict the correlation to neurons with comparable retrieval integrity.
-- The 'decoupling' claim rests on a null result in an unpowered sample. 'Neither log-transformed capacitance nor RM correlated with protein identifications (p > 0.05; n = 6)' is presented as evidence that retrieval loss decouples proteomic measurements from electrophysiology. With n = 6, the power to detect a correlation is minimal; absence of evidence is not evidence of absence. Moreover, the n = 6 pools heterogeneous outcomes (no gigaseal, gigaseal lost, torn), and the torn neurons' low protein counts could dilute any genuine size effect. The manuscript itself concedes larger samples are needed, yet the conclusion is stated as established. Reframe this as preliminary, or add an equivalence test if the claim is that the correlation is truly absent.
-- The spike-integrity/synaptic-protein association is descriptive, not tested. The claim that 'preservation of active properties during retrieval is associated with recovery of synaptic proteins' rests on a qualitative comparison of SynGO enrichment across three neurons (Figure 4). No statistical test compares enrichment across neurons; the pattern (neuron #4 richest, neuron #6 lacking synaptic signaling) is anecdotal at n = 3. There is also a partial circularity: spike integrity is itself a marker of retrieval quality, so both spike integrity and synaptic protein recovery are consequences of the same retrieval damage — the association is partly built into the design.
-- The '25–50% of the soma could be lost' estimate has no stated derivation; specify how it was computed from the capacitance changes in Figure 3C.
-- SynGO enrichment reports Q-values < 0.05, implying FDR correction, but the correction method is never named; state it.
-- PCA (Figure 6A) gives no scaling, number of components, or variance explained; the clustering interpretation is qualitative.
-- Exact p-values are not reported (e.g., 'p < 0.05' for F = 1577 with df = 1,1); report exact values.
-- The log transformation of capacitance is not justified; with n = 3, the transformation choice can materially affect the fit.
-- No power analysis or equivalence testing accompanies the 'no correlation' claims; acceptable for a proof-of-concept only if explicitly framed as preliminary.
+
+### Load-bearing
+
+**1. The capacitance–protein-identification correlation is computed on n=3 and reported with an adjusted R² of 0.998.** This is the paper's central quantitative claim, and it is unsupported as stated. With three points, a linear regression has one degree of freedom for error; the adjusted R² is essentially meaningless, and the F-statistic (F=1577) is driven entirely by the spread of the three points. The claim that "soma size plays a more direct role in protein recovery than RM" is a comparison of two correlations on the same three points — no test of the difference between the correlations is provided, and with n=3 no such test could be meaningful. The authors should either present this as a descriptive observation with the n=3 caveat prominently stated, or collect more gigaseal-preserved retrievals before claiming a correlation. The one thing that would settle this: report the raw data points (C, RM, protein IDs) for all three neurons in a table, and state explicitly that no inferential claim is being made from n=3.
+
+**2. The claim that "preservation of neuronal spiking during relocation tended to be associated with broader synaptic enrichment" is based on a comparison of three neurons, one of which (neuron #6) was partially aspirated.** The SynGO enrichment analysis is performed on each neuron individually, and the comparison of "diversity of enriched terms" across neurons #4, #6, and #7 is a comparison of three single observations. There is no statistical test comparing the groups — the UpSet plot and heatmap are descriptive. The claim that "neuron #6 lacked significant enrichment for synaptic signaling" is presented as evidence that compromised retrieval reduces synaptic recovery, but with n=1 per condition, this is an anecdote, not a finding. The authors should either present this as a case study with explicit caveats, or collect enough neurons per retrieval category to support a comparison.
+
+**3. The claim that "retrieval loss decouples proteomic measurements from electrophysiology" is supported by a null result in an unpowered sample.** The authors report that neither capacitance nor RM measured in situ correlated with protein identifications (p > 0.05, n = 6). This is presented as evidence that in situ recordings do not predict proteomic recovery. But a non-significant result in n=6 is not evidence of absence — it is consistent with a true correlation that the study is underpowered to detect. The authors should either present this as "we could not detect a correlation in this small sample" or perform an equivalence test. The claim that "robust in situ recordings cannot compensate for severe retrieval loss" is supported only by the two torn neurons (#11, #12), which is again n=2.
+
+### Sweep
+
+- The PCA in Figure 6A is descriptive and the clustering is interpreted post hoc; no variance explained is reported, and the claim that "neuron #6 grouped more closely with neurons lacking gigaseals" is a visual interpretation of a 2-D projection that is not quantified.
+- The SynGO enrichment analysis is performed per cell, but the multiple-comparison correction is applied within each cell's gene list, not across the 12 cells; the family-wise error rate across the study is not controlled.
+- The ion channel, GPCR, and transporter recovery lists are presented as binary heatmaps with no quantification of detection reliability; a protein detected in one cell with one peptide is treated identically to a protein detected with many peptides.
+- The claim that "torn samples still showed impressive protein recovery" (1,400–2,300 proteins) is presented without a comparison to a negative control — no empty pipette or buffer-only sample is analyzed to establish the background protein identification rate.
+- The correlation between capacitance and protein identifications uses log-transformed capacitance but the raw data are not shown; the choice of log transform is not justified and could be inflating the apparent linearity.
+- The statement that "25–50% of the soma could be lost over the course of collection" is an estimate with no measurement basis — no imaging or quantitative comparison of the soma before and after retrieval is provided.
+- The paper does not state whether the three gigaseal-preserved neurons were recorded from the same animal or different animals; if they are from one animal, the n is effectively 1 for biological replication.
 
 ## Questions
-- For the capacitance–protein correlation, can you report the capacitance change from in situ to during-retrieval for each of the three neurons? This would directly test whether retrieval damage, rather than soma size, drives the correlation.
-- What is the derivation of the 25–50% soma loss estimate from Figure 3C?
-- Which multiple-comparison correction was applied to the SynGO Q-values?
+
+1. Were the three gigaseal-preserved neurons (#4, #6, #7) from the same animal or different animals? If the same, what is the justification for treating them as independent replicates?
+2. Was a blank pipette or empty-well sample processed through the same workflow to establish the background protein identification rate?
+3. For the capacitance–protein correlation, can the authors report the raw values (C, RM, protein IDs) for the three neurons, and state explicitly whether they are making an inferential claim from n=3?
+4. What was the multiple-testing correction applied across the SynGO enrichment analyses for the 12 individual neurons — was the family of 12 analyses treated as a single experiment?

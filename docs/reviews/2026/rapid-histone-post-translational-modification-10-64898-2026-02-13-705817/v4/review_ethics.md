@@ -1,17 +1,29 @@
 # Ethics & Compliance Reviewer
 
-## Summary
-The compliance posture of this manuscript is largely sound: the rat work is covered by a properly cited IACUC approval with protocol number, no human-subjects obligations arise (established commercial cell line and rat tissue only), and funding is fully disclosed. The one required element missing is a competing interests declaration, which is a genuine gap given the manuscript's evaluation of specific commercial products, including a reagent obtained through a vendor's Early Access program. This is a one-line fix, not a substantive flaw.
+SCORE: 5
+CONFIDENCE: 4
 
-## Strengths
-- Animal research approval is explicitly stated with protocol number (IACUC #09-0006), ARRIVE reference, and NIH Guide compliance — the standard a reader needs.
-- Funding sources are fully disclosed in the acknowledgements.
-- Raw data and search results are deposited to ProteomeXchange (PXD073683), supporting transparency.
+## Ethics & Compliance Review
 
-## Weaknesses
-- No competing interests statement appears anywhere in the manuscript (HARD). This matters because the work evaluates specific commercial products — Promega's Arg-C Ultra, r-Chymotrypsin (obtained through the company's Early Access program, per the Practical Considerations section), and Trypsin Gold — and includes a per-sample cost analysis citing Promega pricing. A reader cannot determine whether any author has a material relationship with Promega (reagent provision, Early Access participation, consulting, honoraria). The absence of a statement is not evidence of a hidden conflict; it is a missing required declaration. The fix is a "Competing Interests" section declaring any relationships or explicitly stating none.
-- ARRIVE wording imprecision (SOFT). The methods state rats were "kept in accordance with the ARRIVE guidelines," but ARRIVE is a reporting checklist, not a husbandry standard; the substantive compliance basis is the cited IACUC approval and NIH Guide, which are properly stated. Suggest rewording to "reported in accordance with ARRIVE."
+**Overall take:** This manuscript raises no ethics or compliance concerns within my remit. Animal work is properly approved and described; human-derived cell line work (HEK293T) requires no consent statement under standard norms; no clinical, dual-use, or restricted-consent issues are present. Funding and competing interests are disclosed. The paper is compliant as written.
 
-## Questions
-- Do any authors have a financial or material relationship with Promega Corporation (e.g., provision of the r-Chymotrypsin Early Access reagent, consulting, honoraria) that should be declared in a competing interests statement?
-- Was the r-Chymotrypsin (rChymoselect) obtained free of charge under the Early Access program, and does the cost analysis in SI Table S5 account for this?
+**Strengths:**
+- Animal research approval (IACUC #09-0006) is explicitly stated with protocol number and institutional reference.
+- Funding sources are fully disclosed, including specific NIH grant numbers.
+- No competing interests are declared, which is appropriate given the absence of any apparent financial conflicts.
+
+**Weaknesses:**
+
+*Load-bearing claims (none in my specialty — no ethics or compliance claim is load-bearing for this manuscript's conclusions).*
+
+*Sweep:*
+- Animal research: approval, protocol number, and institutional committee are all named — compliant.
+- Human cell line (HEK293T): commercially available cell line, no identifiable human data, no consent required — compliant.
+- No clinical trial, human subjects, biobank, indigenous sample, or restricted-consent data involved — no statement needed.
+- No dual-use or biosafety risk: standard histone extraction and mass spectrometry — no statement needed.
+- Funding: fully disclosed (NIH grants listed) — compliant.
+- Competing interests: none declared, and none apparent from the manuscript — compliant.
+- Data availability: deposition to ProteomeXchange/PRIDE with accession PXD073683 is stated, which supports transparency but is outside my strict remit.
+
+**Questions:**
+- None — no ethics or compliance questions arise from this manuscript.

@@ -1,188 +1,70 @@
 {
   "schema_version": 1,
   "round": 1,
-  "job_id": "20260814-112512-molecular-and-structural-characterization-reveals-",
+  "job_id": "20260815-115700-molecular-and-structural-characterization-reveals-",
   "manuscript_title": "Molecular and Structural Characterization Reveals Divergent Extracellular Vesicle Profiles Between Wild Type and Alzheimer's Disease Cerebrocortical Organoids",
-  "manuscript_cache_key": "2b1d2ea4c24a066e1a5c78055f24745f31478c41a74be325ff7be324161ac466",
+  "manuscript_cache_key": "01548abb794f39326f0cb9e878bbd3eef5b8810ea66e9acf8eec1573693e2f01",
   "decision": "major",
-  "weighted_score": 2.875,
+  "weighted_score": 3.0,
   "required_revisions": [
     {
       "id": "R1-01",
-      "text": "1. Provide biological replication. The vFC count comparison, the proteomics and the co-culture Aβ quantification each need at least three independent organoid differentiations per genotype before any claim of a genotype-driven difference can stand. Until then, state that all findings are from a single paired differentiation and frame them as preliminary or hypothesis-generating.",
-      "source_reviewer": "",
-      "blocking": false
-    },
-    {
-      "id": "R1-02",
-      "text": "2. Isolate the vector in the co-culture experiment. The claim of EV-mediated transfer is not supported by the current design. Add at least one control that distinguishes EV-mediated transfer from free-dye/diffusible-factor transfer — for example a transwell co-culture that shares media but blocks vesicle contact, or a conditioned-medium-alone control. Until added, requalify all claims in the abstract and section heading from 'EV-mediated spread' to 'membrane and Aβ transfer between co-cultured organoids'.",
-      "source_reviewer": "rigor",
-      "blocking": false
-    },
-    {
-      "id": "R1-03",
-      "text": "3. Correct all overclaiming in the abstract to match the body. The abstract must be rewritten so that: (a) the size-distribution claim states the actual result (non-significant trend, not 'wider'), (b) the tetraspanin claim states that expression was at or below the detection limit in both genotypes, and (c) the Aβ measurement is described as immunoreactive puncta, not 'amyloid-β peptides'.",
-      "source_reviewer": "rigor",
-      "blocking": false
-    },
-    {
-      "id": "R1-04",
-      "text": "4. Provide ethics approval and donor-consent statement for the hiPSC lines. Cite the protocol identifier or approval number.",
-      "source_reviewer": "ethics",
-      "blocking": false
-    },
-    {
-      "id": "R1-05",
-      "text": "5. Correct the figure-panel citations. The fibril and MLV claims cite Figure 4G (WT panels) — correct to Figure 4I. Cite the correct panels throughout (Section 3.6's Figure 2C reference should be Figure 3; Section 3.2's 'Figure 3D-E' should be 'Figure 3D-F').",
-      "source_reviewer": "clarity",
-      "blocking": false
-    },
-    {
-      "id": "R1-06",
-      "text": "6. Reconcile or correct the TS ABC numbers and inequalities. The text gives '>20 ABC' and '~38 ABC' — provide the correct single measured value with a clear statement of what is above vs below the detection limit.",
-      "source_reviewer": "",
-      "blocking": false
-    },
-    {
-      "id": "R1-07",
-      "text": "7. Reconcile the statistical test for the co-culture experiment. The Methods say two-way ANOVA; the Figure 7 legend says Student's t-test. State the single correct test and report all assumptions checked.",
-      "source_reviewer": "clarity",
-      "blocking": false
-    },
-    {
-      "id": "R1-08",
-      "text": "8. Correct the two SNARE citations. Kumar et al. 2018 and Matsui et al. 2018 are both STX17 papers; they do not support the STX3/STX7 claims. Replace with sources that actually establish STX3 as a secretory SNARE and STX7 as a degradative-autophagy SNARE, or reattribute.",
-      "source_reviewer": "literature",
-      "blocking": false
-    },
-    {
-      "id": "R1-09",
-      "text": "9. Fix the citation of Mirdha 2024 and Budvytyte & Valincius 2023. Neither is about EVs; both are about lipid-membrane interactions. Cite EV-specific aggregation studies instead, or requalify the framing to 'lipid membranes influence Aβ aggregation' (distinct from EVs). Acknowledge that Halipi et al. 2024 reports the opposite direction (EVs slow aggregation).",
-      "source_reviewer": "literature",
-      "blocking": false
-    },
-    {
-      "id": "R1-10",
-      "text": "10. Add MLV/fibril frequency counts to the cryo-TEM comparison. Report the number of vesicles with MLVs or fibrils per total vesicles examined for each genotype, with confidence intervals.",
+      "text": "Add 2–3 fully independent, interleaved differentiation batches per genotype for the EV proteomics comparison, process them blind, and report the number of biological replicates; aggregate statistical analysis to the organoid/batch level (the number of batches, not the number of injections), and re-report the differential protein lists (170/184) and all fold-changes/p-values on this basis. If this is not feasible, explicitly demote the differential-proteomics and EV-count claims from findings to candidate observations.",
       "source_reviewer": "methodology",
       "blocking": false
     },
     {
-      "id": "R1-11",
-      "text": "11. Provide vendor/catalog/clone/RRID for the three IHC primary antibodies (Aβ XP, AT8, MAP2) in Methods 2.16.",
-      "source_reviewer": "",
+      "id": "R1-02",
+      "text": "Add the decisive controls to the co-culture experiment to establish that the Aco-650 signal in WT organoids is vesicle-mediated transfer rather than free-dye diffusion or soluble-factor effects: (a) an EV-depleted AD conditioned-medium control added to a naive WT organoid, (b) a transwell insert that allows soluble factors but blocks vesicles, and (c) a dye-only (no-organoid) washout control showing the dye is fully removed post-rinse. Report the Aco-650 concentration in the medium at day 0/1/4/7.",
+      "source_reviewer": "methodology",
       "blocking": false
     },
     {
-      "id": "R1-12",
-      "text": "12. Pin the analysis code to a versioned commit or archived DOI, and supply the exact Uniprot FASTA accession/version and DIA-NN library-generation parameters so the search is reproducible.",
+      "id": "R1-03",
+      "text": "Reconcile the abstract with the body text: remove or qualify 'wider size distribution' (contradicted by the authors' own 'not significantly different' and by vFC showing identical medians) and 'differential expression of tetraspanins CD63, CD9, CD81' (contradicted by 'phenotypically similar' and TS at/below the LOD). Scale the 'non-cell-autonomous spread of amyloid-containing EVs' claim to 'transfer of endosomal material and amyloid-associated signal,' explicitly flagging the templating interpretation as unproven.",
+      "source_reviewer": "novelty",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "For the co-culture Aβ quantification, state the number of independent organoids per condition, report the Arivis 'Simple Threshold' value used, and re-analyze with organoid as the independent unit (e.g., mixed-effects model or aggregation to organoid level) rather than treating images as the experimental unit.",
       "source_reviewer": "reproducibility",
       "blocking": false
     },
     {
-      "id": "R1-13",
-      "text": "13. Report the number of independent organoids (not images) that contributed to each condition in the co-culture quantification, and re-analyse with organoid as the unit.",
-      "source_reviewer": "data_analysis",
+      "id": "R1-05",
+      "text": "Quantify the frequency of multilamellar vesicles and fibril-containing vesicles per genotype from the cryo-TEM data (report total micrographs per genotype, not just 'positive' ones), and either molecularly identify the fibrillar material (immunogold or targeted proteomics) or explicitly state that its identity is unconfirmed.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
-      "id": "R1-14",
-      "text": "14. State an explicit competing-interest declaration covering all authors, not only J.W.K. and S.A.L.",
+      "id": "R1-06",
+      "text": "Deposit the cryo-EM movies/micrographs in an accessible repository (EMPIAR accession) and state the classification criteria for 'fibril' vs artifact; state the final volume of the concentrated EV sample after the 10K MWCO spin column and the overall concentration factor from the 120 mL conditioned media so the reported EV concentrations can be reproduced.",
+      "source_reviewer": "reproducibility",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "Add a statement in Methods or Acknowledgements covering (a) informed consent/IRB approval for the original donor-derived hiPSC derivation and (b) that the present reuse/EV study falls within the scope of that consent or an IRB 'not human subjects research' determination by the receiving institution, citing the relevant protocol/MTA identifier.",
       "source_reviewer": "ethics",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "Add biological negative controls for the ThT/AmyTracker signal (e.g., EVs from a non-AD or non-neuronal source, and RNase A/proteinase K digest controls to exclude RNA or non-amyloid hydrophobic aggregates), and report the n and error bars for the ThT assay.",
+      "source_reviewer": "methodology",
       "blocking": false
     }
   ],
-  "minor_suggestions": [],
+  "minor_suggestions": [
+    "Add a positive control (an EV preparation known to express CD63/CD9/CD81) to the tetraspanin immunoprecipitation workflow to exclude the null that the capture did not work, particularly for the tau-negative result.",
+    "Normalize EV counts and concentrations to organoid number, mass, or cell count so the 2x EV difference can be attributed to the mutation rather than culture size.",
+    "Pin the GitHub analysis code with a commit hash or archived DOI, and deposit the custom Python scripts used for the cryo-TEM violin plots.",
+    "Complete the reference list entries that lack volume/page identifiers (e.g., Fowler 2025, Mao 2025, Forero 2024) and confirm the Jakhria 2014 attribution for the membrane-rupture claim.",
+    "Acknowledge the contradicting Halipi 2024 finding (EVs slow Aβ aggregation) in the sentence claiming EVs enhance aggregation propensity.",
+    "Define the arrow colors in the Figure 4 legend and state what the Aco-650 signal represents in the Figure 7 WT-organoid image."
+  ],
   "reviewer_reports": [
-    {
-      "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "novelty-1",
-          "text": "The contribution as stated — \"non-cell-autonomous spread of amyloid-containing EVs\" modeled in organoids — is not established by the evidence offered. The co-culture experiment (Fig. 7) shows Aco-650 endosomal-membrane transfer and increased intra-tissue Aβ puncta in WT organoids, but nothing distinguishes EV-mediated transfer from free Aβ, soluble oligomers, or other non-vesicular particles in the shared medium. The Aco-650 dye labels endosomes broadly, not EVs specifically, and the Aβ increase in WT organoids could equally arise from uptake of free Aβ42 secreted by the AD organoid (which the authors themselves show is abundant in the media). As a novelty claim, \"EV-mediated spread\" is the load-bearing part, and the experiment does not isolate it. What would settle it: an EV-depleted co-culture control (e.g., size-exclusion or ultracentrifugation of the AD-conditioned medium before co-culture), or a labeled-EV-only (not whole-organoid) transfer experiment. Without this, the claim should be demoted to \"membrane and Aβ transfer between co-cultured organoids,\" which is itself novel and sufficient."
-        },
-        {
-          "id": "novelty-2",
-          "text": "The \"novel extracellular biomarker signature of failed AEV biogenesis\" (RAB11/RAB8/STX3 without LC3 cargo) is a strong interpretive claim built on a single biological replicate. The proteomics is n=1 organoid pair with 3 technical replicates (Fig. 5, PCA in Supp. Fig. 4), and the signature rests on a handful of proteins, several below the stated FC≥2 threshold (RAB11B at 1.86-fold, adj. p=0.056; ATG5/ATG7 at ~1.1–1.3-fold). As a contribution, the signature is new, but its significance is overstated relative to the evidence base; it should be framed as hypothesis-generating pending a second biological replicate, or the claim scaled down."
-        },
-        {
-          "id": "novelty-3",
-          "text": "The \"first\" framing is implicit rather than explicit, which weakens the priority claim's auditability. The abstract claims \"a thorough characterization\" and \"divergent EV profiles\" without stating what is claimed as novel relative to Forero/Liu/Silver. Given that EV characterization of organoids is an active area (multiple 2024–2025 papers), the authors should state explicitly what is new (the isogenic AD comparison, the cryo-TEM morphology, the transfer experiment) so the delta is testable."
-        },
-        {
-          "id": "novelty-4",
-          "text": "The MLV/fibril observation is presented without acknowledging that MLVs were already reported in PD patient CSF EVs (Emelyanov et al. 2020) and tau filaments in AD brain EVs (Fowler et al. 2025), so the \"divergent morphology\" claim should position itself as an extension into organoids rather than a first observation of the phenomenon."
-        },
-        {
-          "id": "novelty-5",
-          "text": "The claim that AD EVs show \"low TS expression\" and thus are not predominantly MVB-derived is presented as a phenotype, but the vFC assay's TS detection limit (~38 ABC) means \"low\" may be an assay-floor artifact rather than a biological difference; this is partly methodology's call but it undercuts the biogenesis interpretation the authors draw."
-        },
-        {
-          "id": "novelty-6",
-          "text": "The tau-in-flow-through vs Aβ-in-eluate split (Fig. 2C/D) is used to infer distinct EV subpopulations, but the authors do not test whether tau is simply weakly bound to TS+ EVs and stripped during the IP wash; a wash-fraction analysis would separate these accounts."
-        },
-        {
-          "id": "novelty-7",
-          "text": "The ThT signal in both WT and AD EV isolates (Fig. 6A) is presented as amyloid evidence, but ThT also binds RNA and other polymers (Sugimoto et al. 2015, cited by the authors); the AmyTracker STED data partially addresses this, but the bulk ThT claim should be qualified."
-        },
-        {
-          "id": "novelty-8",
-          "text": "The co-culture Aβ quantification (Fig. 7D) is reported as a per-cell segment volume with n=27 vs n=49 images, but the number of independent organoids and biological replicates is not stated, which limits how much the transfer claim can be generalized."
-        }
-      ],
-      "questions": [
-        "In the co-culture experiment, was the AD-conditioned medium ever depleted of EVs before transfer, or was any non-vesicular Aβ control run, to test whether the WT Aβ increase requires intact EVs?",
-        "How many independent organoid differentiations (biological replicates) underlie the proteomics and the co-culture quantification, respectively?",
-        "For the Aco-650 transfer, is the dye confirmed to be EV-associated in the medium, or could it transfer as free dye or via non-EV particles?"
-      ]
-    },
-    {
-      "reviewer": "data_analysis",
-      "score": 2.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "data_analysis-1",
-          "text": "LOAD-BEARING — EV count difference (3.1e9 vs 1.6e9/mL, ~2×) rests on a single pooled 120 mL sample per genotype, with no biological replicates, no error bars, no test, and no n stated. The count is expressed per mL of concentrated media, a denominator that is itself one measured quantity per genotype, so the difference cannot be separated from batch or biological variability. Report the count with ≥3 independent organoid batches per genotype and a test on those, or the claim is unsupported."
-        },
-        {
-          "id": "data_analysis-2",
-          "text": "LOAD-BEARING — All proteomic significance (170/184 proteins; CD9 4.8×, RAB8A/B 2.2×/2.0×, LC3B 4.9×, etc.) is computed across three technical replicates of one pooled EV prep per genotype (methods: 'in technical triplicate'). The adj p-values therefore reflect measurement noise, not biological variability, and every 'significant' difference could be driven by batch effects between the two pooled preparations. The PCA (Supplementary Figure 4) shows 'dispersed clusters of replicates' — but those are technical replicates. Biological replication (independent organoid batches) is required before any of these differences can be attributed to genotype."
-        },
-        {
-          "id": "data_analysis-3",
-          "text": "LOAD-BEARING — The co-culture Aβ-puncta increase (Figure 7D) is tested with a Student's t-test on n=27 (WT+AD) vs n=49 (WT+WT) images, where images are pseudo-replicates (multiple images per organoid), the n per group is unequal, and 3 outliers were removed post-hoc by ROUT. State the number of independent organoids per condition, treat organoid (not image) as the unit, and report the analysis with and without the excluded outliers."
-        },
-        {
-          "id": "data_analysis-4",
-          "text": "The cryo-TEM size comparison treats 24 WT vs 65 AD individual EVs as independent observations (Mann-Whitney U), but EVs within one preparation are not independent; and 'not significantly different' is asserted from an unpowered sample, which cannot support a no-difference claim."
-        },
-        {
-          "id": "data_analysis-5",
-          "text": "The methods section states significance was assigned by two-way ANOVA, but the results (Figure 7D) report a Student's t-test; the stated thresholds are non-standard (** = p<0.005 rather than 0.01). Reconcile the stated and used tests."
-        },
-        {
-          "id": "data_analysis-6",
-          "text": "The ThT '~25× higher' signal is reported with no test, no n, and no definition of the error bars; three technical replicates of one prep per genotype cannot support a quantitative comparison."
-        },
-        {
-          "id": "data_analysis-7",
-          "text": "Several mechanism-supporting markers are discussed as evidence despite being non-significant or unreported (RAB11B adj p=0.056; ATG7 1.1-fold with no p; LC3A 'exclusively detected' in 3/3 vs 0/3 technical replicates). The 'failed AEV biogenesis' narrative is built on a pattern of individually marginal markers."
-        },
-        {
-          "id": "data_analysis-8",
-          "text": "The vFC TS expression is reported as 'at or below the LOD (~38 ABC)' — a floor value is being reported as a measurement; state the fraction of events above LOD rather than a mean at the detection limit."
-        }
-      ],
-      "questions": [
-        "How many independent organoid differentiation batches (biological replicates) were used for the vFC count, the proteomics, and the co-culture experiment, and how many organoids per batch?",
-        "For the co-culture quantification, how many independent organoids contributed to the 27 and 49 images, and is the t-test on image-level or organoid-level means?",
-        "Was the proteomics 'replicate' a technical injection of one pooled digest or a separate EV purification? If the latter, from how many independent batches?",
-        "What was the exact test and correction used for the volcano-plot hits, and were the individual-marker claims (RAB8A/B, STX3, LC3A/B) tested against the same corrected threshold or reported uncorrected?"
-      ]
-    },
     {
       "reviewer": "ethics",
       "score": 3.0,
@@ -190,32 +72,101 @@
       "weaknesses": [
         {
           "id": "ethics-1",
-          "text": "The co-culture experiment does not isolate EV-mediated transfer from soluble-factor transfer. The central claim of Figure 7 — that co-culturing AD with WT organoids transfers endosomal material and increases WT Aβ signal — rests on Aco-650 signal appearing in WT organoids and increased Aβ puncta. But the two organoids share the same medium, and Aco-650 is a membrane dye that can leak from the stained AD organoid into the medium and be taken up by the WT organoid; likewise, soluble Aβ secreted by the AD organoid can diffuse to the WT organoid. The \"several rinses\" do not exclude this. The same result would be produced by dye and Aβ diffusion alone, with no EV involvement. What would settle it: a control where a WT organoid is cultured in conditioned medium from an Aco-650-stained AD organoid without physical co-culture, or a dye-only spike control, alongside the current co-culture condition."
+          "text": "**Load-bearing claim 1 — human-derived cells used without an ethics/consent statement.** The entire study rests on hiPSC lines \"derived from a male donor\" (Section 2.1), obtained from the Tessier-Lavigne laboratory and the New York Stem Cell Foundation. No sentence states (a) the original derivation received informed consent / IRB approval of the donor, or (b) the present laboratory use was reviewed. Under the standard that silence is not compliance, the absence of any statement is a hard finding, not a shrug. The plain alternative explanation for the omission — the donors were consented at the NYSCF and the current work falls under standard cell-line reuse — may be true, but the reader cannot verify it, and the manuscript as written is not, on its face, in compliance. The one thing that would settle it: a statement in Methods or Acknowledgements explicitly noting informed consent for donor-sourced lines, naming the derivation body and giving evidence of the receiving site classification of this reuse. It is a one-paragraph amendment but a required one."
         },
         {
           "id": "ethics-2",
-          "text": "The morphological claim of multilamellar vesicles and luminal fibrils in AD EVs is descriptive, not quantitative, and the fibril identity is unverified. The evidence is cryo-TEM on 24 WT vs 65 AD EVs (Figure 4H), and the MLV difference is stated only as \"not as common\" in WT — no counting statistics are reported. The fibrillar material is not identified by immunogold or tomography, and the authors themselves concede it could be co-purifying contaminant rather than EV cargo. The claim that AD EVs contain amyloid fibrils therefore outruns the evidence, which shows fibrillar material in some micrographs of an EV-enriched fraction. What would settle it: MLV frequency quantified across all micrographs in both conditions, and immunogold labeling (e.g., against Aβ or tau) or cryo-ET to identify the fibrils."
-        },
-        {
-          "id": "ethics-3",
-          "text": "The ThT signal is interpreted as amyloid content without excluding non-amyloid binders. The ~25-fold ThT signal in EV isolates (Figure 6A) is attributed to amyloid, but the authors themselves cite that ThT binds RNA and other biological polymers, and the EV isolates are not shown to be free of such material. WT and AD EVs give equally high signal, so this is not disease-specific. What would settle it: a competition control with a known amyloid ligand, or loss of signal after proteinase treatment."
-        },
-        {
-          "id": "ethics-4",
-          "text": "No ethics approval or donor-consent statement for the human-derived iPSC lines. The lines are described as \"derived from a male donor\" and obtained from the New York Stem Cell Foundation, but the manuscript contains no statement of ethics approval for the original derivation or of donor consent for use. Silence is not compliance here; the approval and consent statement must be stated, even if the original derivation is covered by the cited Paquet et al. (2016) protocol. (HARD)"
-        },
-        {
-          "id": "ethics-5",
-          "text": "The competing-interest statement covers only J.W.K. and S.A.L.; there is no explicit sentence that the remaining authors declare no competing interests. (SOFT — request an explicit statement covering all authors.)"
-        },
-        {
-          "id": "ethics-6",
-          "text": "No clinical-trial, animal-research, or dual-use concerns arise from this work."
+          "text": "**Load-bearing claim — continuous scope of secondary use.** The organoid EV work goes beyond the original cell-line derivation: the cells are being used in organoid and a related protocol the donor likely never encountered, and the manuscript gives no material-transfer or biobank statement covering the ISCI lines. If the original repository consent is restricted, the research is conducted and the claimed de-identification and evidence disappears. The alternative (the original consent is broad or the reuse is covered by the NYSCF Material Distribution Agreement, which is common) also exists. A line must specify that the requisite scope of reuse is covered; before that, the entire model rests on the provenance of the cells. The change: confirm for the existing repository that the cell lines' use is in agreement with the MTA and donor; the word \"male donor\" is not anonymity for personal data — and this sentence gives a λεγmen."
         }
       ],
       "questions": [
-        "What ethics approval and donor-consent arrangements cover the derivation and use of the hiPSC lines, and can the authors cite the approval or protocol identifier?",
-        "Can the authors state explicitly that all co-authors not named in the competing-interest section declare no competing interests?"
+        "What is the explicit sentence at Methods (or its same level) that covers (a) the original donor consent for the hiPSC derivation and (b) that the current reuse/EV study falls under the scope of that consent or an IRB \"not human subjects research\" determination by the receiving institution?",
+        "Doyou have the protocol or MTA identifier from Tessier-Lavigne/NYSCF that documents the applicable informed-consent limits? (A simple citation to that protocol would resolve both of my stated claims.)"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "Pseudo-replication in the co-culture experiment. The claim that WT organoids co-cultured with AD organoids accumulate more intratissue Aβ (Figure 7C–D) rests on a Student's t-test over \"n = 27 images for WT+AD and n = 49 images for WT+WT\". Images are not the independent unit of analysis. If these images are drawn from one (or even a few) organoids per condition, the effective sample size is the number of organoids, not the number of images, and the p-value — whatever it is — is meaningless: standard errors are minimized by the number of tiles 27/49, not 2–4. The text never states how many independent organoids were co-cultured per condition, nor whether images were sampled randomly, staged, or selected for quality. A ROSOM with organoid as random effect, or an analysis aggregated to the organoid level, is what the comparison actually requires."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "vFC vesicle-count and size claims have no stated test and no independent replication. The report \"The AD organoid EV isolate contained more EVs compared to the WT organoid (~3.1 e9/mL vs 1.6 e9/mL)\" and the \"wider size distribution\" advance in the Abstract are not supported by any statistic in the text. Each value appears to come from a single EV isolate per genotype — one pooled 120 mL harvest per apS. That yields * n = 1 per condition, for which no inferential statement is possible. The size/count comparisons are thus descriptive figures, not findings, and should be either accompanied by at least 3–6 biologically independent EV preparations (collections separated in time, and compiled), or explicitly demoted from claims you made to observations. \"Very low levels of tetraspanin expression (~20 ABC per EV)\" is likewise a single estimate not subject to actual variant measurement."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The \"significant\" proteomics list has *n* = 1 biological sample per genotype. Deep profiling from a single AST/AD pooled conditioned-media harvest, run in \"technical triplicate\", produces 3848 proteins with 170 (WT)-upregulated and 184 (AD-upregulated) at FC ≥ 2 / adj p ≤ 0.05 — and a series of strongly errant candidate numbers e.g. RAB8A, FC 2.2, adj p = 0.030. The reported p-values and adj.p-value sequences measure protocol reproducibility between three injections of one biological mixture, not biological signal between genotypes. The multiple-comparison correction (MSstats dataProcess) is performed correctly, but correct science gating cannot rescue biological replication that is not recorded. Every differential-importclaim resting on these lists is over-stated to the precision the design supports; the experience is reframable: these are candidate distinguishing proteins — validate on three or more biological replicates are needed."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "ThT binding — \"25-fold higher than synthetic liposome control\" has no stated n, no error bars, and no test; numerically the signal is integer-level; flat line versus a fiber calibration is missing."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "He IP-ELISA \"Aβ42 — present at the highest level in the TS+ eluate\" has no stated n, no test, no input-size normalization — one trifecta of undefined statistics."
+        },
+        {
+          "id": "data_analysis-6",
+          "text": "We lower variance in the FT0 bar plot was not defined as \"SEM\" or \"SD\"; figure legends don't provide exact p-values, no CIs, at \"value > threshold (yet 4.3.2 'n = technical replicates' pre-defines the whole paper's level of replication as technical-ended)."
+        },
+        {
+          "id": "data_analysis-7",
+          "text": "L scalar \"elementary instrument-free\" image-based quantitative measure (copy the ROUT-detect outputs) — the size of the FDR on repeated-measures that would have been obtained by 4-difference shrinkage — neither the Αβ-threshold or the normalization coefficient (per cell) — for \"volume per cell\" as reported now established."
+        },
+        {
+          "id": "data_analysis-8",
+          "text": "The abstract's \"differential expression of tetraspanins CD63, CD9, CD81\" — is not supported even at the descriptive level of §3.2, which says the populations were \"phenotypically similar\" and showed \"very low TE\". This is not a question; it is a direct contradiction."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The fibrillar-material claim rests on cryo-EM micrographs that are not deposited. The central structural finding — AD organoid EVs contain \"luminal fiber-like structures\" and \"fibrils with amyloid-like twists, resembling PHF-type tau\" (Figure 4I) — is a visual identification. The micrographs are not deposited in EMPIAR or any accessible repository, and the data availability statement gates \"all other data\" behind \"reasonable request,\" which is not availability. An independent group cannot verify the fibril identification or distinguish it from membrane fragments or staining artifacts. The fix: deposit the cryo-EM movies/micrographs with an EMPIAR accession and state the classification criteria for \"fibril\" vs. artifact."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "The reported EV concentrations are not reproducible because the final concentration factor is unspecified. The vFC reports \"~3.1 e9 EVs/mL in the concentrated media compared to 1.6 e9/mL for the WT\" (Figure 3), but the protocol says the 2 mL SEC eluate was concentrated \"until the desired volume was reached\" — the final volume, and hence the concentration factor from the 120 mL conditioned media, is not given. The reported per-mL concentrations cannot be reproduced or compared back to the original media. The fix: state the final volume and the overall concentration factor."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "The co-culture Aβ quantification cannot be rerun without the threshold value and biological n. The Aβ puncta analysis uses \"Simple Threshold analysis operator\" with no threshold value given, and the n=27 (WT+AD) / n=49 (WT+WT) images are not tied to a stated number of independent organoids per condition. The threshold directly determines the segment volume, so the reported increase in WT+AD cannot be reproduced. The fix: report the threshold value and the number of organoids per condition."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "The GitHub analysis code has no commit/tag or archived DOI, so the exact analyzed version is not pinned (SOFT)."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "The custom Python scripts for the cryo-TEM violin plots are not deposited (SOFT)."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "I could not verify that the PRIDE accession PXD076102 resolves; the format is correct but the link is unverified."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "The ThT assay compares 20 µg of EV protein against 2.5e6 liposomes without matching vesicle number or lipid content — a design-adequacy issue for methodology."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "The co-culture transfer claim lacks a transwell or EV-depleted-media control to distinguish EV-mediated transfer from free dye/Aβ in the media — a design-adequacy issue for methodology."
+        }
+      ],
+      "questions": [
+        "What is the final volume of the concentrated EV sample after the 10K MWCO spin column, and the overall concentration factor from the 120 mL conditioned media?",
+        "Are the cryo-EM micrographs deposited (EMPIAR accession)? If not, can they be made available?",
+        "What threshold value was used in the Arivis \"Simple Threshold\" operator, and how many independent organoids contributed to the n=27 and n=49 images?",
+        "Does the GitHub repository have a tagged release or commit hash?"
       ]
     },
     {
@@ -225,123 +176,110 @@
       "weaknesses": [
         {
           "id": "methodology-1",
-          "text": "The co-culture experiment does not establish EV-mediated transfer (HARD). The claim that 'endosomal membrane transfer' and increased Abeta in WT organoids result from EV-mediated spread is not earned by the design. Aco-650 is a lipophilic membrane-intercalating dye; nothing in the design excludes the possibility that dye leaches from the stained AD organoid into the media and is taken up directly by the WT organoid, or that the increased Abeta XP signal reflects the WT organoid upregulating endogenous Abeta production in response to co-culture stress rather than receiving transferred Abeta. The WT+WT co-culture controls for co-culture stress generally, but not for free-dye transfer or for Abeta transfer versus induction. A transwell co-culture (physical separation, shared media) or a conditioned-media control would distinguish EV-mediated transfer from free-dye/diffusible-factor transfer. Additionally, the Abeta quantification ('cumulative Abeta XP segment volume per cell') is not described as blinded; the segmentation threshold and nuclei normalization are subjective steps that should be performed blind to condition."
+          "text": "Load-bearing — HARD: the co-culture/\"non-cell-autonomous\" claim. The abstract concludes \"and there is evidence of endosomal membrane transfer between isogenic cultures with an increase of Aβ peptides in the WT organoids.\" The design supports the conclusion only if the fluorescent signal that appears in the WT is actually transferred intracon membra — but the Aco-650 stained AD organoid was merely \"rinsed several times\" and then co-cultured for 7 days. With no evidence that free dye is fully removed from the well, the fluorescent signal observed in the WT could be dye diffused out (from dead/leaky cells), not vesicle-bound, and taken up directly by WT cells. The claim about the Aβ increase in WT is similarly under-separated: soluble factors, inflammatory mediators, and/or cell stress in the shared well are all plausible causes; the design that would separate EV-mediated transfer from release — passaged AD conditioned medium with EVs vs. EV-depleted AD medium vs. a transwell insert — is not present. What would settle it: (1) a condition in which attempt-confirmed 'no-organoid' or filtered stained-AD medium is added to a naive WT organoid; (2) a transwell that allows soluble factors but the vesicles; /3) an added dye-only control to show the washout kinetics. The second issue is sampling: the quantification reports 27 vs 49 images (z-stacks in the tile), but the number of independent co-culture w characters and the treatment of images as the experimental unit are not disclosed. If 27/49 images came, for instance, from one co-culture, the test is pseudo-replication."
         },
         {
           "id": "methodology-2",
-          "text": "The AD-specific EV morphology claim rests on unequal sampling (HARD). The cryo-TEM comparison examined 24 WT EVs versus 65 AD EVs. The claim that multilamellar vesicles and luminal fibrils are AD-specific features is not supported when the WT sample is less than half the size of the AD sample — absence in WT could be sampling. The authors themselves note the size difference 'trended towards a wider, though not significantly different' distribution, which is honest, but the MLV and fibril claims are stated as divergent features without the same hedge. The free-floating fibrils 'co-purified with the AD EVs' could be purification contamination rather than EV cargo, which the authors acknowledge but do not resolve. Reporting the fibril/MLV frequency per vesicle examined, with confidence intervals, would address whether the difference is real."
+          "text": "Load-bearing — H2: the EV proteomic differences. The comparison WT vs AD EVs is derived from one prep (pooled above one differentiation batch), analyzed in technical triplicate. Technical NMR of the same peptide digest cannot address the covariate of biological variability — the batch effects of the differentiation procedure and genotype are now intertwined. The stated claims (Chapter 5's \"significant differences\", \"secretory autophagy\" protein set) need a design where two to three fully independent, interleaved batches per genotype are processed blind, and the \"n\" of statistical analysis is the number of batches, not the number of injections. Without this, the 170/184 significant proteins cannot be attributed to M146V."
         },
         {
           "id": "methodology-3",
-          "text": "The secretory autophagy inference outruns the evidence (HARD). The claim that AD EVs reveal 'failed AEV biogenesis' with 'the defect lies upstream of amphisome formation, most likely at the level of autophagosome biogenesis via ATG5/ATG7' is a strong causal inference about intracellular autophagy status drawn from extracellular vesicle cargo. EV content reflects what is secreted, not necessarily the intracellular state of the secreting cell — reduced LC3 in EVs could reflect reduced secretion of LC3-bearing vesicles, altered packaging, or differential EV subpopulation proportions, none of which establish an intracellular autophagosome biogenesis defect. The authors have organoid lysates available (used for Western blots in Figure 2A); direct measurement of ATG5/ATG7 and LC3 in the lysates would test the intracellular claim. As stated, the design cannot distinguish 'autophagy is impaired' from 'autophagy is normal but its EV packaging is altered.'"
+          "text": "Load-bearing — H3: \"fibrillar material\" in EVs. The abstract records \"AD-deficient EVs display luminal fibrillar material,\" but the cryo-EM evidence as reported is: fibrillar in vesicle lumen sections, \"often nearby vesicles or in dense clumps,\" and partly co-purified. If it's adjacent/freely-floating tissue, it is not shown to be luminal; and in the absence of immunolabeling (or a cryo-ET tomography plane through the vesicle), fibrillar morphology alone doesn't establish one protein composition. The fact that WT and AD differences are illustrated with 65 AUC-positive micrographs vs 17 WT—without a per-genotype count of total EVs, the proportion with loose fibrils — only one-quarter. Provide a per-vesicle quantitation and a labeled FIBRIL protein element; otherwise, the distinct claim is not evidenced."
         },
         {
           "id": "methodology-4",
-          "text": "EV counts are not normalized to cell number or viability. The vFC finding that AD media contains ~2x more EVs than WT could reflect more dying cells in AD organoids (the authors themselves interpret reduced L1CAM as 'indicative of early neuronal cell death') rather than a disease-specific EV secretion phenotype. Normalizing EV counts to organoid cell number, protein content, or a viability measure would address this."
+          "text": "The abstract's \"differential expression of tetraspanins\" is at odds with the body text stating that WT and AD are \"phenotypically similar\" — an internal inconsistency; one of the two statements should be changed or shown with precise fluorescence quantified."
         },
         {
           "id": "methodology-5",
-          "text": "Batch effects are not addressed. The methods state conditioned media was pooled 'from the same differentiation batch' (Figure 1 legend), but it is unclear whether WT and AD organoids were from matched batches. If WT and AD EVs come from different differentiation runs, batch effects could confound every comparative measurement. The authors should state whether WT and AD organoids were differentiated in parallel and whether EV isolations were interleaved."
+          "text": "The \"flat / similar\" conclusion from the vesicle flow cytometer relies on `TS` events at or below the antibody binding capacity (ABC) LOD — measuring at the instrument's detection floor can only show \"≥\", not equivalence, so \"phenotypically similar\" is unjustified."
         },
         {
           "id": "methodology-6",
-          "text": "The TS expression comparison operates at the measurement floor. The text reports 'very low levels of tetraspanin expression (>20 ABC per EV)' while the LOD is ~38 ABC per vesicle — the measured values are below the detection limit. The claim that AD and WT EVs are 'phenotypically similar' in TS expression is therefore a claim that both are undetectable, not that they are similar. This should be stated as such."
+          "text": "In the tetraspin IP experiment, there is a negative bead arm (TS−) but no positive single concentration (i.e., an EV preparation known to express CD63/CD9/CD81 processed through the same workflow); without it, a plausible null (\"the capture didn't work\") is not excluded — particularly for the tau-negative result (tau was in the flow-through)."
         },
         {
           "id": "methodology-7",
-          "text": "The ThT assay lacks a protein-matched negative control. The Lipo100 control is a reasonable membrane control, but the ~25x signal could reflect EV protein content (ThT binds RNA and other biological polymers) rather than amyloid specifically. The HMW protein fraction is shown in Figure 6A but the comparison to it is not discussed; if the HMW fraction also shows elevated ThT signal, the amyloid specificity claim weakens."
+          "text": "The ThT \"EVNAMS\" assay compares only to liposomes rather than to a biochemically matched EVs able whose protein/RNA are digested (RNase A, proteinase K): since ThT binds RNA and other non‑amyloid hydrophobic aggregates, the signal cannot be called \"amyloid in EV\" without these digest controls per vesicle."
         },
         {
           "id": "methodology-8",
-          "text": "The AmyTracker STED FWHM measurement uses one representative punctum per condition. The size estimate from a single punctum does not establish the size distribution of amyloid-positive vesicles."
+          "text": "The tissue/confocal \"amyloid in WT\" quant is described only as \"segmented nuclei + Aβ signal\" — no descriptions of how WT vs AD cells were distinguished in the same well, or from when cell lines were preshopped, and no blinding of region selection; which matters in the multiple-extracondition."
         }
       ],
       "questions": [
-        "Were WT and AD organoids differentiated in parallel, and were EV isolations from the two genotypes interleaved or run in separate batches?",
-        "In the co-culture experiment, was the Abeta XP quantification performed blind to condition, and was the segmentation threshold fixed a priori?",
-        "What is the EV count per organoid (or per cell) rather than per mL of concentrated media, and how does viability compare between WT and AD organoids at the time of media collection?",
-        "Does the HMW protein fraction from the SEC column show elevated ThT signal comparable to the EV isolate?"
+        "What is the level of Aco-650 (or free dye) in the culture medium immediately post-rinse and at day 1/4/7 — and how would you distinguish that pooled \"dye in solution\" from vesicle-bound dye being taken up by the WT?",
+        "How many independent co-cultures were performed per condition, and how were cell traces for analysis assigned to WT versus AD organoid identity after clearing/immunostaining (which organoids in the analysis, if the cell Tracker signal was used)?",
+        "Of triple MS injections — are these (y) the three same sample, and how many separate differentiations, were evaluated (by genotype) to independently replicate the protein fold changes in Figure 5A?",
+        "In the cryo-EM micrographs counted, how many total micrographs (rather than \"positive\" ones) are present per genotype — and how many micrographs with fibrillar material adjacent to/hiding in vesicles, i.e., inside the vesicle lumen?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "The 'non-cell-autonomous spread of amyloid' claim outruns the evidence: the co-culture experiment shows (a) the transfer of Aco-650 endosomal label from AD to WT organ acts and (b) increased amyloid signal in co-cultured WT organ acts, but neither establishes spread of pathology — the Aco-650 transfer shows membrane/endosome transfer, not that the transferred material is amyloid-bearing, and the increased signal in WT could reflect uptake of amyloid monomer/oligomer rather than templated aggregation. The claim of 'modeling non-cell-autonomous spread of amyloid-containing EVs' should be scaled to 'transfer of endosomal material and amyloid-associated signal,' with the templating interpretation explicitly flagged as unproven."
+        },
+        {
+          "id": "novelty-2",
+          "text": "The 'divergent EV profiles' claim rests partly on a comparison that may not isolate genotype: quantification of EV count and size distribution is not normalized to cell number or organoid mass, so the 2x difference may reflect more cells or more secretion rather than the mutation itself."
+        },
+        {
+          "id": "novelty-3",
+          "text": "The fibrillar material in AD EVs is not molecularly identified — no immunogold, cryo-ET, or proteomic confirmation identifies it as tau, amyloid, or anything else; molecular identification would strengthen the novel claim."
+        }
+      ],
+      "questions": [
+        "Were EV counts and concentrations normalized to organoid number, mass, or cell count, and if not, can the 2x EV concentration difference (3.1 vs 1.6 e9/mL) be attributed to the mutation rather than culture size?",
+        "Can the luminal fibrils in AD EVs be identified (immunogold or targeted proteomics), and do they co-localize with the transferred Aco-650 signal in co-cultured WT organoids?",
+        "What is the biological negative control for the ThT/AmyTracker signal — do EVs from a non-AD or non-neuronal source show comparable binding?"
       ]
     },
     {
       "reviewer": "rigor",
-      "score": 3.0,
+      "score": 2.0,
       "confidence": 4.0,
       "weaknesses": [
         {
           "id": "rigor-1",
-          "text": "HARD — the co-culture experiment does not support EV-mediated transfer. The abstract's closing claim ('non-cell-autonomous spread of amyloid-containing EVs in human AD brains can be modeled') and the section heading 'EVs can transfer from AD to WT organoids' rest on two observations: Aco-650 fluorescence appearing in WT organoids, and increased Aβ XP puncta in WT+AD co-cultures. Aco-650 is a small-molecule fluorogenic dye, not an EV marker; free dye released into the shared medium (or from dying cells) would be taken up by WT cells and produce the identical result. Likewise, the increased WT Aβ signal could be endogenous upregulation driven by any secreted factor or co-culture stress in the shared medium, not transferred Aβ. Nothing in the design distinguishes EV-mediated transfer from soluble-factor or free-dye transfer. A transwell that permits soluble factors but blocks vesicle contact, or an EV-depleted medium control, would isolate the vector; a species- or label-specific Aβ tracer would distinguish transferred from induced material. As worded, this is the paper's central claim and it is not established."
+          "text": "HARD — Title/abstract: 'AD organoid-derived EVs have a wider size distribution' is contradicted by the authors' own text: 'they trended towards a wider, though not significantly different, size distribution' (Fig 4H). The abstract states as fact what the Results report as a non-significant trend."
         },
         {
           "id": "rigor-2",
-          "text": "HARD — the abstract states as fact what the Results report as non-significant or below-detection. 'EVs purified from AD organoid conditioned media have a wider size distribution' contradicts Results 3.3 ('trended towards a wider, though not significantly different, size distribution'; n=24 vs 65) and vFC, which found similar sizes. 'Differential expression of tetraspanins CD63, CD9, and CD81' contradicts the vFC finding that WT and AD EVs were 'phenotypically similar, exhibiting very low levels of tetraspanin expression (>20 ABC per EV)' at or below the limit of detection; proteomics shows CD9 up but not CD63/CD81. Both abstract sentences should be requalified to match the body."
+          "text": "HARD — Abstract: 'After a 1-week co-culture of AD organoids with WT organoids, there is evidence of endosomal membrane transfer between the isogenic cultures with an increase in amyloid-β peptides in the WT organoids.' The Aco-650 signal in WT organoids is not established as transferred endosomes: the dye is a small fluorophore that can be released from the stained AD organoid, diffuse through shared media, and be taken up by the WT organoid independently of any vesicle. The authors' own design (shared well, full media changes) cannot exclude this. The A-beta increase is correlational and not tied to the dye transfer."
         },
         {
           "id": "rigor-3",
-          "text": "SOFT — the abstract converts immunostaining into peptide quantification: 'an increase in amyloid-β peptides in the WT organoids' is actually an increase in Aβ XP immunoreactive puncta ('cumulative Aβ XP segment volume per cell'), which is not a peptide measurement and could reflect aggregate or cross-reactive signal."
+          "text": "HARD — Abstract: 'These observations support the notion that non-cell-autonomous spread of amyloid-containing EVs in human AD brains can be modeled in a cerebral organoid system.' The co-culture experiment never demonstrates that A-beta moved inside EVs; it shows a dye signal and an A-beta increase in the same well. The claim that this models EV-mediated spread is not supported by the evidence presented."
         },
         {
           "id": "rigor-4",
-          "text": "SOFT — the Discussion's secretory-autophagy mechanism ('the defect lies upstream of amphisome formation, most likely at the level of autophagosome biogenesis via ATG5/ATG7'; 'aberrantly packaged into conventional CD9-enriched exosomes') is a causal narrative inferred from co-occurring protein abundances in a correlational proteomics comparison, with no functional test. The abstract's 'evidence for modifications' is appropriately hedged; the Discussion is not."
+          "text": "SOFT — 'EVs purified from AD organoid conditioned media have a wider size distribution' (abstract) also conflicts with the vFC data (Fig 3), which reports similar size ranges for WT and AD (~85–270 nm, median 124 nm for both). The wider-distribution claim rests on the cryo-TEM subset (24 vs 65 EVs), a small and possibly biased sample, and is not corroborated by the flow cytometry."
         },
         {
           "id": "rigor-5",
-          "text": "SOFT — the abstract's generalization from a single isogenic donor line (one male donor, one mutation) to 'human AD brains' is unhedged; the single genetic background is acknowledged in Methods but not near the claim."
+          "text": "SOFT — The claim that AD EVs 'show differential expression of tetraspanins CD63, CD9, and CD81' (abstract) is not supported by the vFC data, which report TS expression at or below the limit of detection for both genotypes; the differential expression rests on the proteomics (CD9 up in AD), not on the flow cytometry, and the abstract does not distinguish these."
         },
         {
           "id": "rigor-6",
-          "text": "SOFT — the luminal fibrils are described as 'resembling PHF-type tau,' but the authors themselves note 2D class averaging yielded no identifiable features; the amyloid identity of the fibrils is not established, and the ThT signal (which binds RNA, as acknowledged) does not independently confirm it."
+          "text": "SOFT — The multilamellar-vesicle claim ('AD organoid-derived EVs can have single, double, and even triple membranes') is based on a small cryo-TEM subset (63 AD micrographs positive for vesicles) without quantification of the frequency of multilamellar forms in each genotype; 'can have' is defensible but the implied divergence is not quantified."
         },
         {
           "id": "rigor-7",
-          "text": "Pseudoreplication: the co-culture Aβ quantification uses images (n=27 WT+AD, n=49 WT+WT) as the unit of analysis rather than independent organoids; multiple images per organoid inflate n. Attribute to the data-analysis reviewer."
+          "text": "SOFT — The fibrillar material in AD EVs is described as 'amyloid-like' and 'resembling PHF-type tau' in the body, but the abstract's 'luminal fibrillar material' is presented without the caveat that its identity is unconfirmed; the authors themselves note immunogold and cryo-ET are needed."
+        },
+        {
+          "id": "rigor-8",
+          "text": "SOFT — The claim that 'EVs can transfer from AD to WT organoids' (section heading) overstates the evidence, which shows dye co-localization and an A-beta increase, not demonstrated vesicle transfer."
         }
       ],
       "questions": [
-        "What control distinguishes EV-mediated transfer of Aco-650 from free-dye or soluble-factor transfer — e.g., a transwell insert, or co-culture with EV-depleted conditioned medium?",
-        "Can you show the increased WT Aβ signal is transferred material rather than induced endogenous production, e.g., with a labeled Aβ tracer or species-specific detection?",
-        "Please report the size-distribution comparison with its p-value and the TS ABC values for both genotypes, since the abstract presents these as established differences the body reports as non-significant or below LOD."
-      ]
-    },
-    {
-      "reviewer": "reproducibility",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "reproducibility-1",
-          "text": "LOAD-BEARING — Proteomic signature (the 170/184 differentially abundant proteins and the 'failed AEV biogenesis' autophagy argument): the data is deposited, but the search was run against a 'predicted Homo sapiens library containing 20,405 reviewed sequences (downloaded from Uniprot: 22 Oct 2024)' — a DIA-NN predicted library is generated from a FASTA, and neither the FASTA accession/version nor the library-generation parameters are given, so the exact search space cannot be reproduced. The analysis code is at a GitHub URL with no commit/tag or archived DOI, so the exact version that produced the results is not pinned. Both are HARD for rerunning this analysis; the data deposit is the strength, the code/library specification is the gap."
-        },
-        {
-          "id": "reproducibility-2",
-          "text": "LOAD-BEARING — Co-culture transfer and increased intratissue Aβ in WT (Fig 7): the quantification rests on Arivis image analysis (Cellpose nucleus model, Simple Threshold operator, ROUT outlier removal), but the threshold and segmentation parameters are not specified, the raw images are not deposited ('available on reasonable request'), and the n=27 vs n=49 are image counts with no stated number of independent organoids/replicates, so the unit of replication is unclear. Without the threshold settings and raw data, the 'significant increase in Aβ XP segment volume per cell' cannot be reproduced or independently verified. I could not inspect the figures."
-        },
-        {
-          "id": "reproducibility-3",
-          "text": "LOAD-BEARING — Cryo-TEM morphology (MLVs and luminal fibrils in AD EVs, Fig 4): the fibril identification is qualitative manual inspection, the authors state '2D class averaging did not yield identifiable features,' and the micrographs are not deposited. The claim that AD EVs contain fibrillar material 'resembling PHF-type tau' is a key structural finding that I cannot verify from the text and whose raw data is on-request."
-        },
-        {
-          "id": "reproducibility-4",
-          "text": "The organoid differentiation protocol is 'performed in accordance with a previously established protocol (Labra et al. 2026)'; that reference appears to be in press/2026, so if it is not yet published or deposited, the core culture procedure is not resolvable to an independent group."
-        },
-        {
-          "id": "reproducibility-5",
-          "text": "No computational environment is captured (no conda env, lockfile, or container) for the R/DIA-NN analysis, and no random-seed or seed-averaging statement is given for the stochastic steps (DIA-NN search, Cellpose segmentation)."
-        },
-        {
-          "id": "reproducibility-6",
-          "text": "The vFC EV-count comparison (3.1e9 vs 1.6e9 EVs/mL) is reported as a single measurement per condition with no replicate count stated, so its reproducibility cannot be assessed."
-        },
-        {
-          "id": "reproducibility-7",
-          "text": "The STED FWHM vesicle-size estimate is derived from a single representative punctum per condition with no replicate statistics."
-        }
-      ],
-      "questions": [
-        "Can you provide the Uniprot FASTA accession/version and the DIA-NN library-generation parameters, and pin the analysis code to a commit/tag or archived DOI?",
-        "What are the exact Arivis Simple Threshold and Cellpose segmentation parameters, how many independent organoids (not images) underlie each co-culture condition, and can the raw images be deposited?",
-        "Is the Labra et al. 2026 protocol currently published or deposited anywhere an independent group can access it now?",
-        "Can the cryo-TEM micrographs supporting the MLV/fibril claim be deposited, and what explicit criteria were used to classify a structure as a fibril?"
+        "Can you report the Aco-650 signal in WT organoids from a control where the dye is added to media without an AD organoid, and from a transwell/separate-well design that prevents direct contact while sharing conditioned media — to distinguish vesicle-mediated transfer from free-dye diffusion?",
+        "Can you quantify the frequency of multilamellar vesicles and fibril-containing vesicles per genotype from the cryo-TEM data, rather than presenting representative micrographs?",
+        "Can you reconcile the abstract's 'wider size distribution' claim with the vFC data showing similar size ranges for WT and AD, and with the non-significant cryo-TEM trend?"
       ]
     },
     {
@@ -351,90 +289,79 @@
       "weaknesses": [
         {
           "id": "clarity-1",
-          "text": "The abstract's central claim about size contradicts the results. Abstract: 'EVs purified from AD organoid conditioned media have a wider size distribution'; Results 3.3: 'they trended towards a wider, though not significantly different, size distribution.' A reader cannot tell whether the paper claims a real size difference or not, and the vFC data (3.2) report 'similar' sizes. State the actual finding (and its significance) in the abstract."
+          "text": "The central claim that co-culturing WT with AD organoids transfers endosomal material and increases intratissue A-beta signal in WT is not fully supported by the text: the Aco-650 transfer is shown in a live-cell image (Figure 7B) but the text does not state how the transfer was quantified or whether the Aco-650 signal in WT was distinguished from background or from the WT organoid's own endosomes. The claim that 'Aco-650 signal was present in the WT organoids' is stated without a control showing that the dye does not leak or transfer via media exchange."
         },
         {
           "id": "clarity-2",
-          "text": "The key morphological finding — fibrils and multilamellar vesicles in AD EVs — is cited to the wrong panels. Discussion 4.3: 'structures with fibril morphology were present within or around the larger AD EVs, whereas no comparable material was detected in WT isolates (Figure 4G)' — but Figure 4G is the WT micrographs; the AD fibrils are in Figure 4I. The same error appears in 4.3 ('more MLVs... (Figure 4G and I)'). A reader trying to verify the paper's most striking image cannot find it."
+          "text": "The quantitative claim in the Results that AD organoid media contained 'about twice as many EVs' as WT is not tied to a specific number in the text; the vFC data are presented as ranges and medians but the exact EV counts per mL are not given in the main text, making the 'twice as many' claim unverifiable from the text alone."
         },
         {
           "id": "clarity-3",
-          "text": "Tetraspanin expression is reported with two irreconcilable numbers and a wrong inequality. Results 3.2: 'very low levels of tetraspanin expression (>20 ABC per EV)' — the '>' contradicts 'very low' and should be '<'; Discussion 4.2 gives 'at or below the LOD of ~38 antibody molecules per vesicle.' 20 and 38 cannot both be the reported value."
+          "text": "The statement that 'AD organoid-derived EVs can have single, double, and even triple membranes' (Abstract) is supported by cryo-EM images, but the text does not quantify how many of the 65 AD EVs were multilamellar versus the 24 WT EVs, so the reader cannot judge whether this is a robust difference or a few striking examples."
         },
         {
           "id": "clarity-4",
-          "text": "The statistical test for the co-culture result is contradictory: Methods 2.18 says 'two-way ANOVA analysis using Prism's default parameters,' while the Figure 7D legend says 'Statistical significance was assessed via student's t test.' The reader cannot determine which test produced the reported p-value."
+          "text": "The proteomics section reports fold-changes and adjusted p-values for several proteins but does not state the number of biological replicates (only technical triplicates are mentioned), so the reader cannot assess whether the statistical comparisons are adequately powered."
         },
         {
           "id": "clarity-5",
-          "text": "A non-significant result is presented as evidence without flagging it: Discussion 4.3 states RAB11B enrichment 'indicating intact and upregulated amphisome formation' citing 'adj.p = 0.056,' which is above the manuscript's own stated threshold (adj p ≤ 0.05). The interpretation should be labeled as a trend, not a finding."
+          "text": "The figure legends are incomplete: Figure 4 legend does not define the color of the arrows (blue for multilamellar, red for fibrils is stated in the text but not in the legend), and Figure 7 legend does not define what the Aco-650 signal represents in the WT organoid image."
         },
         {
           "id": "clarity-6",
-          "text": "Section 3.6 cites 'Figure 2C' as a size measurement ('consistent with the size of EVs measured in the vFC and Cryo-TEM data (Figure 2C, Figure 4H...)'); Figure 2C is the Aβ42 ELISA, not a size plot — the vFC size data are in Figure 3."
-        },
-        {
-          "id": "clarity-7",
-          "text": "Section 3.2 references 'Figure 3D-E' for AD EVs, but the legend defines panels A–F (size in D, TS in E–F); the reference should be 3D–F."
-        },
-        {
-          "id": "clarity-8",
-          "text": "Typo: 'FWHK measurement' (Section 3.6) should be FWHM; and the STED size estimate rests on 'a representative punctum' (singular) per condition, so the reader cannot tell how many puncta the FWHM figure is based on."
-        },
-        {
-          "id": "clarity-9",
-          "text": "Terminology is not consistent: the same material is called 'EV isolate,' 'EV-enriched samples,' and 'EV purification samples,' and the SEC fraction is 'HMW protein sample' in Methods but 'High MW Protein sample' in the Figure 4 legend — friction that slows cross-referencing."
-        },
-        {
-          "id": "clarity-10",
-          "text": "The protein counts 3848 (quantified, 3.4) and 3852 (identified in both, 3.4) are never reconciled, and '2D class averaging' is invoked in Discussion 4.3 but never described in Methods 2.8–2.9."
+          "text": "The term 'amyloid' is used loosely: the ThT and AmyTracker signals are attributed to 'amyloidogenic proteins' but the text does not state which proteins are being detected, and the possibility that ThT binds to RNA or other polymers is acknowledged in the Discussion but not in the Results where the claim is made."
         }
       ],
       "questions": [
-        "What is the actual, significance-tested size comparison between WT and AD EVs, and which figure/statistic supports it?",
-        "For the TS expression measurement, what is the correct ABC value and inequality (≤20 or ≤38)?",
-        "Which statistical test was used for the Figure 7D comparison — two-way ANOVA or Student's t test?",
-        "How many AmyTracker-680 puncta per condition were measured for the FWHM size estimate?"
+        "How many biological replicates were used for the proteomics comparison, and were the technical triplicates from a single EV isolation or from multiple isolations?",
+        "In the co-culture experiment, was there a control where Aco-650 was added to media without an AD organoid, to rule out dye transfer via media exchange?",
+        "What is the exact EV count per mL for WT and AD isolates, and how was the 'twice as many' claim derived from the vFC data?",
+        "For the cryo-EM analysis, how many of the 65 AD EVs were multilamellar, and how many of the 24 WT EVs?"
       ]
     },
     {
       "reviewer": "literature",
       "score": 3.0,
-      "confidence": 4.0,
+      "confidence": 3.0,
       "weaknesses": [
         {
           "id": "literature-1",
-          "text": "Two SNARE citations in the \"failed AEV biogenesis\" section do not support the sentences they are attached to. The manuscript states \"The secretory SNARE protein STX3 was detected only in AD EVs (Kumar et al. 2018), while the degradative autophagy SNARE STX7 showed 1.5-fold enrichment in WT EVs (adj. p = 0.036) (Matsui et al. 2018).\" The cited Kumar et al. 2018 (J Cell Biol 217:997–1013) is titled \"Mechanism of Stx17 recruitment to autophagosomes via IRGM and mammalian Atg8 proteins\" — it concerns STX17, not STX3, and does not establish STX3 as a secretory SNARE. Matsui et al. 2018 (\"Autophagosomal YKT6 is required for fusion with lysosomes independently of syntaxin 17\") is likewise about YKT6/STX17, not STX7. Both citations appear to be a systematic STX17/STX3–STX7 confusion. This matters because the discussion builds the \"novel extracellular biomarker signature of failed AEV biogenesis\" on \"the complete molecular suite for secretory autophagy\" (RAB11B, RAB8A/B, STX3). What would resolve it: cite sources that actually establish STX3 as a plasma-membrane/secretory SNARE and STX7 as a degradative-autophagy SNARE, or reattribute."
+          "text": "Load-bearing. The paper's central claim — that co-culturing a WT organoid with an AD organoid transfers endosomal material and \"potentially pathogenic amyloid-β peptides,\" implying EV-mediated non-cell-autonomous spread — is not established by the evidence cited. The Aco-650 transfer (Fig. 7B) shows membrane transfer but not that it is EV-mediated: the dye could transfer via any secreted vesicle, free dye carryover, or direct cell contact, and the authors state only that Aco-650 \"intercalates into endosome membranes,\" not that it is EV-exclusive. The increased Aβ puncta in co-cultured WT organoids (Fig. 7C–D) is correlative; nothing in the cited data distinguishes EV-mediated Aβ transfer from the WT organoid's own upregulated Aβ production in response to diffusible factors, or from the AD organoid's proximity. The one-week co-culture with full media changes every other day does not exclude soluble Aβ or non-EV particles as the vector. The claim in the abstract that these observations \"support the notion that non-cell-autonomous spread of amyloid-containing EVs... can be modeled\" outruns the evidence: to support it, the authors would need to show the transferred material is inside EVs (e.g., EV-depleted media control, or fluorescent Aβ tracked within Aco-650+ vesicles) and that the WT Aβ increase is causally linked to that transfer rather than to bystander effects."
         },
         {
           "id": "literature-2",
-          "text": "The claim that \"EVs can enhance the aggregation propensity of amyloidogenic proteins (Mirdha 2024; Budvytyte & Valincius 2023)\" is supported by citations about lipid membranes, not EVs. Mirdha 2024 (J Membrane Biol) concerns Aβ aggregation depending on membrane lipid composition; Budvytyte & Valincius 2023 (Biochem Soc Trans) concerns Aβ aggregates interacting with phospholipid membranes. Neither is about EVs, and neither demonstrates EVs enhancing aggregation. The discussion then cites Halipi et al. 2024, which reports the opposite direction — EVs *slow down* Aβ(1–42) aggregation by interfering with fibril elongation. The manuscript should either cite EV-specific aggregation studies or soften the results framing to \"influence\" and acknowledge the conflicting direction."
+          "text": "Sweep. The novelty claim of EV-mediated inter-organoid amyloid spread is asserted without a comparison to directly competing prior work on EV-mediated Aβ propagation (e.g., Sardar Sinha 2018, which is cited but not positioned against the organoid result) — a completeness gap I could not fully resolve because my searches returned no directly competing organoid-EV-transfer study."
         },
         {
           "id": "literature-3",
-          "text": "Asai et al. 2015 (Nature), the foundational demonstration that exosome-synthesis inhibition halts tau propagation, is absent from the EV-mediated spread discussion and would round out the tau-propagation citations (SOFT)."
+          "text": "The claim that \"amyloid fibrils are established to mediate the rupture of membranes\" (Jakhria 2014) is cited to a β2-microglobulin study; the attribution is plausible but I could not verify the specific claim from the abstract, so I ask the authors to confirm the source supports the membrane-rupture point."
         },
         {
           "id": "literature-4",
-          "text": "Jakhria et al. 2014 is cited for \"amyloid fibrils are established to mediate the rupture of membranes,\" but that paper reports fibrils disrupting lysosomal membrane protein trafficking and inhibiting degradation, not membrane rupture — confirm the intended claim (SOFT)."
+          "text": "The claim that \"EVs can enhance the aggregation propensity of amyloidogenic proteins\" (Mirdha 2024; Budvytyte & Valincius 2023) is presented as established, yet the directly relevant Halipi 2024 (cited elsewhere) reports EVs slow Aβ aggregation — the contradicting finding is not acknowledged in that sentence, which is a fairness issue."
         },
         {
           "id": "literature-5",
-          "text": "The claim that \"L1CAM generally correlates with neuronal cell number\" is supported by citations (Patzke 2016; Barman & Thakur 2024) establishing L1CAM's role in neuronal development, not a correlation with cell number; soften or re-source (SOFT)."
+          "text": "The Mao 2025 citation (autophagic EVs distinct from exosomes) is used to support the AEV framework; I could not verify this reference resolves, and it appears in the reference list without a volume/page — I ask the authors to confirm the citation is complete and real."
         },
         {
           "id": "literature-6",
-          "text": "The Mao et al. 2025 Nat Commun entry (load-bearing for the AEV definition) lacks volume/page identifiers; add full citation details (SOFT)."
+          "text": "The reference list has several entries with garbled or truncated fields from the PDF conversion (e.g., the Forero 2024 entry runs into page numbers, the Fowler 2025 entry lacks volume/pages), which I flag as a hygiene issue rather than evidence the references are fabricated."
+        },
+        {
+          "id": "literature-7",
+          "text": "The proteomics section cites the MSstats and DIA-NN pipelines appropriately, but the claim that specific autophagy markers (RAB8A/B, STX3, LC3A/B) constitute \"a novel extracellular biomarker signature\" is a novelty claim resting on the proteomics interpretation, which the citation record alone cannot support — I attribute this to the novelty reviewer."
         }
       ],
       "questions": [
-        "Which source establishes STX3 as a secretory SNARE in the context cited, and STX7 as a degradative-autophagy SNARE — the current Kumar 2018 and Matsui 2018 citations are both STX17 papers?",
-        "Can the authors confirm whether Jakhria et al. 2014 supports \"membrane rupture\" or only trafficking disruption/degradation inhibition?"
+        "Can the authors confirm that the Aco-650 dye is EV-exclusive and does not transfer via free dye or non-EV carriers, and can they report an EV-depleted media control for the co-culture transfer?",
+        "Can the authors confirm that Jakhria 2014 (β2-microglobulin) is the correct source for the claim that amyloid fibrils rupture membranes, and that Mao 2025 is a complete, resolvable citation?",
+        "Is the increased Aβ signal in co-cultured WT organoids attributable to transferred Aβ rather than to the WT organoid's own upregulated production, and what control would distinguish these?"
       ]
     }
   ],
   "manuscript_text_sha256": "33a63f0452e726521471a4f620b9df854fa77cc086d2a04520be13ed5b9770e6",
-  "manuscript_file_sha256": "d911c484e0251e43ee7f922fc80e6742649040e6b702a7e794355e5a1490ac6e",
+  "manuscript_file_sha256": "7972a8fb86b063b884a5ec2c60ab54d91943fdb0675cec3a0551f47402c89330",
   "prior_job_id": "",
   "desk_rejected": false
 }

@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-14T19:35:18+00:00",
+  "generated_at": "2026-08-15T18:30:47+00:00",
   "pipeline": {
-    "sha": "290ffb8702d63ee81ceb6e267511812c9e8a2821",
+    "sha": "c71c823b71b3072b8cdf02a13547084036f11e1f",
     "version": "0.3.0"
   },
   "provider": "openrouter",
@@ -18,7 +18,7 @@
     "replaced": "v1",
     "prior_decision": "major",
     "prior_mean_score": 3.5,
-    "prior_pipeline_sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "prior_pipeline_sha": "290ffb8702d63ee81ceb6e267511812c9e8a2821",
     "prior_reviewed_at": "2026-08-14"
   },
   "submitter": "pgarrett-scripps",
@@ -96,36 +96,21 @@
       },
       "caveman": null
     },
-    "file_sha256": "919694a5801a07074f0d5a0ba2c7b01f2ca36f726108dd14b8405df46ce9b466"
+    "file_sha256": "960c4cfa4701c1e52982ba45fe92d6453c40cb8b404a553a806b526d700bbb94"
   },
   "screens": {
     "desk_screen_mode": "gate"
   },
   "panel": [
     {
-      "reviewer": "ethics",
-      "score": 5.0,
-      "confidence": 5.0
-    },
-    {
-      "reviewer": "clarity",
-      "score": 4.0,
-      "confidence": 5.0
-    },
-    {
-      "reviewer": "reproducibility",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
       "reviewer": "methodology",
       "score": 3.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 4.0
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0
     },
     {
       "reviewer": "rigor",
@@ -133,158 +118,173 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "literature",
+      "reviewer": "data_analysis",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
       "score": 4.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "data_analysis",
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "clarity",
       "score": 3.0,
       "confidence": 4.0
     }
   ],
-  "mean_score": 3.5,
+  "mean_score": 3.12,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 0.10044145316,
+  "total_cost_usd": 0.065771164504,
   "cost_by_node": {
-    "audit_citation_integrity": 0.011968,
-    "audit_methods_completeness": 0.000589,
-    "debate_advocate": 0.002747,
-    "debate_skeptic": 0.002855,
-    "desk_screen": 0.002139,
-    "editor": 0.002189,
-    "journal_recommender": 0.002391,
-    "reviewer_clarity": 0.007885,
-    "reviewer_data_analysis": 0.005472,
-    "reviewer_ethics": 0.005335,
-    "reviewer_literature": 0.014846,
-    "reviewer_methodology": 0.005993,
-    "reviewer_novelty": 0.023321,
-    "reviewer_reproducibility": 0.006965,
-    "reviewer_rigor": 0.005745
+    "audit_citation_integrity": 0.00717,
+    "audit_methods_completeness": 0.003553,
+    "debate_advocate": 0.001077,
+    "debate_skeptic": 0.001131,
+    "desk_screen": 0.001812,
+    "editor": 0.001364,
+    "journal_recommender": 0.000855,
+    "reviewer_clarity": 0.003784,
+    "reviewer_data_analysis": 0.008634,
+    "reviewer_ethics": 0.006338,
+    "reviewer_literature": 0.006931,
+    "reviewer_methodology": 0.005872,
+    "reviewer_novelty": 0.003956,
+    "reviewer_reproducibility": 0.004738,
+    "reviewer_rigor": 0.008556
   },
   "research_by_node": {
     "audit_citation_integrity": [
       {
         "tool": "search_biomedical_literature",
-        "query": "Bache KG, Raiborg C, Mehlum A, Stenmark H (2003) STAM and Hrs are subunits of a multivalent ubiquitin-binding complex on early endosomes. Journal of Biological Chemistry 278:12513-12521.",
+        "query": "Mayers 2011 ESCRT-0 heterotetrameric complex binds multiple ubiquitinated cargoes Hrs STAM1 affinity",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Ren X, Hurley JH (2010) VHS domains of ESCRT-0 cooperate in high-avidity binding to polyubiquitinated cargo. EMBO journal 29:1045-1054.",
+        "query": "Tamai 2008 loss of hrs central nervous system ubiquitinated proteins neurodegeneration Hgs mRNA brain",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Hirano S, Kawasaki M, Ura H, Kato R, Raiborg C, Stenmark H, Wakatsuki S (2006) Double-sided ubiquitin binding of Hrs-UIM in endosomal protein sorting. Nature structural & molecular biology 13:272-277.",
+        "query": "Zhu 2001 ablation NF1 function neurons synapsin Cre recombinase embryonic development",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Mayers JR, Fyfe I, Schuh AL, Chapman ER, Edwardson JM, Audhya A (2011) ESCRT-0 assembles as a heterotetrameric complex on membranes and binds multiple ubiquitinylated cargoes simultaneously. Journal o",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "STAM and Hrs are subunits of a multivalent ubiquitin-binding complex on early endosomes Bache 2003",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "ESCRT-0 assembles as a heterotetrameric complex on membranes and binds multiple ubiquitinylated cargoes simultaneously Mayers 2011",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Double-sided ubiquitin binding of Hrs-UIM in endosomal protein sorting Hirano 2006",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Loss of hrs in the central nervous system causes accumulation of ubiquitinated proteins and neurodegeneration Tamai 2008",
-        "hits": 3
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Bache STAM Hrs multivalent ubiquitin-binding complex early endosomes J Biol Chem 2003",
+        "query": "Mayers ESCRT-0 assembles heterotetrameric complex membranes binds multiple ubiquitinylated cargoes",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Mayers ESCRT-0 heterotetrameric complex membranes ubiquitinylated cargoes J Biol Chem 2011",
+        "query": "Tamai loss of hrs central nervous system accumulation ubiquitinated proteins neurodegeneration American journal pathology",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Hirano Double-sided ubiquitin binding Hrs-UIM endosomal protein sorting Nat Struct Mol Biol 2006",
+        "query": "Zhu ablation NF1 function neurons induces abnormal development cerebral cortex reactive gliosis",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Tamai loss hrs central nervous system accumulation ubiquitinated proteins neurodegeneration Am J Pathol 2008",
+        "query": "ESCRT-0 assembles as a heterotetrameric complex on membranes and binds multiple ubiquitinylated cargoes simultaneously",
         "hits": 0
       },
       {
-        "tool": "find_related_work",
-        "query": "Hrs STAM ESCRT-0 ubiquitin binding complex early endosomes",
-        "hits": 3
+        "tool": "search_biomedical_literature",
+        "query": "Loss of hrs in the central nervous system causes accumulation of ubiquitinated proteins and neurodegeneration",
+        "hits": 0
       },
       {
-        "tool": "find_related_work",
-        "query": "Hrs DUIM double ubiquitin interacting motif ubiquitinated cargo sorting",
-        "hits": 3
+        "tool": "search_biomedical_literature",
+        "query": "Ablation of NF1 function in neurons induces abnormal development of cerebral cortex and reactive gliosis in the brain",
+        "hits": 0
       },
       {
-        "tool": "find_related_work",
-        "query": "teetering mice Hgs mutation ESCRT neuromuscular junction Watson",
+        "tool": "search_biomedical_literature",
+        "query": "Hrs ESCRT-0 ubiquitin binding affinity STAM1",
         "hits": 2
       },
       {
-        "tool": "find_related_work",
-        "query": "Nedd4-1 ubiquitinates GluA1 Lys-868 AMPA receptor trafficking degradation",
-        "hits": 3
-      },
-      {
         "tool": "search_biomedical_literature",
-        "query": "Nedd4-mediated AMPA receptor ubiquitination regulates receptor turnover and trafficking Lin 2011",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Mutations in the endosomal ESCRTIII-complex subunit CHMP2B in frontotemporal dementia Skibinski 2005",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Ca2+/calmodulin-kinase II enhances channel conductance AMPA type glutamate receptors Derkach 1999",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Autophosphorylated CaMKIIalpha acts as scaffold to recruit proteasomes to dendritic spines Bingol 2010",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "CHMP2B mutations frontotemporal dementia ESCRT-III Skibinski Nature Genetics 2005",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Diminished neuronal ESCRT-0 function exacerbates AMPA receptor derangement accelerates prion-induced neurodegeneration Lawrence 2023",
-        "hits": 3
-      },
-      {
-        "tool": "find_related_work",
-        "query": "activity-dependent ubiquitination of GluA1 mediates distinct AMPA receptor endocytosis sorting pathway Schwarz 2010",
+        "query": "Hrs knockout central nervous system ubiquitinated proteins neurodegeneration",
         "hits": 2
       },
       {
-        "tool": "find_related_work",
-        "query": "synaptic strength bidirectionally controlled opposing activity-dependent regulation Nedd4-1 USP8 Scudder 2014",
+        "tool": "search_biomedical_literature",
+        "query": "synapsin I Cre recombinase neuron specific knockout mouse",
         "hits": 3
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Nedd4-1 ubiquitinates GluA1 Lys-868 AMPA receptor ubiquitination receptor turnover trafficking",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Skibinski mutations endosomal ESCRTIII complex subunit CHMP2B frontotemporal dementia",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Watson teetering mice mutation ESCRT component HGS motor sensory deficits",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Nedd4-mediated AMPA receptor ubiquitination regulates receptor turnover and trafficking",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Mutations in the endosomal ESCRTIII-complex subunit CHMP2B in frontotemporal dementia",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Motor and sensory deficits in the teetering mice result from mutation of the ESCRT component HGS",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Nedd4-1 AMPA receptor ubiquitination GluA1 trafficking",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "CHMP2B frontotemporal dementia ESCRT-III mutation",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "teetering mice Hgs ESCRT neuromuscular junction synaptic dysfunction",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Mayers 2011 ESCRT-0 heterotetrameric complex ubiquitin cargo Journal Biological Chemistry",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lin 2011 Nedd4-mediated AMPA receptor ubiquitination Journal of Neurochemistry",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Derkach 1999 Ca2+/calmodulin-kinase II enhances channel conductance AMPA glutamate receptors",
+        "hits": 0
       }
     ],
     "reviewer_clarity": [
@@ -295,218 +295,179 @@
         "error": "tool loop returned no text"
       }
     ],
+    "reviewer_data_analysis": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
+      }
+    ],
     "reviewer_literature": [
       {
         "tool": "search_biomedical_literature",
-        "query": "Hrs ESCRT-0 postsynaptic density AMPA receptor trafficking",
+        "query": "Ojeda-Ju\u00e1rez prions Arc response mGluR5 hippocampus pGluA1 ubiquitinated proteins",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "ESCRT machinery dendritic spines postsynaptic endosomal sorting glutamate receptors",
+        "query": "Tamai 2008 loss of hrs central nervous system ubiquitinated proteins neurodegeneration Hrs mRNA expression brain",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Hrs STAM ESCRT-0 neuron synapse",
+        "query": "Hrs ESCRT-0 AMPA receptor ubiquitination Nedd4-1 synaptic trafficking",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "ESCRT postsynaptic density glutamate receptor ubiquitin",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "ESCRT-0 Hrs AMPA receptor trafficking postsynaptic",
-        "hits": 8
+        "query": "Hrs synaptic vesicle protein degradation activity dependent Rab35 ESCRT",
+        "hits": 2
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Hrs hepatocyte growth factor regulated tyrosine kinase substrate synapse",
+        "query": "Hrs teetering mice neuromuscular junction neurotransmitter release HGS mutation",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Nedd4-1 ubiquitination GluA1 AMPA receptor endocytosis",
+        "query": "activity-dependent ubiquitination GluA1 Nedd4-1 AMPA receptor endocytosis sorting Schwarz Patrick",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "ESCRT complex synaptic vesicle degradation activity dependent Rab35",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Hrs ESCRT-0 AMPA receptor hippocampus synaptic plasticity",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "ESCRT-0 Hrs STAM postsynaptic density glutamatergic synapse",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "teetering mouse Hrstn/tn Hrs mutation neuromuscular synapse",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"Hrs\" \"ESCRT\" \"neuron\" \"synaptic\"",
+        "query": "Hrs STAM1 prion disease ESCRT-0 AMPA receptor phosphorylation Lawrence",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "\"hepatocyte growth factor regulated\" synapse AMPA",
+        "query": "Hrs ESCRT-0 postsynaptic density localization synapse",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Tamai 2008 Loss of hrs in the central nervous system accumulation ubiquitinated proteins neurodegeneration",
+        "query": "Tamai 2008 Hrs Hgs mRNA expression brain hippocampus cortex hypothalamus in situ hybridization",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Watson 2015 teetering mice HGS mutation motor sensory deficits",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Birdsall 2022 Axonal transport of Hrs activity dependent synaptic vesicle degradation",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Tamai 2008 \"Loss of hrs\" central nervous system ubiquitinated",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Lawrence 2023 \"Diminished neuronal ESCRT-0\" AMPA prion",
+        "query": "Birdsall 2022 axonal transport Hrs activity dependent synaptic vesicle protein degradation",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Watson 2015 \"Motor and sensory deficits in the teetering mice\" HGS PLoS genetics",
+        "query": "Hrs ESCRT-0 postsynaptic density PSD localization dendritic spines",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Birdsall 2022 \"Axonal transport of Hrs is activity dependent\" \"synaptic vesicle\" Life science alliance",
+        "query": "Hrs ESCRT-0 AMPA receptor trafficking postsynaptic degradation lysosome",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "ESCRT machinery postsynaptic density AMPA receptor degradation lysosome ubiquitin",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Sheehan 2016 \"Activity-dependent degradation of synaptic vesicle proteins\" Rab35 ESCRT Journal of Neuroscience",
+        "query": "Hrs hepatocyte growth factor regulated tyrosine kinase substrate dendritic spine postsynaptic",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "ESCRT postsynaptic density synaptic plasticity AMPA receptor endosomal sorting",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Hrs ESCRT-0 synapse localization immunocytochemistry hippocampal neurons",
         "hits": 0
       }
     ],
     "reviewer_novelty": [
       {
         "tool": "find_related_work",
-        "query": "ESCRT-0 Hrs AMPA receptor synaptic plasticity endosomal sorting",
-        "hits": 10
+        "query": "Hrs ESCRT-0 postsynaptic AMPA receptor trafficking ubiquitination",
+        "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "Hrs ESCRT-0 synaptic localization postsynaptic density AMPAR trafficking",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Hrs hepatocyte growth factor regulated tyrosine kinase substrate neuron synapse",
-        "hits": 10
+        "query": "Hrs hepatocyte growth factor regulated tyrosine kinase substrate synapse neuronal activity",
+        "hits": 5
       },
       {
         "tool": "search_preprints",
-        "query": "Hrs ESCRT-0 postsynaptic AMPA receptor trafficking neuron",
+        "query": "Hrs ESCRT-0 AMPA receptor postsynaptic trafficking",
         "hits": 0
       },
       {
         "tool": "search_preprints",
-        "query": "ESCRT postsynaptic density receptor degradation synaptic plasticity",
+        "query": "ESCRT postsynaptic density AMPA receptor degradation ubiquitin",
         "hits": 0
       },
       {
         "tool": "find_related_work",
-        "query": "Nedd4-1 ubiquitination GluA1 AMPA receptor endocytosis ESCRT degradation",
-        "hits": 10
+        "query": "Hrs postsynaptic density localization dendritic spines",
+        "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "Hrs teetering mouse synaptic vesicle degradation ESCRT",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Lawrence Aguilar-Calvo prion ESCRT-0 Hrs AMPA receptor 2023",
-        "hits": 10
+        "query": "Hrs activity-dependent regulation neuronal activity bicuculline tetrodotoxin",
+        "hits": 5
       },
       {
         "tool": "search_preprints",
-        "query": "Hrs activity-dependent synaptic plasticity LTD LTP",
+        "query": "Hrs postsynaptic density dendritic spines ESCRT",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Hrs neuronal activity bicuculline tetrodotoxin synaptic",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Hrs ESCRT-0 synaptic vesicle degradation presynaptic activity-dependent",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Hrs prion disease ESCRT-0 AMPA receptor GluA1 phosphorylation",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Hrs ESCRT-0 AMPA receptor GluA1 phosphorylation prion",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "ESCRT-0 Hrs postsynaptic AMPA receptor currents CaMKII",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Hrs postsynaptic AMPA receptor trafficking",
         "hits": 2
       },
       {
-        "tool": "find_related_work",
-        "query": "Hrs STAM1 ESCRT-0 postsynaptic density PSD-95 dendritic spine",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Sheehan Waites activity-dependent degradation synaptic vesicle ESCRT Hrs Rab35",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Birdsall Waites Hrs axonal transport synaptic vesicle degradation 2022",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"hepatocyte growth factor-regulated tyrosine kinase substrate\" Hrs postsynaptic",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "ESCRT postsynaptic density AMPA receptor trafficking degradation",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Lawrence Aguilar-Calvo \"Diminished neuronal ESCRT-0 function\" prion AMPA 2023",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Tamai Toyoshima \"Loss of hrs in the central nervous system\" ubiquitinated proteins neurodegeneration",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Schwarz Patrick \"Activity-dependent ubiquitination of GluA1\" AMPA endocytosis 2010",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Hrs HGS ESCRT-0 postsynaptic density PSD dendritic spine AMPA receptor",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "ESCRT-0 Hrs activity dependent regulation synaptic plasticity hippocampal",
-        "hits": 10
-      },
-      {
         "tool": "search_preprints",
-        "query": "Hrs HGS ESCRT-0 postsynaptic AMPA receptor trafficking plasticity",
+        "query": "ESCRT-0 postsynaptic density receptor degradation",
         "hits": 0
       },
       {
-        "tool": "search_preprints",
-        "query": "\"hepatocyte growth factor regulated\" Hrs neuron dendrite spine",
-        "hits": 0
+        "tool": "find_related_work",
+        "query": "Hrs ESCRT-0 AMPA receptor endocytosis degradation lysosome postsynaptic",
+        "hits": 5
+      }
+    ],
+    "reviewer_reproducibility": [
+      {
+        "tool": "",
+        "query": "",
+        "hits": 0,
+        "error": "tool loop returned no text"
       }
     ],
     "reviewer_rigor": [
@@ -553,7 +514,7 @@
     "abstract": "Membrane protein trafficking is essential for synaptic growth, maintenance, function, and plasticity, and involves the regulated exocytosis and endocytosis of proteins to and from the pre-and post-synaptic membranes. Defects in the clearance of membrane proteins can lead to the accumulation of ubiquitinated membrane proteins and contribute to neurodegenerative disease. The ESCRT (endosomal sorting complexes required for transport) machinery binds and sorts ubiquitinated membrane proteins into lysosomes for degradation, yet the presence and function of ESCRTs in sorting ubiquitinated AMPA and other receptors at the post-synapse remain unclear. Here we show that the ubiquitin-binding ESCRT-0 protein, Hrs, localizes to both pre- and post-synapses, and levels are modulated by neuronal activity, increasing and decreasing with higher and lower neuronal activity, respectively. Phosphoproteomic profiling of Hrs-depleted post-synaptic membranes revealed a role for Hrs in glutamatergic synaptic transmission, including long-term potentiation. In addition, Hrs-depleted neurons showed faster AMPAR current kinetics and reduced amplitude in whole-cell patch-clamp recordings. Genetic deletion of neuronal Hgs in mice led to reductions in phosphorylated CaMKII- and -{beta} (T286/T287) and structural proteins, PSD-95 and gephyrin, suggestive of LTD (long-term depression)-like synaptic depression. In contrast, Hrs overexpression led to increases in Ca2+-dependent signaling, including protein kinase C (PKC) and PKC substrate, AMPAR subunit GluA1-S831, a site which increases conductance. Together, these findings identify a dynamic, bidirectional role for Hrs at the post-synapse as it both senses and is modulated by neuronal activity, ultimately impacting excitatory synaptic strength. Significance StatementSynaptic plasticity relies on dynamic trafficking and turnover of membrane proteins, including AMPA-type glutamate receptors (AMPARs), yet how receptor trafficking intersects with ubiquitin-mediated sorting pathways at synapses remains unclear. We show that the ubiquitin-binding ESCRT-0 protein, Hrs, localizes to both pre- and post-synapses, and its abundance is bidirectionally regulated by neuronal activity. Genetic depletion of Hrs in mice reduces CaMKII phosphorylation and impacts AMPAR channel surface localization. In contrast, neuronal-specific Hrs overexpression led to enhanced GluA1 and protein kinase C substrate phosphorylation, suggesting altered AMPAR trafficking, subunit composition, and/or function. Thus, Hrs emerges as a modulator of glutamatergic signaling, coupling ubiquitin-mediated receptor sorting to the fine-tuning of synaptic transmission, with direct implications for learning and memory in health and disease.",
     "published": "2026-06-24",
     "version": "1",
-    "pdf_sha256": "919694a5801a07074f0d5a0ba2c7b01f2ca36f726108dd14b8405df46ce9b466",
+    "pdf_sha256": "960c4cfa4701c1e52982ba45fe92d6453c40cb8b404a553a806b526d700bbb94",
     "pdf_bytes": 3400643
   }
 }

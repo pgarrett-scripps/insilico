@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-14T17:40:36+00:00",
+  "generated_at": "2026-08-15T18:21:13+00:00",
   "pipeline": {
-    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "sha": "c71c823b71b3072b8cdf02a13547084036f11e1f",
     "version": "0.3.0"
   },
   "provider": "openrouter",
@@ -13,7 +13,13 @@
   "desk_rejected": false,
   "round": 1,
   "revision": {
-    "round": 1
+    "round": 1,
+    "kind": "rerun",
+    "replaced": "v1",
+    "prior_decision": "major",
+    "prior_mean_score": 2.88,
+    "prior_pipeline_sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "prior_reviewed_at": "2026-08-14"
   },
   "submitter": "pgarrett-scripps",
   "submitter_is_author": "",
@@ -114,19 +120,34 @@
       },
       "caveman": null
     },
-    "file_sha256": "db773f3563d4c5f0ba7fc3d1dccaeb0a95000f3ff389abcb26e021c0d5f9d7b7"
+    "file_sha256": "850793c56b3c3ab0084587317df5155a063e080674b400245563a6c82376111a"
   },
   "screens": {
     "desk_screen_mode": "gate"
   },
   "panel": [
     {
+      "reviewer": "ethics",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
       "reviewer": "methodology",
       "score": 3.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "ethics",
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "rigor",
       "score": 3.0,
       "confidence": 4.0
     },
@@ -136,390 +157,312 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "literature",
-      "score": 3.0,
-      "confidence": 3.0
-    },
-    {
-      "reviewer": "rigor",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
       "reviewer": "clarity",
       "score": 3.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "reproducibility",
-      "score": 2.0,
-      "confidence": 4.0
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 3.0
     }
   ],
-  "mean_score": 2.88,
+  "mean_score": 3.25,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 0.08858680283999999,
+  "total_cost_usd": 0.055114934344000006,
   "cost_by_node": {
-    "audit_citation_integrity": 0.014175,
-    "audit_methods_completeness": 0.00305,
-    "debate_advocate": 0.001503,
-    "debate_skeptic": 0.001382,
-    "desk_screen": 0.001942,
-    "editor": 0.001835,
-    "journal_recommender": 0.000892,
-    "reviewer_clarity": 0.007405,
-    "reviewer_data_analysis": 0.005767,
-    "reviewer_ethics": 0.005637,
-    "reviewer_literature": 0.01434,
-    "reviewer_methodology": 0.006734,
-    "reviewer_novelty": 0.015078,
-    "reviewer_reproducibility": 0.004216,
-    "reviewer_rigor": 0.00463
+    "audit_citation_integrity": 0.007036,
+    "audit_methods_completeness": 0.002338,
+    "debate_advocate": 0.001304,
+    "debate_skeptic": 0.001341,
+    "desk_screen": 0.001642,
+    "editor": 0.001677,
+    "journal_recommender": 0.001069,
+    "reviewer_clarity": 0.008062,
+    "reviewer_data_analysis": 0.004138,
+    "reviewer_ethics": 0.004308,
+    "reviewer_literature": 0.007991,
+    "reviewer_methodology": 0.003627,
+    "reviewer_novelty": 0.002967,
+    "reviewer_reproducibility": 0.003416,
+    "reviewer_rigor": 0.0042
   },
   "research_by_node": {
     "audit_citation_integrity": [
       {
         "tool": "search_biomedical_literature",
-        "query": "2025 Alzheimer's disease facts and figures estimated number Americans living with Alzheimer's 2025",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Thul subcellular map human proteome Science 2017 proteins localized multiple compartments",
+        "query": "Samelson CRISPR screens iPSC-derived neurons tau proteostasis Cell",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Bai deep multilayer brain proteomics identifies molecular networks Alzheimer's disease progression Neuron 2020",
+        "query": "Abdulkhaliq Amyloid-beta and Tau in Alzheimer's disease pathogenesis mechanisms interplay Cell Death Dis",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Johnson large-scale proteomic analysis Alzheimer's disease brain cerebrospinal fluid early changes energy metabolism Nat Med 2020",
+        "query": "Abdulkhaliq Amyloid-beta Tau Alzheimer's pathogenesis interplay",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Wang transformative network modeling multi-omics detailed circuits key regulators potential therapeutics Alzheimer's Neuron 2021",
+        "query": "Samelson CRISPR tau proteostasis Rab2a oligomers iPSC neurons",
         "hits": 0
       },
       {
-        "tool": "find_related_work",
-        "query": "Deep Multilayer Brain Proteomics Identifies Molecular Networks in Alzheimer's Disease Progression Bai Neuron 2020",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Large-scale proteomic analysis of Alzheimer's disease brain and cerebrospinal fluid reveals early changes in energy metabolism Johnson Nat Med 2020",
-        "hits": 5
+        "tool": "search_biomedical_literature",
+        "query": "Amyloid-beta and Tau in Alzheimer's disease pathogenesis mechanisms interplay Cell Death and Disease 2026",
+        "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Bai \"U1 small nuclear ribonucleoprotein complex\" \"RNA splicing\" Alzheimer's PNAS 2013",
+        "query": "Kim evolutionarily conserved regulators of tau identify targets for new therapies Neuron 2023",
         "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Abdulkhaliq Amyloid-beta Tau Alzheimer's Cell Death Disease",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Samelson CRISPR tau proteostasis Rab2a",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Rab2a tau oligomers CRISPR screen iPSC neurons",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bai Deep Multilayer Brain Proteomics Molecular Networks Alzheimer's Disease Progression Neuron 2020",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Samelson CRISPR screens iPSC-derived neurons tau proteostasis principles",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Eftekharzadeh Tau Protein Disrupts Nucleocytoplasmic Transport Alzheimer's Disease Neuron 2018",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bai Proteomic landscape of Alzheimer's Disease novel insights pathogenesis biomarker discovery Mol Neurodegener 2021",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bai U1 small nuclear ribonucleoprotein complex RNA splicing alterations Alzheimer's disease 2013",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bai Proteomic landscape Alzheimer's Disease novel insights pathogenesis biomarker discovery",
+        "hits": 2
       },
       {
         "tool": "search_biomedical_literature",
         "query": "Hales changes detergent-insoluble brain proteome linked amyloid tau Alzheimer's progression Proteomics 2016",
         "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Freibaum GGGGCC repeat expansion C9orf72 compromises nucleocytoplasmic transport Nature 2015",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Thul 2017 subcellular map human proteome Science 356 \"more than 50% proteins localized more than one compartment\"",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Jankowsky mutant presenilins specifically elevate levels 42 residue beta-amyloid in vivo Hum Mol Genet 2004",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Eftekharzadeh Tau protein disrupts nucleocytoplasmic transport Alzheimer's disease Neuron 2018",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Thul \"subcellular map of the human proteome\" Science 2017 356",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Bai \"deep multilayer brain proteomics\" Alzheimer's Neuron 2020 106 700",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Hales \"changes in the detergent-insoluble brain proteome\" Alzheimer's Proteomics 2016",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"A subcellular map of the human proteome\" Thul 2017 Science",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"Deep Multilayer Brain Proteomics\" \"Molecular Networks\" Alzheimer's Neuron 2020 Bai",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"Changes in the detergent-insoluble brain proteome\" Alzheimer Hales Proteomics 2016",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "28495876 Thul subcellular map human proteome",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "24023061 Bai U1 snRNP RNA splicing Alzheimer PNAS 2013",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "30189209 Eftekharzadeh Tau nucleocytoplasmic transport Neuron 2018",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "28495876",
-        "hits": 0
-      }
-    ],
-    "reviewer_clarity": [
-      {
-        "tool": "",
-        "query": "",
-        "hits": 0,
-        "error": "tool loop returned no text"
       }
     ],
     "reviewer_literature": [
       {
-        "tool": "search_biomedical_literature",
-        "query": "Bai proteomic landscape Alzheimer's disease meta-analysis seven TMT datasets",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "CRISPR screen tau proteostasis iPSC neurons Samelson",
-        "hits": 2
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "proteomic analysis Alzheimer's disease brain subcellular fractionation TMT",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "VPS35 retromer Alzheimer's disease subcellular localization",
-        "hits": 0
+        "tool": "find_related_work",
+        "query": "subcellular fractionation proteomics Alzheimer's disease brain",
+        "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "spatial proteoforms Alzheimer's disease subcellular fractionation proteomics LC-MS",
-        "hits": 10
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "subcellular fractionation proteomics Alzheimer's disease hippocampus spatial protein localization",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "non-canonical CCT chaperonin complex subunits assembly",
+        "query": "spatial proteomics Alzheimer's disease subcellular localization",
         "hits": 5
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "pulsed azidohomoalanine labeling protein degradation brain QUAD",
+        "query": "pulsed azidohomoalanine labeling protein degradation mouse brain",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "non-canonical CCT chaperonin TRiC complex alternative subunit composition",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "McClatchy quantitative analysis global protein stability rates tissues",
+        "query": "retromer VPS35 mislocalization Alzheimer's disease endosome",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Rab2a regulator tau oligomers CRISPR screen neurons",
+        "query": "azidohomoalanine AHA protein degradation brain aging QUAD",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "CCT chaperonin TRiC non-canonical complexes subcomplexes",
+        "query": "subcellular fractionation proteomics Alzheimer's disease hippocampus TMT",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Alzheimer's disease proteomics subcellular fractionation synaptic mitochondria insoluble proteome",
+        "query": "protein degradation rates mouse brain aging proteomics",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bai proteomic landscape Alzheimer's disease meta-analysis unfractionated brain",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Alzheimer's disease protein degradation turnover proteomics mouse model",
-        "hits": 4
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Yarbro delayed protein turnover amyloidome Alzheimer's disease mouse proteomics",
+        "query": "Samelson CRISPR iPSC neurons tau proteostasis",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Andrews multidimensional dynamics proteome neurodegenerative aging mammalian brain",
+        "query": "Kim evolutionarily conserved regulators of tau CRISPR screen",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "McClatchy quantitative analysis global protein stability rates tissues azidohomoalanine",
         "hits": 1
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "TRiC CCT chaperonin subcomplexes non-canonical assembly proteostasis",
+        "query": "Alzheimer's disease brain subcellular proteomics fractionation endosome lysosome quantitative",
         "hits": 0
       },
       {
         "tool": "search_biomedical_literature",
-        "query": "Alzheimer's disease spatial proteomics subcellular localization protein mislocalization",
+        "query": "Thul subcellular map human proteome multiple localizations",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Eftekharzadeh tau nucleocytoplasmic transport NUP98 Alzheimer",
         "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Alzheimer's disease proteomics subcellular fractions synaptic mitochondria quantitative mass spectrometry",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "spatial proteomics brain subcellular localization disease",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bai 2020 deep multilayer brain proteomics Alzheimer's sequential extraction",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Alzheimer's disease proteomics subcellular fractionation hippocampus quantitative mass spectrometry TMT",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "protein turnover degradation Alzheimer's disease mouse model proteomics",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "BIN1 Alzheimer's disease endocytosis tau pathology",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bai 2013 U1 small nuclear ribonucleoprotein RNA splicing Alzheimer's insoluble fraction proteomics",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "synaptic proteomics Alzheimer's disease human brain quantitative",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "VPS29 retromer aging brain endolysosomal Ye 2020",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Hondius proteomics human brain synaptic proteome Alzheimer",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "mitochondrial proteomics Alzheimer's disease brain quantitative mass spectrometry",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Thul subcellular map human proteome Science 2017 multiple compartments",
+        "hits": 2
       }
     ],
     "reviewer_novelty": [
       {
         "tool": "find_related_work",
-        "query": "subcellular fractionation proteomics Alzheimer's disease spatial proteoforms",
+        "query": "spatial proteoforms subcellular fractionation Alzheimer's disease proteomics",
         "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "protein degradation azidohomoalanine QUAD Alzheimer's mouse model",
+        "query": "protein degradation rates QUAD azidohomoalanine mouse brain Alzheimer's",
         "hits": 5
       },
       {
         "tool": "search_preprints",
-        "query": "spatial proteomics subcellular fractionation Alzheimer's disease hippocampus",
+        "query": "subcellular fractionation proteomics Alzheimer's disease hippocampus spatial proteoforms",
         "hits": 0
       },
       {
         "tool": "search_preprints",
-        "query": "protein turnover degradation Alzheimer's mouse model azidohomoalanine",
+        "query": "protein turnover degradation APPswePS1dE9 mouse model proteomics",
         "hits": 0
       },
       {
         "tool": "find_related_work",
-        "query": "TMT-LC-MS subcellular fractionation human brain Alzheimer's proteomics",
+        "query": "TMT subcellular fractionation human brain Alzheimer's hippocampus proteomics spatial",
         "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "retromer complex mislocalization VPS35 Alzheimer's disease subcellular fractionation",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "protein folding chaperonin CCT Alzheimer's disease subcellular localization",
+        "query": "retromer VPS35 mislocalization Alzheimer's disease endosome",
         "hits": 5
       },
       {
         "tool": "search_preprints",
-        "query": "subcellular proteomics Alzheimer's hippocampus fractionation TMT",
+        "query": "pulsed azidohomoalanine labeling protein degradation brain fractions Alzheimer",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "subcellular proteomics Alzheimer's disease hippocampus fractionation TMT",
         "hits": 0
       },
       {
         "tool": "find_related_work",
-        "query": "\"spatial proteoforms\" Alzheimer's disease mass spectrometry",
+        "query": "Alzheimer's disease subcellular fractionation proteomics insoluble nuclear endosomal fractions",
         "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "WGCNA subcellular fractionation Alzheimer's brain proteomics",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "protein degradation rates Alzheimer's mouse cortex azidohomoalanine AHA",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Bai 2020 deep multilayer brain proteomics Alzheimer's molecular networks subcellular fractionation",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Johnson 2020 large-scale proteomic Alzheimer's brain energy metabolism subcellular",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "subcellular fractionation differential centrifugation hippocampus proteomics Alzheimer's human brain quantitative",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "McClatchy Yates QUAD azidohomoalanine protein degradation brain",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"subcellular proteomics\" \"Alzheimer's\" hippocampus TMT fractionation human brain",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "VPS35 retromer Alzheimer's subcellular mislocalization endosome trans-Golgi",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"spatial proteoform\" Alzheimer disease brain fractionation mass spectrometry",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Bai 2020 U1 snRNP splicing Alzheimer's insoluble proteome fractionation",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Hales 2016 detergent insoluble brain proteome Alzheimer's amyloid tau",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "McClatchy 2020 \"quantitative analysis of global protein stability rates\" tissues QUAD",
+        "query": "protein half-life turnover brain aging mouse pulsed labeling",
         "hits": 5
       },
       {
         "tool": "search_preprints",
-        "query": "\"protein degradation\" \"Alzheimer\" subcellular fractionation mouse cortex AHA azidohomoalanine",
+        "query": "spatial proteoforms Alzheimer's disease subcellular localization",
         "hits": 0
       },
       {
-        "tool": "find_related_work",
-        "query": "endosomal pathway dysfunction Alzheimer's preclinical subcellular protein trafficking mislocalization proteomics",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "nuclear cytoplasmic transport NUP98 Alzheimer's tau nucleoporin fractionation proteomics",
-        "hits": 5
+        "tool": "search_preprints",
+        "query": "protein degradation Alzheimer's mouse model azidohomoalanine QUAD",
+        "hits": 0
       }
     ]
   },
@@ -539,7 +482,7 @@
     "abstract": "Alzheimers disease (AD) pathogenesis involves complex, multifactorial changes to the brain proteome that conventional unfractionated analyses may obscure. Proteins frequently occupy multiple subcellular compartments as spatial proteoforms, yet the contribution of aberrant protein localization to AD pathogenesis remains poorly understood. To address this, we fractionated post-mortem human hippocampi from 13 AD and 14 non-AD individuals into four subcellular fractions and quantified 6,123 proteins by TMT-LC-MS. Although 75% of proteins were detected in more than one fraction, 78% of significant AD-associated alterations were restricted to a single fraction, demonstrating that subcellular localization is a primary determinant of disease vulnerability. Discordant abundance patterns between fractions revealed retromer complex mislocalization, nuclear transport dysfunction, and insoluble protein accumulation, with the endosomal-lysosomal and protein folding pathways most consistently perturbed. To examine how these perturbations evolve with disease progression, we applied the QUAD strategy to measure protein degradation in two fractions of APPswePS1delta9 mouse cortex at 2, 5, and 12 months. Degradation rates diverged between fractions and genotypes in an age-dependent manner, and cross-dataset comparison identified six proteins altered at the earliest pre-pathological timepoint, implicating vesicle transport and proteostasis disruption as initiating features of AD. These findings establish spatial proteoforms as essential units of pathogenic analysis and reveal disease-relevant signals invisible to bulk tissue approaches.",
     "published": "2026-07-04",
     "version": "1",
-    "pdf_sha256": "db773f3563d4c5f0ba7fc3d1dccaeb0a95000f3ff389abcb26e021c0d5f9d7b7",
+    "pdf_sha256": "850793c56b3c3ab0084587317df5155a063e080674b400245563a6c82376111a",
     "pdf_bytes": 2398731
   }
 }

@@ -1,15 +1,20 @@
 # Clarity & Presentation Reviewer
 
 ## Summary
-This manuscript reports that the ESCRT-0 protein Hrs localises to both pre- and postsynaptic compartments, is bidirectionally regulated by neuronal activity, and when depleted alters AMPAR kinetics and CaMKII phosphorylation. The narrative is well-constructed and the central claims are stated explicitly. Presentation defects are few and mostly SOFT — one HARD ambiguity in a figure axis and one potentially missing figure reference — but the load-bearing claims are presented with sufficient clarity for the reader to evaluate them. Minor revisions are needed.
+The manuscript is broadly well-organized and the central claim is stated explicitly, but it has several HARD clarity defects: an unparseable sentence in the Results, a figure legend that does not define its symbols, and a quantitative claim that states direction without the quantity. These are fixable with targeted edits.
 
 ## Strengths
-- The narrative structure is clear throughout: each experiment is motivated by the preceding result, and the reader never loses the through-line.
+- The central claim is stated explicitly in the abstract and introduction, giving the reader a clear through-line.
+- The narrative flow from motivation to results to interpretation is smooth, with each finding's purpose recoverable.
+- The methods section is detailed enough to reconstruct the order of operations for the biochemical and imaging experiments.
 
 ## Weaknesses
-- LOAD-BEARING: The claim that Hrs bidirectionally regulates AMPAR currents rests in part on the AMPA/NMDA ratio (Fig. 3G–H) and the classification of AMPAR EPSCs as 'fast' or 'slow' (Fig. 3C–D). The classification rule is stated ('>90% of sweeps with one peak and decay <20 ms' vs '>10% of sweeps with multiple peaks and decay >25 ms'), but the reader cannot determine how many sweeps per neuron were collected, whether the classification was applied blind to condition, or whether the 'slow' phenotype reflects polysynaptic events (which the CA3 cut should prevent) rather than altered AMPAR kinetics. A single sentence clarifying these points would settle it. If the classification is unblinded or if sweep counts vary systematically, the result is ambiguous. This is a HARD defect because a competent reader cannot rule out a methodological confound from the text as written.
-- LOAD-BEARING: The electrophysiology methods state that recordings with series resistance >30 MΩ or variations >30% were excluded, but do not report the mean ± SEM series resistance or capacitance for included neurons in each group. If Hrs knockdown alters cell size or recording quality, differences in series resistance could produce apparent changes in AMPAR kinetics (rise time, decay slope) without a true change in receptor function. The authors should report whether series resistance and capacitance differed between groups. Without it, the reader cannot judge whether the kinetic differences are biological or artefactual. HARD.
-- SOFT: The abstract's first sentence ('Membrane protein trafficking is essential...') introduces no new term and is clear, but the penultimate sentence ('Hrs overexpression leads to increases in Ca2+-dependent signaling, including PKC and PKC substrate, AMPAR subunit GluA1-S831') is slightly ambiguous: does 'PKC' mean total PKC protein or PKC activity? The text clarifies later, but the abstract alone should resolve this. Consider rewriting to 'PKC activity (measured via phosphorylated PKC substrates)'.
+- HARD: The sentence 'Hrs was enriched in S3 relative to the initial supernatant fraction, S1 [S3 / S1: 1.42 ± 0.8 (mean ± SEM) versus synaptophysin: 0.87 ± 0.2, and PSD95: 0.42 ± 0.08]' is ambiguous — the reader cannot tell whether the bracketed values are the ratios for Hrs, synaptophysin, and PSD95, or something else. A reader cannot determine what the comparison is.
+- HARD: The quantitative claim 'Hrs increased by 34% in Bic-treated neurons [1.54 ± 0.17 versus 1.15 ± 0.03 (untreated); p < 0.05]' states the direction and the p-value but not the actual quantity being compared — the reader cannot tell whether 1.54 and 1.15 are normalized intensities, ratios, or something else.
+- SOFT: The figure legends do not define every symbol and abbreviation used in the figures — for example, the legend for Figure 1 does not define 'S1', 'S3', 'PSD2', or 'CHMP2B' at first use.
+- SOFT: The legend for Figure 3 does not define the color coding used in the traces (dark blue/red vs. light blue/red), so a reader cannot interpret the figure from the caption alone.
 
 ## Questions
-- In Fig. 2B, the y-axis is labelled 'Hrs/α-tubulin (normalized to control)'. Is α-tubulin verified to be stable across 72 h of bicuculline and TTX treatment? If not, what is the evidence that the normalization is valid?
+- What are the units of the values in the brackets in the sentence about Hrs enrichment in S3? Are they ratios, normalized intensities, or something else?
+- What do the colors in the Figure 3 traces represent, and are they defined anywhere in the text or legend?
+- What is the actual quantity being compared in the claim that Hrs increased by 34% in Bic-treated neurons — is it a normalized intensity, a ratio, or a count?

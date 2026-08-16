@@ -1,159 +1,102 @@
 {
   "schema_version": 1,
   "round": 1,
-  "job_id": "20260814-104036-quantitation-of-spatial-proteoforms-in-alzheimer-s",
+  "job_id": "20260815-112113-quantitation-of-spatial-proteoforms-in-alzheimer-s",
   "manuscript_title": "Quantitation of Spatial Proteoforms in Alzheimer's Disease",
-  "manuscript_cache_key": "3f105a196fc60b0b7ae732b60e4d1c072883239eb508f7ac2aaeec5cdcfa6f5a",
+  "manuscript_cache_key": "05e649d25093e071ff3aee874f8fedc5607b8916bb7719127318684d48d3299f",
   "decision": "major",
-  "weighted_score": 2.871,
+  "weighted_score": 3.2,
   "required_revisions": [
     {
       "id": "R1-01",
-      "text": "1. Apply a named FDR correction (e.g., Benjamini–Hochberg q<0.05) to the human ANOVA and recompute the 78% fraction-specificity statistic, reporting both the corrected and uncorrected values. Report how many of the 2,405 'significant changes' survive correction.",
+      "text": "Apply Benjamini–Hochberg FDR (or state the correction if ProteomeDiscoverer applied one) to the human per-fraction ANOVA; report how many of the 2,405 changes survive; recompute the 78% fraction-specificity figure and the discordant P3/S2 enrichment on the filtered list. If the 78% figure does not survive, demote the 'subcellular localization is a primary determinant of disease vulnerability' claim accordingly.",
       "source_reviewer": "data_analysis",
       "blocking": false
     },
     {
       "id": "R1-02",
-      "text": "2. Fit a mixed-effects model with animal as a random effect, or compute a per-animal summary (e.g., median log-ratio across proteins) and test with n=4 per group, for the QUAD genotype comparisons (Figs 8E–F). Report whether direction and significance of the genotype differences survive.",
+      "text": "For the QUAD mouse comparisons (Figure 8F, Figure 9A), fit a mixed model with mouse as a random effect, or compare per-mouse median log2 ratios between genotypes (n=4 per group), rather than treating thousands of proteins as independent observations. State the number of mice per Day0 pool and how TMT normalization and missing values were handled.",
       "source_reviewer": "data_analysis",
       "blocking": false
     },
     {
       "id": "R1-03",
-      "text": "3. Report the denominator N (proteins quantified in both human and mouse datasets at 2 months), compute the expected overlap under the null, and test the observed 6-protein overlap against it (e.g., hypergeometric or permutation test). Requalify 'initiating features of AD' to 'early-associated' or equivalent.",
+      "text": "Run permutation or analytic nulls for (a) the 78% fraction-specificity claim, (b) the 155-measurement human–mouse overlap at 12 months, and (c) the six-protein overlap at 2 months, preserving marginal hit rates and the opposite-sign constraint. Report whether each overlap exceeds chance; if not, demote the 'initiating features' interpretation.",
       "source_reviewer": "data_analysis",
       "blocking": false
     },
     {
       "id": "R1-04",
-      "text": "4. Deposit raw MS data (human and mouse) in a public repository (PRIDE or MassIVE) and provide the accession number in the manuscript. Deposit all 18 supplementary tables in the repository alongside the preprint.",
-      "source_reviewer": "reproducibility",
+      "text": "Requalify the 'mislocalization' (VPS35/retromer) and 'nuclear transport dysfunction' (Ran GTPase-binding proteins) claims to acknowledge that the S2→P3 shift is equally consistent with insolubility/aggregation, which the authors' own hydrophobicity, ubiquitination, and 37-protein insoluble-overlap data favor. The VPS35 immunoblot confirms the abundance pattern, not the mechanism; either add an orthogonal assay that does not depend on pelleting (e.g., immunofluorescence) or state the insolubility alternative as the primary reading.",
+      "source_reviewer": "methodology",
       "blocking": false
     },
     {
       "id": "R1-05",
-      "text": "5. State the normalization applied to TMT reporter ion intensities before ANOVA and before Day7/Day0 ratio calculation (e.g., total-intensity scaling, reference-channel scaling, median centering).",
-      "source_reviewer": "reproducibility",
+      "text": "Reconcile the arithmetic in the QUAD results (238 more-stable + 1,323 less-stable = 1,561, which does not match the stated 1,436 altered proteins) and report the correct numbers.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-06",
-      "text": "6. State the WGCNA parameters: soft-threshold power, minimum module size, merge cut height, and MetaNetwork version.",
-      "source_reviewer": "reproducibility",
+      "text": "Add the required documentation statements: (a) human tissue ethics approval (committee, protocol number, consent basis); (b) IACUC protocol number and approving institution; (c) funding disclosure; (d) competing-interests declaration (or explicit 'none'); (e) data availability statement with raw MS data deposition (PRIDE/MassIVE accession) and confirmation that consent terms permit deposition; (f) code availability for custom analyses.",
+      "source_reviewer": "",
       "blocking": false
     },
     {
       "id": "R1-07",
-      "text": "7. State the MS precursor and fragment mass tolerances used in the ProteomeDiscoverer search.",
+      "text": "Specify the exact thresholds and filtering criteria for the '155 protein measurements' correlation and the 'six proteins' overlap between human and mouse datasets, and for the Tau correlation analysis (r>0.7 threshold, multiple-testing consideration).",
       "source_reviewer": "reproducibility",
       "blocking": false
     },
     {
       "id": "R1-08",
-      "text": "8. State how human and mouse proteins were matched for the cross-dataset overlap (gene symbol? orthology? accession?) and the exact inclusion thresholds (p < 0.05 in both? fold-change cutoffs? directionality criterion).",
-      "source_reviewer": "reproducibility",
+      "text": "Address the AsymAD composition of the control group: 11 of 14 NA samples have AD pathology, so the comparison is a severity gradient (dementia vs. no-dementia, both with plaques/tangles), not a clean contrast; scale the interpretation that findings reflect changes 'underlying AD dementia rather than mechanisms triggered by Abeta plaques or NFT' accordingly.",
+      "source_reviewer": "methodology",
       "blocking": false
     },
     {
       "id": "R1-09",
-      "text": "9. Provide an IRB/ethics approval statement for the human hippocampal tissue, including the approving body and the determination (approval or exemption). Provide a statement on consent or de-identification.",
-      "source_reviewer": "ethics",
+      "text": "Report whether the 78% fraction-specific changes are concentrated among proteins detected in only one fraction; if so, the claim collapses and must be requalified. Also report, for proteins significant in one fraction but quantified in others, whether the non-significant fraction effect sizes are in the same direction but below significance (measurement artifact) or genuinely absent.",
+      "source_reviewer": "methodology",
       "blocking": false
     },
     {
       "id": "R1-10",
-      "text": "10. Provide the IACUC protocol number for the mouse experiments.",
-      "source_reviewer": "ethics",
-      "blocking": false
-    },
-    {
-      "id": "R1-11",
-      "text": "11. Provide a funding statement and a competing-interests declaration (or explicitly declare that none exist).",
-      "source_reviewer": "ethics",
-      "blocking": false
-    },
-    {
-      "id": "R1-12",
-      "text": "12. Provide a data availability statement that includes the repository accession (from #4) and confirms that all supplementary tables are deposited.",
+      "text": "State the ANOVA parameters (normalization, correction, threshold) and the mass-spec search parameters (mass tolerances) explicitly; add software versions for MetaNetwork, Webgestalt, PACOM, and Cytoscape; specify the NP-40 buffer volume for the P1 extraction.",
       "source_reviewer": "reproducibility",
       "blocking": false
     },
     {
-      "id": "R1-13",
-      "text": "13. Fix the Figure 4 caption to match the text: panel C shows GO enrichment, panel D shows fraction-frequency data. The volcano-plot legend must be corrected ('Red < 0.05, black ≥ 0.05').",
-      "source_reviewer": "clarity",
-      "blocking": false
-    },
-    {
-      "id": "R1-14",
-      "text": "14. Fix the numeric inconsistency in the Results: reconcile 238 + 1,323 with the stated total of 1,436. Fix the 37/7 protein count inconsistency. Fix the duplicated '4 AD Day7 measurements' in the Methods.",
+      "id": "R1-11",
+      "text": "Confirm the load-bearing citations flagged as unverifiable: (a) that Bai et al. 2021 reanalyzes exactly seven TMT datasets and that VPS35 is among the proteins it reports as unchanged; (b) that the '>50% of proteins in multiple compartments' statistic is in Thul et al. 2017; (c) the correct published year/venue for Samelson et al. (cited as Cell 2026; a 2023 bioRxiv preprint exists); (d) the Hales 2016 entry; (e) the specific Rab2a detail in Samelson et al.; (f) the full bibliography resolves in the deposited preprint.",
       "source_reviewer": "",
       "blocking": false
     },
     {
-      "id": "R1-15",
-      "text": "15. Define what 'pre-pathological' means operationally for the 2-month mice, given that Abeta42 is detectable at that age. If it cannot be operationally defined, remove the term and adjust the associated claims.",
-      "source_reviewer": "clarity",
+      "id": "R1-12",
+      "text": "Provide a head-to-head statement of the delta over Bai 2020's multilayer fractionation and the cited insoluble-fraction studies (Bai 2013, Hales 2016), naming what this four-fraction design detects that those do not, to support the 'invisible to bulk tissue approaches' novelty claim.",
+      "source_reviewer": "novelty",
       "blocking": false
     },
     {
-      "id": "R1-16",
-      "text": "16. Requalify the abstract's claim of 'protein degradation is altered by Aβ pathology' to acknowledge the relocalization confound explicitly stated in the Discussion. The abstract should carry the same caveat the Discussion carries.",
-      "source_reviewer": "rigor",
-      "blocking": false
-    },
-    {
-      "id": "R1-17",
-      "text": "17. Requalify the abstract's claim that 'subcellular localization is a primary determinant of disease vulnerability' — this conflates a descriptive observation (changes are fraction-specific) with a mechanistic one. Replace 'demonstrating that' with 'consistent with' or add language that excludes the aggregation alternative.",
-      "source_reviewer": "rigor",
-      "blocking": false
-    },
-    {
-      "id": "R1-18",
-      "text": "18. Cite Yarbro et al. 2025 (Nat Commun, PMID 39934151), which directly overlaps the QUAD/human–mouse design space, and state how the present fraction-resolved results differ. Either cite a source for the 'non-canonical CCT chaperonin structures' claim or drop the unsupported phrase.",
-      "source_reviewer": "literature",
-      "blocking": false
-    },
-    {
-      "id": "R1-19",
-      "text": "19. Provide the IACUC protocol number for the mouse experiments.",
-      "source_reviewer": "ethics",
-      "blocking": false
-    },
-    {
-      "id": "R1-20",
-      "text": "20. For the VPS35 'mislocalization' claim: add a sentence acknowledging that the current data cannot distinguish redistribution from aggregation/insolubility, consistent with how the Discussion treats other P3/S2 discord proteins. Alternatively, add an orthogonal readout (e.g., solubility assay).",
+      "id": "R1-13",
+      "text": "Add a limitations section addressing: the single 7-day chase timepoint and Day0 pooling in QUAD; the untested assumption that degradation determines steady-state abundance (synthesis unmeasured); the unexplained 5-month reversal in degradation patterns; and the lack of cell-type composition correction in the human data.",
       "source_reviewer": "methodology",
       "blocking": false
     }
   ],
-  "minor_suggestions": [],
+  "minor_suggestions": [
+    "Add a citation for the 'emerging evidence of non-canonical CCT chaperonin structures' claim (Fig. 3D discussion).",
+    "Cite the primary source (Neumann et al. 2006) for the TDP-43 nuclear-depletion observation rather than the Balendra 2025 review.",
+    "Cite Fornasiero 2018 (or other non-QUAD reports) for the claim that protein degradation slows with age.",
+    "Report the sex composition of the human donor cohort and acknowledge any sex imbalance as a potential confound.",
+    "Add antibody details (clone, host, dilution, RRID) for the Tau, VPS35, and Ubiquitin immunoblots.",
+    "Define error bars in all figure legends and state the number of biological replicates for each panel.",
+    "Confirm the final reference list resolves cleanly (several DOIs are garbled in the parse, which is a converter artifact).",
+    "Consider a direct within-study comparison of the pooled (unfractionated) samples against the fraction-specific results to make the 'invisible to bulk tissue' claim testable rather than asserted."
+  ],
   "reviewer_reports": [
-    {
-      "reviewer": "methodology",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "methodology-1",
-          "text": "The 'fraction-specific' claim is not tested as a claim. The manuscript states that '78% of significant AD-associated alterations were restricted to a single fraction, demonstrating that subcellular localization is a primary determinant of disease vulnerability.' The supporting analysis is an independent per-fraction ANOVA (Fig. 4A), and then a counting of how many proteins reached p<0.05 in only one fraction. But whether a protein passes the cutoff in fraction A and not fraction B depends on the number of quantified peptides, the measured noise, and the abundance of that protein in each fraction – all of which differ by fraction. A genuinely spatial architecture, by contrast, requires a test of interaction between disease and fraction for proteins measured in multiple fractions (a mixed model where an individual protein is quantified in multiple fractions as a within-subject repeated measure). As it stands, the '78%' number can be produced by power and detection differences alone, and no part of the manuscript's design or analysis presently rules that out."
-        },
-        {
-          "id": "methodology-2",
-          "text": "QUAD 'degradation' is confounded with insolubilization during the chase. The paper claims degradation rates diverge between fractions and, in the 12-month AD S2, are increased relative to WT, while AD P3 proteins appear more stable. But a labelled protein moving from the soluble S2 fraction into an aggregate/pellet fraction during the chase would produce exactly these measurements without any change in true degradation. This is not a hypothetical: the manuscript puts the 'shift to the insoluble fraction' as one of its central P3/P2 findings in human brain, and the authors explicitly concede in the Discussion that 'proteins with decreased stability in AD under the S2 and increased stability in the AD P3 could be explained by a protein becoming increasingly insoluble during the seven-day chase.' Once that is conceded, the term 'degradation' in the mouse results is not defended. To support 'degradation,' the authors need either (a) an experimental design where vertical protein pooling includes a redistribution-insensitive readout (e.g., entire-cortex day-0/day-7 ratio, compared to the fraction-level ratios), or (b) a re-labeling caveat, that solubility/death is a condition both change while keeping a 'degradation' claim."
-        },
-        {
-          "id": "methodology-3",
-          "text": "The 'retromer mislocalization' claim requires more than a shift between two fractions. Increased VPS35 in P3, decreased in S2, with unchanged total is consistent with VPS35 becoming less soluble (and therefore pelleting with P3), not necessarily being mislocalized to a different physical compartment. Since the partners construct the conclusion–'retromer complex mislocalization' is a labeled mechanism in the introduction/discussion–the authors should either walk the claim down to 'altered abundance partitioning' or add an orthogonal localization readout (e.g., immunofluorescence or a membrane-based fractionation) to distinguish aggregation from reorganize. The VPS35 immunoblot in Fig. 7D repeats the same fractions and cannot distinguish these."
-        },
-        {
-          "id": "methodology-4",
-          "text": "Sweep items (each one sentence; listed left to right by what they cost the design):\n- The two 16-plex TMT sets per fraction: the manuscript does not state how the AD and ND cases were distributed across the two sets, nor whether the sets can be treated as a single batch; if diagnosis is confounded with the tíde tag set, every fraction comparison inherits a batch effect. Report the design, not a claim in supplementary.\n- Fraction purity is only supported by GO-term enrichment on fraction-unique proteins; no marker-enrichment or cross-contamination estimate across fractions is shown, so 'what the four fractions physically are' is not demonstrated. Add a table of marker proteins (e.g., organelle-specific) and their abundance sera across the four fractions.\n- The 'pre-pathological' 2-month designation is not substantiated: the A42 ELISA at 2 months is described as giving no signal ('signal was not observed' for wild-type), but no limit-of-detection is given for the sample or dilution; weak or OFF-scale signal would invalidate the word 'pre-pathological'.\n- The 2-month QUAD 'initiating features' claim rests on a six-protein overlap, with a nominal n=4 per genotype; this is too small a molecular basis to sustain 'implicating … initiating features of AD'. It may be true, but the word 'initiating' exceeds the assay's temporal resolution.\n- Pooled day-0 denominators: the day7/day0 ratio is computed against pooled day0 value, yet the loss of the day-0 replicate structure is not discussed—if AD and WT consumed, and thereby labeled, different AHA, that difference is absorbed into the ratio confounded with degradation.\n- WGCNA module significance is thresholded at nominal p<0.05 across many (16–25) modules per fraction without multiple-testing correction; several significant modules are correlated—report (or estimate) the P of the observed number of significant modules under a permutation null."
-        }
-      ],
-      "questions": []
-    },
     {
       "reviewer": "ethics",
       "score": 3.0,
@@ -161,138 +104,147 @@
       "weaknesses": [
         {
           "id": "ethics-1",
-          "text": "Human tissue ethics (load-bearing). The methods state human post-mortem hippocampi were 'obtained from the Shiley-Marcos Alzheimer's Disease Research Center of the University of California, San Diego' but provide no IRB/ethics approval statement, no consent statement, and no statement that the tissue was de-identified. Post-mortem human brain research requires an ethics determination even when exempt, and this tissue includes individuals whose brain pathology status (AsymAD) is sensitive. Silence is not compliance — the approving body and the determination must be stated. The one thing that would settle this is a sentence naming the IRB and the approval or exemption determination."
+          "text": "Human post-mortem tissue: no ethics approval or consent statement (HARD). The manuscript analyzes 27 human hippocampal samples and names their source, but nowhere states that the use was approved by an ethics committee, gives a protocol number, or describes the consent basis (e.g., next-of-kin consent, or de-identified autopsy tissue used under an approved biobank protocol). Post-mortem tissue is a triggered category; silence is not compliance. What would settle it: a sentence naming the approving committee and protocol number, and the consent/authorization basis for the tissue."
         },
         {
           "id": "ethics-2",
-          "text": "Funding and competing interests (load-bearing). The manuscript contains no funding statement and no competing-interests declaration, and does not explicitly declare that none exist. This is a required disclosure regardless of category."
+          "text": "No funding disclosure and no competing-interests statement (HARD). The manuscript text contains neither. The mandate requires funding disclosed and competing interests declared or explicitly declared as none. What would settle it: a funding statement and a COI declaration (or an explicit \"none\"), even if these live on the preprint platform rather than in the manuscript body."
         },
         {
           "id": "ethics-3",
-          "text": "The IACUC statement names the committee but no protocol number — supply the identifier (SOFT)."
+          "text": "Animal approval statement lacks the protocol identifier (SOFT). \"Animal facilities were AAALAC-approved, and protocols were in accordance with the IACUC\" names compliance but not the specific IACUC protocol number or the approving institution. Please add the identifier."
         },
         {
           "id": "ethics-4",
-          "text": "No data availability statement or public repository deposition (e.g., PRIDE/MassIVE) for the raw proteomics data, which is standard for TMT-LC-MS studies and needed for the work to be checked; for human-derived data this also has a consent dimension."
+          "text": "No data availability statement (SOFT). The manuscript references supplementary tables but does not state where the mass spectrometry raw data are deposited (e.g., PRIDE/ProteomeXchange). For human-derived data, this should also confirm that the consent terms permit such deposition."
         }
       ],
       "questions": [
-        "Which IRB/ethics committee approved the use of the human hippocampal tissue, and was consent obtained from next-of-kin or is the tissue de-identified?",
-        "What is the IACUC protocol number for the mouse experiments?",
-        "Is there a funding source, and are there any competing interests to declare?"
+        "Which ethics committee approved the use of the human post-mortem tissue, under what protocol number, and on what consent basis?",
+        "What is the IACUC protocol number and the institution that issued it?",
+        "What are the funding sources, and are there any competing interests to declare?"
       ]
     },
     {
-      "reviewer": "data_analysis",
+      "reviewer": "methodology",
       "score": 3.0,
       "confidence": 4.0,
       "weaknesses": [
         {
-          "id": "data_analysis-1",
-          "text": "Pseudo-replication in the QUAD genotype comparisons (HARD). Figure 8F states \"Each circle represents the log2 transformation of the Day7/Day0 ratio for one protein\" and reports p-values from one-way ANOVA with Tukey's test. This treats each of the hundreds-to-thousands of proteins as an independent observation, but all proteins in a genotype come from only 4 pooled biological replicates (each pooled from one male and one female mouse). Proteins within an animal are correlated through shared animal-level effects, so the effective sample size for the genotype comparison is 4 per group, not the number of proteins plotted. The \"**** < 0.0001\" values are almost certainly inflated by this. The same issue affects Figure 8E (proteins as observations in the age comparison). What would settle it: fit a mixed-effects model with animal as a random effect, or compute a per-animal summary (e.g., median log-ratio across proteins) and test with n=4 per group; report whether the direction and significance of the genotype differences survive."
+          "id": "methodology-1",
+          "text": "HARD — The P3/S2 discordant pattern cannot distinguish mislocalization from insolubility. The claim that VPS35 and the retromer are mislocalized in AD rests on the observation that VPS35 is up in P3 and down in S2. But P3 is the NP-40-insoluble pellet. A protein that becomes insoluble or aggregate-associated in AD will shift from S2 to P3 during centrifugation regardless of its true subcellular location. The authors acknowledge this for insoluble protein accumulation but still claim mislocalization for the retromer and nuclear transport dysfunction for the Ran GTPase-binding proteins. The design cannot distinguish a protein moved to a different compartment from a protein that became insoluble and therefore pellets differently. The authors' own data support the latter: they show increased hydrophobicity and ubiquitination in P3, and 37 P3-upregulated proteins overlap with previously published insoluble-fraction datasets. To support the mislocalization claim, an orthogonal assay that does not depend on pelleting is needed — e.g., immunofluorescence showing VPS35 in a different compartment, or a soluble-fraction measurement that isolates transport from solubility."
         },
         {
-          "id": "data_analysis-2",
-          "text": "Uncorrected multiple testing in the human ANOVA undermines the 78% fraction-specificity claim (HARD). The text states \"ANOVA was performed in ProteomeDiscoverer 2.5\" and the volcano plots (Figure 4A) use a p<0.05 threshold, with no multiple-comparison correction named. With ~6,000 proteins tested per fraction across four fractions, the expected number of false positives at p<0.05 is roughly 300 per fraction. These noise hits would be distributed essentially at random across fractions, inflating the apparent fraction-specificity that is the paper's central human finding. The 2,405 \"significant changes\" and the 78% figure are computed on this uncorrected set. What would settle it: recompute the significant sets with a named FDR correction (e.g., Benjamini–Hochberg q<0.05) per fraction, and report the 78% fraction-specificity statistic against the corrected set alongside the uncorrected one."
+          "id": "methodology-2",
+          "text": "HARD — The 78% fraction-specific claim does not rule out a measurement artifact. The headline claim that subcellular localization is a primary determinant of disease vulnerability rests on the observation that 78% of significant changes are restricted to one fraction. But a protein quantified in multiple fractions might show significance in only one fraction because of fraction-specific variance, sensitivity, or peptide sampling depth — not because a specific proteoform is differentially vulnerable. The authors do not test whether the fraction-specific changes are consistent with a single underlying effect with fraction-specific noise. A straightforward check: for proteins significant in one fraction but quantified in others, is the effect size in the non-significant factions in the same direction but below significance, or genuinely absent? The claim as stated is not earned without ruling out the noise explanation."
         },
         {
-          "id": "data_analysis-3",
-          "text": "The six \"initiating\" proteins at 2 months are not tested against their null expectation (HARD). The overlap of BIN1, NSFL1C, HSPA12A, CACNA2D3, DNAJA4, and PHYHIPL comes from the intersection of two sets each filtered at uncorrected p<0.05. If N proteins were tested in both datasets, the expected number of false overlaps is N × α₁ × α₂; for N≈1,000 and α=0.05 in each, that is ~2.5 expected by chance, and 6 observed is only marginally above that. The claim that these represent \"initiating features of AD\" outruns this evidence. What would settle it: report N (the number of proteins quantified in both datasets at 2 months), compute the expected overlap under the null, and test the observed 6 against it (e.g., permutation of labels or a hypergeometric test using the corrected hit lists)."
+          "id": "methodology-3",
+          "text": "HARD — The QUAD Day0 pooling and the 2-month mechanism are both problematic. Day0 samples were pooled per genotype within each timepoint, so the Day7/Day0 ratio has no variance in the denominator. If AD and WT differ in baseline AHA incorporation (i.e., protein synthesis), the ratio is biased in a direction the design cannot detect. The authors do not report whether synthesis rates were comparable between genotypes. Separately, at 2 months the AD mice have minimal Abeta (the authors' own ELISA shows 5 times more at 5 times than at 2 times), so what drives the degradation change at 2 months? The claim that degradation changes are Abeta-driven is not supported at the earliest timepoint, and the authors do not offer an alternative mechanism."
         },
         {
-          "id": "data_analysis-4",
-          "text": "\"No difference\" claim at 12 months in P3 (HARD). The text states \"there was no difference observed between the genotypes at 12 months\" in the P3 fraction. With n=4 animals per group, this is an unpowered claim of absence; the non-significant result cannot support \"no difference.\" What would settle it: report the smallest effect detectable with n=4 at the observed variance, or reframe as \"no difference was detected.\""
+          "id": "methodology-4",
+          "text": "HARD — The six-protein overlap at 2 months could be chance. With thousands of proteins tested, six overlaps between the 2-month mouse data and the human data could occur by chance. No enrichment, permutation, or hypergeometric test is reported. The claim that these six implicate vesicle transport and proteostasis disruption as initiating features is not earned without showing the overlap exceeds chance expectation. The authors should report the expected number of overlaps given the protein counts in each dataset and the significance threshold used."
         },
         {
-          "id": "data_analysis-5",
-          "text": "Day0 pooling (SOFT). The Day7/Day0 ratio divides each of the 4 Day7 replicates by a single pooled Day0 measurement per genotype and timepoint. If the Day0 pool is atypical for a protein, all four ratios for that protein shift together, adding correlated noise that the protein-as-observation analysis does not model. This does not create a genotype difference (both genotypes have pooled Day0), but it inflates protein-level variance and should be acknowledged."
+          "id": "methodology-5",
+          "text": "SOFT — The AsymAD composition of the control group undermines a stated interpretation. Eleven of NA samples are AsymAD (pathology present, no dementia). The comparison is therefore dementia vs. no-dementia, both with plaques and tangles. The claim that findings reflect protein changes underlying AD dementia rather than mechanisms triggered by Abeta plaques or NFT is not earned — AsymAD brains have plaques and tangles too, just less severe. This is a severity gradient, not a clean contrast, and the interpretation should be scaled accordingly."
         },
         {
-          "id": "data_analysis-6",
-          "text": "WGCNA module testing (SOFT). Sixteen to twenty-five modules per fraction are tested for AD vs. ND differences at p<0.05 with no correction named. With ~20 modules per fraction, ~1 false-positive module per fraction is expected."
+          "id": "methodology-6",
+          "text": "SOFT — WGNCA cross-fraction comparisons compare different protein sets. Modules are constructed independently per fraction, so a protein folding module in S2 is not the same set of proteins as a protein folding module in P2. The claim that a pathway is regulated differently between fractions requires the same proteins in both modules; the authors show only partial overlap (14 of 86 proteins shared between two fractions, 4 in all three). The claim of differential regulation is therefore based on largely non-overlapped protein sets."
         },
         {
-          "id": "data_analysis-7",
-          "text": "Figure 8E test specification (SOFT). The caption reports \"one-way ANOVA with Tukey's multiple comparison test\" but does not state the grouping — is this a 2-group paired comparison (2-month vs 12-month ratios for the same proteins) or a 4-group comparison including genotype? For a paired two-group comparison, a paired test on protein-level ratios would be the natural choice; the current description is ambiguous."
+          "id": "methodology-7",
+          "text": "SOFT — The Tau correlation threshold (r > 0.7) has no multiple-testing correction. With 27 samples and thousands of proteins, the expected number of correlations exceeding this threshold by chance is not addressed. The claim that Rab2a may be a negative regulator of Tau aggregation based on correlation in NA samples (which have low Tau) is a weak basis for a regulatory claim."
         },
         {
-          "id": "data_analysis-8",
-          "text": "Tau-correlated proteins (SOFT). The r>0.7 threshold for Tau-correlated proteins is stated with no p-value or multiple-comparison correction; with n=13–14 samples, r>0.7 is nominally significant, but the 124 proteins identified across fractions are not corrected for the number of correlations tested."
-        },
-        {
-          "id": "data_analysis-9",
-          "text": "CV<50% filter in Figures 8G/H (SOFT). The exclusion of proteins with >50% CV is not justified; if high-CV proteins are preferentially excluded in one genotype or fraction, this could bias the median comparisons. A sensitivity analysis with the filter relaxed would address this."
+          "id": "methodology-8",
+          "text": "SOFT — The human-mouse correlation assumes degradation determines steady-state abundance. The inference that faster degradation in AD mice corresponds to decreased abundance in AD humans holds only if synthesis is unchanged. Synthesis is unmeasured in the human samples (post-mortem, cannot be), so the direction-of-change assumption is an untested premise."
         }
       ],
       "questions": [
-        "What is the exact grouping in the Figure 8E ANOVA — is the 2-month vs 12-month comparison paired on protein identity, and is genotype included as a factor?",
-        "How many proteins were quantified in both the human and mouse datasets at the 2-month timepoint (the denominator N for the six-protein overlap)?",
-        "Was any FDR correction applied within ProteomeDiscoverer for the human ANOVA, and if so, what was it and what threshold was used?"
+        "For proteins significant in one fraction but quantified in others, are the non-significant fraction effect sizes in the same direction but below significance, or genuinely absent? This would distinguish the measurement-artifact explanation from true proteoform-specific vulnerability.",
+        "What is the baseline AHA incorporation (Day0) in AD vs. WT — is there evidence that synthesis rates are comparable between genotypes?",
+        "What is the expected number of overlaps between the 2-month mouse and human datasets by chance, given the protein counts and thresholds used?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The claim that \"78% of significant AD-associated alterations were restricted to a single fraction\" (Figure 4C) cannot be reproduced from the described analysis. The ANOVA was \"performed in ProteomeDiscoverer 2.5\" with no statement of normalization method, multiple-testing correction (FDR? Benjamini–Hochberg?), or significance threshold. The 78% figure is the paper's central quantitative claim, and an independent group could obtain a very different percentage depending on these settings. Additionally, the raw MS data (raw files, peak lists, search results) are not deposited anywhere stated — no PRIDE/MassIVE accession, no data availability section at all. The supplementary tables contain processed protein-level data, but not the peptide-level or raw data needed to re-run the ANOVA. What would resolve it: state the ANOVA parameters (normalization, correction, threshold) and deposit raw MS data with a working accession."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "The QUAD degradation claims (Figure 8E–H, Figure 9) rest on an incompletely specified analysis pipeline. The Day0 pooling is described as \"an equal number of male and female mice were pooled for each fraction,\" but the number of mice per pool is not stated — this matters because the Day7/Day0 ratio variance structure depends on how many animals contributed to the Day0 denominator. The TMT normalization procedure (e.g., total peptide amount normalization, reference channel scaling) is not described. The \"median Day0 protein TMT value\" division is stated, but not how missing values were handled in the ratio calculation. What would resolve it: state the number of mice per Day0 pool, the TMT normalization method, and the missing-value handling."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "The cross-dataset comparison yielding \"155 protein measurements\" and the \"six proteins\" at 2 months (Figure 9E) lacks specified criteria. The text says \"Using these stipulations, we identified 155 protein measurements... that correlated\" — but the correlation threshold, p-value threshold, and the exact definition of \"altered\" in the human data are not stated. Similarly, the six proteins at 2 months are presented as an \"overlap\" without the filtering criteria that produced them. What would resolve it: specify the exact thresholds and filtering steps for both the 155-measurement correlation and the six-protein overlap."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "No data availability statement or accession numbers for raw MS data anywhere in the manuscript — HARD for all load-bearing claims."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "No code availability for any custom analysis (e.g., the human–mouse correlation, the Tau correlation analysis, the WGCNA post-processing) — HARD."
+        },
+        {
+          "id": "reproducibility-6",
+          "text": "Software versions incomplete: MetaNetwork, Webgestalt, PACOM, and Cytoscape are named without versions — SOFT."
+        },
+        {
+          "id": "reproducibility-7",
+          "text": "Fractionation volume not specified: \"H1 buffer with 0.5% NP-40 was added to the P1 pellet\" — the volume is not given, which affects the extraction efficiency — SOFT."
+        },
+        {
+          "id": "reproducibility-8",
+          "text": "Results-to-artifact mapping is implicit: the manuscript does not state which data + which step produces each figure (e.g., which ProteomeDiscoverer export feeds which WGCNA input) — SOFT."
+        }
+      ],
+      "questions": [
+        "What were the exact ANOVA settings in ProteomeDiscoverer 2.5 (normalization, multiple-testing correction, significance threshold) for the human fraction analyses?",
+        "How many mice were pooled into each Day0 sample for the QUAD analysis, and how was TMT data normalized before the Day7/Day0 ratio calculation?",
+        "What specific thresholds defined the \"155 protein measurements\" correlation and the \"six proteins\" overlap between human and mouse datasets?",
+        "Where will the raw MS data (raw files, peak lists, search results) be deposited, and under what accession?"
       ]
     },
     {
       "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "novelty-1",
-          "text": "The central novelty claim is incompletely differentiated from Bai et al. (2020). The manuscript states that \"conventional unfractionated analyses may obscure\" AD proteome changes (Abstract) and that fractionation \"reveals disease-relevant signals invisible to bulk tissue approaches\" (Discussion). But Bai et al. already fractionated AD brains into 3 layers (soluble, membrane/organelle, insoluble), used TMT-LC-MS, and identified 5,305 proteins across multiple regions including hippocampus. Their fractions differ from the S2/P2/S3/P3 scheme here, but the core insight — that fractionation reveals layer-specific AD alterations — was established. The present study does not name Bai 2020 as the closest prior work, does not provide a head-to-head table comparing what each set of fractions captures, and does not state explicitly what biological dimension the current 4-fraction scheme accesses that Bai's 3-fraction scheme does not. Without this differentiation it is unclear whether the 78 % fraction-specificity statistic is a novel finding or a replication of an expected property in a different fractionation scheme."
-        },
-        {
-          "id": "novelty-2",
-          "text": "The QUAD degradation comparisons are incremental over established methods in the same system. The authors apply the QUAD method (published by this group in 2020) to two subcellular fractions of APPswePS1dE9 mouse cortex at three ages and report that AD alters degradation rates. Fornasiero et al. (Nat Commun 2018) already measured protein lifetimes across subcellular fractions (cytosol, membranes, mitochondria, synaptosomes, nuclei) in mouse brain using a different labelling strategy (SILAC), finding that subcellular localisation is a major determinant of protein turnover. The present study's contribution is to repeat that analysis in an AD model. This is useful — degradation dynamics may differ in disease — but the manuscript frames it as though subcellular degradation analysis itself were novel (\"we quantitated protein degradation in different biological fractions,\" Introduction). The delta (AD-specific vs. WT-specific changes in degradation across fractions) is real but should be presented as an incremental extension, not as an innovation."
-        },
-        {
-          "id": "novelty-3",
-          "text": "The six-protein early-stage overlap (2-month mouse + human) is a thin discovery. The authors highlight six proteins (BIN1, NSFL1C, HSPA12A, CACNA2D3, DNAJA4, PHYHIPL) that are altered in both the human AD analysis and the 2-month pre-pathological mouse timepoint. BIN1 is an established AD risk factor; its alteration in an APP-overexpressing model at 2 months could reflect a direct response to APP overexpression rather than an early pathogenic mechanism. The remaining five proteins are mostly novel but their individual statistical support is not described — the authors report only that they \"overlap\" between datasets, not the direction of change, the effect sizes, or whether the overlap exceeds chance expectation given the number of proteins quantified in both datasets. A Fisher's exact test or permutation-based enrichment would establish whether six proteins from a set of hundreds is surprising or within the expected false-positive count."
-        },
-        {
-          "id": "novelty-4",
-          "text": "The manuscript's core statistic \"78% of significant changes were fraction-specific\" would be more informative if reported alongside the same statistic for the unfractionated control (i.e., what percentage of proteins that change in *any* fraction would have been detected as changed if the fractions were pooled computationally?) — this would quantify the gain of fractionation directly."
-        },
-        {
-          "id": "novelty-5",
-          "text": "The comparison to \"seven proteomic TMT datasets on human unfractionated AD non-hippocampal brain tissue\" (Results, Supplementary Table 7) that confirmed 748/2405 (31%) of the present changes does not tell the reader how many of the remaining 69% are missed solely because of brain-region differences versus fractionation depth; a direct comparison using the same brain region (hippocampus) fractionated vs. unfractionated would be more informative."
-        },
-        {
-          "id": "novelty-6",
-          "text": "The manuscript uses \"spatial proteoforms\" in a way that conflates true splice-isoform-specific localisation with the trivial case of a protein detected in multiple fractions because of contamination or incomplete fractionation — a distinction not addressed in the text."
-        },
-        {
-          "id": "novelty-7",
-          "text": "The WGCNA and ANOVA analyses on the human data are described as parallel but their results are not cross-referenced; reporting the overlap of significant proteins/modules between the two methods would strengthen the claim that the findings are robust."
-        },
-        {
-          "id": "novelty-8",
-          "text": "The claim that \"80% of the NA group was AsymAD\" and therefore the findings \"likely reflect proteomic changes underlying AD dementia rather than mechanisms triggered by Aβ plaques or NFT\" (Discussion) is a reasonable inference but is stated as a conclusion when it is a selection-bias argument; the study has no AD-dementia vs. AsymAD contrast to demonstrate this."
-        },
-        {
-          "id": "novelty-9",
-          "text": "The QUAD analysis pools male and female mice (one of each per replicate) and does not examine sex as a variable; given known sex differences in AD progression, this is a limitation that should be acknowledged."
-        }
-      ],
-      "questions": []
-    },
-    {
-      "reviewer": "literature",
-      "score": 3.0,
+      "score": 4.0,
       "confidence": 3.0,
       "weaknesses": [
         {
-          "id": "literature-1",
-          "text": "**Missing directly-competing prior work on AD protein turnover.** The QUAD section measures degradation in APPswePS1delta9 cortex at 2/5/12 months and cross-compares to human brain. Yarbro et al., *Nature Communications* 2025, \"Human and mouse proteomics reveals the shared pathways in Alzheimer's disease and delayed protein turnover in the amyloidome\" (PMID 39934151), does precisely this design space — human+mouse AD proteomics with protein-turnover measurements. It is not in the reference list. Because it directly overlaps the degradation and human-mouse claims, this is a must-cite (HARD); the authors should state how their fraction-resolved QUAD results differ from it."
+          "id": "novelty-1",
+          "text": "The central framing claim — that this \"establishes spatial proteoforms as essential units of pathogenic analysis\" and reveals \"signals invisible to bulk tissue approaches\" — outruns what is actually new. Subcellular fractionation proteomics of AD brain is established (the manuscript itself cites Bai 2013 and Hales 2016 on insoluble fractions; Bai 2020 \"Deep Multilayer Brain Proteomics\" used fractionation), and the \"spatial proteoform\" concept is standard (Thul 2017, cited). The finding that 78% of AD changes are fraction-specific is a plausible and interesting observation, but it is partly a consequence of the fractionation design itself — a protein moving between fractions will by construction appear as a single-fraction change — so it does not by itself establish that spatial proteoforms are the \"essential unit.\" What would settle this: a head-to-head statement of the delta over Bai 2020's multilayer fractionation and over the insoluble-fraction studies, naming what this four-fraction design detects that those do not. Without that, the contribution is real but its significance is overstated."
         },
         {
-          "id": "literature-2",
-          "text": "**Unsupported literature claim with no citation.** In the WGCNA section: \"This corresponds to emerging evidence of non-canonical CCT chaperonin structures and indicates they are dierentially regulated in AD.\" No source is given for the \"emerging evidence,\" so the claim cannot be checked. My searches did not surface a specific \"non-canonical CCT\" literature; either cite the source or drop the phrase (HARD — a claim about prior work with no traceable origin)."
+          "id": "novelty-2",
+          "text": "The degradation analysis is the strongest genuinely novel element, but its novelty claim rests on the QUAD method applied to an AD model across ages. My searches (find_away_work and search_preprints on \"protein degradation AD mouse azidohomoalanine/QUAD\") returned no preempting work, so I cannot flag preemption — but the searches were largely uninformative (the fallback routing returned generic AD papers and empty bioRxiv results), so this is a pass with limited confidence, the verifiable priority. I could not verify the claim that \"we have previously overstated with QUAD that proteins are more stable at 12-month compared to 2-month\" — that is a citation to the authors' own prior work and is literature's call to check, not mine."
         },
         {
-          "id": "literature-3",
-          "text": "**Two specific attributions I could not verify from metadata.** (a) \"A meta-analysis of seven proteomic TMT datasets… confirmed 748 (31%) AD changes in our dataset\" (ref 27, Bai 2021) — the paper exists but the specific 748/31% figure is not checkable from the abstract; (b) \"Rab2a was identified as a regulator of Tau oligomers in genome-wide CRISPRi screen in iPSC-derived neurons\" (ref 38, Samelson 2026, PMID 41610849) — the paper exists but I could not confirm Rab2a specifically from metadata. Both are plausible; please confirm the specific claims against the cited sources."
+          "id": "novelty-3",
+          "text": "The novel that most AD changes are fraction-specific (78%) is presented as a discovery, but the manuscript does not compare this against what a bulk tissue analysis of the same samples would show — a direct within-study comparison would make the \"invisible to bulk tissue\" claim testable rather than asserted."
+        },
+        {
+          "id": "novelty-4",
+          "text": "The cross-dataset human/mouse correlation (155 measurements) is presented as evidence of shared biology, but the direction-of-change logic (faster degradation ↔ lower abundance) is an assumption that the manuscript does not defend against the absolute value that both reflect independent Abeta-driven processes; this is partly consequence's call, which I flag and defer."
+        },
+        {
+          "id": "novelty-5",
+          "text": "The six 2-month proteins are called \"initiating features,\" but with N=4 pooled replicates and a single early timepoint, the claim that these are initiating rather than early-responding is not established by the design; this is a significance claim that outruns the evidence."
         }
       ],
-      "questions": []
+      "questions": [
+        "What specifically does the four-fraction design detect that Bai 2020's multilayer fractionation and the cited insoluble-fraction studies do not — stated as a concrete delta?",
+        "Can the \"invisible to bulk tissue\" claim be demonstrated within this study by running the same ANOVA on the pooled (unfractionated) samples alongside the fraction-specific results?",
+        "For the 2-month \"initiating\" claim: is there any independent evidence (e.g., a second early timepoint or a functional assay) that these six proteins precede rather than accompany Abeta accumulation?"
+      ]
     },
     {
       "reviewer": "rigor",
@@ -301,41 +253,86 @@
       "weaknesses": [
         {
           "id": "rigor-1",
-          "text": "\"Initiating features of AD\" claim (HARD). The abstract states the six-protein overlap \"implicat[es] vesicle transport and proteostasis disruption as initiating features of AD.\" Three problems. First, \"initiating\" is causal language from an observational AD-vs-WT comparison at a single timepoint — association at an early age does not establish initiation. Second, \"pre-pathological\" is contradicted by the authors' own ELISA, which shows Abeta42 present at 2 months (five-fold less than at 5 months, but present). Third, the six-protein overlap is reported without an enrichment statistic: with ~1,900 human changes and several hundred mouse 2-month changes, six overlaps could be chance. The authors should report the sizes of both compared sets and an overlap test (e.g., hypergeometric), and requalify \"initiating\" to something like \"associated with early pathology.\""
+          "text": "The abstract's claim that the 78% fraction-specificity 'demonstrating that subcellular localization is a primary determinant of disease vulnerability' is not licensed; the figure may reflect detection incompleteness (proteins near the detection limit in other fractions) rather than localization-dependent biology."
         },
         {
           "id": "rigor-2",
-          "text": "\"Primary determinant of disease vulnerability\" claim (SOFT). The abstract says 78% fraction-specific changes are \"demonstrat[ive] that subcellular localization is a primary determinant of disease vulnerability.\" The descriptive finding is solid, but the mechanistic interpretation is not established. The alternative the authors themselves invoke for P3 — that fraction-specific changes reflect protein aggregation/insolubility shifting proteins between fractions — would not support \"localization as a determinant of vulnerability\" but rather \"aggregation as a determinant.\" The claim conflates a descriptive observation (changes are fraction-specific) with a mechanistic one (localization determines vulnerability). \"Demonstrating\" should be softened to \"consistent with\" or the aggregation alternative explicitly excluded."
+          "text": "The authors report that 75% of proteins were detected in more than one fraction, but never state whether the 78% fraction-specific changes are concentrated among proteins detected in only one fraction; if they are, the claim collapses."
         },
         {
           "id": "rigor-3",
-          "text": "\"Revealed retromer complex mislocalization, nuclear transport dysfunction\" (SOFT). The VPS35 data (total unchanged + fraction redistribution) supports mislocalization as one explanation, but the aggregation/insolubility alternative is not excluded — the authors invoke this alternative for other non-nuclear P3/S2 discord proteins, and VPS35 is non-nuclear. The NCT claim is indirect: Ran GTPase binding proteins up in P3 and down in S2 are consistent with NCT dysfunction but could reflect other processes, and the body hedges (\"may be mislocalized\") where the abstract does not. The abstract's \"revealed\" overstates what the data shows."
+          "text": "The claim that the six-protein overlap 'implicat[es] vesicle transport and proteostasis disruption as initiating features of AD' is causal language not supported by the evidence: the 2-month mice are transgenic with mutations present from conception, so 'pre-pathological' means only low Abeta accumulation, and the six-protein overlap is not tested against chance expectation."
         },
         {
           "id": "rigor-4",
-          "text": "\"Protein degradation is altered by Abeta pathology\" (SOFT). The QUAD data shows Day7/Day0 differences between genotypes, but the authors acknowledge the relocalization confound. The opposite stability changes between S2 and P3 at 12 months (faster in AD S2, slower in AD P3) are exactly what relocalization of insoluble proteins during the 7-day chase would produce. The abstract's degradation claim should carry the same hedge the body carries."
+          "text": "The discordant S2/P3 patterns do not license 'nuclear transport dysfunction': the fractionation protocol places nuclei in P3 by design, and the pattern is equally consistent with aggregation/insolubility (proteins migrating from S2 to P3 during centrifugation without any transport defect); the immunoblot confirms the abundance pattern, not the mechanism."
         },
         {
           "id": "rigor-5",
-          "text": "\"This corresponds to emerging evidence of non-canonical CCT chaperonin structures and indicates they are differentially regulated in AD\" — \"indicates\" is over-strong; different subunits in different fractions with different regulation is consistent with, but does not demonstrate, non-canonical structures."
+          "text": "The retromer 'mislocalization' claim is under-hedged, since the same aggregation alternative applies."
         },
         {
           "id": "rigor-6",
-          "text": "\"produced by alterations in protein degradation\" (discussion) — causal language from a correlational cross-dataset comparison; \"associated with\" would match the design."
+          "text": "The human-mouse correlation assumes degradation rate is the sole determinant of protein abundance, ignoring transcription and other inputs; this assumption is neither stated nor tested."
         },
         {
           "id": "rigor-7",
-          "text": "\"invisible to bulk tissue approaches\" — the VPS35 example supports this, but \"invisible\" is absolute; the signal is invisible to *this* bulk approach, not all."
+          "text": "The QUAD Day0 samples were pooled per genotype/timepoint, so the Day7/Day0 ratio variance reflects only Day7, yet the statistics treat both timepoints as contributing variance."
         },
         {
           "id": "rigor-8",
-          "text": "The \"spatial proteoforms\" framing conflates localization with aggregation state — a protein sedimenting into P3 because it is aggregated is not a \"spatial proteoform\" in the functional sense the term implies; this conflation underlies several of the over-claims above."
+          "text": "The 5-month reversal in degradation patterns (AD S2 faster at 2mo, slower at 5mo, faster at 12mo) is unexplained and the narrative reads as post-hoc."
+        },
+        {
+          "id": "rigor-9",
+          "text": "The biological meaning of opposite module directions within one pathway ('protein folding pathway was upregulated in the blue and green modules in the S2 with AD but downregulated in the turquoise modules in the P2 and P3 fractions') is asserted, not explained."
+        },
+        {
+          "id": "rigor-10",
+          "text": "The claim that proteins correlating with Tau in NA samples 'may reflect Tau resilience' is speculative; no evidence links those correlations to resilience."
+        },
+        {
+          "id": "rigor-11",
+          "text": "'These findings establish spatial proteoforms as essential units of pathogenic analysis' outruns evidence that is correlational and drawn from one tissue (hippocampus) and one AD model."
+        },
+        {
+          "id": "rigor-12",
+          "text": "The abstract's 'reveal disease-relevant signals invisible to bulk tissue approaches' is supported by the VPS35 example but asserted generally; the meta-analysis comparison used non-hippocampal tissue, so the comparison is not apples-to-apples."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "(HARD) The primary human ANOVA is thresholded at p<0.05 with no multiple-testing correction stated. With roughly 4,500–6,000 proteins tested per fraction, α=0.05 yields ~225–300 expected false positives per fraction, or ~900–1,200 across the four fractions — up to ~40% of the 2,405 reported changes. The 78% fraction-specificity claim and the discordant P3/S2 enrichment are both built on this hit list. Settle it: apply Benjamini–Hochberg FDR (or state the correction if ProteomeDiscoverer applied one), report how many of the 2,405 changes survive, and recompute the 78% and the discord enrichment on the filtered list."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "(HARD) The mouse degradation comparison (Figure 8F) treats proteins as the unit of replication. Each circle is a protein ratio, but proteins within a mouse are correlated; the effective sample size for \"proteins in AD brains degraded significantly faster\" is 4 mice per group, not thousands of proteins, so the ANOVA p-values are anti-conservative. Additionally, the Day7/Day0 ratio divides by a single pooled Day0 sample per genotype — a single measured denominator whose error is not propagated, so any bias in the pool shifts every ratio for that genotype. Settle it: fit a mixed model with mouse as a random effect, or compare per-mouse median log2 ratios between genotypes (n=4 per group)."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "(HARD) The 78% fraction-specificity claim has no null expectation. A protein quantified in k fractions has k chances to cross the threshold, and abundances across fractions from the same brain are correlated, so the chance rate of single-fraction hits is not simply 0.05. The paper reports that 89% of altered proteins were quantified in multiple fractions but never computes how many single-fraction hits would occur by chance. Settle it: a permutation test (shuffle AD/NA labels, recompute per-fraction ANOVA, count single-fraction hits) or an analytic null based on the observed distribution of k."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "(HARD) The human–mouse overlaps (155 measurements at 12 months; 6 proteins at 2 months) are intersections of two uncorrected p<0.05 filters, reported as counts without a chance expectation. With the marginal hit rates in each dataset, the expected overlap is substantial and is not computed; the \"initiating features\" interpretation of the 6-protein set requires showing it exceeds chance. The interpretation also assumes steady-state abundance with unchanged synthesis, which is not tested. Settle it: a hypergeometric test or permutation that preserves the marginal hit rates and the opposite-sign constraint."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "(SOFT) The arithmetic does not reconcile: 238 more-stable + 1,323 less-stable = 1,561, but the text states"
         }
       ],
       "questions": [
-        "What are the sizes of the human-change and 2-month mouse-change sets, and does the six-protein overlap exceed chance expectation (hypergeometric or similar)?",
-        "How is \"pre-pathological\" defined, given that Abeta42 is detectable at 2 months in the authors' own ELISA?",
-        "For the VPS35 \"mislocalization\" claim, is there any evidence distinguishing redistribution from aggregation/insolubility — e.g., a solubility assay or native fractionation on the S2 and P3 pools?"
+        "Apply Benjamini–Hochberg FDR (or state the correction if ProteomeDiscoverer applied one), report how many of the 2,405 changes survive, and recompute the 78% and the discord enrichment on the filtered list.",
+        "Fit a mixed model with mouse as a random effect, or compare per-mouse median log2 ratios between genotypes (n=4 per group).",
+        "Run a permutation test (shuffle AD/NA labels, recompute per-fraction ANOVA, count single-fraction hits) or an analytic null based on the observed distribution of k.",
+        "Run a hypergeometric test or permutation that preserves the marginal hit rates and the opposite-sign constraint."
       ]
     },
     {
@@ -345,100 +342,90 @@
       "weaknesses": [
         {
           "id": "clarity-1",
-          "text": "The paper's central quantitative claim — '78% of significant AD-associated alterations were restricted to a single fraction' — is cited to Figure 4C, but the Figure 4 caption assigns GO enrichment to panel C and the fraction-frequency data to panel D, the reverse of what the text says. Because this statistic is the evidence for the headline conclusion that 'subcellular localization is a primary determinant of disease vulnerability,' the reader cannot verify it from the figure as labeled; the caption and text must be reconciled."
+          "text": "Mouse stability experiments appear underpowered (n=3 per group) and stability is inferred from a single 7-day time point, so changed ratios may reflect synthesis, insolubility, or neomorphic changes rather than degradation."
         },
         {
           "id": "clarity-2",
-          "text": "Figure 4A's legend is self-contradictory: 'Red circles indicate the proteins with a p-value < 0.05 whereas black circles indicate a p-value < 0.05.' One of these must be p > 0.05; as written a reader cannot tell which population is which on the volcano plot."
+          "text": "The manuscript does not disambiguate translocation from solubility/trapping: less-soluble aggregated proteins may pellet more efficiently in P3 without changing their true subcellular location, and these two models have opposite interpretive implications."
         },
         {
           "id": "clarity-3",
-          "text": "The Results state 'There were 238 proteins that were more stable... and 1,323 proteins less stable... In sum, there were 1,436 proteins with altered degradation.' 238 + 1323 = 1561, not 1436; the stated total does not follow from its own parts."
+          "text": "Fraction purity and cross-fraction carryover are not quantified; QC is limited to immunoblot comparison of a few known markers."
         },
         {
           "id": "clarity-4",
-          "text": "The Results state 'We observed 37 proteins enriched in our AD P3 fraction that were also identified in one of these studies. Three of these seven proteins were APP, MAPT, and APOE.' The count is given as both 37 and seven; a reader cannot tell how many proteins the overlap actually contains."
+          "text": "Human tissue data are not weighted or corrected for cell-type composition, so reported changes may reflect AD/ND differences in cell composition rather than within-fraction protein changes."
         },
         {
           "id": "clarity-5",
-          "text": "The 2-month mouse timepoint is repeatedly called 'pre-pathological,' yet the same Results section reports Abeta42 present at 2 months ('five times more Abeta42 at 5 months compared to 2 months'). 'Pre-pathological' is never defined operationally, so the claim that the six overlapping proteins are 'initiating features' rests on an undefined threshold."
+          "text": "The stated aim of cross-species (human vs mouse) convergence is never executed; no direct overlap analysis between human and mouse datasets is presented."
         },
         {
           "id": "clarity-6",
-          "text": "Supplementary Table 18's caption cites 'Supplementary Figure 9F,' but no Supplementary Figure 9 exists; the referenced panel is Figure 9E/F in the main text."
+          "text": "Lack of orthogonal validation (e.g., immunoblot, PRM, or microscopy) of fraction-specific TMT hits, especially the central P3/S2 changes."
         },
         {
           "id": "clarity-7",
-          "text": "Terminology is inconsistent across the manuscript: the non-AD group is 'non-AD (NA)' in the text, 'non-demented (ND)' in the Figure 1 caption, and 'ND' again in Figure 6A/B, with 'AsymAD' and 'normal' used as sub-classifications. The same group should carry one symbol."
+          "text": "Sex of human donors is not reported or acknowledged; apparent female-only or female-enriched samples are a major unaddressed confound."
         },
         {
           "id": "clarity-8",
-          "text": "Significance-threshold legends disagree between figures: Figure 7F gives '*** < 0.005' while Figures 6E and 8 give '*** < 0.001'; the Methods '4 WT Day7 measurements' is duplicated where '4 AD Day7 measurements' is meant; and the Methods reads 'S2, P2, S3, and P fractions were lysed' (should be P3)."
+          "text": "No methodological caveats section, no consideration of alternative spatial dynamics models, and thin ethical/participant reporting for human tissue work."
+        },
+        {
+          "id": "clarity-9",
+          "text": "The WGCNA/centrality conclusion that abundant proteins are most robust or that centrality implies disease relevance is not supported by the data."
         }
       ],
-      "questions": [
-        "For Figure 4C/D, which panel actually displays the 78%-fraction-specific statistic, and can the caption be corrected to match the text?",
-        "What is the operational definition of 'pre-pathological' for the 2-month mice, given that Abeta42 is detectable at that age?",
-        "Is the overlap with the two insoluble-fraction studies 37 proteins or 7, and which is plotted in Figure 7E?"
-      ]
+      "questions": []
     },
     {
-      "reviewer": "reproducibility",
-      "score": 2.0,
-      "confidence": 4.0,
+      "reviewer": "literature",
+      "score": 4.0,
+      "confidence": 3.0,
       "weaknesses": [
         {
-          "id": "reproducibility-1",
-          "text": "No raw data deposition (HARD). The manuscript contains no Data Availability section and no repository accession (PRIDE, MassIVE, ProteomeXchange) for either the human or mouse MS datasets. Every quantitative claim in the paper — the 6,123 human proteins, all fraction-specific ANOVA results, all QUAD Day7/Day0 ratios — rests on data an independent group cannot obtain. This is the field standard for proteomics and is the single largest reproducibility gap. The fix is a repository accession, which should be stated in the manuscript."
+          "id": "literature-1",
+          "text": "The VPS35 \"invisible to unfractionated analysis\" claim rests entirely on the Bai 2021 meta-analysis, whose exact contents I could not verify: I could not confirm from the available metadata that this source contains a reanalysis of exactly seven TMT datasets, that the 748/31% figure is correct, or that VPS35 is among the unchanged proteins. This is the single most load-bearing citation in the paper — the VPS35 example is the flagship demonstration that spatial analysis rescues disease-relevant signals — so the authors should confirm the exact source and numbers, or the claim should be softened to what the source actually supports."
         },
         {
-          "id": "reproducibility-2",
-          "text": "No normalization description for TMT reporter ion intensities (HARD). The methods state the statistical tests (ANOVA in ProteomeDiscoverer 2.5; t-tests on log2-transformed Day7/Day0 ratios) but never state how TMT reporter intensities were normalized across channels — total-intensity scaling, reference-channel scaling, median centering, or none. The reference channel is described as created (\"Two microliters from all peptide samples were pooled and used reference channels\") but its role in normalization is not stated. Normalization choices materially change AD/NA ratios and the fraction-specific comparisons that are the paper's central claim; a replicator cannot know whether the reported values would be reproduced."
+          "id": "literature-2",
+          "text": "The novelty positioning (\"spatial proteoforms... invisible to bulk tissue approaches\") rests on a completeness assumption I could not verify: the claim that no directly competing subcellular-fractionation AD proteomics exists is asserted rather than demonstrated. My searches did not surface a directly competing study, so this is a SOFT completeness question rather than a HARD omission — but the authors should confirm they have not omitted prior subcellular or synaptic proteomics of AD brain (e.g., hippocampal proteome studies across AD stages) that would bear on the novelty claim."
         },
         {
-          "id": "reproducibility-3",
-          "text": "WGCNA parameters not specified (HARD for the module-based claims). \"WGCNA was performed by MetaNetwork\" with no soft-threshold power, minimum module size, merge cut height, or MetaNetwork version. The module eigenproteins (Figure 2E, 3A) and their enriched pathways are load-bearing for the vesicle-trafficking and protein-folding conclusions. WGCNA module structure is highly parameter-sensitive; the pathway enrichments depend on these choices."
+          "id": "literature-3",
+          "text": "The foundational \">50% of proteins localize to more than one compartment\" statistic, the premise for the entire spatial-proteoform framework, could not be verified in Thul 2017: the abstract/metadata of that paper supports multi-compartment localization broadly but I could not confirm the specific \">50%\" figure; the authors should confirm the statistic is in that source (or cite the source that actually reports it)."
         },
         {
-          "id": "reproducibility-4",
-          "text": "Human–mouse cross-dataset matching procedure not specified (HARD for the overlap claims). The 155 correlated measurements and the six early-stage proteins (Figure 9E) depend on how human and mouse proteins were matched (gene symbol? orthology? accession?) and on the exact inclusion thresholds (p < 0.05 in both datasets? fold-change cutoffs? the directionality criterion is described only in prose). A replicator cannot reproduce the overlap lists without this."
+          "id": "literature-4",
+          "text": "Samelson et al. is cited as \"Cell 189, 1517-1534 e1519 (2026)\" (ref 38), but my search surfaced the same work as a 2023 bioRxiv preprint; the published year/venue should be verified (HARD hygiene if the year is wrong)."
         },
         {
-          "id": "reproducibility-5",
-          "text": "Processed data not visible to me (HARD if the supplementary files are not attached to the preprint). The 18 supplementary tables are the processed outputs for every figure, including the human sample metadata (Table S1) used in the Braak correlation. I cannot verify their contents from the manuscript text, and no data availability statement confirms they exist anywhere. If they are attached to the preprint, this is resolved; if not, the processed data are as unavailable as the raw data."
+          "id": "literature-5",
+          "text": "Balendra et al. 2025 (Lancet Neurol) is a review cited for the foundational TDP-43 nuclear-depletion observation; the primary source (Neumann et al. 2006) would be more appropriate for a specific empirical claim (SOFT)."
         },
         {
-          "id": "reproducibility-6",
-          "text": "Day0 pool size and AHA incorporation not reported (SOFT). The QUAD ratio divides each Day7 measurement by a single pooled Day0 value per genotype per timepoint, but the number of mice in the Day0 pool is not stated, and no AHA incorporation efficiency is reported. The pool's representativeness is load-bearing for every degradation ratio."
+          "id": "literature-6",
+          "text": "The claim \"emerging evidence of non-canonical CCT chaperonin structures\" (Fig. 3D discussion) is made without a citation — add one (SOFT)."
         },
         {
-          "id": "reproducibility-7",
-          "text": "Human tissue access path not described (SOFT). The tissue source is named (Shiley-Marcos ADRC, UCSD) but no cohort identifiers, consent constraints, or application process are given. Controlled access is legitimate for human tissue, but the path must be described."
+          "id": "literature-7",
+          "text": "The claim that \"protein degradation slows with age... many reports using various analytical methods\" is made without citing the non-QUAD reports; Fornasiero 2018 is cited elsewhere and should be cited here (SOFT)."
         },
         {
-          "id": "reproducibility-8",
-          "text": "Software versions incomplete (SOFT). MetaNetwork, PACOM, Cytoscape, and Prism versions are absent; the text cites both WebGestalt 2017 and 2024 without stating which was used."
-        },
-        {
-          "id": "reproducibility-9",
-          "text": "TMT set assignment not specified (SOFT). The 27 human samples were split into two 16-plex sets per fraction, but which samples went into which set is not stated, so a replicator cannot assess batch structure between sets. (Statistical validity of the batch handling is data_analysis's call.)"
-        },
-        {
-          "id": "reproducibility-10",
-          "text": "Search tolerances omitted (SOFT). Precursor and fragment mass tolerances for the ProteomeDiscoverer searches are not stated."
+          "id": "literature-8",
+          "text": "Reference-list hygiene: several DOIs are garbled in the parse (e.g., ref 3, ref 4), which is a converter artifact, but the authors should confirm the final reference list resolves cleanly (SOFT)."
         }
       ],
       "questions": [
-        "What is the repository accession for the raw MS data (human and mouse), and will the supplementary tables be deposited alongside the preprint?",
-        "What normalization was applied to the TMT reporter ion intensities before the ANOVA and before the Day7/Day0 ratio calculation?",
-        "What were the WGCNA parameters (soft threshold, min module size, merge cut height) and the MetaNetwork version?",
-        "How were human and mouse proteins matched for the cross-dataset overlap, and what were the exact inclusion thresholds for the 155 measurements and the six 2-month proteins?",
-        "How many mice were pooled for the Day0 samples at each timepoint and genotype, and was AHA incorporation measured?"
+        "Does Bai et al. 2021 reanalyze exactly seven TMT datasets, and is VPS35 among the proteins it reports as unchanged — the \"invisible to unfractionated analysis\" claim for VPS35 rests on this?",
+        "Is the \">50% of proteins in multiple compartments\" statistic actually in Thul et al. 2017, or does it come from another source?",
+        "What is the correct published year/venue for Samelson et al. (cited as Cell 2026; a 2023 bioRxiv preprint of the same work exists)?"
       ]
     }
   ],
   "manuscript_text_sha256": "8b31e8f2283959890e783fa044e5a01eb4a5c8542749ee8faba9611caa6e6cf0",
-  "manuscript_file_sha256": "db773f3563d4c5f0ba7fc3d1dccaeb0a95000f3ff389abcb26e021c0d5f9d7b7",
+  "manuscript_file_sha256": "850793c56b3c3ab0084587317df5155a063e080674b400245563a6c82376111a",
   "prior_job_id": "",
   "desk_rejected": false
 }

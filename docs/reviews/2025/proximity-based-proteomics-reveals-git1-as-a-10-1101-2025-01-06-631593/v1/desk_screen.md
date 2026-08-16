@@ -1,6 +1,7 @@
-# Editorial Desk Screen
+DESK DECISION: proceed
 
-**Outcome:** Passed Desk Screen
+This manuscript is a research article reporting a proximity-labeling proteomics study of Smoothened (Smo) signaling, with functional follow-up on a newly identified interactor, Git1. The work is within scope for *In Silico*: it is an original research manuscript whose claims are evaluable from the manuscript itself, and the central evidence (proteomics data, imaging, biochemical assays, and functional readouts) is presented or deposited in a manner that a careful reader can inspect.
 
-## Rationale
-The manuscript reports a proximity-based proteomics study of Smoothened signaling, identifies Git1 as a novel regulator, and validates this finding with cell-biological experiments including knockout and localization studies. This is original research in cell and molecular biology. The evidence (data, figures, statistics, method descriptions) is presented in the manuscript. The work falls squarely within the scope of In Silico (it is a research manuscript whose claims can be evaluated from the manuscript itself and its cited materials). The submission is complete, intelligible, and appears to be a serious piece of work. There is no obvious fundamental flaw on its face that would warrant desk rejection. It should proceed to full review.
+The manuscript is complete and intelligible. The experimental design is coherent, the controls are described, and the claims are scaled to the evidence presented. The authors identify a limitation of their own system (elevated Smo levels in the stable cell line) and address it explicitly, which is the kind of candor the venue rewards. The work is not obviously duplicative of prior publications, and the time-resolved proteomic dataset is positioned as a resource for the field.
+
+There is no threshold problem that would justify desk rejection. Whether the conclusions fully outrun the evidence, whether the statistical treatment is adequate, and whether the functional claims are fully supported are questions for the review panel, not for a desk screen. The manuscript should proceed to full review.

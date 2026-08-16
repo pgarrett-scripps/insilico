@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-14T20:26:29+00:00",
+  "generated_at": "2026-08-16T02:45:32+00:00",
   "pipeline": {
-    "sha": "290ffb8702d63ee81ceb6e267511812c9e8a2821",
+    "sha": "cd05a2bc1553aacb386aac91e7bf9545ef83bbac+dirty",
     "version": "0.3.0"
   },
   "provider": "openrouter",
@@ -17,9 +17,9 @@
     "kind": "rerun",
     "replaced": "v1",
     "prior_decision": "major",
-    "prior_mean_score": 2.88,
-    "prior_pipeline_sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
-    "prior_reviewed_at": "2026-08-14"
+    "prior_mean_score": 3.12,
+    "prior_pipeline_sha": "c71c823b71b3072b8cdf02a13547084036f11e1f+dirty",
+    "prior_reviewed_at": "2026-08-15"
   },
   "submitter": "pgarrett-scripps",
   "submitter_is_author": "",
@@ -96,7 +96,7 @@
       },
       "caveman": null
     },
-    "file_sha256": "993cd7385d77d900c9dc38a3e7434f6410024c45c71c67ec2112a4724fd84622"
+    "file_sha256": "1bf13d25702ea03e1d079ae404075dc4987b9c3a80e96d8dd476cdae37936734"
   },
   "screens": {
     "desk_screen_mode": "gate"
@@ -108,12 +108,12 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "clarity",
-      "score": 3.0,
+      "reviewer": "ethics",
+      "score": 4.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "ethics",
+      "reviewer": "reproducibility",
       "score": 2.0,
       "confidence": 4.0
     },
@@ -123,265 +123,58 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "novelty",
+      "reviewer": "clarity",
       "score": 3.0,
-      "confidence": 3.0
+      "confidence": 4.0
     },
     {
       "reviewer": "literature",
       "score": 4.0,
-      "confidence": 3.0
-    },
-    {
-      "reviewer": "reproducibility",
-      "score": 2.0,
-      "confidence": 5.0
+      "confidence": 4.0
     },
     {
       "reviewer": "rigor",
-      "score": 2.0,
-      "confidence": 5.0
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0
     }
   ],
-  "mean_score": 2.62,
+  "mean_score": 3.12,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 0.06322174062800001,
+  "total_cost_usd": 0.03828286116,
   "cost_by_node": {
-    "audit_citation_integrity": 0.010176,
-    "audit_methods_completeness": 0.002547,
-    "debate_advocate": 0.001387,
-    "debate_skeptic": 0.001575,
-    "desk_screen": 0.000482,
-    "editor": 0.001991,
-    "journal_recommender": 0.000677,
-    "reviewer_clarity": 0.003278,
-    "reviewer_data_analysis": 0.001582,
-    "reviewer_ethics": 0.00356,
-    "reviewer_literature": 0.008124,
-    "reviewer_methodology": 0.002767,
-    "reviewer_novelty": 0.009248,
-    "reviewer_reproducibility": 0.010748,
-    "reviewer_rigor": 0.00508
+    "advocate": 0.004808,
+    "audit_citation_integrity": 0.00144,
+    "audit_methods_completeness": 0.000967,
+    "desk_screen": 0.00129,
+    "editor": 0.00638,
+    "journal_recommender": 0.00142,
+    "reviewer_clarity": 0.001581,
+    "reviewer_data_analysis": 0.001644,
+    "reviewer_ethics": 0.001481,
+    "reviewer_literature": 0.001765,
+    "reviewer_methodology": 0.002419,
+    "reviewer_novelty": 0.004078,
+    "reviewer_reproducibility": 0.002326,
+    "reviewer_rigor": 0.001661,
+    "skeptic": 0.005023
   },
   "research_by_node": {
-    "audit_citation_integrity": [
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Neumann M ubiquitinated TDP-43 frontotemporal lobar degeneration amyotrophic lateral sclerosis Science 2006",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Cohen TJ acetylation switch TDP-43 function aggregation Nature Communications 2015",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Doll SG Recognition TDP-43 nuclear localization signal importin alpha1 beta Cell Reports 2022",
-        "hits": 0
-      },
+    "reviewer_novelty": [
       {
         "tool": "find_related_work",
-        "query": "Neumann 2006 ubiquitinated TDP-43 frontotemporal lobar degeneration ALS Science 314 130-133",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Neumann+2006+ubiquitinated+TDP-43+frontotemporal+lobar+degeneration+ALS+Science+314+130-133&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Doll 2022 Recognition TDP-43 nuclear localization signal importin alpha1 beta Cell Reports 39 111007",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Doll+2022+Recognition+TDP-43+nuclear+localization+signal+importin+alpha1+beta+Cell+Reports+39+111007&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Cohen 2015 acetylation switch TDP-43 function aggregation Nature Communications 6 5845",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Cohen+2015+acetylation+switch+TDP-43+function+aggregation+Nature+Communications+6+5845&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Ko 2024 \"acetylation-mimetic\" TDP-43 \"nuclear localization signal\" importin alpha1 beta J Mol Biol",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Melamed 2019 \"Premature polyadenylation\" stathmin-2 TDP-43 neurodegeneration Nature Neuroscience",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Kametani 2016 \"mass spectrometric\" \"TDP-43\" \"amyotrophic lateral sclerosis\" Scientific Reports",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Ko 2024 \"acetylation-mimetic\" TDP-43 NLS importin Journal of Molecular Biology",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Kametani 2016 \"mass spectrometric\" TDP-43 ALS brains Scientific Reports 6 23281",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Melamed 2019 \"stathmin-2\" TDP-43 Nature Neuroscience 22 180",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Neumann M 2006 TDP-43 frontotemporal lobar degeneration amyotrophic lateral sclerosis Science",
-        "hits": 2
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Winton MJ 2008 TDP-43 nuclear localization signal redistribution J Biol Chem",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Sreedharan J 2008 TDP-43 mutations familial sporadic amyotrophic lateral sclerosis Science",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Lee BJ 2006 \"Rules for nuclear localization sequence recognition by karyopherin beta 2\" Cell 126 543",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Garcia Morato 2022 \"Sirtuin-1\" \"lysine-136\" TDP-43 phase separation Nature Communications 13 1223",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Afroz 2017 \"Functional and dynamic polymerization\" TDP-43 Nature Communications 8 45",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Neumann M 2006 \"Ubiquitinated TDP-43\" \"frontotemporal lobar degeneration\" Science",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Sreedharan J 2008 \"TDP-43 mutations\" familial sporadic ALS Science 319 1668",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Cohen TJ 2015 \"acetylation switch\" TDP-43 \"Nature Communications\" 6 5845",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Neumann[Author] AND 2006[Date] AND TDP-43[Title] AND Science[Journal]",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Cohen[Author] AND 2015[Date] AND TDP-43[Title] AND acetylation[Title] AND Nature Communications[Journal]",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Doll[Author] AND 2022[Date] AND TDP-43[Title] AND importin[Title] AND Cell Reports[Journal]",
-        "hits": 0
-      }
-    ],
-    "reviewer_literature": [
-      {
-        "tool": "find_related_work",
-        "query": "TDP-43 acetylation lysine 82 nuclear import importin alpha",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+acetylation+lysine+82+nuclear+import+importin+alpha&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "TDP-43 acetylation lysine 82 nuclear localization importin",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "TDP-43 acetylation nuclear localization signal importin alpha",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+acetylation+nuclear+localization+signal+importin+alpha&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "TDP-43 K82 acetylation importin alpha1 nuclear import",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "TDP-43 nuclear import importin alpha NLS acetylation",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+nuclear+import+importin+alpha+NLS+acetylation&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "TDP-43 proteinopathy acetylation proteasome aging neurodegeneration",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "TDP-43 acetylation aggregation phase separation",
+        "query": "TDP-43 lysine 82 acetylation nuclear localization importin",
         "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "TDP-43 nuclear localization signal importin recognition",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+nuclear+localization+signal+importin+recognition&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Single acetylation-mimetic mutation TDP-43 nuclear localization signal importin alpha1 beta",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Recognition of the TDP-43 nuclear localization signal by importin alpha1 beta",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Ko acetylation-mimetic mutation TDP-43 nuclear localization signal importin",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Kametani mass spectrometric analysis accumulated TDP-43 amyotrophic lateral sclerosis brains",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Kametani mass spectrometric analysis accumulated TDP-43 ALS brains acetylation",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Cohen acetylation switch controls TDP-43 function aggregation propensity lysine",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Cohen TDP-43 acetylation switch function aggregation propensity",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Kametani TDP-43 mass spectrometry ALS brains",
-        "hits": 2
-      }
-    ],
-    "reviewer_novelty": [
-      {
-        "tool": "find_related_work",
-        "query": "TDP-43 acetylation lysine 82 nuclear import importin-alpha",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+acetylation+lysine+82+nuclear+import+importin-alpha&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+        "query": "TDP-43 acetylation nuclear import signal importin alpha",
+        "hits": 5
       },
       {
         "tool": "search_preprints",
@@ -389,91 +182,84 @@
         "hits": 0
       },
       {
+        "tool": "search_preprints",
+        "query": "TDP-43 acetylation cNLS importin alpha nuclear localization",
+        "hits": 1
+      },
+      {
         "tool": "find_related_work",
-        "query": "TDP-43 acetylation initiates cytoplasmic mislocalization ALS",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+acetylation+initiates+cytoplasmic+mislocalization+ALS&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "search_preprints",
-        "query": "TDP-43 NLS acetylation K82 importin alpha",
-        "hits": 0
-      },
-      {
-        "tool": "search_preprints",
-        "query": "TDP-43 lysine 82 acetylation",
+        "query": "TDP-43 acetylation aggregation phase separation sirtuin",
         "hits": 5
       },
       {
         "tool": "find_related_work",
-        "query": "TDP-43 K82 acetylation importin alpha nuclear localization",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+K82+acetylation+importin+alpha+nuclear+localization&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "TDP-43 classical nuclear localization sequence importin alpha1 nuclear import disruption",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+classical+nuclear+localization+sequence+importin+alpha1+nuclear+import+disruption&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "proteasome inhibition TDP-43 mislocalization neurodegenerative disease",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=proteasome+inhibition+TDP-43+mislocalization+neurodegenerative+disease&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "TDP-43 acetylation lysine 82 postmortem ALS motor cortex",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+acetylation+lysine+82+postmortem+ALS+motor+cortex&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "proteasome aging TDP-43 nuclear import cytoplasmic accumulation neurons",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=proteasome+aging+TDP-43+nuclear+import+cytoplasmic+accumulation+neurons&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Cohen 2015 TDP-43 acetylation switch function aggregation",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Cohen+2015+TDP-43+acetylation+switch+function+aggregation&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "TDP-43 NLS lysine to arginine mutation nuclear import importin",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=TDP-43+NLS+lysine+to+arginine+mutation+nuclear+import+importin&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Doll 2022 importin alpha1 TDP-43 nuclear localization signal Nature Cell Reports",
-        "hits": 0,
-        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: rate-limited (arxiv rate-limited: Page request resulted in HTTP 429 (https://export.arxiv.org/api/query?search_query=Doll+2022+importin+alpha1+TDP-43+nuclear+localization+signal+Nature+Cell+Reports&id_list=&sortBy=relevance&sortOrder=descending&start=0&max_results=100))"
+        "query": "TDP-43 nuclear localization signal importin alpha binding lysine",
+        "hits": 5
       },
       {
         "tool": "search_preprints",
-        "query": "TDP-43 K82Q acetylation mimic nuclear import",
+        "query": "TDP-43 acetylation K82 nuclear import ALS",
         "hits": 0
       },
       {
         "tool": "search_preprints",
-        "query": "TDP-43 nuclear import importin alpha acetylation",
+        "query": "TDP-43 acetylation importin alpha nuclear localization signal",
         "hits": 1
       },
       {
-        "tool": "search_preprints",
-        "query": "TDP-43 proteasome inhibition bortezomib mislocalization",
-        "hits": 1
-      }
-    ],
-    "reviewer_rigor": [
+        "tool": "find_related_work",
+        "query": "TDP-43 acetylation lysine 145 aggregation Cohen",
+        "hits": 5
+      },
       {
-        "tool": "",
-        "query": "",
-        "hits": 0,
-        "error": "tool loop returned no text"
+        "tool": "find_related_work",
+        "query": "TDP-43 importin alpha1 KPNA interaction NLS recognition",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TDP-43 acetylation importin alpha KPNA NLS",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TDP-43 K82 acetylation ALS motor cortex",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "TDP-43 acetylation switch function aggregation propensity",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "TDP-43 proteasome inhibition mislocalization cytoplasm",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TDP-43 acetylation K82 importin",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TDP-43 acetylation nuclear import ALS TARDBP",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "acetylation-mimetic mutation TDP-43 nuclear localization signal importin alpha1 beta",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TDP-43 acetylation-mimetic NLS importin",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TDP-43 K82 acetylation motor cortex ALS postmortem",
+        "hits": 0
       }
     ]
   },
@@ -502,7 +288,7 @@
     "abstract": "The hallmark of a spectrum of age-dependent neurodegenerative diseases, including Amyotrophic Lateral Sclerosis (ALS), is a TDP-43 proteinopathy that includes nuclear loss of function and cytoplasmic aggregation. Here, reduced proteasome activity, as naturally occurs during aging, is shown to inhibit nuclear import of TDP-43. Quantitative mass spectrometry is used to determine that TDP-43 is the protein whose nuclear localization is most perturbed upon reduction in proteasome activity, culminating in elevated cytoplasmic TDP-43. Interaction of importin-1 with the bipartite classical nuclear localization sequence (cNLS) of TDP-43 is shown to be disrupted by partial proteasome inhibition but maintained by replacement with a PY-NLS that is recognized by importin-{beta}2. Mechanistically, this nuclear depletion of TDP-43 is shown to be driven by ubiquitination or acetylation of lysines 79, 82, and 84 within the cNLS when proteasome activity is reduced in human neurons. Specifically, acetylation at lysine 82 is sufficient to abolish TDP-43 binding to importin-1 and subsequent nuclear import of TDP-43. Moreover, using acetylation-specific TDP-43 antibodies, we detected acetylation of lysine 82 in the motor cortex of sporadic ALS patients but not control subjects. Our findings demonstrate that post-translational acetylation at lysine 82 of TDP-43 drives disruption of its importin-1-mediated nuclear import and is sufficient to initiate TDP-43 nuclear loss of function and cytoplasmic accumulation, evidence supporting acetylation as a plausible initiator of TDP-43 proteinopathies.",
     "published": "2024-09-07",
     "version": "1",
-    "pdf_sha256": "993cd7385d77d900c9dc38a3e7434f6410024c45c71c67ec2112a4724fd84622",
+    "pdf_sha256": "1bf13d25702ea03e1d079ae404075dc4987b9c3a80e96d8dd476cdae37936734",
     "pdf_bytes": 2240252
   }
 }

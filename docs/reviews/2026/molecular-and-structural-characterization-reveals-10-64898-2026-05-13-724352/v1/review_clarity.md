@@ -1,27 +1,23 @@
 # Clarity & Presentation Reviewer
 
 ## Summary
-The manuscript is ambitious and well-motivated, and the narrative arc (purify EVs → characterize → show transfer) is recoverable, but it is marred by a cluster of HARD presentation defects that sit on the central claims: the abstract's headline size claim contradicts the results, the key morphological finding is cited to the wrong figure panels, and two quantitative statements are internally inconsistent. These are fixable, but as written a careful reader cannot reliably determine what the paper actually claims on its three load-bearing points. I recommend major revision on clarity grounds.
+The manuscript is broadly readable and the experimental narrative is recoverable, but several load-bearing claims are presented in ways that a careful reader cannot fully verify from the text, and some quantitative statements are ambiguous. The central claim — that AD organoid EVs differ structurally and molecularly from WT EVs and can transfer amyloid pathology — is stated, but the evidence for the transfer claim is not fully presented in the text, and some figure references are incomplete.
 
 ## Strengths
-- The workflow (Figure 1) gives a clear, recoverable map of the purification pipeline and which fractions feed which downstream assays.
-- The paper is candid about its negative and null results (tau not captured by TS-IP, no AT8 spread, non-significant size difference), which is exactly the honesty this venue rewards.
-- Figure legends are unusually complete, defining symbols, colors, and statistical tests for most panels.
+- The purification workflow is described in enough detail that the order of operations is recoverable (TFF → SEC → spin concentration), and the three fractions (EV isolate, HMW protein, permeate) are consistently named and used across figures.
+- The manuscript is candid about limitations, including the low tetraspanin expression on EVs and the inability to identify the fibrillar material in AD EVs.
+- The use of multiple orthogonal methods (TEM, cryo-EM, vFC, proteomics, ELISA, ThT, STED) gives the reader a clear sense of the breadth of characterization.
 
 ## Weaknesses
-- The abstract's central claim about size contradicts the results. Abstract: 'EVs purified from AD organoid conditioned media have a wider size distribution'; Results 3.3: 'they trended towards a wider, though not significantly different, size distribution.' A reader cannot tell whether the paper claims a real size difference or not, and the vFC data (3.2) report 'similar' sizes. State the actual finding (and its significance) in the abstract.
-- The key morphological finding — fibrils and multilamellar vesicles in AD EVs — is cited to the wrong panels. Discussion 4.3: 'structures with fibril morphology were present within or around the larger AD EVs, whereas no comparable material was detected in WT isolates (Figure 4G)' — but Figure 4G is the WT micrographs; the AD fibrils are in Figure 4I. The same error appears in 4.3 ('more MLVs... (Figure 4G and I)'). A reader trying to verify the paper's most striking image cannot find it.
-- Tetraspanin expression is reported with two irreconcilable numbers and a wrong inequality. Results 3.2: 'very low levels of tetraspanin expression (>20 ABC per EV)' — the '>' contradicts 'very low' and should be '<'; Discussion 4.2 gives 'at or below the LOD of ~38 antibody molecules per vesicle.' 20 and 38 cannot both be the reported value.
-- The statistical test for the co-culture result is contradictory: Methods 2.18 says 'two-way ANOVA analysis using Prism's default parameters,' while the Figure 7D legend says 'Statistical significance was assessed via student's t test.' The reader cannot determine which test produced the reported p-value.
-- A non-significant result is presented as evidence without flagging it: Discussion 4.3 states RAB11B enrichment 'indicating intact and upregulated amphisome formation' citing 'adj.p = 0.056,' which is above the manuscript's own stated threshold (adj p ≤ 0.05). The interpretation should be labeled as a trend, not a finding.
-- Section 3.6 cites 'Figure 2C' as a size measurement ('consistent with the size of EVs measured in the vFC and Cryo-TEM data (Figure 2C, Figure 4H...)'); Figure 2C is the Aβ42 ELISA, not a size plot — the vFC size data are in Figure 3.
-- Section 3.2 references 'Figure 3D-E' for AD EVs, but the legend defines panels A–F (size in D, TS in E–F); the reference should be 3D–F.
-- Typo: 'FWHK measurement' (Section 3.6) should be FWHM; and the STED size estimate rests on 'a representative punctum' (singular) per condition, so the reader cannot tell how many puncta the FWHM figure is based on.
-- Terminology is not consistent: the same material is called 'EV isolate,' 'EV-enriched samples,' and 'EV purification samples,' and the SEC fraction is 'HMW protein sample' in Methods but 'High MW Protein sample' in the Figure 4 legend — friction that slows cross-referencing.
-- The protein counts 3848 (quantified, 3.4) and 3852 (identified in both, 3.4) are never reconciled, and '2D class averaging' is invoked in Discussion 4.3 but never described in Methods 2.8–2.9.
+- The central claim that co-culturing WT with AD organoids transfers endosomal material and increases intratissue A-beta signal in WT is not fully supported by the text: the Aco-650 transfer is shown in a live-cell image (Figure 7B) but the text does not state how the transfer was quantified or whether the Aco-650 signal in WT was distinguished from background or from the WT organoid's own endosomes. The claim that 'Aco-650 signal was present in the WT organoids' is stated without a control showing that the dye does not leak or transfer via media exchange.
+- The quantitative claim in the Results that AD organoid media contained 'about twice as many EVs' as WT is not tied to a specific number in the text; the vFC data are presented as ranges and medians but the exact EV counts per mL are not given in the main text, making the 'twice as many' claim unverifiable from the text alone.
+- The statement that 'AD organoid-derived EVs can have single, double, and even triple membranes' (Abstract) is supported by cryo-EM images, but the text does not quantify how many of the 65 AD EVs were multilamellar versus the 24 WT EVs, so the reader cannot judge whether this is a robust difference or a few striking examples.
+- The proteomics section reports fold-changes and adjusted p-values for several proteins but does not state the number of biological replicates (only technical triplicates are mentioned), so the reader cannot assess whether the statistical comparisons are adequately powered.
+- The figure legends are incomplete: Figure 4 legend does not define the color of the arrows (blue for multilamellar, red for fibrils is stated in the text but not in the legend), and Figure 7 legend does not define what the Aco-650 signal represents in the WT organoid image.
+- The term 'amyloid' is used loosely: the ThT and AmyTracker signals are attributed to 'amyloidogenic proteins' but the text does not state which proteins are being detected, and the possibility that ThT binds to RNA or other polymers is acknowledged in the Discussion but not in the Results where the claim is made.
 
 ## Questions
-- What is the actual, significance-tested size comparison between WT and AD EVs, and which figure/statistic supports it?
-- For the TS expression measurement, what is the correct ABC value and inequality (≤20 or ≤38)?
-- Which statistical test was used for the Figure 7D comparison — two-way ANOVA or Student's t test?
-- How many AmyTracker-680 puncta per condition were measured for the FWHM size estimate?
+- How many biological replicates were used for the proteomics comparison, and were the technical triplicates from a single EV isolation or from multiple isolations?
+- In the co-culture experiment, was there a control where Aco-650 was added to media without an AD organoid, to rule out dye transfer via media exchange?
+- What is the exact EV count per mL for WT and AD isolates, and how was the 'twice as many' claim derived from the vFC data?
+- For the cryo-EM analysis, how many of the 65 AD EVs were multilamellar, and how many of the 24 WT EVs?

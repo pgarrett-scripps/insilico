@@ -1,140 +1,82 @@
 {
   "schema_version": 1,
   "round": 1,
-  "job_id": "20260814-123518-escrt-0-regulates-ampa-receptor-currents-and-ca2-d",
+  "job_id": "20260815-113047-escrt-0-regulates-ampa-receptor-currents-and-ca2-d",
   "manuscript_title": "ESCRT-0 regulates AMPA receptor currents and Ca2+- dependent signaling",
-  "manuscript_cache_key": "34dae1837b8d2a0bf371b40c9ef877f9b32f0b871f22d945a83800e354db17a8",
+  "manuscript_cache_key": "7e22cb854b8dd887e93a62073a1d2ad9ac273a5151871c19136958ad802b14a5",
   "decision": "major",
-  "weighted_score": 3.5588,
+  "weighted_score": 3.125,
   "required_revisions": [
     {
       "id": "R1-01",
-      "text": "Phosphoproteomics correction: Report adjusted p-values (Benjamini–Hochberg FDR=0.05) for the phosphopeptides in Figure 4. Re-do GO/KEGG enrichment on the set of hits that survive correction, or clearly state that the pathway analyses are exploratory and built on uncorrected candidates.",
+      "text": "Report the raw AMPAR and NMDAR current amplitudes separately (not just the ratio), with both components measured at matched time points, and state the per-group n, effect sizes, and whether comparisons are paired or unpaired. If the reduction is not resolved to the AMPAR component, requalify the claim 'Hrs levels impact AMPAR kinetics' accordingly.",
       "source_reviewer": "data_analysis",
       "blocking": false
     },
     {
       "id": "R1-02",
-      "text": "Electrophysiology classification: State whether the fast/slow AMPAR EPSC classification was performed blind to condition. Report the number of sweeps per neuron and justify the 10%/20 ms/25 ms thresholds. Re-analyse rise time, decay time and decay slope in the fast-only subset of each group and report whether the differences survive within that subset.",
+      "text": "Address the AMPA/NMDA ratio confound: provide synaptic (not whole-cortex lysate) NMDAR subunit data and/or surface GluA1 measured in the same slice preparation, or explicitly state the limitation that a reduced ratio could reflect increased NMDAR current.",
       "source_reviewer": "rigor",
       "blocking": false
     },
     {
       "id": "R1-03",
-      "text": "AMPA/NMDA ratio: Report the decay time constant of NMDAR EPSCs for both groups to exclude the alternative that Hrs depletion alters NMDA receptor kinetics rather than AMPAR abundance. Also report the AMPA/NMDA ratio using peak-to-peak measurement as a sensitivity check.",
-      "source_reviewer": "data_analysis",
+      "text": "Resolve the developmental-knockout confound for the CaMKII/PSD-95/gephyrin claims: either measure these proteins in the acute shRNA or AAV-Cre systems (which currently measure neither), or requalify the LTD-like interpretation to acknowledge that the constitutive Hrsf/fSyn1-Cre deletion (from E13) cannot separate acute Hrs function from developmental compensation.",
+      "source_reviewer": "methodology",
       "blocking": false
     },
     {
       "id": "R1-04",
-      "text": "Surface biotinylation: Include an AAV-Cre on wild-type (Hrs+/+) neuron group to control for Cre-expression effects. State the number of independent biological replicates for every condition in Figure 3N. Report the interaction p-value (Cre × Bic) from the 2×2 design.",
-      "source_reviewer": "",
+      "text": "Apply multiple-testing correction (e.g., Benjamini-Hochberg) to the phosphoproteomics and report how many of the 16 differentially abundant phosphopeptides survive; if none survive, reframe the phosphoproteomics and its GO/KEGG enrichment as hypothesis-generating rather than supporting glutamatergic transmission.",
+      "source_reviewer": "methodology",
       "blocking": false
     },
     {
       "id": "R1-05",
-      "text": "Reagent traceability: Deposit (in the manuscript or a public repository) the shRNA target and scrambled-control sequences, vector backbones, promoters, and titers for both the lentiviral and AAV knockdown reagents. Specify the species of the Hrs cDNA used in AAV-Hrs-HA, the tag position, and deposit the plasmid. Deposit the R scripts that produced Figures 4 and S5, and state the rule used to select the single UniProt ID when a phosphopeptide maps to several.",
-      "source_reviewer": "",
+      "text": "Deposit the raw electrophysiology traces and per-cell dataset (rise time, decay slope, AMPA/NMDA ratio, slow-current classification) with the analysis script, and confirm the PXD073715 accession is live with the TMT normalization and search parameters consolidated into a single reproducible pipeline document.",
+      "source_reviewer": "reproducibility",
       "blocking": false
     },
     {
       "id": "R1-06",
-      "text": "Causal language and bidirectionality: Qualify claims about Hrs ‘regulating’ AMPAR currents throughout the abstract and results to reflect that the electrophysiological evidence is from knockdown only. The word ‘bidirectional’ should be restricted to the Hrs protein-level data (Figure 2) and not extended to the functional consequences unless overexpression electrophysiology is added.",
-      "source_reviewer": "rigor",
+      "text": "For the 'fast vs slow' AMPAR EPSC classification, report the per-sweep distribution of decay times across all neurons (rather than the dichotomized split), demonstrate that stimulation parameters and recording-quality metrics (series resistance, input resistance) were matched between groups and that slow currents are not polysynaptic (e.g., low-intensity or paired-pulse stimulation), and state whether classification was performed blind.",
+      "source_reviewer": "methodology",
       "blocking": false
     },
     {
       "id": "R1-07",
-      "text": "Correct the abstract: Replace ‘reduced amplitude’ with the correct measure (reduced AMPA/NMDA ratio). Quantify the LTD-like state language as ‘consistent with an LTD-like depressive state’ rather than ‘suggestive of LTD’.",
-      "source_reviewer": "rigor",
+      "text": "Report the per-replicate values and n for the surface-biotinylation experiment (absolute surface signal and input GluA1 separately, given the large SEM of 50 ± 7% vs 90 ± 24%), and state transduction efficiency for the Cre vs YFP arms.",
+      "source_reviewer": "data_analysis",
       "blocking": false
     },
     {
       "id": "R1-08",
-      "text": "Series resistance reporting: Report mean ± SEM series resistance and capacitance for included neurons in both groups in the electrophysiology experiments.",
-      "source_reviewer": "clarity",
+      "text": "Provide the IACUC protocol number(s) covering the mouse experiments, rat primary cultures, and organotypic slice work.",
+      "source_reviewer": "ethics",
       "blocking": false
     },
     {
       "id": "R1-09",
-      "text": "Multiple comparison correction for western blots: Report (or add a methods statement) whether any correction for multiple testing was applied across the many immunoblot comparisons, or justify the per-test approach.",
-      "source_reviewer": "data_analysis",
-      "blocking": false
-    },
-    {
-      "id": "R1-10",
-      "text": "Phosphoproteomics validation: The pCaMKII reduction should be checked against the phosphoproteomics data; if the parent proteins of the 16 hits changed in total abundance, report this to confirm the phospho/normalisation strategy is not confounded.",
+      "text": "For the 'no difference' claims (PKCα/γ, PP2B, PKA substrates unchanged), either add a power analysis or equivalence test, or requalify these as 'no significant difference detected in this sample size'.",
       "source_reviewer": "data_analysis",
       "blocking": false
     }
   ],
-  "minor_suggestions": [],
+  "minor_suggestions": [
+    "Fix the unparseable sentence on Hrs enrichment in S3/S1 — state explicitly what the bracketed values are (ratios, normalized intensities) and what they are compared against.",
+    "Define all symbols and abbreviations at first use in figure legends (S1, S3, PSD2, CHMP2B) and define the color coding in the Figure 3 traces.",
+    "State the actual quantity being compared in the activity-dependent Hrs claims (e.g., 'normalized Hrs/α-tubulin intensity') rather than direction plus p-value alone.",
+    "Requalify the abstract 'sensor...fine-tune' framing: the activity-dependence experiment shows Hrs levels track activity, but nothing shows Hrs levels in turn modulate activity; state the closed-loop claim as a hypothesis.",
+    "Differentiate explicitly from the authors' 2023 prion-disease paper (Lawrence et al.) by listing the specific non-disease findings this work adds, and acknowledge the presynaptic activity-dependence work (Sheehan 2016, Birdsall 2022) as the prior art the 'first evidence' claim distinguishes from.",
+    "Confirm the sources of three specific attributions: the 'more than twice the affinity for ubiquitin' value (Mayers 2011), the Hgs mRNA regional expression claim (Tamai 2008), and the NMJ neurotransmitter-release finding (Watson 2015); re-cite if the sources do not report them.",
+    "State whether the 2.7-fold Hrs overexpression is within or beyond the physiological range, and whether the pGluA1-S831/PKC effect persists at a lower, more physiological dose.",
+    "Report the per-condition n and test used for the three-group activity-dependence comparison (untreated, Bic, TTX), and address the unequal variance across conditions.",
+    "Report inter-rater or test-retest reliability for the STED pixel-classifier segmentation, and state whether colocalization and slow/fast classifications were performed blind.",
+    "Report the raw per-sweep distributions and the number of cells in each fast/slow category per group, and reconcile the small scaffold changes (12-17% gephyrin/PSD-95) with the large pCaMKII reduction (60%) before describing an 'LTD-like' state.",
+    "Add the foundational Hrs identification reference (Komada & Kitamura, 1995) and confirm every reference in the list resolves, since the parsed list carries no DOIs.",
+    "State whether the phosphoproteomics KEGG hits support the glutamatergic claim specifically, given the enrichment is dominated by GABAergic-synapse and tight-junction terms."
+  ],
   "reviewer_reports": [
-    {
-      "reviewer": "ethics",
-      "score": 5.0,
-      "confidence": 5.0,
-      "weaknesses": [
-        {
-          "id": "ethics-1",
-          "text": "The IACUC approval is named but lacks its protocol identifier — a soft request: the authors should add the UCSD animal protocol number to the Methods."
-        },
-        {
-          "id": "ethics-2",
-          "text": "(For the rigor/methods reviewer, one line) Animal sex is reported per experiment but is not consistent across experiments (mixed sexes for PSD purification; female-only for Hrsf/f cohorts; male-only for AAV transduction), with no stated rationale."
-        }
-      ],
-      "questions": [
-        "What is the UCSD IACUC protocol number covering the mouse breeding, AAV transduction, and organotypic slice recordings described in the Methods?"
-      ]
-    },
-    {
-      "reviewer": "clarity",
-      "score": 4.0,
-      "confidence": 5.0,
-      "weaknesses": [
-        {
-          "id": "clarity-1",
-          "text": "LOAD-BEARING: The claim that Hrs bidirectionally regulates AMPAR currents rests in part on the AMPA/NMDA ratio (Fig. 3G–H) and the classification of AMPAR EPSCs as 'fast' or 'slow' (Fig. 3C–D). The classification rule is stated ('>90% of sweeps with one peak and decay <20 ms' vs '>10% of sweeps with multiple peaks and decay >25 ms'), but the reader cannot determine how many sweeps per neuron were collected, whether the classification was applied blind to condition, or whether the 'slow' phenotype reflects polysynaptic events (which the CA3 cut should prevent) rather than altered AMPAR kinetics. A single sentence clarifying these points would settle it. If the classification is unblinded or if sweep counts vary systematically, the result is ambiguous. This is a HARD defect because a competent reader cannot rule out a methodological confound from the text as written."
-        },
-        {
-          "id": "clarity-2",
-          "text": "LOAD-BEARING: The electrophysiology methods state that recordings with series resistance >30 MΩ or variations >30% were excluded, but do not report the mean ± SEM series resistance or capacitance for included neurons in each group. If Hrs knockdown alters cell size or recording quality, differences in series resistance could produce apparent changes in AMPAR kinetics (rise time, decay slope) without a true change in receptor function. The authors should report whether series resistance and capacitance differed between groups. Without it, the reader cannot judge whether the kinetic differences are biological or artefactual. HARD."
-        },
-        {
-          "id": "clarity-3",
-          "text": "SOFT: The abstract's first sentence ('Membrane protein trafficking is essential...') introduces no new term and is clear, but the penultimate sentence ('Hrs overexpression leads to increases in Ca2+-dependent signaling, including PKC and PKC substrate, AMPAR subunit GluA1-S831') is slightly ambiguous: does 'PKC' mean total PKC protein or PKC activity? The text clarifies later, but the abstract alone should resolve this. Consider rewriting to 'PKC activity (measured via phosphorylated PKC substrates)'."
-        }
-      ],
-      "questions": [
-        "In Fig. 2B, the y-axis is labelled 'Hrs/α-tubulin (normalized to control)'. Is α-tubulin verified to be stable across 72 h of bicuculline and TTX treatment? If not, what is the evidence that the normalization is valid?"
-      ]
-    },
-    {
-      "reviewer": "reproducibility",
-      "score": 3.0,
-      "confidence": 4.0,
-      "weaknesses": [
-        {
-          "id": "reproducibility-1",
-          "text": "_Load-bearing: the knockdown reagents are unidentifiable._ The AAV-shHrs used for all physiology is identified only as \"VectorBuilder, Chicago, IL,\" with no target sequence, scrambled-control sequence, backbone, promoter, or titer; the lentivirus used for the Figure S3 knockdown validation has no source at all. The knockdown-efficiency evidence shown is from dissociated neurons transduced with lentivirus, not from the organotypic slices in which the recordings were made. An independent group cannot reproduce the manipulation, and a different target site could plausibly give a different phenotype. Remedy: publish both target and scrambled sequences (with reference transcript and species), vector backbones, titers, and knockdown quantification in organotypic slices."
-        },
-        {
-          "id": "reproducibility-2",
-          "text": "_Load-bearing: the phosphoproteomics analysis code is absent._ The Figure 4/S5 pipeline is described in unusually good prose (normalization to unmodified intensities, Welch t-test, unadjusted p<0.05), and the raw data is accessioned, but the R code is not deposited, and one decision is genuinely ambiguous: for phosphopeptides mapping to multiple UniProt IDs \"only a single uniprot ID was considered\" — by what rule? Without the scripts, the figures are not rederivable from the accession without an unverifiable reconstruction. Remedy: deposit the analysis and figure-generation scripts with the PXD record, and state the disambiguation rule."
-        },
-        {
-          "id": "reproducibility-3",
-          "text": "_Load-bearing: the HA-Hrs overexpression cassette is underspecified._ No species of the Hrs cDNA, tag position, plasmid backbone, or deposit; \"AAV-GFP\" is not stated to be the same backbone with the insert swapped out. The capsid (CAP-B10) is traceable to Goertsen et al. 2022 and the titer is given, but the transgene itself cannot be obtained identically. Remedy: report the full expression cassette and deposit the plasmid."
-        }
-      ],
-      "questions": [
-        "What are the shRNA target and scrambled-control sequences for both the lentiviral and AAV reagents, with vector backbones and titers — none of these appear in the text?",
-        "Which species' Hrs cDNA is encoded in AAV-Hrs-HA, where is the HA tag, and where is the plasmid deposited?",
-        "Where are the R scripts that produced Figures 4 and S5, and what rule selects the single UniProt ID when a phosphopeptide maps to several?",
-        "How many biological replicates underlie the surface-biotinylation quantification in Figure 3N?"
-      ]
-    },
     {
       "reviewer": "methodology",
       "score": 3.0,
@@ -142,83 +84,63 @@
       "weaknesses": [
         {
           "id": "methodology-1",
-          "text": "HARD — The AMPAR kinetics claim conflates a population shift with a per-synapse change. EPSCs are classified as \"fast\" or \"slow\" (multi-peak, decay >25 ms), and Hrs KD neurons have fewer slow currents (21/41 vs 38/46). The subsequent rise-time and decay-slope differences (Figure 3I–L) are then reported as evidence of faster receptor kinetics. But if the recorded population is a mixture of fast and slow currents, the average rise time and decay slope will change with the proportion shift even if no individual synapse's AMPAR kinetics change at all. The slow currents, defined by multiple peaks, are equally consistent with polysynaptic or asynchronous release — an alternative the extracellular-stimulation design cannot exclude. The classification also leaves a gap (neurons with 5–10% multi-peak sweeps fit neither category), and the thresholds are not justified. To support the kinetics claim, analyze fast and slow currents separately, or use minimal stimulation to isolate unitary events. Note also that the abstract's \"reduced amplitude\" outruns the evidence, which is an AMPA/NMDA ratio, not an absolute amplitude (overclaiming — rigor's lane)."
+          "text": "1. HARD — The slow/fast AMPAR EPSC classification may reflect a technical confound, not an Hrs effect. The scrambled control shows slow, multi-peak AMPAR EPSCs in 38/46 neurons. Slow multi-peak EPSCs are classically a sign of polysynaptic contamination, incomplete CA3 cut, or poor space clamp — not a biological property of AMPARs. If the control group's slow currents reflect technical factors (stimulation intensity, slice health, recording quality), then the difference between groups could be a technical confound rather than an Hrs effect. The authors need to demonstrate that stimulation parameters were matched between groups, that the slow currents are not polysynaptic (e.g., by showing they persist with low-intensity stimulation or paired-pulse protocols), and that recording quality metrics (series resistance, input resistance) did not differ between groups. The fact that most control neurons show this atypical phenotype is a red flag that the baseline itself is contaminated."
         },
         {
           "id": "methodology-2",
-          "text": "HARD — The surface GluA1 experiment lacks a Cre-expression control. The claim that Hrs deletion reduces activity-dependent surface GluA1 rests on comparing AAV-Cre (Hrsf/f) with AAV-YFP (Hrsf/f) after bicuculline. AAV-Cre expression itself — independent of Hrs deletion — can affect neuronal health, protein trafficking, or the response to Bic. The design does not include AAV-Cre on WT (Hrs+/+) neurons, which would isolate the effect of Hrs deletion from the effect of Cre expression. Without this control, the attribution of the surface GluA1 reduction to Hrs loss specifically is not earned."
+          "text": "2. HARD — The developmental knockout confound undermines the causal claim about CaMKII and synaptic scaffolds. The Hrsf/f Syn1-Cre model deletes Hrs from E13. The observed reductions in pCaMKII-α/β, PSD-95, and gephyrin, and the increase in total CaMKII, could reflect developmental compensation or chronic adaptation to lifelong Hrs loss rather than a direct role for Hrs in synaptic signaling. The claim \"Hrs depletion leads to reduced CaMKII phosphorylation\" as a statement about Hrs function at the synapse is not fully earned by a constitutive knockout. An inducible knockout (e.g., AAV-Cre delivered to adult Hrsf/f mice) or acute shRNA knockdown would separate developmental from acute effects. Without this, the LTD-like interpretation is one of several possible accounts of the data."
         },
         {
           "id": "methodology-3",
-          "text": "SOFT — The activity-regulation experiments lack a specificity control. Bic increases and TTX decreases Hrs, but no other endosomal/ESCRT or synaptic protein is measured in the same lysates. The effect could be a general response of protein turnover to prolonged activity change rather than specific to Hrs. A control protein (e.g., EEA1, another ESCRT component) would establish specificity. Additionally, chronic Bic (72 h) can cause excitotoxicity; cell viability/density is not reported, and the MAP2-normalized immunofluorescence only partially addresses this."
+          "text": "3. HARD — Phosphoproteomics without multiple testing correction is likely dominated by noise. With 924 phosphopeptides tested at p < 0.05, roughly 46 false positives are expected by chance; the authors report 16 differentially abundant phosphopeptides, which is below the chance expectation. The GO/KEGG enrichment analyses are therefore built on a set that may be largely noise. The authors should apply multiple testing correction (e.g., Benjamini-Hochberg) and report how many of the 16 survive; if none survive, the phosphoproteomics claim should be substantially softened or reframed as hypothesis-generating."
         },
         {
           "id": "methodology-4",
-          "text": "The \"bidirectional\" framing (depletion → reduced pCaMKII; overexpression → increased PKC substrates/pGluA1-S831) compares a constitutive, partial developmental KO with adult AAV overexpression — different systems, ages, and routes — so the bidirectional synthesis is not tested under matched conditions."
+          "text": "4. SOFT — Surface biotinylation arms are not matched for transduction efficiency. The Cre and YFP AAV arms are compared for surface GluA1 after Bic treatment, but differences in viral titer, transduction efficiency, or neuronal health between arms could confound the comparison. Reporting transduction efficiency (e.g., % GFP-positive neurons) and total GluA1 per arm would help rule this out."
         },
         {
           "id": "methodology-5",
-          "text": "The phosphoproteomics hits (gephyrin S264/S268, Cntnap1, Grm3, etc.) are not validated by targeted western blot or phosphosite-specific antibodies; the validated pCaMKII finding was not among the proteomics hits. (The multiple-comparisons issue — 16 hits at unadjusted p<0.05 across 924 peptides — belongs to data_analysis.)"
+          "text": "5. SOFT — AMPA/NMDA ratio reduction is not resolved to a component. A reduced ratio is consistent with either reduced AMPA or increased NMDA; the authors acknowledge this but do not resolve it. Reporting the absolute amplitudes of each component (not just the ratio) would distinguish these alternatives."
         },
         {
           "id": "methodology-6",
-          "text": "The STED analysis uses pixel classifiers trained on a representative image and applied to all images, with no reported validation (e.g., comparison with manual segmentation or inter-rater reliability)."
+          "text": "6. SOFT — Single dose for Hrs overexpression. The AAV-Hrs overexpression uses one dose; a dose-response would establish that the PKC/pGluA1-S831 effects are specific to Hrs level rather than a threshold or off-target effect."
         },
         {
           "id": "methodology-7",
-          "text": "Blinding is not stated for the subjective fast/slow EPSC classification or the colocalization quantifications."
+          "text": "7. SOFT — No blinding reported for subjective classifications. The slow/fast EPSC classification and the colocalization analyses involve subjective judgment; blinding the analyst to condition would strengthen confidence in these measurements."
         },
         {
           "id": "methodology-8",
-          "text": "The Nedd4-1/Hrs colocalization experiment uses overexpressed GFP-Nedd4-1 without a control protein to show the AMPA-induced association is specific to Nedd4-1 rather than reflecting general endosomal accumulation."
+          "text": "8. SOFT — STED segmentation reliability not reported. The analysis relies on trained pixel classifiers applied across images; inter-rater or test-retest reliability for the segmentation is not reported, which matters for the quantitative cluster-volume and density claims."
         }
       ],
       "questions": []
     },
     {
-      "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 4.0,
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0,
       "weaknesses": [
         {
-          "id": "novelty-1",
-          "text": "The fractionation data show Hrs in the PSD2 fraction, though PSD2 is prepared with 0.5% Triton X-100, which can co-purify endosomal membranes that resist detergent extraction."
+          "id": "ethics-1",
+          "text": "[Load-bearing] The animal approval statement lacks the IACUC protocol number(s). The Materials and Methods state that all animal experiments were \"approved by the Institutional Animal Care and Use Committee (IACUC) at the University of California, San Diego (UCSD),\" but no protocol identifier is given. This is a SOFT request per the review standard — the approval is named but the identifier is missing. Provide the protocol number(s) covering the mouse breeding and experiments, the rat primary cultures (P1 pups), and the organotypic hippocampal slice work."
         },
         {
-          "id": "novelty-2",
-          "text": "The phosphoproteomics of 924 quantified phosphopeptides, 16 pass an uncorrected p < 0.05 threshold; none would survive Benjamini–Hochberg correction at 5% FDR (expected false positives: ~46 at p < 0.05), and adjusted p-values are not reported."
+          "id": "ethics-2",
+          "text": "No new human subjects data is presented; the human prion disease references in the introduction and discussion are citations to prior published work (Lawrence et al., 2023), so no consent statement is required for this manuscript."
         },
         {
-          "id": "novelty-3",
-          "text": "The manuscript does not show co-immunoprecipitation of Hrs with GluA1, nor test whether Hrs depletion alters GluA1 ubiquitination, nor whether the AMPAR kinetic changes depend on the Hrs ubiquitin-interacting motif (UIM)."
+          "id": "ethics-3",
+          "text": "Biosafety approval for the AAV vector work is not stated; this is standard practice for AAV research and typically not a required manuscript statement, but worth a line if institutional policy requires it."
         },
         {
-          "id": "novelty-4",
-          "text": "The AMPA/NMDA ratio is measured at 100 ms post-stimulation where the AMPAR current has largely decayed, so the ratio is dominated by NMDAR amplitude rather than reflecting the relative contributions of the two receptors to the synaptic response."
-        },
-        {
-          "id": "novelty-5",
-          "text": "The CaMKII data show a striking dissociation — reduced pCaMKII alongside increased total CaMKII — but the proposed explanation (impaired proteasomal turnover) is untested; an alternative is reduced neuronal activity with compensatory transcriptional response."
-        },
-        {
-          "id": "novelty-6",
-          "text": "The conclusion that Hrs overexpression effects are due to enhanced PKC activity is correlative; the authors do not measure PKC activity directly or show that the pGluA1-S831 increase is blocked by a PKC inhibitor."
-        },
-        {
-          "id": "novelty-7",
-          "text": "The Nedd4-1 colocalization experiment uses overexpressed GFP-Nedd4-1 and does not demonstrate that endogenous Nedd4-1 recruits Hrs to ubiquitinated AMPARs."
-        },
-        {
-          "id": "novelty-8",
-          "text": "There is no mention of STAM1, the other component of ESCRT-0; some effects could be due to unpartnered STAM1 rather than loss of ESCRT-0 function."
+          "id": "ethics-4",
+          "text": "The rat primary cultures fall under the same IACUC statement but should be explicitly covered by the protocol number requested above."
         }
       ],
       "questions": [
-        "What are the FDR-adjusted p-values for the phosphopeptides in Figure 4?",
-        "Does the AMPA/NMDA ratio difference hold with peak-to-peak (AMPAR peak / NMDAR peak) measurement rather than the 100 ms time point?",
-        "Can the rise-time difference in Figure 3I be explained by a shift in AMPAR subunit composition (e.g., GluA1:GluA2 ratio or TARP association) rather than altered surface abundance?",
-        "Is the increase in total CaMKII in Hrs-KO cortex (Fig. 5) due to increased transcription, increased protein stability, or both — and does it occur in the postsynaptic density fraction or only in the total lysate?",
-        "Does Hrs co-immunoprecipitate with GluA1 under basal or activity-stimulated conditions?"
+        "What is the IACUC protocol number(s) covering the mouse experiments, rat primary cultures, and organotypic slice work?"
       ]
     },
     {
@@ -228,104 +150,238 @@
       "weaknesses": [
         {
           "id": "rigor-1",
-          "text": "LOAD-BEARING 1 — Causal direction and bidirectionality of the Hrs–AMPAR relationship. The title and abstract state that ESCRT-0 'regulates AMPA receptor currents' and 'impacts' AMPAR function. The electrophysiological evidence is confined to Hrs knockdown (Figs. 3B–L), which shows faster rise time, steeper decay slope, and a reduced AMPA/NMDA ratio. This is a single perturbation; a true regulatory role implies that increasing Hrs would produce the opposite effect. The overexpression experiments (Fig. 7) do measure AMPAR phosphorylation (pGluA1-S831) but do not include any electrophysiological measurement — the strongest claim about 'regulation' is in the dimension (current kinetics) where the complementary experiment is absent. Without the overexpression electrophysiology, the claim that Hrs 'regulates' AMPAR currents is over-strong: the data establish that knocking Hrs down alters AMPAR kinetics, not that Hrs is a bidirectional regulator of those currents. The word 'modulates' in the discussion and 'bidirectional' in the abstract should be restricted to the Hrs-protein-level data (Fig. 2), not extended to the functional consequences. To support the claim fully, the authors would need to record AMPAR EPSCs from Hrs-overexpressing CA1 neurons and show that rise time and AMPA/NMDA ratio shift in the opposite direction from the KD. Alternatively, the claim should be requalified to 'Hrs knockdown alters AMPAR kinetics'."
+          "text": "LOAD-BEARING 1 — 'Hrs levels impact AMPAR kinetics in CA1 pyramidal neurons' (title/abstract claim). The evidence is the shRNA knockdown recording showing a lower AMPA/NMDA ratio and faster rise time. The alternative explanation the design does not exclude: Hrs depletion could alter NMDAR abundance or function rather than AMPARs, since the ratio uses NMDAR current at 100 ms as the denominator and the authors themselves report no change in NMDAR subunit levels only in the cortex lysate (Fig S7), not at the synapse. A reduced ratio is equally produced by increased NMDAR current or by reduced AMPAR current; the paper's own data (no change in GluN2B in lysate) does not settle the synaptic question. What would distinguish: report the absolute AMPAR and NMDAR current amplitudes separately (not just the ratio), and quantify surface GluA1 in the same slice preparation rather than only in dissociated cortical culture. As worded, 'Hrs levels impact AMPAR kinetics' overstates what the ratio and rise-time data establish."
         },
         {
           "id": "rigor-2",
-          "text": "LOAD-BEARING 2 — The fast vs slow AMPAR current classification is insufficiently explained and could drive the measured kinetic differences. The authors classify AMPAR EPSCs as 'slow' when >10% of sweeps show multiple peaks and decay >25 ms (Fig. 3B–D). The proportion of slow cells drops from 83% (38/46) in scrambled to 51% (21/41) in Hrs KD, and this is the basis for the reported effects on rise time and decay slope. However, the classification boundary (10% of sweeps) is arbitrary, and the authors do not report whether the 38 slow cells in scrambled and the 21 slow cells in Hrs KD have similar rise/decay parameters when considered only among themselves. If the Hrs KD group simply has fewer slow-classified cells (which tend to have longer rise times), the overall mean shift could be an artifact of reclassification rather than a true change in channel kinetics. The authors should report the kinetics in the fast-only subset of each genotype, and should show that the kinetic differences survive within the slow-only category. If they do not, the claim about 'faster AMPAR current kinetics' (abstract) is primarily a claim about prevalence of a multi-peak waveform, not about single-channel or unitary-synaptic behaviour. This needs clarification."
+          "text": "LOAD-BEARING 2 — 'Hrs depletion leads to a specific reduction of CaMKII autophosphorylation, suggestive of reduced neuronal activity' (Results). The evidence is the western blot showing reduced pCaMKII-T286/T287 with increased total CaMKII in cortical lysate. The alternative: the increase in total CaMKII could be a compensatory or degradation-blockade effect (the authors themselves suggest proteasomal clearance of CaMKII is impaired), in which case the reduced pCaMKII/total ratio reflects altered turnover rather than reduced neuronal activity. The claim that this is 'suggestive of reduced neuronal activity' is a SOFT over-hedge in the right direction, but the sentence 'loss of Hrs leads to a specific reduction of CaMKII autophosphorylation' is causal language for a correlational lysate measurement — the design (whole-cortex lysate, no activity manipulation) cannot establish that Hrs depletion causes reduced CaMKII activity. Requalify to 'Hrs-depleted cortex shows reduced pCaMKII relative to total CaMKII'."
         },
         {
           "id": "rigor-3",
-          "text": "LOAD-BEARING 3 — The phosphoproteomics (Fig. 4) is presented as evidence that Hrs depletion 'disrupts glutamatergic signaling at the post-synaptic membrane', but the analysis uses an uncorrected p<0.05 threshold on 924 phosphopeptides. At this threshold one expects ~46 false positives by chance; the authors report 16 hits, which is fewer than the expected false-positive count. Enrichment analyses (GO, KEGG) based on 16 hits are therefore fragile — the pathway hits (GABAergic and glutamatergic synapses, tight junctions) each depend on a small number of phosphopeptides (one or two per pathway) that may not survive correction. The paper does not report any multiple-testing correction (Bonferroni, Benjamini-Hochberg). Until the authors show which hits survive FDR correction, the phosphoproteomics should be described as 'candidates that did not reach corrected significance' rather than as evidence of pathway disruption. The claim that Hrs depletion 'disrupts glutamatergic signaling' should be softened if the phosphoproteomics pillar of that claim collapses."
+          "text": "LOAD-BEARING 3 — 'Hrs acts as a sensor at the post-synapse to fine-tune neuronal activity' (abstract). The evidence is the bidirectional activity regulation plus the electrophysiology. The gap: the activity-dependence experiment shows Hrs levels track activity, but nothing in the paper shows that Hrs levels in turn modulate neuronal activity — the electrophysiology is on Hrs-depleted neurons at rest, not on neurons whose Hrs was raised or lowered by activity. The 'sensor...fine-tune' framing implies a closed loop that the experiments do not close. SOFT: requalify to 'Hrs levels are bidirectionally regulated by activity and Hrs depletion alters AMPAR-mediated currents'."
         },
         {
           "id": "rigor-4",
-          "text": "SOFT — Causal language for correlational data. The abstract says Hrs 'regulates AMPA receptor currents' and 'drives' an LTD-like state. The LTD-like interpretation (reduced pCaMKII, reduced PSD-95, reduced gephyrin) is based on correlational protein-level changes in whole cortical lysates from Hrs KO mice. The authors do not demonstrate that these changes are physiologically reversible, nor that they are accompanied by the expected functional hallmarks of LTD (e.g., a measured change in synaptic efficacy in the slice from Hrs KO mice). The LTD language should be hedged to 'consistent with an LTD-like depressive state' throughout."
+          "text": "Sweep — the 'dramatic' increase in CaMKII (Results: 'increased by 56%') is described with an importance-laden adjective for a modest effect size; report the effect in interpretable terms."
         },
         {
           "id": "rigor-5",
-          "text": "SOFT — Generalisation from organotypic slices. All electrophysiology was performed in organotypic hippocampal slices 5–12 days after AAV injection. This preparation has altered connectivity and glial reactivity relative to acute slices. The authors acknowledge this implicitly by using slices for shRNA delivery, but the abstract does not qualify 'CA1 pyramidal neurons' with 'in organotypic slice culture'. Given that the rise-time and AMPA/NMDA ratio effects are modest, replication in acute slices from Hrs KO mice would substantially strengthen the generalisability."
+          "text": "Sweep — the claim that Hrs overexpression 'enhances PKC activity' (Results) rests on a 36% increase in phosphorylated PKC substrates plus an 11% decrease in PKCα; the substrate-phosphorylation measure is a proxy for activity and the direction of the PKCα change is not obviously consistent with 'enhanced activity' — the causal chain from Hrs overexpression to PKC activity is inferred, not tested."
+        },
+        {
+          "id": "rigor-6",
+          "text": "Sweep — the 'approximately 40% reduction in surface GluA1' after Bic in Hrs-ablated neurons is reported with a large SEM (50 ± 7% vs 90 ± 24%) and the basal condition shows no difference; the activity-dependent effect is the load-bearing comparison and its variance is high — report the per-replicate values and the n."
+        },
+        {
+          "id": "rigor-7",
+          "text": "Sweep — the phosphoproteomics and total-proteomics screens are presented with p<0.05 unadjusted thresholds and no multiple-testing correction; the 16 differentially abundant phosphopeptides out of 924 are likely to include false positives, and the GO/KEGG enrichment is built on that uncorrected set — flag this as a multiple-comparisons concern for the data-analysis reviewer."
+        },
+        {
+          "id": "rigor-8",
+          "text": "Sweep — the 'slow AMPAR EPSC' classification (more than 10% of sweeps with multiple peaks) is a post-hoc grouping that drives the headline percentage difference; the authors should report the distribution of decay times across all neurons rather than the dichotomized fast/slow split, since the dichotomy may be where the effect lives."
         }
       ],
       "questions": [
-        "What proportion of the Hrs/Bassoon and Hrs/PSD-95 overlap in the STED data (Fig. 1L–M) is accounted for by the diffraction-limited resolution of the Bassoon and PSD-95 channels relative to the STED-resolution Hrs channel? The text reports 89–91% overlap, but this could be inflated if those channels were acquired at confocal rather than STED resolution — please clarify the acquisition mode for each channel and, if applicable, provide a cross-channel resolution control.",
-        "In Fig. 3I–L, the rise-time and decay-slope differences between scrambled and Hrs KD are nominally significant but visually small. Please report the mean and SD for each group, not only the p-value, and specify the effect size (e.g., Cohen's d or a ratio) so a reader can judge biological magnitude.",
-        "The abstract and discussion state that Hrs 'senses' neuronal activity. The experiments show that Bic increases, and TTX decreases, Hrs protein levels (Fig. 2). Does this bidirectional change require 72 h of treatment? If so, the claim that Hrs 'senses' activity should be qualified as a slow transcriptional or translational response, not a rapid sensor like Ca2+ influx — please clarify the timescale on which the Hrs protein change first becomes detectable.",
-        "Fig. 3M–N: the basal surface GluA1 comparison (YFP vs Cre, no Bic) is a control for Cre toxicity. If these two groups differ even under basal conditions, the Bic interaction could reflect a baseline shift rather than a specific activity-dependent defect. Please report the raw (non-normalized) surface GluA1 intensities for all four groups, not only the normalized bar chart.",
-        "The phosphoproteomics (Fig. 4) compares Cre+ vs Cre- PSM fractions. Which of the 16 differentially phosphorylated peptides survive a correction for multiple testing (e.g., Benjamini-Hochberg)? The volcano-plot threshold of p<0.05 uncorrected is permissive for a 924-peptide discovery set. Please report both the raw and adjusted p-values for the 16 hits."
+        "Can you report the absolute AMPAR and NMDAR current amplitudes separately, not just the ratio, to show the reduction is in the AMPAR component?",
+        "In the surface biotinylation experiment, what are the per-replicate values and n for the Bic-treated Hrs-ablated group, given the large SEM?",
+        "For the phosphoproteomics, what is the false-discovery rate at the 16 differentially abundant phosphopeptides after multiple-testing correction?",
+        "Is the reduced pCaMKII/total ratio in Hrs-depleted cortex accompanied by any measure of neuronal activity (e.g., immediate-early gene expression) that would support the 'reduced neuronal activity' interpretation?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 2.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "data_analysis-1",
+          "text": "The AMPA/NMDA ratio is the paper's central functional claim, but it is computed as peak AMPAR amplitude divided by NMDAR amplitude measured at 100 ms post-stimulation, and the two denominators are not measured on the same scale or at the same time point; a change in the ratio could be driven entirely by a change in the NMDAR component, and the paper reports no NMDAR amplitude data to exclude this. Report the raw AMPAR and NMDAR amplitudes separately, and the ratio computed with both components measured at matched time points."
+        },
+        {
+          "id": "data_analysis-2",
+          "text": "The 'fast vs slow' AMPAR EPSC classification is the basis for the claim that Hrs depletion changes AMPAR kinetics, but the classification rule is defined only by a threshold on the fraction of sweeps with multiple peaks and decay time (>25 ms), with no stated inter-rater reliability, no blinded classification, and no report of how many cells fell into each category per group beyond the fraction. The 20-80% rise-time and decay-slope differences are then computed on the averaged traces after alignment at the point of maximal rise, which can itself manufacture a rise-time difference; report the raw per-sweep distributions and the classification done blind."
+        },
+        {
+          "id": "data_analysis-3",
+          "text": "The activity-dependent Hrs fold-changes (Bic +34%, TTX −31%) are reported as ratios to α-tubulin, and the TTX/Bic comparison is made against a single 'untreated' group with no stated n per condition beyond '8 independent experiments'; the SEMs (e.g. 1.15 ± 0.03 vs 0.80 ± 0.12) suggest the untreated group has far less variance than the treated groups, which is not addressed. Report the per-condition n, the test used, and the raw Hrs/tubulin values."
+        },
+        {
+          "id": "data_analysis-4",
+          "text": "The surface-GluA1 result is normalized to input GluA1, but input GluA1 itself responds to Bic treatment; the reported Bic-induced reduction in surface GluA1 in the Cre group (50 ± 7% vs 90 ± 24%) could be an artefact of the denominator rising. Report the absolute surface signal and the input values separately."
+        },
+        {
+          "id": "data_analysis-5",
+          "text": "The phosphoproteomics analysis identifies 16 differentially abundant phosphopeptides out of 924 at p<0.05 with no multiple-comparison correction; at that threshold ~46 false positives are expected by chance alone, so the hit list is not distinguishable from noise. Report the FDR-adjusted q-values and the number of hits surviving correction."
+        },
+        {
+          "id": "data_analysis-6",
+          "text": "The 'no difference' claims (e.g. 'PKCα and γ, PP2B, PKA substrates unchanged') are made from non-significant results in samples of n=6-7 per group with no power analysis and no equivalence testing; a null result in an under-powered sample cannot support a claim of no effect."
+        },
+        {
+          "id": "data_analysis-7",
+          "text": "The electrophysiology comparisons (rise time, decay slope, AMPA/NMDA ratio) are reported with no stated n per group beyond the total cell counts (41 vs 46), no effect sizes or CIs, and no statement of whether the comparisons are paired or unpaired; the recording exclusion criteria (series resistance >30 MΩ, variation >30%) are stated but it is not disclosed whether these were applied before or after outcomes were seen."
+        },
+        {
+          "id": "data_analysis-8",
+          "text": "The imaging colocalization analyses (Pearson coefficients, Manders coefficients) are reported as means with SEM but no stated test (parametric vs non-parametric) and no correction for the multiple comparisons across the many dendrites and conditions; the n for the Hrs/Bassoon comparison (30 dendrites from 2 experiments) is smaller than for Hrs/PSD-95 (36 from 3), which is not discussed."
+        }
+      ],
+      "questions": [
+        "Can you report the raw AMPAR and NMDAR amplitudes separately, and the AMPA/NMDA ratio computed with both components measured at matched time points, to exclude the possibility that the ratio change is driven by the NMDAR component?",
+        "For the 'fast vs slow' classification, was the classification performed blind to condition, and can you report the per-sweep distribution of decay times and the number of cells in each category per group?",
+        "For the activity-dependent Hrs experiments, what is the n per condition (untreated, Bic, TTX) and which test was used for the three-group comparison?",
+        "Can you report the absolute surface GluA1 signal and the input GluA1 values separately for the biotinylation experiment, so the normalization denominator can be inspected?",
+        "What is the FDR-adjusted q-value threshold for the phosphoproteomics hits, and how many of the 16 differentially abundant phosphopeptides survive it?",
+        "For the 'no difference' claims (PKC, PP2B, PKA substrates), what power analysis or equivalence test supports the conclusion of no effect?"
+      ]
+    },
+    {
+      "reviewer": "novelty",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "novelty-1",
+          "text": "Load-bearing: differentiation from the authors' own 2023 paper. The manuscript's most important novelty boundary is internal, not external: Lawrence et al. (2023) already reported that neuronal Hgs deletion accelerates GluA1 hyperphosphorylation (S831/S845) and ubiquitinated-protein accumulation at synapses in prion disease. The present paper's claim that Hrs regulates AMPAR currents and CaMKII signaling in the healthy state is a genuine delta, but the manuscript never states it as such — it does not say what the 2023 paper established and what this paper adds beyond \"in the absence of disease.\" Because the 2023 paper is the nearest neighbor and is the authors' own, the differentiation obligation is explicit and unmet. The one sentence that would settle it: a statement of the specific non-disease findings (PSD localization, activity-dependent Hrs levels, AMPAR kinetics, CaMKII changes) that were not and could not have been reported in the 2023 disease study."
+        },
+        {
+          "id": "novelty-2",
+          "text": "Load-bearing: \"first evidence\" claim vs. presynaptic Hrs activity-dependence. The manuscript claims \"the first evidence that Hrs, and therefore ESCRT-0, functions bidirectionally as a responder and modulator of synaptic activity.\" Prior work (Sheehan et al. 2016; Birdsall et al. 2022) already established activity-dependent Hrs behavior at the presynapse — activity-dependent redistribution of Hrs in axons and its role in synaptic vesicle protein degradation. The present claim is distinct (Hrs levels regulated by activity; postsynaptic function), but the manuscript does not acknowledge this nearest neighbor, so a reader cannot judge whether \"first\" refers to the postsynaptic/levels claim or to Hrs-activity coupling generally. The one sentence that would settle it: an explicit statement that prior activity-dependence was presynaptic and redistribution-based, whereas this work shows postsynaptic, level-based regulation."
+        },
+        {
+          "id": "novelty-3",
+          "text": "Sweep: The \"Hrs localizes to the post-synapse\" claim rests partly on PSD2 enrichment of only 0.33× S1 (vs. synaptophysin 0.008×), which is a modest signal for a load-bearing localization claim — a rigor question, but one that bears on how strongly the novelty can be stated."
+        },
+        {
+          "id": "novelty-4",
+          "text": "Sweep: The 12–17% reductions in gephyrin/PSD-95 and the 60% pCaMKII reduction are presented as evidence of an \"LTD-like\" state, but the manuscript never reconciles the small scaffold changes with the large kinase change — the significance framing outruns the effect sizes."
+        },
+        {
+          "id": "novelty-5",
+          "text": "Sweep: The Hrs-overexpression arm (AAV-Hrs-HA) is a strong contribution, but the manuscript does not state whether the 2.7-fold Hrs increase is within a physiologically plausible range or supraphysiological, which affects how the pGluA1-S831/PKC result should be read."
+        },
+        {
+          "id": "novelty-6",
+          "text": "Sweep: The phosphoproteomic analysis is presented as supporting \"glutamatergic synaptic transmission\" but the KEGG hits are dominated by GABAergic synapse and tight-junction terms; the manuscript should say which specific phosphopeptides support the glutamatergic claim rather than the pathway-level enrichment."
+        },
+        {
+          "id": "novelty-7",
+          "text": "Sweep: The claim that Hrs depletion \"reduces surface GluA1\" under Bic but not basal conditions is a nice specificity result, but the manuscript does not connect it to the electrophysiological finding that Hrs KD reduces AMPA/NMDA ratio — the two results are left as separate observations."
+        },
+        {
+          "id": "novelty-8",
+          "text": "Sweep: The authors' own 2023 paper is cited, but the presynaptic Hrs activity-dependence work (Sheehan 2016, Birdsall 2022) is cited only in passing and never engaged as the nearest prior claim on activity-dependent Hrs function."
+        }
+      ],
+      "questions": [
+        "What specifically does this manuscript establish that the authors' 2023 prion-disease study could not, stated as a list of non-disease findings?",
+        "Is the \"first evidence\" claim intended to cover postsynaptic/level-based Hrs-activity coupling specifically, and can the manuscript state the presynaptic redistribution work as the prior art it distinguishes from?",
+        "Can the authors state whether the 2.7-fold Hrs overexpression is within or beyond the physiological range, and does the pGluA1-S831 effect persist at a lower, more physiological overexpression level?"
+      ]
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 2.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "reproducibility-1",
+          "text": "The electrophysiology data — the load-bearing evidence for altered AMPAR kinetics and AMPA/NMDA ratio — are not deposited anywhere. The manuscript reports only summary statistics and representative traces; there is no raw trace archive, no per-cell dataset, and no analysis script. An independent group could not reproduce the reported rise-time, decay-slope, and slow-current percentages from the described inputs. This is a HARD reproducibility break on the paper's central claim."
+        },
+        {
+          "id": "reproducibility-2",
+          "text": "The phosphoproteomics raw data are promised 'upon publication' (PXD073715) but no accession is live; the manuscript states the data 'is publicly available in the ProteomExchange depository (PXD073715)' — a promise, not a working accession. For a load-bearing dataset this is a HARD flag under the 'upon publication' rule."
+        },
+        {
+          "id": "reproducibility-3",
+          "text": "The AAV-Hrs-HA overexpression and Hrsf/fSyn1-Cre experiments report only densitometric western blot quantifications; the underlying blot images, replicate-level values, and the analysis pipeline are not deposited. The GluA1-S831 and PKC-substrate claims therefore cannot be independently recomputed."
+        },
+        {
+          "id": "reproducibility-4",
+          "text": "The manuscript does not state random seeds or a seed-averaging statement for any of the analyses, and the mass spectrometry search and TMT normalization parameters are described in prose but not consolidated into a single reproducible pipeline document."
+        },
+        {
+          "id": "reproducibility-5",
+          "text": "The 'surface biotinylation' assay is described with reagent and steps, but the exact biotinylation time, temperature, and wash conditions are not fully specified, and the input-normalization step is not described in enough detail to reproduce the reported 40% reduction."
+        }
+      ],
+      "questions": [
+        "Can you provide the raw electrophysiology traces and the per-cell dataset (rise time, decay slope, AMPA/NMDA ratio, slow-current classification) as a deposited supplementary file or repository, with the analysis script used to compute the reported statistics?",
+        "Can you confirm the PXD073715 accession is live and provide the raw and processed phosphoproteomics data, with the TMT normalization and search parameters consolidated into a single reproducible pipeline document?",
+        "Can you specify the exact biotinylation conditions (time, temperature, wash steps) and the input-normalization procedure for the surface biotinylation assay, so an independent group could reproduce the reported 40% reduction in surface GluA1?"
       ]
     },
     {
       "reviewer": "literature",
       "score": 4.0,
-      "confidence": 4.0,
+      "confidence": 3.0,
       "weaknesses": [
         {
           "id": "literature-1",
-          "text": "Self-citation proportion — Several citations (Schwarz et al., 2010; Scudder et al., 2014; Goo et al., 2015; Rodrigues et al., 2016; Lawrence et al., 2023; Djakovic et al., 2009, 2012; Keil et al., 2010) originate from the Patrick lab. This is proportionate given that the Patrick lab has been a primary contributor to the ubiquitin–AMPAR trafficking literature, but the authors should confirm that no external group's parallel finding on the same point has been overlooked."
+          "text": "The \"more than twice the affinity for ubiquitin as compared to STAM1\" claim (Mayers et al., 2011) is a specific quantitative attribution I could not verify. Mayers 2011 (\"ESCRT-0 assembles as a heterotetrameric complex on membranes and binds multiple ubiquitinylated cargoes simultaneously\") addresses multivalent cargo binding, but the abstract/metadata do not establish the stated 2× affinity comparison against STAM1. This value underpins the premise that Hrs is the dominant ubiquitin gatekeeper of ESCRT-0 — the paper's central mechanistic framing. If the comparison comes from a different source, the citation is misattributed; if it is the authors' own measurement, it needs a methods citation. Please confirm the source of this specific value."
         },
         {
           "id": "literature-2",
-          "text": "Citation for the UPS/ESCRT distinction in the introduction — The sentence \"ESCRT machinery targets mono- or short-chain ubiquitinated transmembrane proteins for lysosomal degradation\" cites Jarome & Helmstetter (2013) and Soykan et al. (2021). Jarome & Helmstetter focuses on the proteasome and LTM, not on ESCRT specifically; Soykan et al. (2021) is the correct reference for the ESCRT part. The Jarome citation is a tangential fit. Consider replacing it with a dedicated ESCRT review or dropping it."
+          "text": "The attribution \"Hgs mRNA is highly expressed in brain regions crucial for learning and memory, including the hippocampus, cerebral cortex, and hypothalamus (Tamai et al., 2008)\" could not be verified. Tamai 2008 is a pathology paper on Hrs loss causing ubiquitinated-protein accumulation and neurodegeneration; whether it reports regional Hgs mRNA expression is not established by its metadata. This sentence frames the relevance of Hrs to learning/memory circuits, so its source matters. Please confirm Tamai 2008 reports this expression pattern, or re-cite."
         },
         {
           "id": "literature-3",
-          "text": "DOI / resolver information — The reference list is in standard journal format without DOIs. This is acceptable for a preprint review venue, but the authors should ensure that all entries are resolvable through PubMed or their journal's archive. One reference — Quasney & Griffith (2025), \"Degradation of CaMKII is stimulated by its active conformation\" (JBC 301) — appears very recent (2025); its volume number may update before publication. Please verify the final citation data."
+          "text": "The teetering-mouse claim — \"neuromuscular weakness, synaptic dysfunction, and disrupted neurotransmitter release at the neuromuscular junction (Watson et al., 2015)\" — is only partially verifiable. Watson 2015 (verified) reports motor and sensory deficits from HGS mutation, but the specific NMJ neurotransmitter-release finding is not confirmed by the abstract/metadata. This claim supports the \"essential role for ESCRT-0 in synaptic processes\" argument; please confirm the NMJ result is in Watson 2015 or cite the primary source that reports it."
+        },
+        {
+          "id": "literature-4",
+          "text": "SOFT — the original Hrs identification (Komada & Kitamura, 1995, \"Growth factor-induced tyrosine phosphorylation of Hrs…\") is not cited in a paper centered on Hrs; consider adding it as the foundational reference."
+        },
+        {
+          "id": "literature-5",
+          "text": "SOFT — the reference list as typed carries no DOIs and is garbled by conversion; authors should confirm every entry resolves, since I could not fully audit hygiene from the parsed list."
+        },
+        {
+          "id": "literature-6",
+          "text": "No directly competing prior work on ESCRT-0 at the PSD surfaced in my searches, so the post-synaptic-localization novelty claim does not appear to omit a must-cite — though I could not exhaustively confirm absence of prior PSD-localization reports."
+        },
+        {
+          "id": "literature-7",
+          "text": "The citation record is current (2000–2025) and not anchored to stale work; currency is not an issue."
         }
       ],
-      "questions": []
+      "questions": [
+        "Can you confirm the source of the \"more than twice the affinity for ubiquitin\" value attributed to Mayers 2011?",
+        "Does Tamai 2008 actually report Hgs mRNA expression in hippocampus, cortex, and hypothalamus, or should that sentence be re-cited?",
+        "Is the NMJ neurotransmitter-release finding in Watson 2015, or does it come from a different primary source?"
+      ]
     },
     {
-      "reviewer": "data_analysis",
+      "reviewer": "clarity",
       "score": 3.0,
       "confidence": 4.0,
       "weaknesses": [
         {
-          "id": "data_analysis-1",
-          "text": "Phosphoproteomics multiple comparisons (HARD). The manuscript reports 924 unique phosphopeptides with 16 \"differentially abundant\" at p<0.05 uncorrected. At α=0.05 with 924 tests, the expected number of false positives is ~46 — the 16 hits are *below* the expected false-positive count and are indistinguishable from noise. The GO/KEGG enrichment analyses (Figure 4C) are built on these 16 hits and inherit the problem. The authors should apply Benjamini-Hochberg correction and report how many hits survive at FDR=0.05, or justify why uncorrected p-values are appropriate."
+          "id": "clarity-1",
+          "text": "HARD: The sentence 'Hrs was enriched in S3 relative to the initial supernatant fraction, S1 [S3 / S1: 1.42 ± 0.8 (mean ± SEM) versus synaptophysin: 0.87 ± 0.2, and PSD95: 0.42 ± 0.08]' is ambiguous — the reader cannot tell whether the bracketed values are the ratios for Hrs, synaptophysin, and PSD95, or something else. A reader cannot determine what the comparison is."
         },
         {
-          "id": "data_analysis-2",
-          "text": "Surface biotinylation interaction claim (HARD). The claim \"Hrs impacts activity-dependent surface trafficking of GluA1\" rests on comparing Cre+Bic (50±7%) vs YFP+Bic (90±24%) directly. The proper test for an activity-dependent effect is the interaction between Cre and Bic in the 2×2 design — basal data exist and show no difference, so the interaction is testable. Without it, the result is consistent with a main effect of Cre that only becomes detectable under Bic, not a specific activity-dependent effect. The n for this experiment is not stated, and the control SEM of 24% is large relative to the reported 40% effect."
+          "id": "clarity-2",
+          "text": "HARD: The quantitative claim 'Hrs increased by 34% in Bic-treated neurons [1.54 ± 0.17 versus 1.15 ± 0.03 (untreated); p < 0.05]' states the direction and the p-value but not the actual quantity being compared — the reader cannot tell whether 1.54 and 1.15 are normalized intensities, ratios, or something else."
         },
         {
-          "id": "data_analysis-3",
-          "text": "Electrophysiology classification and kinetics (HARD). The slow/fast AMPAR EPSC classification uses a subjective \"multiple peaks\" criterion, and the experimenter is not blinded (GFP identifies KD neurons). The p=0.002 (Fisher's exact) could reflect classification bias. Additionally, the rise time and decay slope analyses (Figure 3I–L) are performed on currents that include multi-peaked \"slow\" responses — rise time and decay slope of a multi-peaked current are not well-defined. The authors should report the kinetic analysis restricted to fast, single-peaked currents, and state whether classification was done blind."
+          "id": "clarity-3",
+          "text": "SOFT: The figure legends do not define every symbol and abbreviation used in the figures — for example, the legend for Figure 1 does not define 'S1', 'S3', 'PSD2', or 'CHMP2B' at first use."
         },
         {
-          "id": "data_analysis-4",
-          "text": "AMPA/NMDA ratio ambiguity. The ratio uses NMDA current at 100 ms post-stimulation. If Hrs depletion alters NMDA receptor composition or kinetics (e.g., slower-decaying GluN2B-containing receptors), the NMDA current at 100 ms increases, reducing the ratio without any change in AMPA. The authors acknowledge the ambiguity but do not report NMDA kinetics to exclude this alternative. Reporting the NMDA decay time constant for both groups would settle it."
-        },
-        {
-          "id": "data_analysis-5",
-          "text": "CaMKII ratio not reported. The authors report pCaMKII (0.39) and total CaMKII (1.56) separately normalized to loading control. The meaningful quantity is the phosphorylation fraction pCaMKII/totalCaMKII (~0.25, a 75% reduction), which is a stronger claim than the stated 60% reduction. Reporting the ratio would clarify the interpretation and the claim of \"reduced activity.\""
-        },
-        {
-          "id": "data_analysis-6",
-          "text": "Multiple comparisons across the many western blots (CaMKII, PKA, PKC, PP2B, gephyrin, PSD-95, GluA1, GluA2, GluN2A/B, etc.) with no correction — some significant results could be chance."
-        },
-        {
-          "id": "data_analysis-7",
-          "text": "Pseudo-replication: dendrite-level n's (Figure 1E: n=30–36 dendrites from 2–3 experiments; Figure 2F: n=34–41 dendrites from 3 experiments) treat dendrites as independent units; the effective n is the number of cultures."
-        },
-        {
-          "id": "data_analysis-8",
-          "text": "\"No difference\" claims (PKA, PKC, PP2B unchanged; basal surface GluA1 unchanged) rest on non-significant results in samples of n=7 or unstated n, without equivalence testing or power analysis."
-        },
-        {
-          "id": "data_analysis-9",
-          "text": "Exact p-values are not given anywhere; the tight control SEM of 0.03 with N=8 in Figure 2B (vs treated SEMs of 0.17 and 0.12) suggests unstable normalization and warrants reporting raw normalized values."
-        },
-        {
-          "id": "data_analysis-10",
-          "text": "The phosphoproteomics normalization (phospho intensity / unmodified protein intensity) means a change in total protein abundance masquerades as a phosphorylation change; the authors should report whether the 16 hits' parent proteins changed in total abundance."
+          "id": "clarity-4",
+          "text": "SOFT: The legend for Figure 3 does not define the color coding used in the traces (dark blue/red vs. light blue/red), so a reader cannot interpret the figure from the caption alone."
         }
       ],
-      "questions": []
+      "questions": [
+        "What are the units of the values in the brackets in the sentence about Hrs enrichment in S3? Are they ratios, normalized intensities, or something else?",
+        "What do the colors in the Figure 3 traces represent, and are they defined anywhere in the text or legend?",
+        "What is the actual quantity being compared in the claim that Hrs increased by 34% in Bic-treated neurons — is it a normalized intensity, a ratio, or a count?"
+      ]
     }
   ],
   "manuscript_text_sha256": "325d6811212bed2f4e93f16bb8d57d7b2a47faebd7769b5976832444492c1fd9",
-  "manuscript_file_sha256": "919694a5801a07074f0d5a0ba2c7b01f2ca36f726108dd14b8405df46ce9b466",
+  "manuscript_file_sha256": "960c4cfa4701c1e52982ba45fe92d6453c40cb8b404a553a806b526d700bbb94",
   "prior_job_id": "",
   "desk_rejected": false
 }

@@ -6,19 +6,19 @@
 
 ## Reviewer Scores
 - **data_analysis** — score 2.0/5 (confidence 4.0/5)
-- **clarity** — score 3.0/5 (confidence 4.0/5)
-- **ethics** — score 2.0/5 (confidence 4.0/5)
+- **ethics** — score 4.0/5 (confidence 4.0/5)
+- **reproducibility** — score 2.0/5 (confidence 4.0/5)
 - **methodology** — score 3.0/5 (confidence 4.0/5)
-- **novelty** — score 3.0/5 (confidence 3.0/5)
-- **literature** — score 4.0/5 (confidence 3.0/5)
-- **reproducibility** — score 2.0/5 (confidence 5.0/5)
-- **rigor** — score 2.0/5 (confidence 5.0/5)
+- **clarity** — score 3.0/5 (confidence 4.0/5)
+- **literature** — score 4.0/5 (confidence 4.0/5)
+- **rigor** — score 3.0/5 (confidence 4.0/5)
+- **novelty** — score 4.0/5 (confidence 4.0/5)
 
-**Average reviewer score:** 2.62/5
+**Average reviewer score:** 3.12/5
 
 ## Editorial Audits
-- **Methods Completeness & Reagent Traceability Auditor** — 9 HARD gap(s), 10 SOFT gap(s)
-- **Citation Integrity Auditor** — 0 HARD gap(s), 0 SOFT gap(s)
+- **Citation Integrity Auditor** — see full Markdown audit
+- **Methods Completeness & Reagent Traceability Auditor** — see full Markdown audit
 
-**Estimated cost:** $0.0632
-**Prompt cache:** 658,432 tokens read, 0 written (64% of 1,023,282 input tokens served from cache)
+**Estimated cost:** $0.0383
+**Prompt cache:** 160,000 tokens read, 0 written (33% of 481,622 input tokens served from cache)

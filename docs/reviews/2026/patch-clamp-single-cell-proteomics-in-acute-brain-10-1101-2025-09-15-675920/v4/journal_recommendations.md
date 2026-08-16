@@ -1,37 +1,27 @@
-# Journal Recommendations
+# Venue Recommendations
 
-## As-is (current quality)
-- **Journal of Proteome Research**
-  - Fit: This is a single-cell proteomics methods paper (patch-SCP with DIA-MS on an Orbitrap Astral), squarely within JPR's scope of proteomics method development and benchmarking. The honest, selection-bias-avoiding shotgun collection design and the interpretive framework are the kind of practical methodological contribution JPR publishes.
-  - Realism: Realistic as a proof-of-concept at current quality: the small n (3 gigaseal, 1 per spike condition, 6 null) will draw scrutiny, but JPR routinely accepts feasibility/methods papers when limitations are stated as candidly as they are here.
-- **Analytical Chemistry**
-  - Fit: The core contribution is an analytical workflow — retrieving single neuronal somas from brain slices and measuring their proteomes with DIA-MS — which fits Analytical Chemistry's instrumentation-and-method focus well.
-  - Realism: Acceptable as-is if framed as a feasibility demonstration; reviewers will push on the n=3 correlation and reproducibility gaps, so odds are moderate rather than high without revision.
-- **Proteomics**
-  - Fit: A Wiley proteomics methods journal that welcomes single-cell proteomics workflows and benchmarking studies, including small-scale proof-of-concept datasets.
-  - Realism: Reasonable acceptance odds at current quality given the explicit proof-of-concept framing and the framework's generalizability, though the same statistical caveats apply.
+## as_is
 
-## After required revisions
-- **Molecular & Cellular Proteomics**
-  - Fit: MCP is the natural home for a rigorously benchmarked single-cell proteomics method once the reproducibility record (versioned code, SynGO parameters, PCA details, exact statistics) is completed and the load-bearing claims are requalified to the sample size.
-  - Realism: Becomes realistic after the required revisions; the framework plus a completed reproducibility record would meet MCP's methodological standards, though the small n still caps it as a proof-of-concept.
-- **Journal of Neuroscience**
-  - Fit: The paper's electrophysiology-plus-molecular-profiling angle and its relevance to mPFC pyramidal neurons and neuropsychiatric disease fit J Neurosci' readership; the framework for co-interpreting physiology and proteomics is of direct interest.
-  - Realism: Realistic after the claims are scaled to the evidence and the neuroscience framing is sharpened; the small n and lack of a functional hypothesis will still be a hurdle, so odds are moderate.
-- **In Silico (this target)**
-  - Fit: As an overlay journal reviewing the preprint, In Silico is an appropriate venue once the major-revision items (requalified claims, completed reproducibility record, resolved citations) are addressed, since the framework and honest reporting are checkable from the manuscript and deposits.
-  - Realism: The editor's 'major' verdict signals a clear revision path rather than rejection; after the required revisions are demonstrably addressed, acceptance at this target is realistic.
+Given the editor's verdict of **major revision**, this manuscript is not ready for publication in its current form at any peer-reviewed venue. The statistical issues (n=3 correlations presented with inferential language, internally inconsistent F-statistics) and the overclaimed novelty relative to the evidence would not survive scrutiny at any serious journal. I would not recommend submitting this manuscript as-is to any venue.
 
-## Alternative outlets
-- **bioRxiv**
-  - Fit: The manuscript is already a preprint-style methods paper with deposited data (MassIVE/PXD) and videos; bioRxiv is the natural fallback home where the proof-of-concept can be shared and cited while claims remain preliminary.
-  - Realism: No acceptance barrier — posting is immediate; this is the appropriate outlet if the authors prefer to disseminate the framework without further revision.
-- **eNeuro**
-  - Fit: A neuroscience journal that explicitly welcomes methods and proof-of-concept work with modest sample sizes, fitting the electrophysiology-plus-proteomics scope.
-  - Realism: Moderate-to-good odds for a clearly labeled feasibility study; eNeuro tolerates small n when claims are scaled accordingly.
-- **Frontiers in Cellular Neuroscience**
-  - Fit: A specialty neuroscience outlet receptive to methodological frameworks for single-neuron molecular profiling in brain slices.
-  - Realism: Reasonable fallback if the higher-tier venues decline; the proof-of-concept framing aligns with its scope.
+## after_revision
 
-## Notes
-Fit confidence is high for the proteomics methods venues (JPR, Analytical Chemistry, MCP, Proteomics) given the paper's explicit single-cell proteomics methodology. The neuroscience venues (J Neurosci, eNeuro, Frontiers) are a slightly looser fit because the paper is primarily a methods/benchmarking contribution rather than a functional neuroscience study; I flagged this rather than asserting a precise match. Nature Methods was deliberately excluded from after_revision: even after the required revisions, the n=3/n=1-per-condition evidence base is too small to be realistic there. Note that the manuscript appears formatted for an ACS journal (placeholder SI DOI at pubs.acs.org), so JPR/Analytical Chemistry are the most natural first submissions.
+The manuscript's core contribution — a methodological framework for patch-clamp single-cell proteomics with gigaseal preservation during soma retrieval — is genuinely novel and would be of interest to the neuroscience proteomics community. After addressing the statistical concerns (reframing n=3 correlations as descriptive, providing raw data, softening causal language, stating animal sex, clarifying the saxitoxin/TTX question), the following venues would be appropriate:
+
+1. **Journal of Proteome Research** — This is the most natural fit. The journal regularly publishes single-cell proteomics methods papers, including patch-SCP work (the authors cite several JPR papers in their introduction). The methodological novelty (gigaseal-preserved retrieval, indiscriminate sampling strategy) aligns with the journal's scope. Acceptance odds after thorough revision: moderate-to-good, given the clear methodological advance and the honest framing of limitations.
+
+2. **Analytical Chemistry** — The journal has published several patch-clamp proteomics/metabolomics papers (e.g., the Aerts et al. 2014 paper cited by the authors). The analytical workflow innovations (DIA-based single-cell proteomics, FAIMS, sample preparation from single somas) would appeal to this readership. Acceptance odds after revision: moderate — the analytical chemistry is sound, but the small sample size may raise concerns about the generalizability of the framework claims.
+
+3. **eLife** — As a methods-focused paper with clear biological relevance (mPFC neurons, synaptic proteins, ion channels), eLife could be a fit if the authors frame the work as a "tools and resources" contribution. The journal values methodological innovation and honest reporting of limitations. However, the n=3 core dataset may be a barrier; eLife reviewers are often skeptical of small-sample correlational claims even when framed descriptively. Acceptance odds: lower than the proteomics-specific journals, but not unreasonable if the framework is positioned as a proof-of-concept.
+
+## alternative
+
+If the manuscript cannot reach the venues above after revision, or if the authors prefer a faster route to publication:
+
+1. **bioRxiv (preprint)** — The manuscript is already well-suited for preprint posting. The videos, raw data, and detailed methods would benefit from community feedback before formal submission. This is a low-risk way to establish priority for the gigaseal-preservation approach.
+
+2. **Journal of Neuroscience Methods** — A solid fallback that explicitly welcomes methods papers with limited sample sizes when the methodological advance is clear. The journal is less demanding on statistical power for proof-of-concept studies. Acceptance odds: good after revision, though the impact factor is lower than the primary options.
+
+3. **Proteomics** (Wiley) — Another proteomics-focused venue that publishes single-cell methods work. Slightly more permissive than JPR on sample size for methods papers. Acceptance odds: moderate-to-good after revision.
+
+**Note on the In Silico target:** The manuscript is technically within In Silico's scope (methodological work, checkable claims, deposited data), but the editor's "major revision" verdict reflects the statistical and framing issues that would need to be resolved before any venue submission. The In Silico review process itself could serve as a useful pre-submission check if the authors address the concerns raised and resubmit there first — the public review record would strengthen the manuscript for subsequent journal submission.

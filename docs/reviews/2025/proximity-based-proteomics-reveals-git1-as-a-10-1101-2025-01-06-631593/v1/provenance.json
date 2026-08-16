@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-14T19:00:46+00:00",
+  "generated_at": "2026-08-16T02:51:52+00:00",
   "pipeline": {
-    "sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
+    "sha": "cd05a2bc1553aacb386aac91e7bf9545ef83bbac+dirty",
     "version": "0.3.0"
   },
   "provider": "openrouter",
@@ -13,7 +13,13 @@
   "desk_rejected": false,
   "round": 1,
   "revision": {
-    "round": 1
+    "round": 1,
+    "kind": "rerun",
+    "replaced": "v1",
+    "prior_decision": "major",
+    "prior_mean_score": 3.38,
+    "prior_pipeline_sha": "c71c823b71b3072b8cdf02a13547084036f11e1f+dirty",
+    "prior_reviewed_at": "2026-08-15"
   },
   "submitter": "pgarrett-scripps",
   "submitter_is_author": "",
@@ -114,15 +120,40 @@
       },
       "caveman": null
     },
-    "file_sha256": "d469f27fbedf9909ecfa7933b7c574a2a519c3808ebfa3bb4fe21629987a7e96"
+    "file_sha256": "66eaac215020f202cefa0e02306f24292b22754c48651c3b32d831be7083ee38"
   },
   "screens": {
     "desk_screen_mode": "gate"
   },
   "panel": [
     {
-      "reviewer": "clarity",
+      "reviewer": "rigor",
       "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 3.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "methodology",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
       "confidence": 4.0
     },
     {
@@ -131,54 +162,180 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "ethics",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "data_analysis",
-      "score": 2.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "methodology",
-      "score": 3.0,
-      "confidence": 5.0
-    },
-    {
       "reviewer": "novelty",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "reproducibility",
-      "score": 2.0,
-      "confidence": 5.0
-    },
-    {
-      "reviewer": "rigor",
-      "score": 3.0,
-      "confidence": 4.0
+      "score": 4.0,
+      "confidence": 3.0
     }
   ],
-  "mean_score": 2.88,
+  "mean_score": 3.38,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 0.09836292529199998,
+  "total_cost_usd": 0.046032872344000005,
   "cost_by_node": {
-    "debate_advocate": 0.002573,
-    "debate_skeptic": 0.002656,
-    "editor": 0.003588,
-    "journal_recommender": 0.002654,
-    "reviewer_rigor": 0.008263
+    "advocate": 0.001493,
+    "audit_citation_integrity": 0.005069,
+    "audit_methods_completeness": 0.005357,
+    "desk_screen": 0.001595,
+    "editor": 0.006802,
+    "journal_recommender": 0.001981,
+    "reviewer_clarity": 0.000658,
+    "reviewer_data_analysis": 0.001957,
+    "reviewer_ethics": 0.002407,
+    "reviewer_literature": 0.001903,
+    "reviewer_methodology": 0.00384,
+    "reviewer_novelty": 0.003992,
+    "reviewer_reproducibility": 0.003838,
+    "reviewer_rigor": 0.003597,
+    "skeptic": 0.001543
   },
   "research_by_node": {
-    "reviewer_rigor": [
+    "audit_citation_integrity": [
       {
-        "tool": "",
-        "query": "",
-        "hits": 0,
-        "error": "tool loop returned no text"
+        "tool": "search_biomedical_literature",
+        "query": "Smoothened PKA pseudosubstrate motif Hedgehog signal transduction",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "GRK2 kinases primary cilium SMOOTHENED-PKA signaling Hedgehog",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Smoothened transduces Hedgehog signals activity-dependent sequestration PKA catalytic subunits",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Git1 G protein-coupled receptor kinase interacting protein pulmonary vascular development",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Git1 microcephaly altered cortical layering deficiency quantitative neuroimaging",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Smoothened-Evc2 complex transduces Hedgehog signal primary cilia",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Dorn Hughes Rohatgi Smoothened Evc2 complex transduces Hedgehog signal primary cilia",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "WDR35 dependent coat protein complex transports ciliary membrane cargo vesicles",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "beta2-adrenergic receptor regulation GIT1 G protein-coupled receptor kinase ADP ribosylation factor GTPase-activating protein",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "GIT1 betaPIX signaling proteins PAK1 kinase regulate microtubule nucleation centrosome",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Premont beta2-adrenergic receptor regulation GIT1 GRK-associated ADP ribosylation factor GTPase-activating protein 1998",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Zhao GIT-associated kinase PAK targets centrosome regulates Aurora-A",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Hedgehog induces formation PKA-Smoothened complexes promote Smoothened phosphorylation pathway activation",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Rohatgi Milenkovic Scott Patched1 regulates hedgehog signaling primary cilium",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Rohatgi Milenkovic Scott Patched1 hedgehog signaling primary cilium Science 2007",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Corbit vertebrate Smoothened functions primary cilium",
+        "hits": 0
+      }
+    ],
+    "reviewer_novelty": [
+      {
+        "tool": "find_related_work",
+        "query": "Smoothened TurboID proximity labeling proteomics Hedgehog",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Git1 Grk2 Smoothened phosphorylation Hedgehog signaling primary cilium",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Smoothened TurboID proximity proteomics cilia Hedgehog",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Git1 Grk2 Smoothened Hedgehog signaling",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Smoothened interactome proximity labeling ciliary Hedgehog signaling regulators",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Grk2 ciliary translocation Smoothened phosphorylation PKA Hedgehog",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Smoothened proximity labeling interactome Hedgehog cilia",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Git1 Hedgehog signaling cilia Grk2",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Git1 GTPase activating protein Hedgehog signaling development",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Smoothened PKA interaction ciliary phosphorylation Grk2 kinase",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Git1 knockout Hedgehog signaling cerebellum granule neuron",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Smoothened interactome BioID proximity labeling Hedgehog pathway",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Grk2 Smoothened phosphorylation site ciliary localization Hedgehog",
+        "hits": 5
       }
     ]
   },
@@ -200,7 +357,7 @@
     "abstract": "The GPCR-like protein Smoothened (Smo) plays a pivotal role in the Hedgehog (Hh) pathway. To initiate Hh signaling, active Smo binds to and inhibits the catalytic subunit of PKA in the primary cilium, a process facilitated by G protein-coupled receptor kinase 2 (Grk2). However, the precise regulatory mechanisms underlying this process, as well as the events preceding and following Smo activation, remain poorly understood. To address this question, we leveraged the proximity labeling tool TurboID and conducted a time-resolved proteomic study of Smo-associated proteins over the course of Hh signaling activation. Our results not only confirmed previously reported Smo interactors but also uncovered new Smo-associated proteins. We characterized one of these new Smo interactors, Grk-interacting protein 1 (Git1), previously known to modulate GPCR signaling. We found that Git1 localizes to the base of the primary cilium, where it controls the cilium transport of Grk2, an early event in Hh signaling. Loss of Git1 impairs Smo phosphorylation by Grk2, a critical step for Smo-PKA interaction, leading to attenuated Hh signaling and reduced cell proliferation in granule neuron precursors. These results revealed a critical regulatory mechanism of Grk2 phosphorylation on Smo in the primary cilium. Our Smo-TurboID proteomic dataset provides a unique resource for investigating Smo regulations across different stages of Hh pathway activation.",
     "published": "2025-01-07",
     "version": "1",
-    "pdf_sha256": "d469f27fbedf9909ecfa7933b7c574a2a519c3808ebfa3bb4fe21629987a7e96",
+    "pdf_sha256": "66eaac215020f202cefa0e02306f24292b22754c48651c3b32d831be7083ee38",
     "pdf_bytes": 16704112
   }
 }

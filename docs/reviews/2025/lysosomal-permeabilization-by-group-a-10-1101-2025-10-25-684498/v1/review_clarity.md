@@ -1,22 +1,26 @@
 # Clarity & Presentation Reviewer
 
 ## Summary
-The manuscript is well-organized and the main claims are stated explicitly. The methodology for cytosolic fractionation and the use of multiple bacterial strains as controls are clearly described. All figures are referenced in the text and the narrative flows logically from motivation to interpretation. The presentation is largely clear, with a few soft issues that cause friction rather than ambiguity: quantitative values are absent from the results text, the ΔSLO mutant notation is inconsistent, and some figure legends lack axis units. These are readily fixed and do not undermine the reader’s ability to understand the core findings.
+The results narrative is logical and the methods give a recoverable order of operations, but several HARD presentation issues — chiefly in the abstract and figure legends — prevent a reader from determining exactly what was claimed and tested. The abstract overstates the M1 finding, "new proteins" is undefined, and a cross-experiment comparison is presented as a finding. All are fixable with revision.
 
 ## Strengths
-- The central claims (SLO-dependent release of M1 into the cytosol; cytosolic histones without DNA) are each foregrounded in a separate sub-section and supported by the figure sequence.
-- The method for isolating cytosol is described with enough procedural detail (digitonin concentration, buffer composition, filtration and MWCO steps) that a reader could reproduce it.
-- Controls (heat-killed, ΔM1, ΔSLO, GBS) are systematically used, making the comparative logic of each experiment easy to follow.
+- The methods section gives a clear, recoverable sequence for the cytosolic isolation protocol, including the 5kD vs 30kD MWCO distinction and its application to specific figures.
+- The results flow logically from IL-1β activity to proteomic identification to functional attribution, with each finding's purpose stated before the data.
+- The purity controls (LAMP-2 absence, GAPDH presence) are clearly described and tied to the relevant figure.
 
 ## Weaknesses
-- The text reports *only* the direction of the IL-1β responses (e.g., “increased amount”, “significantly decreased”) without any numeric summary. A reader skimming the results cannot judge effect sizes without interrupting the narrative to inspect every figure. For each ELISA comparison, provide one sentence giving the mean ± SD and sample size (e.g., “WT-infected cytosol stimulated 2,400 ± 600 pg/mL IL-1β vs. 400 ± 200 pg/mL for uninfected cytosol, p < 0.01, n = 3 preparations”).
-- The ΔSLO mutant is written as “ΔSLO” in the main text and some legends, but as “DSLO” in Fig. 2C, Fig. 3A heading, and occasionally in the text (“DSLO-infected” in the proteomics results). Pick one symbol throughout (recommend “ΔSLO”).
-- Several figure legends for ELISA plots do not state the units of the y-axis. Add “IL-1β (pg/mL)” to the legends of Figs. 1C, 2B, 2C, 4A, 4B.
-- In the results for Fig. 2B, the claim that “in individual experiments the ΔSLO mutant always produced a slightly lower response” is not supported by the aggregate statistical test shown. Either show the individual experiment values or remove the qualitative statement.
-- The list of ECM/collagen/integrin proteins found exclusively in the ΔSLO-infected cytosol (proteomics results) is presented without interpretation or a caveat about possible isolation artefacts, leaving the reader uncertain whether these are genuine cytosolic signals.
-- In the discussion, the sentence linking cytosolic histones to sepsis in invasive GAS infection is speculative; the current data show only intracellular cytosolic histones, not extracellular release. Insert a qualifier such as “if released from dying cells, this could contribute to…”.
+- The abstract overstates the M1 finding. The abstract says "M1 protein was detected only in the cytosol of WT-infected macrophages and corresponded with the IL-1β response, indicating SLO-mediated release of M1 protein from the phagosome." A standalone reader would conclude M1 is the driver of IL-1β. But the results show ΔSLO-infected cytosol also stimulates a strong IL-1β response (Fig 2C) without M1. The results section qualifies this ("accounts for the majority of the inflammasome activation we observe in response to WT-infected cytosol"), but the abstract does not. A reader of the abstract cannot determine that ΔSLO cytosol also stimulates IL-1β, and cannot reconcile the first sentence (both WT and ΔSLO contain "new proteins") with the M1 claim. Fix: rewrite the abstract to acknowledge the ΔSLO response and qualify M1's role as specific to WT-infected cytosol.
+- "New proteins" is undefined in the abstract. "we confirmed that cytosolic preparations from macrophages infected with either wild-type (WT) or SLO-deficient (DSLO) bacteria contained new proteins that are absent in uninfected cytosol controls." A reader cannot determine what "new proteins" means — new to the cytosol? newly synthesized? bacterial in origin? The abstract never defines them. Fix: specify (e.g., "bacterial and lysosomal proteins").
+- Cross-experiment comparison presented as a finding. "WT-infected cytosol not only retained inflammasome-activating capacity (Fig. 2C) but also induced a stronger response than cytosolic fractions obtained using 5kD molecular weight cut-off columns (Fig. 1C)." Fig 1C and Fig 2C are separate experiments with different preparations and different y-axis scales. The text presents the "stronger response" as a finding without acknowledging the comparison is cross-experiment. A reader cannot determine whether the difference is real or an artifact of different preparations. Fix: either remove the comparison or explicitly state it is cross-experiment and not a head-to-head test.
+- Fig 2 legend omits rSLO concentrations. The text says rSLO "did not have inflammasome-stimulating activity until added at high concentrations," but neither the text nor the legend gives the concentrations tested. A reader cannot determine what "high concentrations" means or evaluate the dose-response. Fix: add the concentrations to the legend or text.
+- Strain nomenclature is inconsistent: DSLO/ΔSLO/SLO and DM1/ΔM1 are used interchangeably across abstract, text, and figure legends.
+- Fig 4 legend is garbled: "Cytosolic fractions from uninfected (UI), WT-infected, or ΔM1-infected or cells" — the trailing "or cells" makes the sentence unparseable.
+- Fig 4 title overstates: "GAS M1 protein, but not lysosomal enzymes trigger an IL-1b response" — only cathepsin B was tested; "lysosomal enzymes" is broader than the evidence.
+- Fig 4 title uses "IL-1b" instead of "IL-1β," inconsistent with the text.
+- Fig 3B legend under-describes: "Number of proteins identified in each sample" does not convey that the panel is a Venn diagram of unique vs. common proteins.
+- Fig 5C legend omits units for the DNA quantification ("normalized to the protein concentration" — units not given).
+- "Fractionation buffer" (Fig 1C legend) vs. "digitonin acetate buffer" (methods) — inconsistent terminology for the same reagent.
 
 ## Questions
-- Why was penicillin at 0.1 µg/mL added to the digitonin lysis buffer? Could this concentration affect macrophage protein content or viability during the 1 h lysis on ice?
-- What does the colour scale in the heatmap (Fig. 3A) represent? The legend says “Relative abundance” – please specify: z-score of log₂ NSAF, or fold-change from the row mean, or something else.
-- In the CA-074 experiment (Fig. 4B), were the cells washed after the 1 h pre-incubation with the inhibitor before adding the cytosolic fractions, or was the inhibitor present throughout the 2 h exposure?
+- What were the rSLO concentrations tested in Fig 2A?
+- What are the units of the DNA quantification in Fig 5C?

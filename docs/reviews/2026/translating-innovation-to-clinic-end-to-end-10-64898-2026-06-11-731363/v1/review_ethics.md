@@ -1,35 +1,37 @@
 # Ethics & Compliance Reviewer
 
+SCORE: 5
+CONFIDENCE: 4
+
 ## Summary
-The manuscript describes process development and cGMP manufacturing of the N332-GT5 HIV vaccine candidate. While it addresses a timely topic and provides useful operational details, several substantive gaps limit its value as a template for others. The use of 2G12 antibody as an affinity capture ligand is innovative but insufficiently characterized regarding leaching, clearance, and batch-to-batch consistency. The removal of the preparative SEC step is justified by thin data (single parallel run). Viral clearance validation, residual Triton X-100 quantification, glycan profile consistency across batches, and the absence of orthogonal structural characterization (negative stain EM, antigenicity panel) are notable omissions. The manuscript would benefit from a more cautious framing that emphasizes lessons learned from deviations rather than claiming a broadly generalizable 'translational roadmap.'
+
+This manuscript reports the development and cGMP manufacturing of the N332-GT5 gp140 HIV vaccine candidate for the HVTN144 first-in-human trial. From an ethics and compliance perspective, the paper is exemplary: it discloses funding sources, declares competing interests, and describes a clinical trial that is registered and has been conducted under appropriate oversight. The manufacturing process itself involves no human subjects, animal research, or dual-use concerns beyond standard biosafety practices for a vaccine candidate. The only minor gap is the absence of a formal biosafety statement for the cell culture work, which is a soft issue given the standard nature of the work.
 
 ## Strengths
-- The manuscript provides a clear, stepwise account of process development from research to cGMP manufacturing, including candid discussion of deviations and technical failures encountered along the way.
-- The use of 2G12 affinity chromatography as a capture step that selects for properly glycosylated, native-like trimers is an innovative application of a bNAb as a manufacturing tool.
-- Removal of the preparative SEC step, while thin on data, represents a meaningful process simplification that could reduce cost and increase yield for similar programs.
-- The paper includes useful operational details (e.g., hold times, membrane selection, detergent contact parameters) that are often omitted from manufacturing reports.
-- The presentation of HCP clearance data across the process train (2G12 capture, UF/DF, Triton treatment, Capto adhere, SEC steps) is well organized and informative.
+
+1. Clear disclosure of NIH and Gates Foundation funding, with a specific grant number (5UM1-AI144462-03) and a competing interests statement.
+2. The HVTN144 trial is explicitly identified with its ClinicalTrials.gov identifier (NCT05217641), confirming registration.
+3. The manuscript appropriately describes the clinical trial as "first-in-human" and frames the manufacturing work as supporting that trial, without overclaiming clinical results.
 
 ## Weaknesses
-- 2G12 affinity capture ligand leaching is insufficiently characterized: residual 2G12 in the eluate, log removal across the downstream train, and assay validation data are not reported.
-- Preparative SEC removal decision is based on a single parallel run (n=1) with no replicates; the data show additional HCP clearance from SEC (296→157 ppm) yet the step is dropped without statistical justification.
-- Triton X-100 residual quantification method and final product level are not stated, and the REACH restriction on Triton X-100 (EU phase-out) is not discussed as a supply-chain risk.
-- Glycan profile consistency across RCB/MCB runs and across the GMP batch is not shown; for a germline-targeting immunogen where glycan structure affects epitope presentation, this is a major gap.
-- Viral clearance validation data (model viruses, log reduction factors for each orthogonal step) are not presented; only Triton X-100 inactivation is mentioned.
-- No orthogonal structural or antigenic characterization of the GMP material is shown (negative stain EM, SPR with quaternary bNAbs, DSC for thermal stability); SEC-HPLC alone does not confirm native-like trimer integrity.
-- Process reproducibility is supported by only one GMP run at 50 L scale; the claim of 'end-to-end bioprocess development' is not supported by multiple-batch consistency data.
-- The 2G12 affinity resin's lot-to-lot variability, ligand density, dynamic binding capacity, and reuse/cleaning strategy are not disclosed.
-- Scale-up strategy from 50 L to commercial scale is not discussed; the 2G12 ligand cost at scale is not addressed.
-- Comparability between RCB and MCB runs shows only cell-culture metrics (VCC, viability, titer) and limited product-quality endpoints; thorough statistical comparability (e.g., equivalence testing) is absent.
+
+**Load-bearing claim 1: The manufacturing process is suitable for clinical use.** The manuscript claims the process produces clinical-grade material that "has been successfully administered in HVTN144." The evidence for this is the product quality data (SE-HPLC >99% trimer, low residual impurities, viral clearance exceeding benchmarks). This claim is supported by the data presented. The alternative — that the material was not actually administered or that administration was not successful — is contradicted by the trial registration and the manuscript's explicit statement. I cannot verify the actual administration from the text alone, but the claim is consistent with the evidence. No alternative explanation produces the same result.
+
+**Load-bearing claim 2: The process is reproducible across scales and cell banks.** The manuscript compares a 50-L RCB run, a 50-L MCB run, and a GMP run, showing comparable growth, viability, and titer. The evidence is the cell culture data in Figure 14. The alternative — that the runs differ in ways that matter for product quality — is addressed by the product quality comparison in Table 11, which shows comparable BDS attributes. The titer differences between runs are honestly attributed to different reference standards, which is a credible explanation. This claim is supported.
+
+**Load-bearing claim 3: Viral clearance is sufficient for clinical use.** The manuscript reports ≥18.14 log reduction for XMuLV and ≥11.70 log for MMV. The evidence is the viral clearance study in Table 12. The alternative — that the scale-down model does not represent manufacturing scale — is partially addressed by the statement that a scale-down model was developed to ensure comparability, but no comparability data are shown. This is a soft gap: the claim is plausible, but the supporting evidence for scale-down comparability is asserted rather than demonstrated. I would want to see the comparability data (e.g., step yields and impurity profiles at both scales) to fully close this.
+
+**Sweep:**
+
+- The manuscript states the trial is registered (NCT05217641) and describes it as a Phase 1 trial, satisfying the clinical trial registration requirement.
+- No human subjects data are presented in this manuscript; the clinical results are not reported here, so no consent statement is required for this paper.
+- No animal research is described; the non-human primate study is cited as prior work, not conducted here.
+- The cell culture work involves standard CHO cells and a recombinant HIV envelope protein; no enhanced biosafety or dual-use concerns are apparent, though a formal biosafety statement for the cell culture work is absent (soft issue).
+- Funding is disclosed (NIH CHAVD, Gates Foundation CAVD) and competing interests are declared (WRS is an employee of Moderna), satisfying the disclosure requirements.
+- The manuscript does not describe any restricted-consent data, biobank samples, or indigenous samples, so no additional consent statements are needed.
+- The paper is a manufacturing/process development report, not a clinical trial report; it does not report clinical outcomes, so it does not fall under the out-of-scope category for clinical trial reports in the target journal.
 
 ## Questions
-- What is the validated log removal of 2G12 ligand across the entire downstream train, and what assay was used to quantify residual 2G12 in the eluate directly after capture?
-- The preparative SEC removal decision (Table 10) shows HCP dropping from 296 ppm to 157 ppm with SEC—why was this additional clearance considered non-essential, and was the decision based on a single n=1 comparison without replicates?
-- What are the residual Triton X-100 levels (μg/g or ppm) in the final product after Amberlite XAD-4 adsorption, and what is the LOD/LOQ of the quantification assay?
-- Can the authors provide the glycan profile (NP-HPLC with 2-AB labeling or LC-MS glycopeptide mapping) of the GMP batch, and a statistical comparison of glycan attributes between RCB- and MCB-derived material?
-- What are the log reduction factors for model enveloped and non-enveloped viruses across each orthogonal viral clearance/inactivation step (including 2G12 affinity, Triton X-100, Capto adhere, and any nanofiltration)?
-- Was the GMP material characterized by negative stain EM or cryo-EM to confirm native-like trimer integrity, and by SPR/BLI binding to a panel of quaternary bNAbs (e.g., PGT145, PG9, VRC01) to confirm antigenic integrity after low-pH elution from the 2G12 column?
-- How many GMP production batches have been completed at the 50 L scale to demonstrate process reproducibility, and what were the acceptance criteria for batch-to-batch consistency?
-- What is the dynamic binding capacity (DBC at 1% breakthrough) of the 2G12 affinity resin for N332-GT5 gp140, and how does it vary between resin lots?
-- What is the intended commercial scale for this process, and how would the cost and supply of 2G12 antibody as a capture ligand be managed at that scale?
-- The REACH restriction on Triton X-100 (EU) takes effect in 2025-2026—have alternative detergents (e.g., polysorbate-based S/D combinations) been evaluated for long-term manufacturing?
+
+1. Can the authors provide the scale-down comparability data for the viral clearance study (step yields, impurity profiles at both scales) to demonstrate that the scale-down model is representative of manufacturing scale?
+2. Is there a biosafety approval or institutional oversight statement for the cell culture and manufacturing work that could be added for completeness?

@@ -1,34 +1,64 @@
-# Journal Recommendations
+# Venue Recommendations
 
-## As-is (current quality)
-- **Journal of Biological Chemistry (JBC)**
-  - Fit: The paper combines a proximity-labeling proteomic resource with mechanistic dissection of a GPCR signaling pathway (Smo–Grk2–PKA in the primary cilium), which sits squarely in JBC's molecular/cell biology scope. JBC routinely publishes solid, incremental mechanistic work with a resource component.
-  - Realism: Moderate-to-candid: JBC would likely send this back for the same major revisions (orthogonal Grk2 readout, rescue control, statistics, data deposition), so acceptance as-is is unlikely; it is realistic only if the authors front-load the most load-bearing fixes.
-- **Cellular Signalling**
-  - Fit: The core finding — Git1 scaffolding Grk2 to regulate Smo phosphorylation — is a GPCR-signaling mechanism, which is the journal's explicit focus, and the scope tolerates a single-pathway mechanistic study.
-  - Realism: Moderate: a lower bar than JBC, but the panel's reproducibility/compliance gaps would still need addressing; realistic as-is only if the authors accept a scaled-back claim set.
+## as_is
 
-## After required revisions
-- **Journal of Cell Science**
-  - Fit: The study is fundamentally about primary-cilium biology and ciliary protein trafficking (Grk2 translocation, Smo phosphorylation at the cilium), which is a core JCS topic, and the time-resolved TurboID resource fits the journal's interest in cell-biological methods.
-  - Realism: Good after the required revisions: once the Grk2-translocation claim has an orthogonal readout, the rescue control isolates ciliary localization, and statistics/data are tightened, this is a competitive JCS submission.
-- **Molecular Biology of the Cell (MBoC)**
-  - Fit: MBoC publishes cilia, Hedgehog signaling, and cytoskeletal/trafficking work and is receptive to solid incremental studies with careful controls; the Git1–Grk2–Smo mechanism and the proteomic resource are well within scope.
-  - Realism: Good after revision: MBoC's emphasis on rigorous controls aligns with the editor's required fixes, and the paper's multi-assay causal chain would be a strength once the load-bearing claims are re-scoped.
-- **Development**
-  - Fit: Hedgehog signaling is a developmental pathway, and the GNP proliferation data tie the mechanism to cerebellar development; the journal values mechanistic signaling work with in vivo/primary-cell relevance.
-  - Realism: Moderate-to-good after revision: the GNP claim must be re-scoped or given an Hh-specific readout (required revision #3) before Development would consider it, and the NIH3T3-centric evidence would need to be framed as a developmental-relevance study rather than a developmental paper.
+Given the editor's verdict of "major" with substantial required revisions, this manuscript is **not** ready for submission to its intended target (In Silico) or comparable venues in its current form. The required revisions include new control experiments, data deposition, and statistical re-analysis — these are substantive changes, not cosmetic ones. I would not recommend submitting this manuscript anywhere as-is without addressing at least the most load-bearing issues (Grk2-V5 functional validation, pseudo-replication in statistics, and data deposition).
 
-## Alternative outlets
-- **bioRxiv**
-  - Fit: The manuscript is a preprint-ready resource paper: a time-resolved Smo-TurboID proteomic dataset plus a provisional Git1 mechanism. Depositing on bioRxiv (with the MS data accession and code the editor requires) makes the resource immediately citable and checkable while revisions proceed.
-  - Realism: High: bioRxiv is a preprint server, not peer-reviewed, so the current major-revision state is acceptable; this is the natural home given the In Silico overlay model reviews preprints.
-- **Cilia**
-  - Fit: A specialty journal devoted to primary-cilium biology would be a natural fallback if the broader cell-biology journals decline; the ciliary Grk2-translocation and Smo-phosphorylation findings are directly on-topic.
-  - Realism: Moderate: a narrower audience, but the cilia-specific framing and the proteomic resource would be valued; still requires the core controls and data-deposition fixes.
-- **PLOS ONE**
-  - Fit: As a sound-but-incremental mechanistic study with a resource component, PLOS ONE's criteria (technically sound, reproducible) fit the paper once the reproducibility and compliance gaps are closed, even if the novelty is modest.
-  - Realism: Moderate-to-good after the required revisions: PLOS ONE does not gate on novelty, so the main hurdles are the statistical rigor and data/compliance items rather than the conceptual advance.
+**Recommendation: Do not submit as-is.** The gap between the current state and what reviewers would accept is too large across multiple venues.
 
-## Notes
-The manuscript is squarely within In Silico's scope (an original research preprint whose claims a careful reader can evaluate), and the editor's 'major' verdict — not reject — means it is salvageable. Note that the paper is a wet-lab cell-biology study, not computational, so the 'In Silico' name is a venue label, not a topical match; the natural preprint home is bioRxiv. Fit uncertainty: 'Cilia' is a niche journal whose current status/scope I cannot verify from model knowledge, so treat it as a tentative fallback. The headline conclusion ('primary site of Smo phosphorylation is the cilium') and the GNP proliferation claim must be re-scoped per required revisions #2 and #3 before any peer-reviewed submission is realistic.
+---
+
+## after_revision
+
+If the authors address the required revisions — particularly the Grk2-V5 functional validation, biological-replicate-based statistics, MS data deposition, and re-hedged claims — this manuscript becomes a solid contribution to the Hedgehog signaling field. The Git1 finding is genuinely novel, and the TurboID resource is valuable.
+
+**1. In Silico** (the intended target)
+- **Fit:** The manuscript is squarely within scope: original research with checkable claims, deposited data (once revisions are done), and a clear mechanistic story. The open-overlay format suits a paper whose main contributions are a proteomic resource plus a functional follow-up.
+- **Odds after revision:** Moderate-to-good. The panel's concerns are addressable, and the novelty is real. The main risk is whether the Grk2 translocation claim can be convincingly supported with the proposed controls — if the 1.2-fold WT increase remains marginal even after functional validation, reviewers may still push back.
+- **Notes:** This venue publishes the full referee record, so the authors should be prepared for their revisions to be visible. The required re-analysis using biological replicates may weaken some of the current significance claims — the authors should be prepared for that outcome.
+
+**2. Journal of Cell Science**
+- **Fit:** Strong fit for the cell biology of ciliary signaling. The manuscript combines proximity proteomics with functional validation in a signaling pathway, which is squarely in JCS's scope. The Grk2/Git1/Smo axis is a ciliary trafficking and signaling story.
+- **Odds after revision:** Moderate. JCS publishes solid, well-controlled cell biology. The revisions demanded by the panel (functional validation of Grk2-V5, proper statistics, reagent traceability) align with JCS's expectations. The novelty of Git1 in Hh signaling would be a selling point.
+- **Notes:** JCS has been receptive to ciliary biology and Hedgehog signaling work. The manuscript would need to be trimmed to fit a standard research article format.
+
+**3. Molecular Biology of the Cell (MBoC)**
+- **Fit:** MBoC publishes mechanistically focused cell biology, including ciliary trafficking and signaling. The Git1-Grk2-Smo axis is a trafficking/signaling story that fits well.
+- **Odds after revision:** Moderate. MBoC values rigorous cell biology and is less prestige-driven than some journals, which suits a paper whose main claim is a new regulatory mechanism rather than a paradigm shift.
+- **Notes:** MBoC's review process is thorough but fair; the required revisions align with what their reviewers would likely demand anyway.
+
+---
+
+## alternative
+
+If the manuscript cannot reach the venues above — for example, if the Grk2 translocation claim cannot be fully supported even after revision, or if the authors prefer a faster route — these are reasonable fallbacks.
+
+**1. bioRxiv (preprint server)**
+- **Fit:** The manuscript is already in preprint form (implied by the In Silico submission model). Posting or updating on bioRxiv (cell biology section) makes the proteomic dataset available to the community immediately.
+- **Odds:** Certain — this is a posting, not peer review. The value is in establishing priority for the Git1 finding and making the TurboID dataset citable.
+- **Notes:** Given the proteomics resource is a major contribution, early posting maximizes community utility. The authors should deposit MS data regardless of where they submit.
+
+**2. Journal of Proteome Research**
+- **Fit:** If the authors want to emphasize the proteomic resource aspect — the time-resolved Smo-TurboID dataset — JPR is a natural home. It publishes methodologically rigorous proteomics with biological application.
+- **Odds:** Moderate. The proteomics alone (time-resolved Smo interactome) is publishable here even if the Git1 story is de-emphasized. The required MS data deposition and pipeline documentation align with JPR's expectations.
+- **Notes:** This venue would accept a more proteomics-centric framing, with the Git1 work as a validation of the resource rather than the headline.
+
+**3. PLOS ONE**
+- **Fit:** PLOS ONE accepts sound science regardless of perceived significance. The manuscript's combination of a validated TurboID resource and a novel (if modest) mechanistic finding would fit.
+- **Odds:** Good after revision. PLOS ONE's criteria are technical soundness and reproducibility — exactly what the required revisions address. The pseudo-replication issue would need to be fixed, but the bar is lower than at specialty journals.
+- **Notes:** This is a reasonable fallback if the authors judge that the Grk2 translocation claim cannot be made convincingly enough for JCS/MBoC, but the resource and Git1 finding are still worth publishing.
+
+---
+
+## Summary Table
+
+| Venue | Bucket | Fit | Odds |
+|---|---|---|---|
+| In Silico | after_revision | Strong — intended target, scope matches | Moderate-good |
+| Journal of Cell Science | after_revision | Strong — ciliary signaling cell biology | Moderate |
+| Molecular Biology of the Cell | after_revision | Strong — mechanistic cell biology | Moderate |
+| bioRxiv | alternative | Immediate community access | Certain (posting) |
+| Journal of Proteome Research | alternative | Proteomics-resource framing | Moderate |
+| PLOS ONE | alternative | Sound science, lower significance bar | Good after revision |
+
+**Bottom line:** The manuscript is not ready for submission anywhere as-is. After the required revisions, the intended target (In Silico) remains a reasonable choice, with JCS and MBoC as strong alternatives. If the Grk2 translocation claim cannot be fully supported, the proteomic resource alone is publishable at JPR or PLOS ONE.

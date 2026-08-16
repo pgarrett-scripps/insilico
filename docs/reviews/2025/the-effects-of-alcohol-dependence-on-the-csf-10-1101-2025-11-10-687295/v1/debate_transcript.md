@@ -2,38 +2,22 @@
 
 ## Advocate — round 1
 
-The panel's own findings make the case for acceptance. The novelty reviewer — the one whose job is to judge contribution — found the core result "real and not preempted": no prior CSF proteomic comparison of dependent vs. non-dependent mice in the CIE-2BC model exists. The ethics reviewer found full compliance, and the literature reviewer verified the load-bearing human-correlate citations (Prystupa 2015 for serum MMP-2, Carrino 2021 for BIP). That is a defensible, checkable, genuinely new hypothesis-generating resource.
-
-The criticisms cluster on one axis: the interpretive scaffolding outruns a detection-based, n=4–5 design. I concede this fully — and it is fixable in revision, not fatal. The authors already frame the study as "preliminary discovery" and concede "minimum estimates." The fix is to scale the language to match: soften "dichotomous/qualitative transition" and "BBB breakdown" to "preliminary evidence consistent with," which the rigor reviewer explicitly says is licensed. That is a wording change, not a redesign.
-
-Two harder points deserve honest concession: the vapor/dose confound (methodology, rigor) and the immunoglobulin interpretation entangled with the injected anti-IL-6R antibody (rigor). Both are real. But neither destroys the descriptive core — different protein detection patterns between groups — which every reviewer agrees survives. The BBB-vs-collection-artifact question is the strongest challenge; the authors already cite the Lourbopoulos 2025 method and should add a per-sample hemoglobin/albumin ratio. That is an achievable, specific revision.
-
-The reproducibility breaks (private GitHub, unverifiable MassIVE accession) are mechanical and trivially fixed by making artifacts public. This is a sound, honest, novel pilot whose claims need scaling, not rejection.
+The specialist reviews converge on a clear picture: the core contribution is genuinely novel, the MS pipeline is unusually well-specified and reproducible, the limitations are candidly disclosed, and the data are deposited. The central attack — that the 'dichotomous' claim outruns a presence/absence analysis at n=4-5 — is real but is a framing problem, not a data problem. The authors already hold quantitative MaxLFQ data (diann_maxlfq) and the shared 404 proteins; the fix is to run the quantitative comparison and show bimodality, which is a revision, not a rejection. The rigor reviewer's 'temporal' objection is a wording fix confined to abstract/conclusions. The blood-contamination concern is the strongest point, but the authors have a defensible path: report a per-sample hemoglobin/blood-marker quantification and show Dep-specific proteins don't track it. Every load-bearing criticism has a concrete, in-scope remedy that the authors' own deposited data can supply. The novelty reviewer confirms no prior CSF proteomics in this model exists. This is precisely the kind of preliminary discovery study In Silico exists to publish — with the claims re-scaled to what the design supports.
 
 **Key points:**
-- Novelty reviewer confirms the CSF proteomic comparison is real and not preempted — the genuine delta is new.
-- Most criticisms are about claim magnitude, which the authors already partly concede ('preliminary,' 'minimum estimates') and can fix by scaling language.
-- The descriptive core — different detection patterns between groups — survives every reviewer's scrutiny.
-- Harder confounds (vapor/dose, injected antibody entangling immunoglobulins) are conceded but do not invalidate the descriptive finding.
-- Reproducibility breaks are mechanical (make GitHub public, fix MassIVE accession) and trivially fixable.
-- BBB-vs-artifact question is the strongest challenge; a per-sample hemoglobin/albumin ratio is a specific, achievable revision.
+- Novelty is confirmed and real: no prior CSF proteomic comparison in the CIE-2BC model exists; the work is honestly framed as preliminary.
+- The 'dichotomous' overclaim is a framing defect, not an evidentiary one — the authors hold quantitative MaxLFQ data and the 404 shared proteins, so bimodality testing is an in-scope revision.
+- Temporal language ('transition', 'sustained') is a wording fix confined to abstract/conclusions; the cross-sectional design supports 'differences consistent with...'.
+- The blood-contamination gap is the strongest criticism but has a concrete remedy the authors can execute from existing data: per-sample hemoglobin/blood-marker quantification showing Dep-specific proteins don't track it.
+- Reproducibility is strong (versioned DIA-NN, deposited data); the gated GitHub and unverifiable MassIVE accession are availability fixes, not design flaws.
 
 ## Skeptic — round 1
 
-The advocate's central move — "the descriptive core survives" — is where I part company. The descriptive core is not "different detection patterns"; it is the interpretation that those patterns mean BBB breakdown and dependence-specific pathology. That interpretation does NOT survive, and it is not a wording fix.
-
-Two load-bearing claims are FATAL as designed, not merely over-worded:
-
-(1) BBB disruption. The paper's own hypothesis predicts the confound: if Dep vasculature is fragile, cisterna-magna puncture differentially contaminates Dep CSF with the very endothelial/blood proteins (MMP2, VE-cadherin, LAMB2, hemoglobin, keratins) that anchor the claim. The authors dismiss Hb/keratins as trace contamination while using the same logic to read vascular proteins as in vivo leak. No hemoglobin/albumin ratio, no blood-sparing collection, no Evans-blue control. This is not a language change — it requires new data. The advocate's "add a ratio" concedes the point is unresolved, which is precisely why the claim cannot stand as written.
-
-(2) The qualitative-transition question is untestable. Dep differs from Non-dep in dose, route (vapor + i.p. injection vs oral), and dependence simultaneously. The paper's central question — quantitative progression vs. qualitatively distinct mechanisms — cannot be answered by this design. That is a redesign (matched-exposure control), not a revision.
-
-The advocate also overstates the fixability of reproducibility: the raw-data accession (C5GX4573B) is in a non-standard format and unverifiable — a HARD break at the first link of the chain, not "mechanical."
-
-Panel blind spot: no reviewer tested whether the 140-vs-67 counts survive threshold variation, and the 404 shared proteins were never quantitatively compared — the one analysis that could have strengthened every claim. That omission is the authors' to close, and its absence is itself a reason the mechanistic narrative outruns the evidence.
+The advocate's framing — 'every criticism has a concrete in-scope remedy' — concedes the core problem while mislabeling it. The load-bearing objection is not that the dichotomous claim is 'framing'; it is that the paper's central evidence, as submitted, cannot distinguish the headline claim from its null. The data-analysis reviewer is explicit: the 140/67 counts are descriptive detection thresholds with no stated error rate, no multiple-testing correction across ~600 proteins, and the authors' own power analysis concedes 38% power for the moderate effects that dominate their lists. The advocate's proposed 'fix' — run the quantitative MaxLFQ comparison and show bimodality — is precisely the analysis the manuscript does not contain. A revision that supplies the missing evidence is not a 'framing defect'; it is the difference between the claim being supported and unsupported. The same applies to blood contamination: the literature reviewer calls it a HARD gap, not a soft one — the Dep-specific pattern (MMP2, BIP, complement, immunoglobulins) is exactly what blood contamination predicts, and the Lourbopoulos citation does not exclude it. The advocate's remedy (per-sample hemoglobin quantification) is again an analysis absent from the manuscript. And the IL-6R confound is not addressed by the advocate at all: every animal received the antibody, so the 'effects of alcohol dependence' are conditional on IL-6R blockade. These are not availability fixes; they are the missing evidentiary core. The honest verdict: a useful preliminary dataset whose conclusions outrun the evidence as presented — reject, with a clear path to resubmission.
 
 **Key points:**
-- The 'descriptive core' that survives is not the BBB/dependence interpretation — that interpretation is confounded by collection artifact the paper's own hypothesis predicts, and requires new data (Hb/albumin ratio, blood-sparing method), not wording.
-- The qualitative-transition question is untestable: dose, route, and dependence are confounded; a matched-exposure control is a redesign, not a revision.
-- Reproducibility is a HARD break at the first link: the MassIVE accession is non-standard and unverifiable, not a mechanical fix.
-- Panel blind spot: no reviewer tested threshold sensitivity of the 140-vs-67 counts, and the 404 shared proteins were never quantitatively compared — the analysis that could have validated every claim.
+- The 'dichotomous' claim is unsupported by the submitted evidence — descriptive detection counts with no error rate, no multiple-testing correction, 38% power for the dominant effect sizes.
+- The advocate's 'fixes' (bimodality testing, hemoglobin quantification) are analyses absent from the manuscript; supplying them is not a framing change but the missing evidentiary core.
+- Blood contamination is a HARD gap per the literature reviewer: the Dep-specific pattern is exactly what contamination predicts, and Lourbopoulos does not exclude it.
+- The IL-6R confound is unaddressed: all animals received the antibody, making the 'effects of alcohol dependence' conditional on IL-6R blockade.
+- Verdict: reject as submitted; the dataset is potentially valuable but the conclusions outrun the evidence.

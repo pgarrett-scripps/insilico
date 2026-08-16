@@ -1,24 +1,38 @@
 # Reproducibility Reviewer
 
-## Summary
-This manuscript presents a genuinely useful framework for patch-SCP, and the authors have made a good-faith effort to deposit data (MassIVE/PXD accession, Zenodo videos). However, the reproducibility artifacts are incompletely specified: the custom code is at a non-versioned user URL, the Supporting Information DOI is a literal placeholder, and the analysis pipeline (SynGO parameters, PCA preprocessing, figure-to-script mapping) is not described at the level needed for an independent group to rerun the work end-to-end. These are fixable, but they are HARD issues as written.
+SCORE: 2  
+CONFIDENCE: 4  
 
-## Strengths
-- The authors specify instrument and software versions for the MS acquisition (Orbitrap Astral, DIA-NN v1.8.1, R 4.3.1) and give detailed DIA parameters (resolution, mass range, window width, NCE, FAIMS CV).
-- The inclusion policy is stated explicitly ("we did not impose selection or exclusion criteria for either soma retrieval or MS analysis"), which is important for reproducibility.
-- The data deposit is described with a MassIVE/PXD accession, which is the right venue for raw MS data.
+**Overall take (reproducibility specialty):**  
+The manuscript presents a promising proof-of-concept for patch-SCP, but as a reproducibility reviewer I cannot trace the chain from raw data to any of the three load-bearing claims: the capacitance–protein-identification correlation, the association between spike preservation and synaptic enrichment, and the claim that torn neurons cluster separately. The data are deposited with an accession, but the code is not, the analysis pipeline is under-specified, and the sample size (n=3 for the central correlation) is too small to distinguish the claimed relationship from noise. The paper is not reproducible as written, and the authors' own framework — which explicitly acknowledges that retrieval loss decouples proteomics from electrophysiology — undermines the strength of the conclusions they draw from their own data.
 
-## Weaknesses
-- The central quantitative claim — protein identifications correlate with log-transformed capacitance (Figure 3D, F = 1577, R² = 0.998, n = 3) — cannot be independently recomputed from the manuscript as written. The supporting tables (S1–S3) are referenced throughout but the Supporting Information DOI is a literal placeholder ("https://pubs.acs.org/doi/xxxxxxxxxxx/"), so the per-neuron capacitance values and protein counts are not accessible. With n = 3, the correlation is also statistically fragile (data_analysis's call), but from a reproducibility standpoint the raw values must be in the deposit for the claim to be checkable. The MassIVE/PXD accession is given, but I cannot verify it resolves; the placeholder DOI is verifiably broken.
-- The SynGO enrichment analysis (Figures 4B–C, 6B; Tables S2–S3) is not reproducible as specified. The manuscript states "Gene set enrichment analyses were performed on gene lists derived from DIA-NN's protein-level output" but does not give the SynGO database version, the enrichment algorithm, the background distribution, or the minimum gene-set size. The custom scripts are said to be "available at https://github.com/LarryThePharmacologist" — a user profile URL with no repository name, commit hash, or tag. An independent group cannot know which code version produced the reported enrichment terms.
-- The PCA (Figure 6A) that supports the claim that retrieval outcomes cluster by proteomic content is underspecified. The manuscript does not state the preprocessing applied to the protein intensity matrix (normalization, imputation, scaling) before PCA, nor which script produces the figure. Without this, the clustering pattern cannot be reproduced.
-- R package versions (ComplexHeatmap, ggplot2, UpSetR) are not specified — SOFT.
-- UniProt reference proteome is given only as "downloaded 2024" with no release number — SOFT.
-- No figure-to-script mapping is provided for any key figure; the manuscript never names a script that produces a specific figure — HARD.
-- The "performed as previously described [10, 26-31]" citations resolve to published procedures, which is acceptable, but I could not verify the references contain the full protocol — SOFT.
-- The Zenodo DOI for videos is given, but I cannot verify it resolves — SOFT (peripheral artifact).
+**Strengths:**  
+1. The authors deposited raw mass spectrometry data with a working MassIVE/ProteomeXchange accession (MSV000099156 / PXD068359), which is a genuine step beyond most single-cell proteomics preprints.  
+2. The indiscriminate collection strategy, including torn neurons as internal negative controls, is a thoughtful design choice that strengthens the interpretability of the dataset.  
+3. The framework explicitly acknowledges that retrieval mechanics, not just electrophysiology, shape proteomic outcomes — a candid and useful contribution to the field.
 
-## Questions
-- Can the authors provide a specific repository URL with a commit hash or tag for the custom scripts?
-- Can the authors provide the resolved DOI for the Supporting Information, and confirm Tables S1–S3 are accessible there?
-- Can the authors specify the SynGO database version and the exact GSEA parameters (algorithm, background, minimum gene-set size) used for the enrichment analysis?
+**Weaknesses (load-bearing, in order):**
+
+1. **The capacitance–protein-identification correlation (Figure 3D) is not established by the evidence.** The claim rests on n=3 neurons, with a reported F=1577, p<0.05, adjusted R²=0.998. With three points, a linear fit through three points always yields R²=1.0; the adjusted R² of 0.998 is statistically meaningless at this sample size. The p-value is also suspect — with n=3, the minimum possible p-value for a regression is 0.052 (for a perfect fit), so p<0.05 is not achievable with three points unless the test is mis-specified. This is a HARD reproducibility issue: an independent group could not reproduce this correlation because the statistical claim is not supported by the design. The authors need to either report the raw data points, the exact test used, and the p-value calculation, or acknowledge that this is a descriptive observation, not a validated correlation.
+
+2. **The association between spike preservation and synaptic enrichment (Figure 4) is confounded by neuron size and retrieval outcome.** Neuron #4 (stable spiking) was also the largest neuron and the best-retrieved; neuron #6 (single spike) was the smallest and partially aspirated. The authors themselves note that capacitance correlates with protein identifications, so the synaptic enrichment difference could be driven by total protein yield rather than by spike integrity. The claim that "preservation of active properties during retrieval is associated with recovery of synaptic proteins" is not supported unless the authors control for protein yield (e.g., by subsampling equal numbers of proteins per neuron, or by normalizing enrichment scores to protein count). Without this control, the alternative explanation — that larger, better-retrieved neurons simply yield more proteins, including synaptic ones — is equally consistent with the data. This is a HARD weakness: the conclusion does not follow from the evidence as presented.
+
+3. **The PCA clustering (Figure 6A) is not reproducible without the code and the exact feature set.** The manuscript states that PCA was performed on "single-neuron proteomes" but does not specify whether the input was raw intensities, MaxLFQ-normalized values, presence/absence binary data, or log-transformed counts. The clustering of neuron #6 with the no-gigaseal group, and neuron #1 with the gigaseal-lost group, is presented as meaningful, but without the exact preprocessing steps, an independent group could not reproduce this figure. The code repository link (github.com/LarryThePharmacologist) is mentioned in the methods but no commit hash or archived DOI is provided, and the repository was not accessible at the time of review. This is a HARD flag: custom analysis code is load-bearing for the PCA and the SynGO enrichment, and it is not available at a resolvable, versioned location.
+
+**Sweep (one sentence each):**
+
+- The DIA-NN search parameters are specified (v1.8.1, library-free, 1% FDR, oxidation as variable modification), but the FAIMS compensation voltage, DIA window overlap, and the exact gradient profile are only partially described — the 36-minute gradient at 400 nL/min is given, but the solvent composition and column temperature are not, which are needed to reproduce the chromatography.  
+- The sample preparation protocol (0.02% DDM, 7 ng trypsin, 2 h at 37°C) is specified, but the quenching step (0.1% formic acid) and the storage conditions (-20°C) are described without volumes or timing, which could affect digestion efficiency and peptide recovery.  
+- The SynGO analysis is described as using "stringent conditions" with a Q-value < 0.05, but the exact GSEA parameters (e.g., permutation count, minimum gene set size, ranking metric) are not stated, making the enrichment results non-reproducible.  
+- The ion channel, GPCR, and transporter annotation lists are described as "generated using curated gene families from SynGO and IUPHAR-DB," but the specific version of IUPHAR-DB and the exact gene lists are not provided as supplementary files — an independent group could not reconstruct the exact detection matrix in Figure 7.  
+- The videos of soma retrieval are deposited on Zenodo (DOI: 10.5281/zenodo.18189812), which is good, but the manuscript does not state whether the videos are the raw recordings or processed versions, nor does it specify the imaging parameters (frame rate, magnification, illumination) needed to interpret them.  
+- The "torn" neuron classification (neurons #11 and #12) is based on visual inspection of the pipette tip after retrieval, but no criteria are given for what constitutes "torn" versus "aspirated" versus "intact" — this classification is load-bearing for the PCA and the negative-control argument, and it is not operationalized.  
+- The manuscript states that "all available videos" are deposited, but it is unclear whether videos exist for all 12 neurons or only a subset — if videos are missing for some neurons, the visual classification of retrieval outcomes cannot be independently verified.  
+- The paper does not state whether the mass spectrometry data were acquired in a single batch or across multiple runs, nor whether a pooled QC sample was run between batches — this matters for assessing batch effects in the DIA-NN match-between-runs step.
+
+**Questions:**
+
+1. For Figure 3D, what exact statistical test was used to obtain p<0.05 with n=3, and can the authors provide the raw capacitance and protein-identification values for each of the three neurons?  
+2. Can the authors provide the PCA input matrix (e.g., normalized intensities vs. binary presence/absence) and the exact preprocessing steps, along with a versioned code repository (commit hash or archived DOI)?  
+3. For the SynGO enrichment, what were the exact GSEA parameters (ranking metric, minimum gene set size, permutation count), and can the authors provide the full gene lists used for the ion channel, GPCR, and transporter annotations as supplementary files?  
+4. What operational criteria were used to classify neurons as "torn," "aspirated," or "intact" during retrieval, and were these classifications made blind to the proteomic results?

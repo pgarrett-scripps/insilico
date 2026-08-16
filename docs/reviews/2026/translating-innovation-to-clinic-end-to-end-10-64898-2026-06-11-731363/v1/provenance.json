@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-08-14T19:43:29+00:00",
+  "generated_at": "2026-08-16T03:09:49+00:00",
   "pipeline": {
-    "sha": "290ffb8702d63ee81ceb6e267511812c9e8a2821",
+    "sha": "cd05a2bc1553aacb386aac91e7bf9545ef83bbac+dirty",
     "version": "0.3.0"
   },
   "provider": "openrouter",
@@ -17,9 +17,9 @@
     "kind": "rerun",
     "replaced": "v1",
     "prior_decision": "major",
-    "prior_mean_score": 3.43,
-    "prior_pipeline_sha": "f9ddb1a7c75cbd91f665c394edcf8e32f5532c64",
-    "prior_reviewed_at": "2026-08-14"
+    "prior_mean_score": 3.12,
+    "prior_pipeline_sha": "c71c823b71b3072b8cdf02a13547084036f11e1f",
+    "prior_reviewed_at": "2026-08-15"
   },
   "submitter": "pgarrett-scripps",
   "submitter_is_author": "",
@@ -120,25 +120,40 @@
       },
       "caveman": null
     },
-    "file_sha256": "0c9d38af20bb44ab703eda8519e47a526ee82f06efd07f8d59722749d914974c"
+    "file_sha256": "34f2fdfe75dccd7814bb7b1399d8f9a81de1afad000b1dc4ac2bb912eb892f6e"
   },
   "screens": {
     "desk_screen_mode": "gate"
   },
   "panel": [
     {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "clarity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
       "reviewer": "novelty",
       "score": 3.0,
       "confidence": 4.0
     },
     {
-      "reviewer": "clarity",
+      "reviewer": "reproducibility",
       "score": 3.0,
-      "confidence": 5.0
+      "confidence": 4.0
     },
     {
-      "reviewer": "reproducibility",
-      "score": 2.0,
+      "reviewer": "rigor",
+      "score": 3.0,
       "confidence": 4.0
     },
     {
@@ -147,369 +162,33 @@
       "confidence": 4.0
     },
     {
-      "reviewer": "data_analysis",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
       "reviewer": "methodology",
       "score": 3.0,
       "confidence": 4.0
-    },
-    {
-      "reviewer": "ethics",
-      "score": 3.0,
-      "confidence": 4.0
-    },
-    {
-      "reviewer": "rigor",
-      "score": 4.0,
-      "confidence": 5.0
     }
   ],
-  "mean_score": 3.12,
+  "mean_score": 3.5,
   "scored_count": 8,
   "panel_size": 8,
-  "total_cost_usd": 0.098528426664,
+  "total_cost_usd": 0.054808355728,
   "cost_by_node": {
-    "audit_citation_integrity": 0.016573,
-    "audit_methods_completeness": 0.003193,
-    "debate_advocate": 0.002625,
-    "debate_skeptic": 0.001402,
-    "desk_screen": 0.001889,
-    "editor": 0.001784,
-    "journal_recommender": 0.002153,
-    "reviewer_clarity": 0.0051,
-    "reviewer_data_analysis": 0.007847,
-    "reviewer_ethics": 0.007532,
-    "reviewer_literature": 0.013013,
-    "reviewer_methodology": 0.006807,
-    "reviewer_novelty": 0.015128,
-    "reviewer_reproducibility": 0.008152,
-    "reviewer_rigor": 0.005336
+    "advocate": 0.006453,
+    "audit_citation_integrity": 0.002392,
+    "audit_methods_completeness": 0.005883,
+    "desk_screen": 0.004851,
+    "editor": 0.003696,
+    "journal_recommender": 0.002499,
+    "reviewer_clarity": 0.001881,
+    "reviewer_data_analysis": 0.003895,
+    "reviewer_ethics": 0.002133,
+    "reviewer_literature": 0.002115,
+    "reviewer_methodology": 0.004616,
+    "reviewer_novelty": 0.001912,
+    "reviewer_reproducibility": 0.001909,
+    "reviewer_rigor": 0.003897,
+    "skeptic": 0.006678
   },
-  "research_by_node": {
-    "audit_citation_integrity": [
-      {
-        "tool": "search_biomedical_literature",
-        "query": "N332-GT5 gp140 HIV vaccine germline-targeting immunogen Steichen 2019",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Steichen vaccine priming rare HIV broadly neutralizing antibody precursors nonhuman primates Science 2024",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "DeGlyPHER ultrasensitive method analysis viral spike N-glycoforms Baboo 2021 Analytical Chemistry",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "DeGlyPHER ultrasensitive method analysis viral spike N-glycoforms Baboo 2021",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Steichen generalized HIV vaccine design strategy priming broadly neutralizing antibody responses Science 2019",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Steichen vaccine priming rare HIV broadly neutralizing antibody precursors nonhuman primates Science 2024",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Steichen generalized HIV vaccine design strategy priming broadly neutralizing antibody responses Science 2019 eaax4380",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Baboo DeGlyPHER ultrasensitive method analysis viral spike N-glycoforms Analytical Chemistry 2021",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Dey cGMP production analysis BG505 SOSIP.664 extensively glycosylated trimeric HIV Biotechnology Bioengineering 2018",
-        "hits": 5
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Steichen HIV vaccine design target germline precursors glycan-dependent broadly neutralizing antibodies Immunity 2016",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Sanders next-generation cleaved soluble HIV-1 Env trimer BG505 SOSIP.664 PLoS Pathogens 2013",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Wolfe platform-based approach clinical production HIV gp120 envelope glycoprotein vaccine candidates Vaccine 2021",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Vaccine priming of rare HIV broadly neutralizing antibody precursors in nonhuman primates Steichen Science 2024",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Parks vaccination mRNA-encoded membrane-anchored HIV envelope trimers tier 2 neutralizing antibodies phase 1 clinical trial",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Bale accelerated cGMP production near-native HIV-1 Env trimers electroporation transfection npj Vaccines 2025",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Silva stabilized HIV-1 envelope trimer mimics native viral spike induces neutralizing antibodies Science Immunology 2021",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "HVTN 144 N332-GT5 gp140 SMNP phase 1 clinical trial NCT",
-        "hits": 5
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Pallerla scale-up cGMP manufacturing next-generation vaccine adjuvant saponin MPLA nanoparticles SMNP Journal Pharmaceutical Sciences 2025",
-        "hits": 5
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "A generalized HIV vaccine design strategy for priming of broadly neutralizing antibody responses",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "cGMP production and analysis of BG505 SOSIP.664 extensively glycosylated trimeric HIV-1 envelope glycoprotein vaccine candidate",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "HIV-1 neutralizing antibodies induced by native-like envelope trimers Science 2015",
-        "hits": 4
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Steichen 2019 Science eaax4380 HIV vaccine germline BG18 N332-GT5 20 of 27 precursors",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Vaccine priming of rare HIV broadly neutralizing antibody precursors in nonhuman primates 2024 Science adj8321",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "DeGlyPHER ultrasensitive method analysis viral spike N-glycoforms",
-        "hits": 1
-      }
-    ],
-    "reviewer_clarity": [
-      {
-        "tool": "",
-        "query": "",
-        "hits": 0,
-        "error": "tool loop returned no text"
-      }
-    ],
-    "reviewer_data_analysis": [
-      {
-        "tool": "",
-        "query": "",
-        "hits": 0,
-        "error": "tool loop returned no text"
-      }
-    ],
-    "reviewer_literature": [
-      {
-        "tool": "find_related_work",
-        "query": "N332-GT5 gp140 HIV vaccine bioprocess manufacturing",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Leap-In transposon CHO cell line development HIV Env trimer",
-        "hits": 10
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "cGMP manufacturing HIV envelope trimer vaccine clinical trial",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Steichen 2019 generalized HIV vaccine design priming broadly neutralizing antibody N332-GT",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Steichen 2024 vaccine priming rare HIV broadly neutralizing antibody precursors nonhuman primates BG18",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Dey 2018 cGMP production BG505 SOSIP.664 trimeric HIV envelope glycoprotein vaccine",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "CHO cell line development HIV envelope trimer cGMP manufacturing clinical trial",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "germline-targeting HIV immunogen manufacturing process development",
-        "hits": 2
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Sanders 2015 HIV-1 neutralizing antibodies native-like envelope trimers Science",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Parks 2025 vaccination mRNA-encoded membrane-anchored HIV envelope trimers tier 2 neutralizing antibodies phase 1",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Pallerla 2025 scale-up cGMP manufacturing saponin MPLA nanoparticles SMNP adjuvant",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Steichen 2016 HIV vaccine design target germline precursors glycan broadly neutralizing antibodies Immunity",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "native-like soluble Env trimers BG505 SOSIP Sanders 2013 PLoS Pathogens",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Steichen 2024 Science \"Vaccine priming of rare HIV broadly neutralizing antibody precursors in nonhuman primates\"",
-        "hits": 1
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Hahn 2024 3M-052-AF alum adjuvant HIV trimer vaccine autologous neutralizing antibodies Journal Experimental Medicine",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Silva 2021 Science Immunology stabilized HIV envelope trimer eabf1152",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "Hahn WO 2024 Journal Experimental Medicine 3M-052-AF alum HIV trimer autologous neutralizing antibodies",
-        "hits": 0
-      },
-      {
-        "tool": "search_biomedical_literature",
-        "query": "\"Parks\" \"Science Translational Medicine\" 2025 \"membrane-anchored\" HIV envelope trimers tier 2 neutralizing antibodies",
-        "hits": 0
-      }
-    ],
-    "reviewer_novelty": [
-      {
-        "tool": "find_related_work",
-        "query": "N332-GT5 gp140 HIV vaccine manufacturing cGMP CHO cell line",
-        "hits": 10
-      },
-      {
-        "tool": "search_preprints",
-        "query": "N332-GT5 HIV vaccine germline targeting manufacturing clinical trial",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "cGMP manufacturing HIV envelope trimer BG505 SOSIP CHO cell production",
-        "hits": 10
-      },
-      {
-        "tool": "search_preprints",
-        "query": "HIV Env trimer cGMP manufacturing CHO cell line glycosylation viral clearance",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "BG505 SOSIP.664 cGMP production CHO cell trimer vaccine manufacturing",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "germline targeting HIV immunogen N332-GT5 manufacturing process development",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"SOSIP\" cGMP manufacturing CHO HIV vaccine",
-        "hits": 10
-      },
-      {
-        "tool": "search_preprints",
-        "query": "N332 GT5 gp140 trimer vaccine manufacturing",
-        "hits": 1
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Dey \"cGMP production\" BG505 SOSIP HIV trimer",
-        "hits": 10
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Steichen \"N332-GT5\" germline targeting HIV vaccine immunogen",
-        "hits": 10
-      },
-      {
-        "tool": "search_preprints",
-        "query": "\"germline-targeting\" HIV immunogen manufacturing CHO cell",
-        "hits": 0
-      },
-      {
-        "tool": "search_preprints",
-        "query": "\"N332\" HIV trimer vaccine manufacturing",
-        "hits": 3
-      },
-      {
-        "tool": "search_preprints",
-        "query": "cGMP manufacturing HIV envelope trimer gp140 clinical trial CHO",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "\"Bale\" \"cGMP\" \"HIV\" Env trimer manufacturing 2025",
-        "hits": 10
-      },
-      {
-        "tool": "search_preprints",
-        "query": "Bale accelerated cGMP production HIV Env trimers electroporation",
-        "hits": 0
-      },
-      {
-        "tool": "find_related_work",
-        "query": "Pallerla SMNP saponin MPLA nanoparticle adjuvant cGMP manufacturing",
-        "hits": 10
-      }
-    ],
-    "reviewer_rigor": [
-      {
-        "tool": "",
-        "query": "",
-        "hits": 0,
-        "error": "tool loop returned no text"
-      }
-    ]
-  },
+  "research_by_node": {},
   "errors": [],
   "preprint": {
     "url": "https://www.biorxiv.org/content/10.64898/2026.06.11.731363v1",
@@ -546,7 +225,7 @@
     "abstract": "The successful translation of rationally designed HIV-1 immunogens into effective vaccines requires manufacturing platforms that maintain structural conformity while meeting clinical-grade quality standards. We developed and scaled a robust, cGMP-compliant process for N332-GT5 gp140, a germline-targeting envelope trimer designed to initiate broadly neutralizing antibody responses, which is now undergoing first-in-human evaluation in HVTN144. Starting with a stable CHO cell line developed using Leap-In(R) transposon technology, we established a production clone exhibiting high-titer expression (>200 mg/L) and genetic stability through 60 population doublings. The manufacturing process scaled efficiently from Ambr(R) 250 miniature bioreactors to 200-L single-use systems, delivering consistent product quality across multiple cGMP batches. A streamlined three-step purification strategy--affinity capture, multimodal polishing, and viral clearance- yielded >99% trimeric purity with preserved quaternary structure and native-like antigenicity. Orthogonal LC-MS analyses confirmed site-specific glycan occupancy matching design specifications, while robust viral clearance exceeded 18-log and 11-log reductions for model retroviruses. Clinical material manufactured through this platform has been successfully administered in HVTN144. This work establishes a scalable, reproducible manufacturing paradigm for structurally complex HIV-1 envelope immunogens, advancing the field toward rational vaccine design based on germline-targeting principles.",
     "published": "2026-06-16",
     "version": "1",
-    "pdf_sha256": "0c9d38af20bb44ab703eda8519e47a526ee82f06efd07f8d59722749d914974c",
+    "pdf_sha256": "34f2fdfe75dccd7814bb7b1399d8f9a81de1afad000b1dc4ac2bb912eb892f6e",
     "pdf_bytes": 2056409
   }
 }

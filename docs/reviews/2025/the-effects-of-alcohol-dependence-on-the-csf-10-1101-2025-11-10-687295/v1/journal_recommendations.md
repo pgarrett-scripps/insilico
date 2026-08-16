@@ -1,37 +1,29 @@
 # Journal Recommendations
 
 ## As-is (current quality)
-- **Alcohol (Journal of the Research Society on Alcoholism)**
-  - Fit: This is the natural topical home for a CIE-2BC mouse study on alcohol dependence, and the journal regularly publishes preliminary, hypothesis-generating behavioral/neurobiological work where the descriptive core (differential CSF protein detection between dependent and non-dependent mice) is the contribution.
-  - Realism: Realistic as a modest descriptive pilot if the interpretive claims are scaled to 'dependence-associated' and the immunoglobulin/immune-surveillance reading is requalified; the editor's 'major' verdict signals the descriptive resource is publishable but not at a top tier.
-- **Alcohol and Alcoholism**
-  - Fit: A specialty alcohol journal that accepts smaller discovery studies and is tolerant of preliminary scope when framed honestly; the CSF-proteome-in-a-mouse-model topic is squarely in scope.
-  - Realism: Acceptance is plausible as-is given the candid limitations section, though reviewers will likely push for the same contamination and quantitative caveats the panel raised.
-- **Journal of Proteome Research**
-  - Fit: The DIA-MS CSF proteomics methodology and the deposited raw data (MassIVE) fit this venue's remit, and it publishes pilot discovery datasets with transparent reporting.
-  - Realism: Only realistic as-is if the quantitative shared-protein comparison and contamination metric are added; without them the detection-only framework is below this journal's bar, so this is borderline for the as-is bucket.
+_No headline venue is realistic at the current quality — see Alternative._
 
 ## After required revisions
-- **Alcoholism: Clinical and Experimental Research (ACER)**
-  - Fit: The flagship alcohol journal, and the CIE-2BC model plus dependence-associated neuroinflammation/BBB markers are exactly its scope; once the required revisions (contamination metric, scaled causal language, quantitative shared-protein analysis, resolved citations) are in place, this becomes a solid translational alcohol-neurobiology paper.
-  - Realism: Good odds after the major revision is fully addressed; the panel's required fixes directly target the weaknesses ACER reviewers would flag, so a complete revision materially raises acceptance likelihood.
-- **Journal of Neurochemistry**
-  - Fit: The BBB-disruption and neuroinflammation markers (GFAP, MMP2, CHI3L1, complement) are core neurochemistry territory, and the revised manuscript with a blood-marker ratio and quantitative comparison would meet its evidentiary bar.
-  - Realism: Realistic after revision, though competitive; the small n and single-model scope mean it would need the quantitative and contamination analyses to be convincing.
-- **Neurobiology of Disease**
-  - Fit: The dependence-associated neuroinflammation, BBB compromise, and loss of protective mechanisms fit this journal's disease-mechanism focus, and the revised quantitative analysis would support the mechanistic framing.
-  - Realism: A stretch even after revision given the n=4-5 pilot design and the need to separate dependence from dose/route confounds; only viable if the authors fully deliver the required new data and requalification.
+- **Alcohol**
+  - Fit: This is the field's primary specialty journal for alcohol research, and the manuscript's core content — CIE-2BC mouse model, CSF proteomics, BBB dysfunction and neuroinflammation in alcohol dependence — is squarely in scope. The editor's required revisions (quantitative reanalysis, contamination control, confound handling) are exactly the kind of rigor this venue expects.
+  - Realism: Realistic after the major revisions are addressed; the panel's 3.03/5 and 'major' verdict is consistent with a solid but not outstanding contribution that this journal would consider once the claims are re-scaled to the cross-sectional evidence.
+- **Alcohol and Alcoholism**
+  - Fit: A well-established specialty journal covering the biological mechanisms of alcohol use and dependence, including neuroimmune and neurovascular effects. The preliminary discovery framing and mouse-model proteomics fit its scope.
+  - Realism: Moderate-to-good after revision; the journal accepts preliminary mechanistic studies, though the small n and descriptive analysis will still need the quantitative reanalysis to pass review.
+- **Journal of Neuroinflammation**
+  - Fit: The neuroinflammation, glial activation (GFAP, CHI3L1, CX3CL1), and complement findings are the manuscript's strongest and most novel contributions, and this journal is the natural home for that content.
+  - Realism: Competitive but plausible after revision; the BBB-dysfunction and neuroinflammation claims must be de-confounded from blood contamination and the IL-6R antibody, which the required revisions address.
 
 ## Alternative outlets
-- **bioRxiv (preprint)**
-  - Fit: The data and code are already preprint-oriented and the paper is explicitly a preliminary discovery study; posting a revised version with the contamination metric and quantitative comparison would let the field use the resource immediately while it is under review elsewhere.
-  - Realism: No acceptance barrier; this is the appropriate fallback if the headline venues are out of reach, and it aligns with In Silico's overlay model of reviewing existing preprints.
-- **Frontiers in Neuroscience**
-  - Fit: A broad neuroscience venue that accepts preliminary, hypothesis-generating proteomic studies with transparent limitations, and the alcohol/neuroinflammation topic is in scope.
-  - Realism: Moderate-to-good odds even with the current pilot framing, provided the interpretive claims are scaled and the immunoglobulin caveat is addressed.
-- **Alcohol and Alcoholism**
-  - Fit: If the after-revision venues prove too competitive, this specialty journal remains a realistic landing spot for the descriptive CSF-proteome resource.
-  - Realism: Reasonable acceptance odds for a well-reported pilot once the required revisions are made; lower prestige but a solid topical fit.
+- **bioRxiv**
+  - Fit: A preprint server where the deposited data and code can be shared immediately, matching the manuscript's preliminary discovery scope and the authors' own framing as a preliminary study.
+  - Realism: No peer review; posting is immediate and appropriate for a preliminary dataset while the major revisions are completed.
+- **Alcohol: Clinical and Experimental Research**
+  - Fit: A broad alcohol-specialty journal that publishes preclinical mechanistic and biomarker work; a fallback if the more targeted venues decline.
+  - Realism: Moderate after revision; the journal is receptive to descriptive proteomic discovery studies but will require the quantitative reanalysis and contamination control.
+- **Proteomics**
+  - Fit: A methodology-oriented proteomics journal that would value the well-specified DIA-MS pipeline and deposited data even if the alcohol-specific conclusions are re-scaled.
+  - Realism: Moderate; the venue fits the technical rigor of the MS work, though the biological claims would need to be framed as hypothesis-generating.
 
 ## Notes
-The paper is a small-n (4-5/group), detection-based pilot whose descriptive core is sound but whose interpretive scaffolding (BBB breakdown, immune-surveillance loss, 'dichotomous transition') outruns the evidence per the panel. Fit is strongest in alcohol-specialty journals; proteomics journals will require the quantitative shared-protein comparison and contamination metric that the revision demands. The anti-IL-6R antibody detected in every sample is a load-bearing confound for the immunoglobulin interpretation and must be resolved before any venue. Note that the intended target (In Silico) is an overlay journal that reviews preprints, so the bioRxiv alternative is especially well aligned with that model.
+The intended target (In Silico) is an open overlay journal that reviews preprints; the manuscript is in scope there and the 'major' verdict is consistent with a realistic path to listing after the required revisions. Fit uncertainty is low for the alcohol-specialty venues; the neuroinflammation and proteomics venues are reasonable but the authors should confirm current scope before submitting.

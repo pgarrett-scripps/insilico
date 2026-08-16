@@ -2,50 +2,30 @@
 
 ## Advocate — round 1
 
-The other side hasn't spoken yet, so I need to present a strong opening case for acceptance grounded in the manuscript's genuine contributions while acknowledging that revision is needed. Let me think about how to structure this.
+The specialist reviews converge on a clear picture: the core claims are novel, the activity-dependence finding is solid, and the weaknesses are overwhelmingly fixable in revision rather than fatal. The methodology reviewer explicitly states 'the activity-dependent regulation of Hrs (Bic up, TTX down) is well-supported by a clean manipulation,' and the novelty reviewer confirms 'no published or preprint work reporting the same core results.' That is the foundation for acceptance: a genuine, non-disease advance that builds coherently on the authors' own 2023 work.
 
-The manuscript makes several clear contributions:
-1. Shows Hrs localizes to both pre- and post-synapse (including PSD2 fraction and STED)
-2. Shows Hrs is bidirectionally regulated by neuronal activity (Bic increases, TTX decreases)
-3. Shows Hrs depletion alters AMPAR kinetics and reduces AMPA/NMDA ratio
-4. Shows Hrs depletion reduces pCaMKII and scaffolding proteins
-5. Shows Hrs overexpression increases PKC substrates and pGluA1-S831
+Most of the HARD flags are requests for data the authors already have. The AMPA/NMDA ratio concern (data_analysis, rigor) is resolved by reporting the raw AMPAR and NMDAR amplitudes separately — the authors recorded both at matched holding potentials and can supply them. The 'fast/slow' classification concern is addressed by reporting per-sweep decay distributions and blind classification. The phosphoproteomics multiple-comparisons issue is a threshold choice, not a design flaw; the authors can report FDR-adjusted q-values and, if none survive, reframe the screen as hypothesis-generating — the paper's central claims do not rest on the phosphoproteomics. The developmental-knockout confound is real but the authors already have the acute shRNA knockdown (Fig 3) and AAV-Cre (Fig 3M-N) arms that separate acute from developmental effects.
 
-The reviewers' concerns are real but fixable. The key question is whether the central claims are plausible and supported enough to warrant publication with revision, or whether the weaknesses are fatal.
-
-Let me focus on the strongest defenses:
-- The localization data is solid: biochemical fractionation, confocal, and STED all converge
-- The activity-dependent regulation is clean (bidirectional pharmacology)
-- The electrophysiology, while needing tighter analysis, shows real differences
-- The overexpression data provides complementary evidence
-
-I need to concede the genuine weaknesses (uncorrected phosphoproteomics, lack of blind classification, missing controls) but argue they're fixable in revision.
-
-Let me write a concise argument.
+The reproducibility gaps (raw traces, live PXD accession) are deposit tasks, not scientific failures. The clarity defects are one sentence and one legend. The ethics reviewer found only a missing protocol number. None of these undermine the central, well-supported claims.
 
 **Key points:**
-- The localization data (biochemical fractionation + confocal + STED) provides convergent evidence that Hrs is present at both pre- and post-synapse — a novel finding.
-- The activity-dependent regulation of Hrs (Bic → increase, TTX → decrease) is demonstrated with bidirectional pharmacology and is a clean, well-controlled result that stands independently.
-- The electrophysiological data, while needing refinement (blind classification, series resistance reporting), show a real and replicable difference between Hrs KD and control neurons that warrants publication.
-- The overexpression data (increased PKC substrates, pGluA1-S831) provides a complementary perturbation that, while in a different system, supports a role for Hrs in modulating glutamatergic signaling.
-- The multiple-testing concerns in the phosphoproteomics are acknowledged and fixable; the resource itself is valuable, and the claims can be appropriately qualified.
+- Core claims are novel (novelty reviewer: no competing work found) and the activity-dependence finding is 'well-supported by a clean manipulation' (methodology).
+- Most HARD flags are requests for data already collected: raw AMPAR/NMDAR amplitudes, per-sweep decay distributions, FDR q-values.
+- The acute shRNA (Fig 3) and AAV-Cre (Fig 3M-N) arms already separate acute from developmental effects, addressing the knockout confound.
+- Reproducibility and clarity issues are deposit/editing tasks, not scientific failures; ethics needs only a protocol number.
 
 ## Skeptic — round 1
 
-The skeptics have not yet spoken, so I will lay out a maximal case for acceptance that the opposition must dismantle point by point.
+The advocate's central move — that most HARD flags are 'requests for data the authors already have' — is precisely the problem. The data are not in the manuscript, and several are not merely undisclosed but structurally incapable of supporting the claims as designed. The load-bearing objection is the AMPA/NMDA ratio: it is computed as peak AMPAR over NMDAR at 100 ms, and the paper reports no NMDAR amplitude data, no synaptic NMDAR subunit data (Fig S7 is cortex lysate), and no surface GluA1 in the slice preparation. A reduced ratio is equally produced by increased NMDAR current. The advocate says the authors 'recorded both at matched holding potentials and can supply them' — but the manuscript nowhere states this, and the reproducibility reviewer flags that no raw traces or per-cell dataset are deposited. 'Can supply' is not 'is supplied'; the claim 'Hrs levels impact AMPAR kinetics' is not currently supported by the evidence presented.
 
-THE STRONGEST CASE FOR ACCEPTANCE
+The developmental-knockout confound is not resolved by the shRNA/AAV-Cre arms. The shRNA (Fig 3) and AAV-Cre (Fig 3M-N) are in dissociated culture and organotypic slices; the CaMKII/PSD-95/gephyrin claims come from the constitutive Hrsf/fSyn1-Cre cortex. The advocate conflates two different experimental systems. The acute arms do not measure CaMKII, PSD-95, or gephyrin. FATAL for the LTD-like claim as stated.
 
-1. The central claim—that Hrs localises to the post-synapse—rests on three independent lines of evidence: biochemical fractionation (Hrs in PSD2), conventional confocal co-localisation with PSD-95, and super-resolution STED imaging showing Hrs nanoclusters overlapping with both Bassoon and PSD-95 (Figs 1A–O). Each method has known limitations, but convergence across three methods at different scales makes a spatial or biochemical artefact unlikely. The fractionation alone could be challenged as endosomal carryover (the novelty reviewer raises this), but STED showing Hrs within ~100 nm of PSD-95 in intact dendrites addresses that concern directly.
+The phosphoproteomics is not a 'threshold choice': at p<0.05, ~46 of 924 hits are expected false positives; the 16 reported are below chance. The GO/KEGG enrichment is built on noise. FIXABLE only by reframing as hypothesis-generating.
 
-2. The activity-dependent regulation of Hrs protein levels (Fig. 2A–D) is an unusually clean demonstration: bidirectional pharmacology (Bic up, TTX down) over the same 72 h window, confirmed by both western blot (N=8) and immunofluorescence (N=23 fields). This stands as a novel finding regardless of whether any downstream functional claim survives revision. The reviewer who questions the α-tubulin normalisation (clarity reviewer) raises a valid technical point, but the immunofluorescence confirmation (Fig. 2C–D) does not depend on α-tubulin and reproduces the direction and approximate magnitude of the effect.
+Concede: activity-dependence (Bic/TTX) is solid, and novelty is genuine.
 
-3. The electrophysiology is the manuscript’s weakest load-bearing component, but even here the AMPA/NMDA ratio difference (Fig. 3G) is a standard, widely replicated assay that does not depend on the contested fast/slow classification. The ratio is reduced in Hrs KD, consistent with a relative reduction in AMPAR-mediated transmission. The data-analysis reviewer correctly notes that altered NMDA kinetics could explain this, but the authors could provide NMDA decay time constants—an easily supplied additional analysis that would not require new experiments. The rise-time and decay-slope differences (Figs 3I, L) are more vulnerable to the classification artefact concern, but those are secondary kinetic claims; the ratio difference is the primary functional readout.
-
-4. The overexpression experiments (Fig. 7) provide the complementary perturbation that the rigor reviewer correctly demands for a true regulatory claim. While the overexpression was measured biochemically rather than electrophysiologically, the increase in pGluA1-S831 (a PKC site known to increase single-channel conductance) moves in the opposite direction from the KD phenotype (faster kinetics, reduced ratio). The fact that the two experiments were performed in different systems (KD in organotypic slices; overexpression in adult mice via AAV) weakens the bidirectional synthesis, as the methodology reviewer notes, but does not eliminate it as a converging observation.
-
-5. The phosphoproteomics is the weakest pillar of the paper by the reviewers’ own analyses (data_analysis: 16 hits at p<0.05 uncorrected among 924 peptides is below the expected false-positive count). However, the authors present this as a hypothesis-generating discovery experiment (“phosphoproteomic profiling revealed a role for Hrs in glutamatergic synaptic transmission”) and validate one of its predictions (reduced pCaMKII) by targeted western blot. The KEGG pathway enrichment (Fig. 4C) showing GABAergic and glutamatergic synapse involvement should be treated as suggestive rather than confirmatory, which is how the text presents it. The resource value of the dataset—with deposited raw data (PXD073715)—is independent of the significance threshold used.
-
-WHAT THE MANUSCRIPT NEEDS TO ACCEPT: Every reviewer agrees the phosphoproteomics needs correction; the classification and blinding issues are fixable by reanalysis of existing data; the missing controls (Cre-only, activity specificity, STAM1) require new experiments but would strengthen the paper. The manuscript is not ready for acceptance as written, but its core findings are plausible, convergent across methods, and address an under-explored question (ESCRT-0 function at the post-synapse) with appropriate preliminary data.
-
-I will now wait for the skeptics to identify which of these points they consider FATAL vs FIXABLE, and whether they accept that any of the manuscript’s claims survive the identified weaknesses.
+**Key points:**
+- AMPA/NMDA ratio is uninterpretable as reported — no NMDAR amplitudes, no synaptic NMDAR data, no surface GluA1 in slices; 'can supply' is not 'is supplied' (FATAL to the AMPAR-kinetics claim as worded).
+- The acute shRNA/AAV-Cre arms do not resolve the knockout confound — they are different systems (culture/slices) and never measure CaMKII, PSD-95, or gephyrin, which come only from the constitutive cortex (FATAL to the LTD-like claim).
+- Phosphoproteomics: 16 hits at p<0.05 is below the ~46 expected false positives; enrichment is built on noise (FIXABLE only by reframing as hypothesis-generating).
+- Concede: Bic/TTX activity-dependence is clean and well-supported; novelty is genuine and not preempted.
