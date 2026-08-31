@@ -13,3 +13,7 @@ dist/
 # Review runs made to test a pipeline change rather than to publish.
 # --publish is what puts a bundle in docs/reviews/; everything else lands here.
 runs/
+
+# The unpublished manuscript. Deliberately untracked so making this repository
+# public cannot expose the draft; remove this line once the paper is published.
+paper/

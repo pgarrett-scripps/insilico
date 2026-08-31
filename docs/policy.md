@@ -34,9 +34,10 @@ single paper at 3.88 that went each way on different runs. A threshold at 3.9
 would reproduce the editor's verdict 19 times out of 20.
 
 We use the verdict anyway, because it is a judgement about the manuscript and
-the mean is an average of eight numbers that happens to track it. But nobody
-should read the current acceptance line as evidence that the editor is doing
-something the arithmetic could not.
+the mean is an average that happens to track it. The published evidence cited
+above came from the historical eight-reviewer graded panel. New reviews use the
+five-reviewer panel. Nobody should read the current acceptance line as evidence
+that the editor is doing something the arithmetic could not.
 
 "Declined" rather than "rejected", because that is what happened: the editor
 declined to accept, and most declined papers carry a letter setting out what

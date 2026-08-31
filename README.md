@@ -3,9 +3,9 @@
 **An open, AI-refereed overlay journal. Any field, and the whole review is published.**
 
 In Silico does not host papers. You send us a link to a preprint that already
-exists on arXiv, bioRxiv or medRxiv. We run it through a panel of AI referees —
-eight specialist reviewers, two audits, a debate and an editor —
-and publish the entire review next to a pointer to your paper.
+exists on arXiv, bioRxiv or medRxiv. We run it through a panel of AI referees:
+five specialist reviewers, two audits, a two-round adversarial debate and an
+editor, and publish the entire review next to a pointer to your paper.
 
 > **This is an experiment.** The verdict on every paper here was produced by a
 > language model, not a person. A human decides only whether a review gets
@@ -85,7 +85,7 @@ and nothing checked the referees that was any better than the referees.
 ## Reading a review
 
 Each review is one folder per draft of a paper under `docs/reviews/`, holding
-the editor's decision letter, the eight specialist reports, the audits, the
+the editor's decision letter, the five specialist reports, the audits, the
 debate, and a `provenance.json` recording the verdict, panel scores, models and
 cost. A later review sits **beside** the one before it rather than replacing it.
 
@@ -95,11 +95,11 @@ same document.
 
 ## What a review costs
 
-About **$0.08 a paper** on the current setup (`deepseek/deepseek-v4-flash-0731`
-for every agent), including the live literature searches; the graded
-multi-model panel in `peerreview.toml` runs ~$3.40. Every review records its
-own bill in `provenance.json`, and reviews are judged against In Silico's own
-criteria ([`journals/insilico.toml`](journals/insilico.toml)).
+The published single-model runs averaged about **$0.08 a paper**. New reviews
+use the graded Haiku, Sonnet and Opus panel in `peerreview.toml`. Every review
+records its own bill in `provenance.json`, including the model and cost for each
+agent, and reviews are judged against In Silico's own criteria
+([`journals/insilico.toml`](journals/insilico.toml)).
 
 ## Documentation
 

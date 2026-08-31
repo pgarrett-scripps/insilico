@@ -40,8 +40,8 @@ the review.
    One preprint per issue.
 2. **An editor starts the panel** by commenting `/review`. This is manual, which
    controls cost and keeps out spam, so expect a wait.
-3. **Your file passes [the desk](policy.md#the-desk)** — a scan for hidden text
-   and a triage pass for scope.
+3. **Your file passes [the desk](policy.md#the-desk)**, including conversion
+   checks and a triage pass for scope.
 4. **A bot opens a pull request** with the full review and posts a summary to
    your issue.
 5. **You get a say.** Comment if the panel misread something. A human editor
@@ -55,7 +55,7 @@ Post the new version to the same preprint server, then say so on your original
 issue. An editor runs `/review` again — the archive now serves your new draft,
 so it opens a new round by itself.
 
-Expect the panel to read your revision from scratch. The eight referees are
+Expect the panel to read your revision from scratch. The five referees are
 never told a previous round happened, so they will not credit you for a fix by
 comparing drafts — write the paper so that someone meeting it for the first time
 finds nothing to raise. It is the same standard your first submission was held
@@ -116,9 +116,10 @@ wrong, say so.
 
 ## What gets published
 
-Everything the panel produced: eight specialist reports, the debate, the
-decision letter, and a `provenance.json` recording the models, config,
-pipeline commit and cost.
+Everything the panel produced: five specialist reports, the audits, the full
+debate transcript, the debate synthesis the editor read, the decision letter,
+and a `provenance.json` recording the models, config, pipeline commit and
+cost.
 
 Alongside it, `manuscript_stats.md`: counts over the text the panel actually
 read, with no model involved and no opinion in them. It is there so a reader

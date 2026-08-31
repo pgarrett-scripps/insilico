@@ -107,6 +107,9 @@ BUNDLE_FILES = [
     "decision_letter.md",
     "desk_screen.md",
     "debate_transcript.md",
+    # The synthesizer's condensed account of the debate — the version the
+    # editor actually read; the transcript above is the full exchange.
+    "debate_synthesis.md",
     "journal_recommendations.md",
     "manuscript_stats.md",
 ]
@@ -754,7 +757,7 @@ def write_bundle(
         "agent_models": json.loads(os.environ.get("REVIEW_AGENT_MODELS") or "{}"),
         # Always set from the resolved config before this runs; the literal is
         # only reached by a direct call in a test, and matches peerreview.toml.
-        "debate_rounds": int(os.environ.get("REVIEW_DEBATE_ROUNDS", "1")),
+        "debate_rounds": int(os.environ.get("REVIEW_DEBATE_ROUNDS", "2")),
         "decision": decision,
         # A desk reject and a panel reject are both `decision: reject` but are
         # not the same editorial act — one is a verdict after ten reports and a

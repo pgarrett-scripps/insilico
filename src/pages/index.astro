@@ -11,9 +11,10 @@ const verdictKey = (b) => (b.deskRejected ? "desk" : b.decision);
 
 const STAGES = [
   { stage: "Desk", who: "Integrity scan · editorial triage", out: "Pass, or a desk rejection" },
-  { stage: "Review", who: "Methodology · Data analysis · Novelty · Clarity · Literature · Rigor · Reproducibility · Ethics", out: "8 scored reports" },
+  { stage: "Review", who: "Scientific validity · Quantitative evidence · Contribution and prior work · Reporting and reproducibility · Ethics", out: "5 scored reports" },
   { stage: "Audit", who: "Citation integrity · Methods completeness", out: "2 factual checklists" },
-  { stage: "Debate", who: "Advocate vs. Skeptic", out: "Full transcript" },
+  { stage: "Debate", who: "Advocate vs. Skeptic, parallel rounds", out: "Full transcript" },
+  { stage: "Synthesis", who: "Debate synthesizer", out: "The debate, condensed for the editor" },
   { stage: "Decision", who: "Editor-in-chief, reading every report directly", out: "Recommendation + letter" },
 ];
 ---
@@ -25,7 +26,7 @@ const STAGES = [
       <p class="label hero__eyebrow">An open, AI-refereed overlay journal</p>
       <h1 class="hero__title">In&nbsp;Silico</h1>
       <p class="hero__lede">
-        We don't host papers. Point us at a preprint and a panel of fifteen
+        We don't host papers. Point us at a preprint and a panel of thirteen
         agents reviews it. We publish <em>the entire review</em> next to a link
         to your work.
       </p>
@@ -72,7 +73,7 @@ const STAGES = [
           away.
         </p>
         <p>
-          Here every submission that clears the desk gets eight specialist
+          Here every submission that clears the desk gets five specialist
           reports, a recorded debate and an editor's verdict — public,
           versioned, and reproducible down to the model that wrote each line.
         </p>
@@ -82,7 +83,7 @@ const STAGES = [
     <section class="pipeline">
       <div class="pipeline__head">
         <h2 class="h-section">What the panel does</h2>
-        <p class="label">15 agents · one round</p>
+        <p class="label">13 agents · two debate rounds</p>
       </div>
       <ol class="pipeline__list">
         {STAGES.map((s, i) => (
@@ -95,9 +96,8 @@ const STAGES = [
         ))}
       </ol>
       <p class="pipeline__note">
-        Novelty and Literature query arXiv, Semantic Scholar, PubMed and bioRxiv
-        live. A full review costs about eight cents; each review publishes its
-        own bill.
+        Contribution and prior work queries arXiv, Semantic Scholar, PubMed and
+        bioRxiv live. Each review publishes its own bill.
       </p>
     </section>
 

@@ -32,10 +32,25 @@ provider = "anthropic"
 # Fallback for any agent whose tag isn't defined below.
 reasoning_model = "claude-sonnet-5"
 
-# One round gives the advocate and skeptic one turn each. A second round
-# re-sends all of round 1, lengthens the serial tail, and mostly restates the
-# same positions. Reliability matters more than another optional exchange.
-debate_rounds = 1
+# Five complementary reviewers cover scientific validity, quantitative
+# evidence, contribution and prior work, reporting and reproducibility, and
+# ethics — since PeerReviewAgents 0.5.0 that panel is the only one, and the
+# old review_workflow / reviewer_panel keys are gone. The advocate and
+# skeptic argue in PARALLEL each round, and a Sonnet synthesizer condenses
+# the finished debate into the one account the editor reads beside the full
+# reports; the raw transcript is still published.
+enable_debate = true
+
+# Two rounds. Round 1 is two independent cases built blind from the panel —
+# neither debater sees the other — and round 2 is the rebuttal exchange after
+# each reads the full round-1 record. Rounds are parallel, so two rounds cost
+# two serial steps, the same wall-clock depth the old sequential single round
+# had.
+debate_rounds = 2
+
+# Venue suggestions are useful to In Silico readers but do not affect the
+# verdict. They remain enabled here and run on Haiku below.
+enable_journal_recommender = true
 
 # ---------------------------------------------------------------------------
 # Review posture
@@ -68,10 +83,10 @@ target_journal = "insilico"
 #
 #    It is also close to free, and may be cheaper than not running it. The
 #    screen deliberately shares the reviewers' model and manuscript prefix, so
-#    its call warms the prompt cache that all 8 specialists then read on their
+#    its call warms the prompt cache that all 5 specialists then read on their
 #    parallel fan-out — which would otherwise race and largely miss. And a
-#    desk reject short-circuits the run before 14 further calls (8 reviewers,
-#    2 auditors, one debate round of 2, editor, scout).
+#    desk reject short-circuits the run before 14 further calls (5 reviewers,
+#    2 auditors, two parallel debate rounds of 2, synthesizer, editor, scout).
 #
 #    "gate" enforces the verdict; "warm" runs it for the cache but ignores the
 #    verdict; "off" skips the call. The upstream prompt is explicitly
@@ -84,16 +99,16 @@ conversion_gate = "degraded"
 # ---------------------------------------------------------------------------
 #
 # Agents resolve a model through a named tag: reviewers -> "reviewer",
-# debate -> "debate", auditors -> "audit", and editor / journal-scout ->
-# "synthesis". The desk screen deliberately uses
+# debate -> "debate", auditors -> "audit", and debate synthesizer / editor /
+# journal-scout -> "synthesis". The desk screen deliberately uses
 # the *reviewer* tag rather than a tag of its own, so that the prompt cache it
 # warms is the one the panel then reads — caches are per-model. There is no
 # "screen" tag; a [models.screen] block here would be silently inert.
 #
-# This is the main cost lever. The 8 specialists and the 2 auditors are the
+# This is the main cost lever. The 5 specialists and the 2 auditors are the
 # widest fan-out and the most checklist-like, so they run on Haiku. The debate
-# is adversarial reasoning rather than assessment, so it gets Sonnet. The area
-# chair and editor decide the verdict, so they get Opus.
+# is adversarial reasoning rather than assessment, so it gets Sonnet. The
+# editor alone gets Opus.
 
 [models.reviewer]
 model = "claude-haiku-4-5"
@@ -113,71 +128,24 @@ model = "claude-opus-5"
 #
 # It is now settable here and wins over the pipeline's call-site default (it
 # used to be the other way round, which made this key silently inert). The
-# editor is the only deliberative stage; the venue scout does not decide.
+# editor is the only decision stage. The venue scout does not decide.
 
 # ---------------------------------------------------------------------------
 # Per-agent overrides
 # ---------------------------------------------------------------------------
 #
-# The `synthesis` tag covers the editor and journal scout. The editor sees the
-# manuscript, complete panel, audits, and debate and issues the verdict. The
-# scout suggests venues after that verdict; nothing downstream reads it.
+# The `synthesis` tag covers the debate synthesizer, editor, and journal
+# scout. The editor sees the manuscript, complete panel, audits, and the
+# debate synthesis, and issues the verdict; the raw debate transcript is
+# published but deliberately not part of the editor's record. Nothing
+# downstream reads the venue suggestions.
 #
-# One Opus call per review instead of four.
+# One Opus call per review instead of three.
 
 [agent_models]
+# The synthesizer condenses the finished debate for the editor but does not
+# decide the verdict, so it runs on Sonnet.
+debate_synthesizer = { model = "claude-sonnet-5" }
+
 # Venue selection is useful but non-decisional, so keep it on the cheap model.
 journal_recommender = { model = "claude-haiku-4-5" }
-
-# Two reviewers off the Haiku tag and onto Opus.
-#
-# READ THE CAVEAT AT THE BOTTOM OF THIS BLOCK BEFORE TRUSTING IT.
-#
-# Benchmarking this panel against Nature's published referee reports for one
-# paper (runs/benchmark-609665v2) attributed every human-matching finding to
-# the node that originated it. Four of the eight specialists produce nearly
-# all of the overlap, and on that run the gap between an all-Haiku panel and
-# an all-Opus panel sat almost entirely in these two:
-#
-#   data_analysis  On Opus it originated six of the referees' points, including
-#                  both of the chemistry explanations that were the referees'
-#                  strongest attack on the paper — that the manuscript's
-#                  headline sequence motifs are sample-preparation artefacts.
-#                  On Haiku, DeepSeek and a free model, the same node named the
-#                  same motifs and only asked whether they were defined post
-#                  hoc. Same prompt, same manuscript, different depth.
-#   rigor          Produced the single sharpest finding in the benchmark: the
-#                  "KRAQ motif" is more parsimoniously a ragged-cleavage
-#                  artefact, and the manuscript's own enrichment data say so.
-#
-# The other six specialists stay on Haiku, where the benchmark found no
-# separation between Haiku, a $0.10 model and a free one.
-#
-# Measured cost: $3.38 per review, against $9.28 to put the whole panel on
-# Opus and about $3.00 for the all-Haiku panel.
-#
-# THE CAVEAT. The first run of this configuration did not reproduce either
-# finding described above. Its Opus data_analysis reviewer wrote a competent
-# review about causal inference and multiple testing and never raised the
-# measurement artefact at all; its Opus rigor reviewer found a minor filtering
-# point instead of the ragged-cleavage argument, and abstained from scoring.
-# Same model, same prompt, same manuscript, same profile as the run that
-# produced both — and reviewers run in parallel and never read each other, so
-# sampling randomness is the only variable that differed.
-#
-# What that means: a single review is one sample of a high-variance process,
-# and the all-Opus run that motivated this change was one sample too. This
-# setting is a reasonable bet, not a demonstrated improvement. Do not quote
-# the benchmark as evidence that it works until it has been run over several
-# papers — and note that the same variance makes the *prompt* lever more
-# attractive than the model lever, since an instruction that makes the
-# artefact question mandatory does not depend on a model choosing to ask it.
-# Keyed by the agents' full names. These two lines spent a while as bare
-# `data_analysis` / `rigor`, which match no agent and were silently inert:
-# every review billed as this config ran both reviewers on Haiku, and the
-# caveat above about the first run "not reproducing" the Opus findings has
-# a simpler reading — it was never Opus. The pipeline now warns on an
-# unknown agent name, and `peerreview --show-panel --config peerreview.toml`
-# prints the resolved table this file actually produces.
-reviewer_data_analysis = { model = "claude-opus-5" }
-reviewer_rigor = { model = "claude-opus-5" }

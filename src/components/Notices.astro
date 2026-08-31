@@ -20,6 +20,8 @@ const VERDICT = {
 const revision = provenance.revision || {};
 const round = Number(provenance.round || 1);
 const claim = provenance.submitter_is_author || "";
+const panelSize = Array.isArray(provenance.panel) ? provenance.panel.length : 0;
+const reportCount = panelSize ? `${panelSize} reports` : "specialist reports";
 
 // Whether the panel that wrote the reports below was told it was reading a
 // revision. Those rounds carry `revision.baseline`: the status of the
@@ -67,7 +69,7 @@ if (round > 1) {
         "The authors revised the paper. Each referee below was shown its own report from the previous round and ruled on every point it had raised, and an auditor checked the previous letter's required revisions against the new draft.",
       ]
     : [
-        "The authors revised the paper. Every referee below read this draft cold: none was told that a previous round exists, so the eight reports are an independent read of the paper as it stands rather than a verdict on the revisions. A referee restating a concern is not evidence the authors ignored it, and score movement between rounds carries the noise of a fresh panel.",
+        `The authors revised the paper. Every referee below read this draft cold: none was told that a previous round exists, so the ${reportCount} are an independent read of the paper as it stands rather than a verdict on the revisions. A referee restating a concern is not evidence the authors ignored it, and score movement between rounds carries the noise of a fresh panel.`,
         "What crosses rounds is the editor's numbered required revisions. An auditor rules on each one against the new draft and cannot call an item addressed without quoting manuscript text that is checked to be there, so the compliance report and the decision letter are the account of what happened to the asks.",
       ];
   if (revision.prior_decision) {

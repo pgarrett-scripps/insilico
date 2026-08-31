@@ -82,95 +82,29 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      # PeerReviewAgents is private while the paper is unpublished, so the
-      # runner needs a read token to clone it. Rewriting the URL in git config
-      # keeps the token off the command line, where it would otherwise appear
-      # in the step's own log. Once that repo is public, delete the
-      # PRA_READ_TOKEN secret and this step turns itself into a no-op.
-      - name: Authenticate to the pipeline repo
-        env:
-          PIPELINE_TOKEN: ${{ secrets.PRA_READ_TOKEN }}
-        run: |
-          if [ -n "$PIPELINE_TOKEN" ]; then
-            # Send the credential as a Basic auth header rather than embedding
-            # it in the URL. This is what actions/checkout does, and it is the
-            # form fine-grained PATs actually authenticate with over git —
-            # `x-access-token:<pat>` in the URL authenticates fine against the
-            # REST API but is rejected by git, which then reports the repo as
-            # not found and sends you looking at permissions instead.
-            # actions/checkout writes its own extraheader (with GITHUB_TOKEN)
-            # into the *local* repo config, and local config beats global — so
-            # a global credential set here is silently ignored for any git
-            # command run from the workspace. Export the header instead and
-            # apply it per-command with `git -c`, which outranks both.
-            basic="$(printf 'x-access-token:%s' "$PIPELINE_TOKEN" | base64 -w0)"
-            echo "PIPELINE_AUTH=AUTHORIZATION: basic $basic" >> "$GITHUB_ENV"
-            echo "Using PRA_READ_TOKEN to reach the private pipeline repo."
-
-            # Probe the API before git gets involved. git reports "Repository
-            # not found" for anything it can't read, which conflates a bad
-            # token with a token that simply lacks access; the API separates
-            # them. Prints only a status code, never the token.
-            code="$(curl -s -o /dev/null -w '%{http_code}' \
-              -H "Authorization: Bearer $PIPELINE_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/pgarrett-scripps/PeerReviewAgents)"
-            case "$code" in
-              200) echo "Token check: OK (can read the pipeline repo)." ;;
-              401) echo "::error::Token check: 401 — PRA_READ_TOKEN is not a valid" \
-                        "credential. Usually a paste problem: a truncated value, or a" \
-                        "trailing newline from piping it in. Re-set it with" \
-                        "'gh secret set PRA_READ_TOKEN' and paste at the prompt." ;;
-              404) echo "::error::Token check: 404 — the token is valid but cannot see" \
-                        "pgarrett-scripps/PeerReviewAgents. Check Repository access lists" \
-                        "that repo and Repository permissions grant Contents: Read." ;;
-              *)   echo "::warning::Token check returned HTTP $code." ;;
-            esac
-          else
-            echo "No PRA_READ_TOKEN set — assuming the pipeline repo is public."
-          fi
-
       - name: Pin the referee panel
         id: pipeline
         run: |
           # `set -e` doesn't fire on a failure inside a command substitution,
           # so an unreachable repo used to yield an empty sha and surface as
           # pip complaining about an "empty revision" — pointing at the URL
-          # rather than at the auth problem that actually caused it.
-          # http.extraheader is multi-valued, so adding ours alongside the one
-          # actions/checkout persisted sends two Authorization headers and the
-          # server rejects the request. Git documents an empty value as the
-          # reset for such a list, so clear it first, then add ours.
-          if ! sha="$(git -c "http.https://github.com/.extraheader=" \
-                          -c "http.https://github.com/.extraheader=${PIPELINE_AUTH}" \
-                        ls-remote "$PIPELINE_REPO" "$PIPELINE_REF" | cut -f1)" \
+          # rather than at the outage that actually caused it.
+          if ! sha="$(git ls-remote "$PIPELINE_REPO" "$PIPELINE_REF" | cut -f1)" \
              || [ -z "$sha" ]; then
-            echo "::error::Could not read $PIPELINE_REPO."
-            echo "::error::While that repo is private this needs a PRA_READ_TOKEN secret" \
-                 "whose fine-grained token grants Contents: Read on it." \
-                 "GitHub reports 'Repository not found' for a private repo a token" \
-                 "cannot see, so a missing permission looks identical to a typo."
+            echo "::error::Could not read $PIPELINE_REPO @ $PIPELINE_REF."
             exit 1
           fi
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "Pinning PeerReviewAgents @ $sha"
-          # Scope the credential to this one command via GIT_CONFIG_* rather
-          # than setting it globally: a global extraheader would stack with the
-          # local one actions/checkout persisted and break the later `git push`
-          # with the same "Duplicate header" the ls-remote above had to dodge.
-          # pip clones into a temp dir with no local config, so one header.
-          # [research] pulls the arXiv client. Without it the Novelty and
-          # Literature reviewers' arXiv vendor degrades to a one-line "arxiv
+          # [research] pulls the arXiv client. Without it the contribution
+          # referee's arXiv vendor degrades to a one-line "arxiv
           # unavailable" note and the router silently falls through to the
           # other sources — so the panel would still produce confident claims
           # about prior work, just without having searched the index that
           # matters most for the computational half of the corpus. It fails
           # quietly by design, which is exactly why it has to be installed
           # explicitly rather than assumed.
-          GIT_CONFIG_COUNT=1 \
-          GIT_CONFIG_KEY_0="http.https://github.com/.extraheader" \
-          GIT_CONFIG_VALUE_0="${PIPELINE_AUTH:-}" \
-            pip install --quiet "peerreviewagents[research] @ git+${PIPELINE_REPO}@${sha}"
+          pip install --quiet "peerreviewagents[research] @ git+${PIPELINE_REPO}@${sha}"
           pip install --quiet pyyaml
 
           # The manuscript converter, and the only one: the pipeline reads
@@ -193,7 +127,7 @@ jobs:
           # discovering months later that every review skipped arXiv.
           python -c "import arxiv" || {
             echo "::error::peerreviewagents[research] did not install the arxiv"\
-                 "client. Literature and Novelty searches would silently skip"\
+                 "client. The contribution referee would silently skip"\
                  "arXiv, so this run is stopping instead of publishing a review"\
                  "that claims to have searched it."
             exit 1

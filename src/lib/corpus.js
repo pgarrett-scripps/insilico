@@ -73,6 +73,7 @@ const DOCUMENT_ORDER = [
   ["decision_letter.md", "Decision letter", "The editor's verdict and what it requires."],
   ["desk_screen.md", "Desk screen", "Whether the submission cleared the bar for full review."],
   ["debate_transcript.md", "Advocate / skeptic debate", "The case for and against, in full."],
+  ["debate_synthesis.md", "Debate synthesis", "The condensed account of the debate the editor read."],
   ["journal_recommendations.md", "Venue suggestions", "Where this might be submitted."],
   // Last, and deliberately so: it is the only document with no opinion in it,
   // and it is here for the reader who wants to check that the text the panel

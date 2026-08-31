@@ -19,7 +19,7 @@ docs/                     # the record, written by the pipeline
     ├── summary.md  decision_letter.md  desk_screen.md
     ├── debate_transcript.md  journal_recommendations.md
     ├── manuscript_stats.md   # deterministic counts over the text the panel read
-    ├── review_*.md       # 8 specialist reports
+    ├── review_*.md       # 5 specialist reports
     └── audit_*.md        # 2 audits, 3 in a revision round
 
 src/                      # the site
@@ -171,24 +171,27 @@ The measurements go to `manuscript_stats.md` and into `provenance.json` under
 words" writes a finding about it.
 
 `PEERREVIEW_CAVEMAN` controls telegraphic compression and defaults to `off`. It
-saves under a cent a review and it is not free — under `light` the clarity
-reviewer reported grammatical errors three times on a paper where the
-uncompressed run reported none, having read the compressor's work as the authors'
-writing.
+saves under a cent a review and it is not free. Under `light`, the old
+eight-role panel's clarity reviewer reported grammatical errors three times on
+a paper where the uncompressed run reported none, having read the compressor's
+work as the authors' writing.
 
 ## Cost
 
-A full round is 17 agents reading the manuscript. On a frontier model that is
-dollars per paper, not cents. The main lever is the per-tag model split in
-`peerreview.toml`: the widest fan-out on the cheapest tier, the debate in the
-middle, and only the agent that decides the verdict on the most expensive one.
+A full round is 15 model calls when venue suggestions are enabled. The main
+lever is the per-tag model split in `peerreview.toml`: the widest fan-out on the
+cheapest tier, the debate in the middle, and only the agent that decides the
+verdict on the most expensive one.
 
-`debate_rounds` is 2. The second round costs more than the first, since it
-re-sends it, and is kept because one round only gives the skeptic an unanswered
-swing.
+`debate_rounds` is 2, and the advocate and skeptic argue in parallel within
+each round: two blind opening cases in round 1, two rebuttals in round 2 after
+each side reads the other. Because the rounds are parallel, two rounds cost
+two serial steps — the same wall-clock depth the old sequential single round
+had — and a synthesizer then condenses the exchange into the record the
+editor reads in place of the raw transcript.
 
 Every review records its own per-agent spend in `provenance.json`. A desk
-rejection ends the run before the other 16.
+rejection ends the run before the other 14.
 
 ## First-time setup
 

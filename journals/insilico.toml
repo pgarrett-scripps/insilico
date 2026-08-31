@@ -6,7 +6,7 @@
 #
 # Loaded via `journals_dir = "journals"` + `target_journal = "insilico"` in
 # peerreview.toml. The pipeline injects scope, guidelines and limits into the
-# reviewer, meta-reviewer, editor and recommender prompts, so edits here
+# reviewer, debate-synthesizer, editor and recommender prompts, so edits here
 # change what the panel actually does — this file is configuration, not
 # documentation. The human-readable version lives in docs/criteria.md and
 # the two must be kept in step.

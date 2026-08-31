@@ -47,7 +47,7 @@ and 5s, which makes a score meaningless.
 
 ## When a dimension doesn't apply
 
-Every manuscript gets all eight referees, and some contain nothing in a given
+Every manuscript gets all five referees, and some contain nothing in a given
 dimension — a qualitative interview study has no statistics to judge. Those
 referees return **not applicable**, which is left out of the mean rather than
 counted as a good score, and the page says how many referees the mean covers.
@@ -78,16 +78,16 @@ this", and to say which they mean.
 | Stage | Agents | Produces |
 |---|---|---|
 | Desk | Integrity scan, editorial triage | Pass, or a desk rejection |
-| Review | Methodology, Data analysis, Novelty, Clarity, Literature, Rigor, Reproducibility, Ethics | 8 scored reports |
+| Review | Scientific validity, Quantitative evidence, Contribution and prior work, Reporting and reproducibility, Ethics | 5 scored reports |
 | Audit | Citation integrity, Methods completeness | 2 checklists, straight to the editor |
-| Debate | Advocate vs. Skeptic | A transcript, not a summary |
-| Synthesis | Area chair | Draft recommendation |
-| Rebuttal | Simulated author | The case against the reports |
+| Debate | Advocate and Skeptic, in parallel rounds | A transcript, published in full |
+| Synthesis | Debate synthesizer | The condensed account of the debate the editor reads |
 | Decision | Editor-in-chief | Recommendation and letter |
 
-Novelty and Literature query arXiv, Semantic Scholar, PubMed and bioRxiv live,
-so claims about prior work rest on search results rather than recall. The audits
-bypass the debate deliberately: a missing methods detail is a fact, and facts
+The Contribution and Prior-Work reviewer queries arXiv, Semantic Scholar,
+PubMed and bioRxiv live, so claims about prior work rest on search results
+rather than recall. The audits bypass the debate deliberately: a missing
+methods detail is a fact, and facts
 should not be argued into or out of existence.
 
 Not every stage runs on the same model. Each review records which model wrote
@@ -95,7 +95,7 @@ which report, and what it cost.
 
 ## Revision rounds
 
-**The referees are blind to the round.** Round 3 asks the eight specialists
+**The referees are blind to the round.** Round 3 asks the five specialists
 exactly what round 1 asked: read this manuscript. None of them is told that a
 previous round exists, sees its own earlier report, or is shown what changed.
 They still never see each other's reports either. Rounds are capped at three.
