@@ -60,6 +60,25 @@ there to design against — no fixtures, no seeding. `npm run build` writes to
 Everything visual is a token in `src/styles/global.css`, redefined for light and
 dark. Change a token and it moves everywhere it is used.
 
+## Editor commands
+
+Editors have one command, written as a comment on the submission issue. Only
+owners, members and collaborators can trigger it.
+
+| Command | What happens |
+|---|---|
+| `/review` | reviews whatever draft the archive serves now |
+| `/review replace` | redoes a draft already reviewed, overwriting it |
+| `/review openrouter vendor/model` | the paid budget is spent — that one named model, for every agent |
+
+Whether a run is a first look or a new round is not something an editor
+declares. A bundle is named after the draft it read, so a draft we have not
+reviewed is a new round and one we have needs `replace` said out loud before
+anything is overwritten.
+
+A review run on a single model says so on its page: one model wrote all of it,
+and nothing checked the referees that was any better than the referees.
+
 ## Running a review locally
 
 `requirements.txt` deliberately does not pin the referee panel; the workflow pins

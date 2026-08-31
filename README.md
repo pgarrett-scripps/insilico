@@ -1,114 +1,78 @@
 # In Silico
 
-**An open, AI-refereed overlay journal. Any field, and the whole review is published.**
+**An open journal of AI-written peer reviews. Send us a preprint link, get a
+full referee report back — and everything is published.**
 
-In Silico does not host papers. You send us a link to a preprint that already
-exists on arXiv, bioRxiv or medRxiv. We run it through a panel of AI referees:
-five specialist reviewers, two audits, a two-round adversarial debate and an
-editor, and publish the entire review next to a pointer to your paper.
+[**Browse the reviews →**](https://pgarrett-scripps.github.io/insilico/reviews/)
 
-> **This is an experiment.** The verdict on every paper here was produced by a
-> language model, not a person. A human decides only whether a review gets
-> published, never what it says.
+[![The In Silico home page](media/home.png)](https://pgarrett-scripps.github.io/insilico/)
 
-**[Read the reviews →](https://pgarrett-scripps.github.io/insilico/reviews/)**
+> **This is an experiment.** Every review here was written by AI, not a person.
+> A human decides only whether a review gets published, never what it says. A
+> published review is not evidence that a paper is correct.
 
-## Submitting a paper
+## What is this?
 
-You do not need to know how to code. You do need a free GitHub account.
+In Silico doesn't host papers. You point us at a preprint that already lives on
+**arXiv, bioRxiv or medRxiv**, and a panel of AI referees reads it the way a
+journal's reviewers would: five specialists each take one question, two
+fact-checkers audit the citations and methods, the findings are argued out in a
+debate, and an editor writes the decision letter.
 
-1. [Open a submission issue](../../issues/new?template=submit.yml) and paste your
-   preprint link.
-2. An editor starts the panel.
-3. The review appears as a pull request. Reply in the thread if you disagree.
-   A human editor reads your reply; no AI does.
+Then we publish *all of it* — the letter, every report, the debate, and a
+record of exactly which models did the work and what it cost — next to a link
+to your paper.
 
-Anyone can submit any public preprint, including one they did not write. The form
-asks whether you are an author, and every review says which it was.
+[![The published reviews page](media/reviews.png)](https://pgarrett-scripps.github.io/insilico/reviews/)
 
-Nothing an author writes reaches the panel — no appeal command, no response
-letter ([why](docs/submit.md#why-we-do-not-accept-a-response-letter)). If a
-review misreads your paper, say so on the issue and we take it down. If your
-paper has changed, ask for a fresh review of the new draft.
+## Submit your preprint
 
-Full details: [`docs/submit.md`](docs/submit.md).
+You don't need to know how to code. You need a free GitHub account and a link.
 
-## What we review
+1. **[Open a submission issue](../../issues/new?template=submit.yml)** and
+   paste your preprint link.
+2. **A human editor starts the review.** The panel runs on its own from there.
+3. **The review is published** on the site, where you can read every word the
+   panel wrote.
 
-Original research in any field. What matters is whether the evidence can be
-checked, not what the paper is about — the name describes how we review, not
-what we review. We do not review work where a wrong machine-generated review
-could affect patient care ([scope](docs/policy.md#scope)).
+That's it. Anyone can submit any public preprint, including one they didn't
+write — the form asks whether you're an author, and every review says which it
+was.
 
-Links must be to arXiv, bioRxiv or medRxiv, so a review names an exact draft.
+## What you get back
 
-## How a review happens
+Each paper gets its own page: the verdict, the decision letter, the specialist
+reports, and a citable link that always points to the latest review of your
+paper.
 
-```
-  anyone opens a submission issue
-             ↓
-  an editor comments  /review
-             ↓
-  a GitHub Action fetches the preprint and runs the panel
-             ↓
-  a bot opens a pull request with the full review
-             ↓
-  editor merges  → published
-  editor closes  → declined, nothing published
-```
+[![A review record page](media/review-record.png)](https://pgarrett-scripps.github.io/insilico/reviews/2026/patch-clamp-single-cell-proteomics-in-acute-brain-10-1101-2025-09-15-675920/)
 
-Merging is what publishes a review. It means the review is now public, not that
-anyone endorses what the panel recommended.
+Posted a new draft since? Ask on your submission issue and the new version gets
+a fresh review, published beside the old one — the record shows how the paper
+improved.
 
-In Silico **accepts** a paper the panel returns at accept or minor revision, and
-**declines** the rest. The editor is not told this rule — it recommends one of
-the four standard verdicts, and the line is drawn afterwards
-([why](docs/policy.md#what-acceptance-means)).
+## The ground rules
 
-Editors have one command, written as a comment on the submission issue. Only
-owners, members and collaborators can trigger it.
+- **Any field.** What matters is whether the evidence can be checked, not what
+  the paper is about. The one exception: we don't review work where a wrong
+  machine-generated review could affect patient care.
+- **The AI's words are never edited.** A human editor publishes a review or
+  declines to; nobody rewrites what the panel said.
+- **Nothing you write reaches the panel.** No response letter, no appeal — the
+  referees only ever see the paper
+  ([why](docs/submit.md#why-we-do-not-accept-a-response-letter)).
+- **If a review misreads your paper, tell us.** Say so on your submission issue
+  and a human reads it. We take down reviews that misread the work.
+- **It's free**, and every review publishes its own bill.
 
-| Command | What happens |
-|---|---|
-| `/review` | reviews whatever draft the archive serves now |
-| `/review replace` | redoes a draft already reviewed, overwriting it |
-| `/review openrouter vendor/model` | the paid budget is spent — that one named model, for every agent |
-
-Whether a run is a first look or a new round is not something an editor
-declares. A bundle is named after the draft it read, so a draft we have not
-reviewed is a new round and one we have needs `replace` said out loud before
-anything is overwritten.
-
-A review run on a single model says so on its page: one model wrote all of it,
-and nothing checked the referees that was any better than the referees.
-
-## Reading a review
-
-Each review is one folder per draft of a paper under `docs/reviews/`, holding
-the editor's decision letter, the five specialist reports, the audits, the
-debate, and a `provenance.json` recording the verdict, panel scores, models and
-cost. A later review sits **beside** the one before it rather than replacing it.
-
-There is also a `manuscript_stats.md` with no opinion in it at all: counts over
-the text the panel read, so a reader holding the PDF can check the panel read the
-same document.
-
-## What a review costs
-
-The published single-model runs averaged about **$0.08 a paper**. New reviews
-use the graded Haiku, Sonnet and Opus panel in `peerreview.toml`. Every review
-records its own bill in `provenance.json`, including the model and cost for each
-agent, and reviews are judged against In Silico's own criteria
-([`journals/insilico.toml`](journals/insilico.toml)).
-
-## Documentation
+## Want the details?
 
 | | |
 |---|---|
 | [`docs/submit.md`](docs/submit.md) | how to submit, and what to expect |
 | [`docs/criteria.md`](docs/criteria.md) | what the panel looks for |
 | [`docs/policy.md`](docs/policy.md) | editorial policy, limitations, how to contest a review |
-| [`docs/development.md`](docs/development.md) | running the site or the pipeline yourself |
+| [`docs/development.md`](docs/development.md) | how it works under the hood, and running it yourself |
 
 ## License
 
