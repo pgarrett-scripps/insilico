@@ -92,7 +92,10 @@ target_journal = "insilico"
 #    verdict; "off" skips the call. The upstream prompt is explicitly
 #    reject-sparingly and errs toward sending borderline work to the panel.
 desk_screen_mode = "gate"
-conversion_gate = "degraded"
+# A degraded conversion still carries readable manuscript text. Continue with
+# a disclosed warning and withhold section-keyed statistics. Only stop when
+# the conversion is broken enough that the panel would review damaged text.
+conversion_gate = "broken"
 
 # ---------------------------------------------------------------------------
 # Per-agent models  — TABLES ONLY BELOW THIS LINE
