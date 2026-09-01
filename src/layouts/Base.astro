@@ -107,14 +107,8 @@ const path = Astro.url.pathname;
 
     <footer class="site-footer">
       <div class="shell site-footer__inner">
-        <p class="site-footer__note">
-          <strong>In Silico</strong> publishes machine-generated peer review.
-          The verdicts are produced by language models, not people; a human
-          decides only whether a review is published. Nothing here certifies
-          that a result is correct.
-        </p>
         <div class="site-footer__meta label">
-          <span>Reviews CC BY 4.0 · code MIT</span>
+          <a href={`${base}/policy/#license`}>License</a>
           <a href="https://github.com/pgarrett-scripps/insilico">Repository</a>
           <a href="https://github.com/pgarrett-scripps/PeerReviewAgents">Engine</a>
         </div>
@@ -255,13 +249,6 @@ const path = Astro.url.pathname;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-  }
-
-  .site-footer__note {
-    max-width: var(--measure);
-    font-size: var(--t--1);
-    color: var(--ink-dim);
-    line-height: 1.6;
   }
 
   .site-footer__meta {

@@ -77,21 +77,16 @@ this", and to say which they mean.
 
 | Stage | Agents | Produces |
 |---|---|---|
-| Desk | Integrity scan, editorial triage | Pass, or a desk rejection |
 | Review | Scientific validity, Quantitative evidence, Contribution and prior work, Reporting and reproducibility, Ethics | 5 scored reports |
 | Audit | Citation integrity, Methods completeness | 2 checklists, straight to the editor |
 | Debate | Advocate and Skeptic, in parallel rounds | A transcript, published in full |
 | Synthesis | Debate synthesizer | The condensed account of the debate the editor reads |
-| Decision | Editor-in-chief | Recommendation and letter |
 
 The Contribution and Prior-Work reviewer queries arXiv, Semantic Scholar,
 PubMed and bioRxiv live, so claims about prior work rest on search results
 rather than recall. The audits bypass the debate deliberately: a missing
 methods detail is a fact, and facts
 should not be argued into or out of existence.
-
-Not every stage runs on the same model. Each review records which model wrote
-which report, and what it cost.
 
 ## Revision rounds
 
@@ -106,9 +101,7 @@ revision is a panel given a reason to find progress. On a resubmission that was
 byte-identical to the draft before it, one referee raised its score from 3 to 5
 "because the revision successfully addresses the concerns", an audit described
 an expanded methods section that was not in the paper, and the editor rejected
-the manuscript for disregarding a review process nobody had gone through. A
-round published before that panel went blind is never edited to match this
-page; it carries a notice saying which arrangement produced its reports.
+the manuscript for disregarding a review process nobody had gone through.
 
 Continuity lives on the editor's numbered required revisions instead, which is
 the actual contract with the authors. An item keeps the id it was born with:
@@ -124,24 +117,23 @@ not evidence the authors ignored it, and score movement between rounds includes
 the resampling noise of a fresh panel. The account of what happened to the asks
 is the compliance audit and the decision letter.
 
-Each round publishes a `round.json` in its bundle, so you can verify what was
-carried forward. A review published before round records existed cannot be
-revised and needs a fresh review instead.
-
 An unchanged resubmission is caught by comparing the manuscript file's SHA-256
 against the one the previous round recorded — no re-reading, no converter that
 could disagree with itself. The editor is told plainly that this is a fact about
 a file rather than defiance: this pipeline reviews whatever draft an archive
 serves it, and the authors have usually never seen the decision letter.
 
-Nothing an author writes reaches the panel
-([why](submit.md#why-we-do-not-accept-a-response-letter)). Review removal is
-handled by a person under the [editorial policy](policy.md#removing-a-review).
+### Why the panel does not receive response letters
 
-## Removing a review
+A response letter gives the panel an account of the revision that may not match
+the manuscript. In one test, a compliance auditor confirmed four claimed
+changes and cited a statistical test it said appeared in a figure legend. The
+test was not in the paper. The editor then changed the verdict on that invented
+evidence. Without the letter, the same auditor evaluated all ten items against
+the manuscript correctly.
 
-Anyone who submitted the paper, or an author of the paper, can ask us to remove
-the review from the site. No explanation is required.
+The panel therefore receives the new draft and nothing written about it. If you
+want a change noticed, put it in the manuscript.
 
 If you think this page describes the wrong criteria, open an issue against
 `journals/insilico.toml`. That is a more interesting argument and we would

@@ -6,6 +6,9 @@ In Silico is an experiment in open machine-generated peer review. It is not
 accredited, not indexed, and not a substitute for conventional peer review.
 Do not cite an In Silico listing as evidence that a result is correct.
 
+The panel's rubric and method limits are documented under
+[Criteria](criteria.md).
+
 ## Authority
 
 **The panel decides the verdict. A human decides whether to publish it.**
@@ -36,7 +39,7 @@ would reproduce the editor's verdict 19 times out of 20.
 We use the verdict anyway, because it is a judgement about the manuscript and
 the mean is an average that happens to track it. The published evidence cited
 above came from the historical eight-reviewer graded panel. New reviews use the
-five-reviewer panel. Nobody should read the current acceptance line as evidence
+current panel. Nobody should read the current acceptance line as evidence
 that the editor is doing something the arithmetic could not.
 
 "Declined" rather than "rejected", because that is what happened: the editor
@@ -85,13 +88,12 @@ Submitting a rival's work to attach a public criticism to it is not a use we
 support. An editor reads every submission before starting a run, and declines
 any that reads as score-settling.
 
-If you find an unrequested review of your work, open an issue. If you object to
-it existing at all, we take it down.
+If you find an unrequested review of your work, you can
+[request its removal](#removing-a-review).
 
 ## The desk
 
 Two checks run before any referee is assigned, and either can stop a submission.
-`provenance.json` records which were active.
 
 ### We do not screen for prompt injection
 
@@ -122,23 +124,12 @@ send anything borderline to the panel.
 A desk rejection is badged separately from a panel rejection. Nothing read the
 paper in depth and no specialist reports exist.
 
-## Known limitations
+## Publication record and reproducibility
 
-Properties of the method, not bugs we expect to fix. The panel cannot run your
-code, check your maths, or see your figures; its literature search is real but
-not exhaustive; and it rewards conventional structure and clear writing, so
-unusual but correct work will probably score worse than it deserves. Consequences
-of each: [what the panel cannot do](criteria.md#what-the-panel-cannot-do).
-
-Nothing is truncated today — every agent reads the whole paper. If long
-submissions become a budget problem we may cap that, and each affected review
-will record it.
-
-Referees may return **not applicable** rather than a score, which is left out of
-the mean rather than averaged in. See
-[when a dimension doesn't apply](criteria.md#when-a-dimension-doesnt-apply).
-
-## Reproducibility
+A published review contains the panel output described under
+[Who does what](criteria.md#who-does-what), plus the decision letter. It also
+contains `manuscript_stats.md`, which records counts over the text the panel
+read so a reader can compare that text with the source PDF.
 
 Every review ships a `provenance.json`: provider, the model at each stage and
 any per-agent override, pipeline version and commit SHA, debate rounds, active
@@ -148,7 +139,8 @@ identical — the models are not deterministic — but the configuration is full
 disclosed.
 
 A published bundle is never edited. A fresh run is published separately, and so
-is a [revision round](criteria.md#revision-rounds).
+is a [revision round](criteria.md#revision-rounds). Revision bundles include a
+`round.json` record of what was carried forward.
 
 ## Removing a review
 
