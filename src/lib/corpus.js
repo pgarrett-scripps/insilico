@@ -60,7 +60,11 @@ export function isAccepted(review) {
 }
 
 /** What In Silico did, as opposed to what the editor recommended. */
-export const STATUS = { accepted: "Accepted", declined: "Declined", desk: "Desk reject" };
+export const STATUS = {
+  accepted: "Accepted",
+  declined: "Revision needed",
+  desk: "Desk reject",
+};
 
 export function statusOf(review) {
   if (!review) return "declined";
