@@ -1,0 +1,273 @@
+{
+  "generated_at": "2026-09-01T23:40:14+00:00",
+  "pipeline": {
+    "sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "version": "0.5.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "minor",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "goodb",
+  "submitter_is_author": "yes",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 16945,
+    "section_source": "document",
+    "text_sha256": "ee214bca4533128997df7b156b9cc384c55526b473665c7a1aaf11b155548ef7",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 3,
+        "preamble_share": 0.8397,
+        "verdict": "degraded",
+        "notes": [
+          "84% of the text matched no known section \u2014 section-keyed statistics are unavailable"
+        ]
+      },
+      "counts": {
+        "chars": 16945,
+        "words": 2170,
+        "sentences": 80,
+        "blocks": 36,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 183,
+        "references_separable": true,
+        "main_text_words": 1987,
+        "reference_entries": 7
+      },
+      "density": {
+        "sentence_len_mean": 27.12,
+        "sentence_len_median": 24.5,
+        "sentence_len_p90": 43.0,
+        "long_sentence_share": 0.175,
+        "numbers_per_1k": 41.47,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 1.38,
+        "boosters_per_1k": 2.3,
+        "mattr": 0.5996,
+        "passive_per_sentence_approx": 0.2,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 1822,
+          "sentences": 65,
+          "sentence_len_mean": 28.03,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 1.65,
+          "boosters_per_1k": 2.2
+        },
+        "conclusion": {
+          "words": 163,
+          "sentences": 6,
+          "sentence_len_mean": 27.17,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 6.13
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "17730e4ffd5ace71eb3e0921bd1f182411f938ddbc16c8b355fc3270ac6a50be"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "ethics",
+      "score": null,
+      "confidence": 5.0,
+      "not_applicable_reason": "The reviewer gave no score and did not say why."
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 3.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 4.0,
+  "scored_count": 4,
+  "panel_size": 5,
+  "total_cost_usd": 0.837223,
+  "cost_by_node": {
+    "advocate": 0.130947,
+    "audit_citation_integrity": 0.046307,
+    "audit_methods_completeness": 0.023729,
+    "debate_synthesizer": 0.081285,
+    "desk_screen": 0.015166,
+    "editor": 0.30442,
+    "journal_recommender": 0.010906,
+    "reviewer_contribution_context": 0.059974,
+    "reviewer_data_analysis": 0.010759,
+    "reviewer_ethics": 0.003505,
+    "reviewer_reporting_reproducibility": 0.008953,
+    "reviewer_scientific_validity": 0.009909,
+    "skeptic": 0.131361
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "find_related_work",
+        "query": "Emonet LLM SPARQL federated knowledge graphs 2410.06062",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Kinjo TogoMCP MCP SPARQL RDF schema 2026",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Morris SPOKE scalable precision medicine knowledge graph 2023",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Gao BioBricks versioned data registry life sciences 2408.17320",
+        "hits": 3
+      }
+    ],
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "Model Context Protocol MCP knowledge graphs SPARQL",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "natural language SPARQL query generation LLM",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Proto-OKN knowledge graph federation",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "MCP Model Context Protocol scientific knowledge",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "TogoMCP natural language knowledge graph query",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ontology expansion MONDO UBERON hierarchical reasoning",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "federated SPARQL query execution multiple endpoints",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "LLM SPARQL query generation federated knowledge graphs",
+        "hits": 2
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Emonet SPARQL federated knowledge graphs RAG",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "SPOKE knowledge graph biomedical",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Open Knowledge Network OKN Fabric NSF",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "text-to-SPARQL generation schema inspection",
+        "hits": 5
+      }
+    ]
+  },
+  "errors": [
+    "ethics reviewer degraded: review Markdown was preserved, but no score could be extracted"
+  ],
+  "preprint": {
+    "url": "https://arxiv.org/abs/2605.30283",
+    "source": "arxiv",
+    "pdf_url": "https://arxiv.org/pdf/2605.30283v1",
+    "identifier": "2605.30283",
+    "doi": "10.48550/arXiv.2605.30283",
+    "title": "mcp-proto-okn: Natural-language access to open scientific knowledge graphs through the Model Context Protocol",
+    "authors": [
+      "Peter W. Rose",
+      "Benjamin M. Good",
+      "Amanda M. Saravia-Butler",
+      "Charlotte A. Nelson",
+      "James P. Balhoff",
+      "Yaphet Kebede",
+      "Patricia L. Whetzel",
+      "Christopher Bizon",
+      "Andrew I. Su",
+      "Sergio E. Baranzini"
+    ],
+    "abstract": "MCP Server Proto-OKN (mcp-proto-okn) is a Python-based Model Context Protocol server that enables AI assistants to discover, inspect, query and integrate scientific knowledge graphs through natural language. The server provides graph routing, schema inspection, SPARQL execution, ontology expansion, multi-graph querying, and transcript generation, lowering the barrier to cross-domain knowledge graph analysis for biomedical and scientific users. mcp-proto-okn is implemented in Python using the FastMCP framework and is available at https://github.com/sbl-sdsc/mcp-proto-okn. Documentation, client configuration instructions, and example analysis transcripts are provided in the GitHub repository.",
+    "published": "2026-05-28",
+    "version": "1",
+    "pdf_sha256": "17730e4ffd5ace71eb3e0921bd1f182411f938ddbc16c8b355fc3270ac6a50be",
+    "pdf_bytes": 431079
+  }
+}
