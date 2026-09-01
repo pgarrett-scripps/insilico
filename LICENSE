@@ -15,8 +15,11 @@ made.
 Full text: https://creativecommons.org/licenses/by/4.0/legalcode
 
 ================================================================================
-Scripts and workflows — MIT
+Site software and automation — MIT
 ================================================================================
+
+All source code, site templates, configuration, scripts, and workflows outside
+docs/ are licensed under the MIT License.
 
 Copyright (c) 2026 In Silico contributors
 

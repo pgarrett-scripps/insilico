@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
+import { unified } from "@astrojs/markdown-remark";
 import remarkDemoteHeadings from "./src/lib/remark-demote-headings.mjs";
 import remarkMdLinks from "./src/lib/remark-md-links.mjs";
 
@@ -20,11 +21,13 @@ export default defineConfig({
     // URLs on the way out; without it they ship as-is and 404.
     // Every markdown file here renders inside a page that already has an
     // <h1>, so the document's own `#` made a second one. See the plugin.
-    remarkPlugins: [[remarkMdLinks, { base: BASE }], remarkDemoteHeadings],
+    processor: unified({
+      remarkPlugins: [[remarkMdLinks, { base: BASE }], remarkDemoteHeadings],
+      smartypants: true,
+    }),
     // The panel writes plain markdown. Smartypants turns its quotes and dashes
     // into typographic ones, which matters when the output is set in a serif
     // reading column rather than a docs theme.
-    smartypants: true,
     shikiConfig: { theme: "github-dark-default", wrap: true },
   },
   build: { format: "directory" },

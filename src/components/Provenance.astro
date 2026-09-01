@@ -19,15 +19,19 @@ const TAG_LABEL = {
 const pipeline = provenance.pipeline || {};
 const preprint = provenance.preprint || {};
 const fallback = provenance.model || "unspecified";
+const modelName = (value) =>
+  typeof value === "object" && value !== null && "model" in value
+    ? value.model
+    : value;
 
 const modelRows = [
   ...Object.entries(provenance.models || {}).map(([tag, v]) => ({
     stage: TAG_LABEL[tag] || tag,
-    model: (typeof v === "object" ? v.model : v) || fallback,
+    model: modelName(v) || fallback,
   })),
   ...Object.entries(provenance.agent_models || {}).map(([agent, v]) => ({
     stage: `${agent.replace(/_/g, " ")} (override)`,
-    model: (typeof v === "object" ? v.model : v) || fallback,
+    model: modelName(v) || fallback,
   })),
 ];
 

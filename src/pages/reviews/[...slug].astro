@@ -64,7 +64,7 @@ const verdictOf = (b) =>
   b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision;
 const verdictClass = (b) => (b.deskRejected ? "desk" : b.decision);
 
-const bibKey = (extra) =>
+const bibKey = (extra = "") =>
   `insilico-${paper.slug.replace(/[^A-Za-z0-9-]+/g, "-").toLowerCase()}${extra ? `-${extra}` : ""}`;
 
 // --- page metadata ---------------------------------------------------------

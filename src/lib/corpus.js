@@ -18,10 +18,11 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-export const REPO = path.resolve(HERE, "../..");
+// Astro bundles server-side modules during a production build, so
+// import.meta.url points into generated build output rather than src/lib.
+// The build and development commands both run from the repository root.
+export const REPO = process.cwd();
 export const REVIEWS_DIR = path.join(REPO, "docs", "reviews");
 
 export const VERDICT = {
