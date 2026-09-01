@@ -1,0 +1,45 @@
+# Debate Transcript
+
+## Skeptic — round 1
+
+The load-bearing objection: this manuscript makes reproducibility and scalability claims that its own data cannot support, because the reference standards used to measure the key output (titer, and therefore yield) change between every comparison the authors rely on. Section 3.2.3 states plainly that the RCB run (562 mg/L), MCB demonstration run (355 mg/L), and GMP run (390 mg/L) each used a *different* BLI reference lot, and that "absolute titers varied across runs (mainly due to different reference standards)." The abstract nonetheless claims the process "scaled efficiently... delivering consistent product quality across multiple cGMP batches." Both the data_analysis and reporting_reproducibility reviewers independently flag this same primary-text passage as confounding cell-bank effects with assay drift, and no cross-calibration between lots is provided anywhere in the manuscript. This is FIXABLE — a cross-calibration table or common-reference reanalysis would resolve it — but as submitted, the central scalability claim is not verifiable from the text given.
+
+A second, related gap: only one cGMP batch exists. "Reproducibility" and "consistent quality across multiple cGMP batches" (Abstract) are claimed from n=1 GMP run compared against pilot/demonstration runs that differ in cell bank, reference standard, and (per Section 3.3.2) presence/absence of the preparative SEC step. The removal of SEC itself rests on a single small-scale parallel comparison (Table 10) with no pre-specified equivalence criteria — reporting_reproducibility correctly notes the compared intermediates in that table aren't even the same species (Load/Flowthrough vs. Load/Final Retentate). FIXABLE, but it means "reproducible manufacturing paradigm" is currently asserted, not demonstrated.
+
+Third, a genuinely unresolved blind spot across the whole panel: the abstract's genetic-stability claim ("stability through 60 population doublings") is sourced to Section 2.3.8/3.1.2, but every reviewer independently notes the actual copy-number, mRNA-identity, and productivity data for PD60 are never shown — only the protocol. This is a claim in the abstract with zero supporting data in the results. FIXABLE (report the numbers), but currently the paper asserts a headline stability result it does not exhibit.
+
+None of these are fatal to the underlying manufacturing achievement (material was made, dosed in HVTN144), but the specific written claims of consistency, scalability, and stability outrun the evidence shown.
+
+## Advocate — round 1
+
+I'll make the case for acceptance based on the panel's own findings.
+
+**All five specialist reviewers converged on a score of 3–4, with no reviewer identifying a claim that "does not survive the evidence given"** — the threshold this venue sets for the bottom of the scale. That convergence, from reviewers applying different lenses (statistics, ethics, reproducibility, contribution, validity), is itself informative: this is solid, middle-of-the-distribution work, exactly where the target journal says most sound papers should sit.
+
+**The core achievement is real and independently verified across reviewers.** The Ethics reviewer states plainly: "The manuscript provides complete process lineage from cell line development through cGMP manufacturing... enabling reproducibility and regulatory confidence" and viral clearance "substantially exceed[s] industry benchmarks." The Validity reviewer agrees the MMV clearance claim "clearly meets" the two-orthogonal-step, ≥4-log criterion. This is not a paper whose central claim collapses under scrutiny — it is a paper whose *secondary* quantitative framings (reference-standard cross-calibration, single-batch replication) invite reasonable requests for more data, which is normal for a first report on a novel clinical candidate.
+
+**Reviewers repeatedly praise the candour that the journal's own guidelines say should be rewarded, not penalized.** The manuscript explicitly flags the reference-standard change and its effect ("absolute titers varied across runs... mainly due to different reference standards," Section 3.2.3), explicitly reports the DeGlyPHER/LC-MS glycosylation discrepancy rather than hiding it, and explicitly states the preparative-SEC removal was driven by supply-chain constraints with supporting data (Table 10). The Data-Analysis reviewer calls the glycosylation discordance handling "appropriate candor." Per the venue's own instruction — "reward candour rather than treating an admitted weakness as a new one" — these disclosures should count *for* the paper.
+
+**The clinical stakes argue for visibility, not suppression.** This is manufacturing documentation for material already dosed in HVTN144. Publishing the full referee record — including the panel's specific, actionable requests (report PD60 stability data, clarify SEC-removal validation, state LOQ values) — serves the journal's stated audience of readers "deciding whether to trust a preprint" far better than leaving this undiscussed. A score of 3–4 with a public, detailed review record is the correct outcome, not rejection.
+
+## Skeptic — round 2
+
+I concede the advocate's strongest point: no reviewer says the central practical achievement — material was made and dosed — is unsupported. That is real and I won't pretend otherwise. But the advocate's argument rests on collapsing "sound work happened" into "the manuscript's specific written claims are supported," and those are not the same test the venue asks us to apply. The instruction is explicit: identify which claims outrun their evidence. The advocate has not engaged with the three specific gaps I raised — they've restated that candour should be rewarded, which is true but non-responsive to whether the abstract's assertions are backed by shown data.
+
+Take the genetic-stability point again, since it is the cleanest case and every one of the five independent reports flagged it without prompting from each other: the abstract states "genetic stability through 60 population doublings" as a headline result. Section 3.1.2 and 2.3.8 describe the protocol — copy number, mRNA identity, productivity at PD0/PD60±Gln — but the Results section never states the outcome. That is not a matter of reviewer preference for more replicates; it is a claim in the abstract with literally zero corresponding data anywhere in the manuscript as written. The advocate's "candour" defense doesn't apply here — the authors aren't disclosing a limitation, they're asserting a positive result and omitting its evidence. This is FIXABLE by simply reporting the numbers, but until it's fixed, a reader cannot verify a claim the abstract puts front and center.
+
+Similarly, "consistent product quality across multiple cGMP batches" (Abstract) is not supported by n=1 GMP batch compared against runs that differ in cell bank, reference standard, and a whole purification step (SEC present/absent). That's not pedantry about precision — reporting_reproducibility shows the SEC-removal comparison in Table 10 doesn't even compare like intermediates.
+
+I'm not arguing for rejection. I'm arguing the abstract's language should be brought into line with what the results section actually shows — that's a revision, not a fatal flaw, but it's real and unaddressed.
+
+## Advocate — round 2
+
+The skeptic is right that the reference-standard mismatch and the missing PD60 data are real problems, and I won't argue otherwise. But look at what those problems actually undermine versus what they leave standing.
+
+The harvest-yield consistency the authors cite (91.4%, 90.8%, 91% across RCB, MCB-demo, and GMP runs, Section 3.2.3) is calculated *within* each run — Day-14 bioreactor titer versus harvest titer, same reference standard each time. That comparison is not touched by the cross-lot confound the skeptic identifies; only the *absolute* titer values (562 vs. 355 vs. 390 mg/L) are. So the specific evidence for consistent recovery efficiency across scales survives even if the absolute-productivity comparison doesn't. Similarly, VCC and viability trajectories (Figure 14) are directly comparable and are not reference-dependent at all.
+
+On "multiple cGMP batches" in the abstract: this is a genuine overstatement against the single true GMP run described, and I concede it should be corrected or qualified in revision — but it's a wording problem in the abstract, not a defect in the Table 11 data showing pilot-demonstration and GMP product quality are comparable on the metrics that were actually measured twice.
+
+On PD60: fully conceded, no rebuttal available — the protocol is described, the numbers aren't. That is a hole the authors must fill.
+
+None of this touches the independently strong evidence for purity (SE-HPLC, nsEM), glycosylation mapping, or viral clearance, which is where the paper's real contribution lives. A 4 with a review that names these specific fixes precisely is the right outcome.

@@ -1,0 +1,356 @@
+{
+  "generated_at": "2026-09-01T14:48:54+00:00",
+  "pipeline": {
+    "sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "version": "0.5.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "minor",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 83063,
+    "section_source": "document",
+    "text_sha256": "9496c7e0d60aa87bbd0c29d07bca19510476312856fe12b9ceb773cd4efa2b1c",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.88,
+        "markdown_headings": 28,
+        "preamble_share": 0.0166,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 83063,
+        "words": 11303,
+        "sentences": 499,
+        "blocks": 231,
+        "display_math": 0,
+        "table_rows": 21,
+        "reference_words": 958,
+        "references_separable": true,
+        "main_text_words": 10345,
+        "reference_entries": 33
+      },
+      "density": {
+        "sentence_len_mean": 22.74,
+        "sentence_len_median": 20.0,
+        "sentence_len_p90": 37.0,
+        "long_sentence_share": 0.0724,
+        "numbers_per_1k": 134.12,
+        "citations": 2,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.18,
+        "hedges_per_1k": 2.03,
+        "boosters_per_1k": 1.24,
+        "mattr": 0.464,
+        "passive_per_sentence_approx": 0.497,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 176,
+          "sentences": 6,
+          "sentence_len_mean": 29.33,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 200,
+          "sentences": 9,
+          "sentence_len_mean": 22.22,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 5.0
+        },
+        "introduction": {
+          "words": 723,
+          "sentences": 25,
+          "sentence_len_mean": 28.92,
+          "citations_per_1k": 1.38,
+          "hedges_per_1k": 1.38,
+          "boosters_per_1k": 2.77
+        },
+        "methods": {
+          "words": 4654,
+          "sentences": 186,
+          "sentence_len_mean": 25.29,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.43,
+          "boosters_per_1k": 0.21
+        },
+        "results": {
+          "words": 4228,
+          "sentences": 165,
+          "sentence_len_mean": 25.62,
+          "citations_per_1k": 0.24,
+          "hedges_per_1k": 4.73,
+          "boosters_per_1k": 1.89
+        },
+        "conclusion": {
+          "words": 354,
+          "sentences": 14,
+          "sentence_len_mean": 25.29,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 2.82
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "97653fad067d3a52cec2170211dd3e81b031b5da686a54c85e1fdf8f2ab4ab34"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.8,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 2.0322706,
+  "cost_by_node": {
+    "advocate": 0.385076,
+    "audit_citation_integrity": 0.078656,
+    "audit_methods_completeness": 0.05025,
+    "debate_synthesizer": 0.101147,
+    "desk_screen": 0.060099,
+    "editor": 0.694515,
+    "journal_recommender": 0.01702,
+    "reviewer_contribution_context": 0.207268,
+    "reviewer_data_analysis": 0.018625,
+    "reviewer_ethics": 0.017751,
+    "reviewer_reporting_reproducibility": 0.020304,
+    "reviewer_scientific_validity": 0.01719,
+    "skeptic": 0.36437
+  },
+  "research_by_node": {
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "N332-GT5 HIV vaccine manufacturing cGMP",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "HIV Env trimer production CHO cells bioprocess",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "BG505 SOSIP.664 cGMP manufacturing viral clearance",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "N332-GT5 germline targeting HIV vaccine",
+        "hits": 1
+      },
+      {
+        "tool": "search_preprints",
+        "query": "HIV envelope trimer clinical manufacturing scale-up",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Steichen N332-GT germline targeting broadly neutralizing antibody",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Dey BG505 SOSIP cGMP production biotechnology bioengineering",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "native-like HIV envelope trimer vaccine immunogenicity",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "HVTN 144 HIV vaccine clinical trial phase 1",
+        "hits": 2
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Leap-In transposon CHO cell line development stable clone",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Sanders BG505 SOSIP envelope trimer neutralizing antibodies",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "HIV envelope glycoprotein trimer vaccine manufacturing process development",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "N332 epitope broadly neutralizing antibody HIV vaccine",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Steichen germline targeting HIV vaccine design BG18",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Steichen 2024 vaccine priming BG18 precursor nonhuman primates",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Parks 2025 mRNA envelope trimer neutralizing antibodies phase 1",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Dey cGMP production BG505 SOSIP biotechnology bioengineering 2018",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "viral clearance retroviruses parvovirus biopharmaceutical purification",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "glycosylation HIV envelope protein mass spectrometry analysis",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Sanders 2013 BG505 SOSIP envelope trimer neutralizing antibodies",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Steichen 2019 germline targeting HIV vaccine design broadly neutralizing",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Steichen 2024 vaccine priming BG18 precursor antibodies science",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Bale 2025 accelerated cGMP HIV envelope electroporation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Pallerla SMNP saponin MPLA nanoparticles vaccine adjuvant 2025",
+        "hits": 2
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Ambr 250 bioreactor scale-up process development fed batch",
+        "hits": 5
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.06.11.731363v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.06.11.731363v1.full.pdf",
+    "identifier": "10.64898/2026.06.11.731363",
+    "doi": "10.64898/2026.06.11.731363",
+    "title": "Translating Innovation to Clinic: End-to-End Bioprocess Development and cGMP Manufacturing of N332-GT5 HIV Vaccine Candidate for First-in-Human Trials HVTN144",
+    "authors": [
+      "Pallerla, S.",
+      "Uplekar, S.",
+      "Boldog, F.",
+      "Paulson, J. C.",
+      "Baboo, S.",
+      "Yates, J. R.",
+      "Lee, W.-H.",
+      "Ozorowski, G.",
+      "Allen, J. D.",
+      "Crispin, M.",
+      "Cottrell, C.",
+      "Ward, A. B.",
+      "Sitaraman, V.",
+      "Broderick, T.",
+      "Costakes, A.",
+      "McCombs, N.",
+      "Ryan, D.",
+      "Wolfe, L.",
+      "Craig, D.",
+      "Syvertsen, K.",
+      "Price, A. E.",
+      "Steichen, J. M.",
+      "Schief, W."
+    ],
+    "abstract": "The successful translation of rationally designed HIV-1 immunogens into effective vaccines requires manufacturing platforms that maintain structural conformity while meeting clinical-grade quality standards. We developed and scaled a robust, cGMP-compliant process for N332-GT5 gp140, a germline-targeting envelope trimer designed to initiate broadly neutralizing antibody responses, which is now undergoing first-in-human evaluation in HVTN144. Starting with a stable CHO cell line developed using Leap-In(R) transposon technology, we established a production clone exhibiting high-titer expression (>200 mg/L) and genetic stability through 60 population doublings. The manufacturing process scaled efficiently from Ambr(R) 250 miniature bioreactors to 200-L single-use systems, delivering consistent product quality across multiple cGMP batches. A streamlined three-step purification strategy--affinity capture, multimodal polishing, and viral clearance- yielded >99% trimeric purity with preserved quaternary structure and native-like antigenicity. Orthogonal LC-MS analyses confirmed site-specific glycan occupancy matching design specifications, while robust viral clearance exceeded 18-log and 11-log reductions for model retroviruses. Clinical material manufactured through this platform has been successfully administered in HVTN144. This work establishes a scalable, reproducible manufacturing paradigm for structurally complex HIV-1 envelope immunogens, advancing the field toward rational vaccine design based on germline-targeting principles.",
+    "published": "2026-06-16",
+    "version": "1",
+    "pdf_sha256": "97653fad067d3a52cec2170211dd3e81b031b5da686a54c85e1fdf8f2ab4ab34",
+    "pdf_bytes": 2056409
+  }
+}
