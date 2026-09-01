@@ -1,0 +1,287 @@
+{
+  "generated_at": "2026-09-01T14:44:22+00:00",
+  "pipeline": {
+    "sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "version": "0.5.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 51926,
+    "section_source": "document",
+    "text_sha256": "a0a1673bb0ce3c74dc02a2f902cd968d6671728b7c126ae3bccdf7ddcb540ff0",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 55,
+        "preamble_share": 0.009,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 51926,
+        "words": 6056,
+        "sentences": 327,
+        "blocks": 219,
+        "display_math": 29,
+        "table_rows": 32,
+        "reference_words": 2985,
+        "references_separable": true,
+        "main_text_words": 3071,
+        "reference_entries": 20
+      },
+      "density": {
+        "sentence_len_mean": 18.87,
+        "sentence_len_median": 17.0,
+        "sentence_len_p90": 32.0,
+        "long_sentence_share": 0.0498,
+        "numbers_per_1k": 48.38,
+        "citations": 54,
+        "citation_style": "numeric",
+        "citations_per_1k": 8.92,
+        "hedges_per_1k": 4.29,
+        "boosters_per_1k": 0.5,
+        "mattr": 0.5688,
+        "passive_per_sentence_approx": 0.156,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 60,
+          "sentences": 1,
+          "sentence_len_mean": 60.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 228,
+          "sentences": 9,
+          "sentence_len_mean": 25.33,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 13.16,
+          "boosters_per_1k": 4.39
+        },
+        "introduction": {
+          "words": 834,
+          "sentences": 43,
+          "sentence_len_mean": 20.85,
+          "citations_per_1k": 4.8,
+          "hedges_per_1k": 4.8,
+          "boosters_per_1k": 0.0
+        },
+        "related work": {
+          "words": 1740,
+          "sentences": 96,
+          "sentence_len_mean": 18.71,
+          "citations_per_1k": 9.2,
+          "hedges_per_1k": 3.45,
+          "boosters_per_1k": 0.0
+        },
+        "conclusion": {
+          "words": 203,
+          "sentences": 7,
+          "sentence_len_mean": 29.0,
+          "citations_per_1k": 9.85,
+          "hedges_per_1k": 4.93,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "dd3a6b59389184800ee109fe11d4b4b990464d066ca3697cb4801d0518175ec9"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 3.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.2,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 1.5942551999999999,
+  "cost_by_node": {
+    "advocate": 0.305055,
+    "audit_citation_integrity": 0.050383,
+    "audit_methods_completeness": 0.033362,
+    "debate_synthesizer": 0.102218,
+    "desk_screen": 0.039338,
+    "editor": 0.50746,
+    "journal_recommender": 0.01309,
+    "reviewer_contribution_context": 0.152288,
+    "reviewer_data_analysis": 0.016542,
+    "reviewer_ethics": 0.018777,
+    "reviewer_reporting_reproducibility": 0.01357,
+    "reviewer_scientific_validity": 0.013511,
+    "skeptic": 0.328659
+  },
+  "research_by_node": {
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "spatial transcriptomics multimodal integration graph neural networks",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "graph self-supervised learning masked reconstruction cross-modal alignment",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "spatial omics multimodal representation learning ATAC transcriptomics",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "GraphST STAGATE SpaGCN spatial domain clustering",
+        "hits": 8
+      },
+      {
+        "tool": "search_preprints",
+        "query": "SARSIM spatially anchored regulatory state inference melanoma",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "multimodal integration spatial transcriptomics ATAC accessibility",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "search_preprints",
+        "query": "graph neural networks spatial omics representation learning",
+        "hits": 8
+      },
+      {
+        "tool": "search_preprints",
+        "query": "masked autoencoder spatial transcriptomics self-supervised",
+        "hits": 6
+      },
+      {
+        "tool": "find_related_work",
+        "query": "contrastive learning multimodal fusion cross-modal alignment",
+        "hits": 8
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Visium scMultiome integration spatial ATAC CUT&Tag",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "SIMO MaxFuse spatial single-cell integration mapping",
+        "hits": 8
+      },
+      {
+        "tool": "search_preprints",
+        "query": "multimodal spatial omics integration embedding representation",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "GraphST spatial transcriptomics clustering graph neural network",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "TransformerConv graph attention message passing",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "masked reconstruction graph autoencoder spatial features",
+        "hits": 8
+      },
+      {
+        "tool": "find_related_work",
+        "query": "noise contrastive estimation NCE multimodal learning",
+        "hits": 8
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://arxiv.org/abs/2607.14410",
+    "source": "arxiv",
+    "pdf_url": "https://arxiv.org/pdf/2607.14410v2",
+    "identifier": "2607.14410",
+    "doi": "10.48550/arXiv.2607.14410",
+    "title": "LATTICE: Graph Self-Supervised Learning for Multimodal Spatial Omics Integration",
+    "authors": [
+      "Jagan Mohan Reddy Dwarampudi",
+      "Veena Kochat",
+      "Suresh Satpati",
+      "Hien Van Nguyen",
+      "Kunal Rai",
+      "Tania Banerjee"
+    ],
+    "abstract": "Spatially resolved omics studies increasingly combine transcriptomic and epigenomic assays, yet downstream analysis is often still performed using single-modality pipelines. We present LATTICE (Latent Alignment of Tissue-level and Transcriptomic Information for Cross-modal Embedding), a graph-based self-supervised framework that learns spot-level representations from harmonized multimodal features. LATTICE integrates five aligned modality blocks per Visium spot: Visium RNA, scMultiome RNA, scMultiome ATAC, spatial ATAC, and spatial CUT\\&Tag. These modalities capture spatial transcriptomic measurements, single-cell inferred regulatory activity, and in situ chromatin and histone states within a unified lattice representation. LATTICE constructs a spatial neighborhood graph and trains a TransformerConv encoder using masked reconstruction, cross-modal alignment, and spatial smoothness objectives. On a private 11-sample melanoma cohort from an anonymized clinical collaborator comprising 54{,}912 total spots, LATTICE demonstrated stable optimization behavior, reproducible embeddings across analysis seeds, and complete multimodal integration across all samples. Adding scMultiome RNA to Visium RNA alone substantially improved concordance with Space Ranger clusters across 11 runs (adjusted Rand index [ARI] +0.157, normalized mutual information [NMI] +0.143, and spatial contiguity +0.174). Additional modalities further improved spatial contiguity and multimodal utility score (MUS), although they sometimes reduced agreement with RNA-derived reference labels, likely because the learned embeddings captured chromatin and regulatory structure beyond transcriptomic similarity alone. These results position LATTICE as a practical and empirically grounded framework for multimodal spatial omics integration, while also highlighting the need for stronger supervision and broader external benchmarking.",
+    "published": "2026-07-15",
+    "version": "2",
+    "pdf_sha256": "dd3a6b59389184800ee109fe11d4b4b990464d066ca3697cb4801d0518175ec9",
+    "pdf_bytes": 4186683
+  }
+}
