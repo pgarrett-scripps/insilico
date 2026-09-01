@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260901-144543-on-the-sensitivity-of-machine-learned-probabilisti",
+  "manuscript_title": "On the sensitivity of machine-learned probabilistic weather forecast",
+  "manuscript_cache_key": "6c7358362b0f0ee9404f215b535e4781ccc04aa7a45d4b670f084177b0d484ba",
+  "decision": "major",
+  "weighted_score": 3.5,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Quantify the skill comparison in Figure 2.** Report the actual fair-CRPS values (not only relative curves) for each of the three experiments, each region and each lead time shown, with confidence intervals obtained by bootstrap over the 84 initialization dates, and present the pairwise differences (CRPS vs. energy score; CRPS vs. graph energy) as paired quantities with intervals. State the margin, in CRPS units, that you regard as \"broadly similar.\" Then reconcile the text with the result: if the tropical differences do not clear sampling uncertainty, remove the claims that the graph energy score \"performs best\" and that the global energy score \"shows some degradation\" from the abstract, Section 4.1 and Section 5, or restate them as not distinguishable from noise. Also show, rather than assert, the statement that \"conclusions are also consistent when the fair energy score or fair graph energy score is used for verification.\"",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Provide a quantitative spectral diagnostic for the twelve configurations.** Add at least one scalar summary per experiment, variable, lead time and wavenumber band (for example mean absolute log tendency-spectrum ratio to ERA5 over the bands used in training, or an equivalent integrated measure), with sampling uncertainty across the 84 dates, presented as a table or compact figure. Use it to substantiate or soften \"substantially improves,\" and to support or withdraw the specific ranking claims about the edge-CRPS and spectral magnitude CRPS experiments.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Report the weighting factors numerically and requalify the weighting claim.** Give the actual values of the scale weights ζ_i, the per-variable factors applied to geopotential and mean sea-level pressure, and the spectral band weights, for every experiment in Table 2. The conclusion that weighting \"can matter as much as, or more than, the specific mechanism\" must either be supported by at least one alternative weighting run or comparable evidence, or be explicitly downgraded to a hypothesis consistent with the observed weighted/unweighted contrast, with the confound stated.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "**State the composite nature of the graph energy objective where the result is claimed.** In the abstract, Section 4.1 and Section 5, make explicit that the graph energy experiment optimizes fGES_graph + 0.1·fES and that no experiment isolates the graph term; therefore any advantage cannot be attributed to localization rather than to the anchor or their interaction. Remove or rephrase wording that implies the localization mechanism has been validated.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "**Make Figures 3–14 self-explanatory and legible.** Each caption must state the plotted quantity and its units, the normalization, the lead times shown, the reference field and — for the ratio panels — the direction of the ratio. Describe the salient features in the running text. Consolidate where possible: twelve near-identically captioned figures with distinguishable-only-by-legend curves are hard to read; consider fewer panels with clearer line styling, or move per-variable duplicates to an appendix.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**Close the reproducibility gaps identified by the methods audit.** Specifically: (a) state the random seed(s) and whether each reported result is a single run or an average over runs; (b) give Anemoi (version or commit), PyTorch and Triton versions, GPU type and count, and an approximate compute budget; (c) specify the ERA5 product variant with a DOI or CDS reference, and the exact train / validation / test date ranges, including whether a validation set was monitored during training; (d) state whether early stopping was used or whether all scheduled iterations were completed; (e) describe how the 8 ensemble members are generated at inference (noise injection mechanism and whether members are independent forward passes); (f) give the exact definition of the graph-based Gaussian smoothing operators (kernel form and width parameter), since \"approximately 100/200/400/800 km\" is not reproducible as stated; (g) state the batch size and, if relevant, data shuffling.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**Add code and data availability statements.** Provide a repository or archive DOI for the scoring-rule implementations and training/evaluation configurations used here (or an explicit statement of the conditions of availability), together with the Anemoi commit for the spherical-harmonic transform. State where, if anywhere, the 2022 forecast output underlying Figures 2–14 can be obtained.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Note the unablated hyperparameters as such.** α = 0.95, k = 16, the 0.1 anchor weight, the T191 truncation and the band boundaries are all fixed without justification or sensitivity testing. Say so in one place, so readers do not assume they were selected.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Position the graph energy score against patch-based localization.** Since Pacchiardi et al. is cited as the motivation, state plainly that no head-to-head comparison against the patched energy score was performed, and confine the advantage claimed for the graph formulation to generality of applicability (irregular grids, sparse networks) rather than performance — noting that the irregular-grid capability is argued but not demonstrated here.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "The ablation the panel wanted most — fGES_graph without the global anchor — would be the single most informative additional run and would convert the paper's mechanistic argument from plausible to tested. Similarly, one repeat of the CRPS and graph energy experiments under a different seed would settle how much of the tropical separation is run-to-run variability. Neither is required for this revision, but both would strengthen a follow-up substantially.",
+    "A trivial reference baseline (climatology or persistence) would let readers confirm that all three models are in a skillful regime, which the current relative plots do not establish.",
+    "Sensitivity to ensemble size (here fixed at 8) is worth a sentence, given that the fair/almost-fair corrections exist precisely because of finite-M bias.",
+    "The compute cost per training step of the graph and edge scores relative to CRPS is worth reporting; if it differs materially, a nominally identical iteration schedule is not an identical training budget, and readers will want to know.",
+    "Please give arXiv identifiers or DOIs for the 2025–2026 preprint references so readers can resolve them.",
+    "Consider adding a brief statement of funding and competing interests; the ethics reviewer found nothing substantive at issue, but the statement is conventionally expected.",
+    "Several equations in the current PDF-to-text rendering are badly mangled (for example the CRPS and afCRPS displays, and the definition of ‖d‖_{G,n}). This is almost certainly a conversion artifact rather than an error in the source, but since the definitions are the part of the paper most likely to be reused, it is worth checking the compiled version that readers will see."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "ethics",
+      "score": null,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "In Figure 2, what are the actual CRPS values (not just the skill anomaly) for each experiment and region, and what is the standard error across the 84 initialization dates?",
+        "For the spectral analysis, were the spectra computed separately for each initialization date and then averaged, or were all 84 forecasts pooled before computing the spectrum? If pooled, what is the effective sample size (accounting for spectral correlation)?",
+        "The global energy score experiment shows degradation in the tropics (Figure 2); is this degradation statistically significant, and does it persist if the experiment is re-run with different random seeds?"
+      ]
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "What are the exact numerical values of the ad hoc weighting factors (ζ_i for scales, per-variable weights for geopotential and MSLP, and spectral-band weights) used in Section 3.2, and how sensitive are the spectral results to ±50% variation in these weights?",
+        "Were the same random seed(s) used across all experiments in Section 3.2, and if so, which seed; if not, how many independent runs were performed and what are the standard deviations of the reported differences?",
+        "What do Figures 3–14 show on the y-axis (power spectral density, variance, or another quantity), what is the reference line (ERA5 mean, ERA5 ±1σ, or another baseline), and are the ratio plots (Figures 5, 6, 9, 10, 13, 14) computed as forecast/ERA5 or ERA5/forecast?",
+        "Can the authors provide a link to the Anemoi repository, version number, and commit hash used for these experiments, or a standalone implementation of the six scoring rules sufficient to reproduce the loss values?",
+        "For the three experiments in Section 3.1, what are the 95% confidence intervals on the CRPS values shown in Figure 2, computed either from multiple runs or from the ensemble spread?"
+      ]
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [
+        {
+          "id": "scientific_validity-1",
+          "text": "**Tropical skill differences not quantified.** Figure 2 shows separation in tropical regions (graph energy best, global energy degraded) but no confidence intervals, significance tests, or statement of whether differences exceed inter-annual variability. The claim of \"broad similarity\" is not supported where differences are visible."
+        },
+        {
+          "id": "scientific_validity-2",
+          "text": "**Spectral improvements lack statistical grounding.** Figures 3–14 show ratios without error bars or significance tests; with only 84 initialization dates, sampling variability is unknown. The claim that scale-aware losses \"substantially improve\" small-scale variability is not quantified."
+        },
+        {
+          "id": "scientific_validity-3",
+          "text": "**Scale-aware loss superiority confounded with reweighting.** The authors acknowledge that \"different effective weights per scale\" may explain the spectral differences, but do not test whether improved spectra reflect genuine improvements in forecast realism or only reflect different weightings of the same underlying score. No ablation isolates the contribution of scale-aware structure from ad hoc per-variable, per-scale weighting."
+        },
+        {
+          "id": "scientific_validity-4",
+          "text": "**Graph energy score not isolated from global anchor.** The graph energy score is always combined with a fair energy score anchor (L_graph = fGES_graph + 0.1 fES). No experiment tests the graph component alone, so superiority cannot be attributed to the graph localization rather than the added global term."
+        },
+        {
+          "id": "scientific_validity-5",
+          "text": "**Comparison to patched energy score missing.** The authors cite Pacchiardi et al. (2024) as motivating the graph energy score, but do not compare against it. The claim that graph-based localization is superior to patch-based localization is not tested."
+        },
+        {
+          "id": "scientific_validity-6",
+          "text": "The paper does not report whether the three experiments in Section 3.1 used the same random seed, initialization, or data splits, raising the possibility that differences reflect stochastic variation rather than method differences."
+        },
+        {
+          "id": "scientific_validity-7",
+          "text": "The choice of α = 0.95 for the almost fair CRPS is not justified; sensitivity to this hyperparameter is not explored."
+        },
+        {
+          "id": "scientific_validity-8",
+          "text": "The \"weak global anchor\" weight (0.1) for the graph energy score appears ad hoc and is not justified or ablated."
+        }
+      ],
+      "questions": [
+        "For Figure 2 (tropical region): what are the 95% confidence intervals on the CRPS differences, and are they statistically significant at the 5% level?",
+        "For Figures 3–14: what is the sampling uncertainty (e.g., standard error or 95% CI) on the spectral ratios, and do the differences between scale-aware methods exceed this uncertainty?",
+        "Was the same random seed and data split used for all three experiments in Section 3.1, or were they run independently?",
+        "How sensitive are the results to the choice of α = 0.95 for the almost fair CRPS, and to the weight 0.1 on the global energy score anchor in the graph energy experiment?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "In Figure 2, what is the statistical significance of the tropical differences between CRPS, global energy, and graph energy? Are they within the noise of the experimental setup?",
+        "For the spectral experiments (Figures 3–14), can you provide a single quantitative summary metric (e.g., integrated squared error in log-space, or a skill score relative to ERA5) that allows comparison across all 12 configurations?",
+        "Does the graph energy score without the global energy score anchor (i.e., fGES_graph alone) match CRPS skill, or is the anchor essential for the tropical improvement?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "5d7971829131412676098b9826deb28e7fd872d6d38590192ebafb8efd6391bc",
+  "manuscript_file_sha256": "4de252a87afbf9423494b4b54e124683cbc9bda0f44f8e703606dabd0bec0b0e",
+  "prior_job_id": "",
+  "desk_rejected": false
+}

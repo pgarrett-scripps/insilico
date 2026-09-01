@@ -1,0 +1,339 @@
+{
+  "generated_at": "2026-09-01T14:45:43+00:00",
+  "pipeline": {
+    "sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "version": "0.5.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 42158,
+    "section_source": "document",
+    "text_sha256": "5d7971829131412676098b9826deb28e7fd872d6d38590192ebafb8efd6391bc",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 23,
+        "preamble_share": 0.0042,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 42158,
+        "words": 5160,
+        "sentences": 238,
+        "blocks": 144,
+        "display_math": 48,
+        "table_rows": 21,
+        "reference_words": 779,
+        "references_separable": true,
+        "main_text_words": 4381,
+        "reference_entries": 25
+      },
+      "density": {
+        "sentence_len_mean": 21.68,
+        "sentence_len_median": 20.0,
+        "sentence_len_p90": 35.0,
+        "long_sentence_share": 0.063,
+        "numbers_per_1k": 52.33,
+        "citations": 64,
+        "citation_style": "numeric",
+        "citations_per_1k": 12.4,
+        "hedges_per_1k": 3.68,
+        "boosters_per_1k": 0.39,
+        "mattr": 0.457,
+        "passive_per_sentence_approx": 0.2773,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 20,
+          "sentences": 1,
+          "sentence_len_mean": 20.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 190,
+          "sentences": 10,
+          "sentence_len_mean": 19.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 15.79,
+          "boosters_per_1k": 0.0
+        },
+        "introduction": {
+          "words": 2884,
+          "sentences": 124,
+          "sentence_len_mean": 23.26,
+          "citations_per_1k": 11.1,
+          "hedges_per_1k": 1.39,
+          "boosters_per_1k": 0.35
+        },
+        "results": {
+          "words": 752,
+          "sentences": 46,
+          "sentence_len_mean": 16.35,
+          "citations_per_1k": 1.33,
+          "hedges_per_1k": 7.98,
+          "boosters_per_1k": 1.33
+        },
+        "discussion": {
+          "words": 431,
+          "sentences": 20,
+          "sentence_len_mean": 21.55,
+          "citations_per_1k": 13.92,
+          "hedges_per_1k": 13.92,
+          "boosters_per_1k": 0.0
+        },
+        "acknowledgements": {
+          "words": 96,
+          "sentences": 3,
+          "sentence_len_mean": 32.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "4de252a87afbf9423494b4b54e124683cbc9bda0f44f8e703606dabd0bec0b0e"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "ethics",
+      "score": null,
+      "confidence": 5.0,
+      "not_applicable_reason": "The reviewer gave no score and did not say why."
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.5,
+  "scored_count": 4,
+  "panel_size": 5,
+  "total_cost_usd": 1.2766362,
+  "cost_by_node": {
+    "advocate": 0.215076,
+    "audit_citation_integrity": 0.04842,
+    "audit_methods_completeness": 0.018982,
+    "debate_synthesizer": 0.076037,
+    "desk_screen": 0.030331,
+    "editor": 0.435105,
+    "journal_recommender": 0.014448,
+    "reviewer_contribution_context": 0.154924,
+    "reviewer_data_analysis": 0.012602,
+    "reviewer_ethics": 0.004228,
+    "reviewer_reporting_reproducibility": 0.013191,
+    "reviewer_scientific_validity": 0.012692,
+    "skeptic": 0.2406
+  },
+  "research_by_node": {
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "CRPS machine learning weather forecasting ensemble",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "energy score multivariate probabilistic forecasting",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "graph neural networks weather prediction scoring rules",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "scale-aware loss weather forecasting neural networks",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "patched energy score localized multivariate scoring",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Pacchiardi patched energy score generative networks",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Lang AIFS-CRPS ensemble weather forecasting",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "variogram score multivariate ensemble forecasting",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "AIFS ensemble probabilistic weather machine learning",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "FourCastNet spectral loss weather forecasting",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Scheuerer variogram score proper scoring rules",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "multi-scale loss formulation weather forecasting neural networks",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "graph energy score localized multivariate forecast",
+        "hits": 2
+      },
+      {
+        "tool": "find_related_work",
+        "query": "fair CRPS Ferro ensemble forecast bias correction",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Gneiting Raftery proper scoring rules strictly proper",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "FGN FourCastNet Huracan machine learning weather 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Alet Lam Battaglia skillful joint probabilistic weather 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Bonev Kurth FourCastNet 3 geometric probabilistic 2025",
+        "hits": 0
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Lang Leutbecher Maciel multi-scale loss formulation 2025",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Pacchiardi Adewoyin Dueben Dutta probabilistic forecasting generative networks 2024",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "localized multivariate scoring patch-based energy score",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "spectral fidelity machine learning weather forecasting attention",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "graph neural networks spatial localization weather prediction",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Pic Dombry Naveau Taillardat proper scoring rules aggregation transformation",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Zhdanov sparse attention spectral fidelity weather forecasting",
+        "hits": 5
+      }
+    ]
+  },
+  "errors": [
+    "ethics reviewer degraded: review Markdown was preserved, but no score could be extracted"
+  ],
+  "preprint": {
+    "url": "https://arxiv.org/abs/2607.19161",
+    "source": "arxiv",
+    "pdf_url": "https://arxiv.org/pdf/2607.19161v2",
+    "identifier": "2607.19161",
+    "doi": "10.48550/arXiv.2607.19161",
+    "title": "On the sensitivity of machine-learned probabilistic weather forecast models to scale-aware scoring rules",
+    "authors": [
+      "Simon Lang",
+      "Martin Leutbecher",
+      "Sam Hatfield"
+    ],
+    "abstract": "Probabilistic forecast models can be machine-learned from data using loss functions based on scoring rules such as the Continuous Ranked Probability Score (CRPS). This note summarises a preliminary study comparing versions of AIFS-CRPS, a global weather forecast model, trained with different univariate and multivariate scoring rules that aim to explicitly represent scale-awareness in the loss function. In the first part, we compare the (almost) fair CRPS, a fair global energy score, and a graph energy score based on node neighbourhoods. Across standard verification metrics, forecast skill is broadly similar. In the extratropics we find only small differences, while in the tropics the graph energy score setup performs somewhat better and the global energy score shows some degradation. These results suggest that multivariate scores are a viable alternative to CRPS-based training for global machine-learned weather forecasting. In the second part of the study, we analyse how different scoring rules and scale-aware loss constraints shape the spectra of forecast fields. It is apparent that any form of explicit scale-awareness improves realism. Here, the largest differences are likely associated with different effective weights per scale.",
+    "published": "2026-07-21",
+    "version": "2",
+    "pdf_sha256": "4de252a87afbf9423494b4b54e124683cbc9bda0f44f8e703606dabd0bec0b0e",
+    "pdf_bytes": 5369177
+  }
+}

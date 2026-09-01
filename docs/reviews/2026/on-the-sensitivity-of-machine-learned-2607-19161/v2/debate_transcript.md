@@ -1,0 +1,39 @@
+# Debate Transcript
+
+## Advocate — round 1
+
+I'll build the case for acceptance from what the manuscript actually demonstrates and what the panel itself grants, not from what would make the paper stronger.
+
+**The core empirical claim is appropriately scoped and the panel largely accepts the design.** All five reviewers agree the architecture-and-data-held-constant comparison (Section 3.1) is a fair design for isolating the effect of loss choice, and the manuscript's own language matches its evidence: "forecast skill is broadly similar," with explicit acknowledgment of "small differences" and tropical separation (Section 4.1). This is not overclaiming — the paper does not say the scores are interchangeable, it says they are "a viable alternative," and reports the one place they diverge (tropics, global energy score degrading) rather than hiding it. The Contribution reviewer's point that the graph score includes a global anchor is a fair caveat for the *mechanism* claim, but it does not undermine the *skill-comparison* claim as stated, since the manuscript explicitly describes the graph experiment's composite objective (Table 1) — nothing is concealed.
+
+**The spectral finding is a genuine, well-motivated contribution, not merely descriptive.** Twelve controlled configurations (Table 2) isolating multi-scale vs. spectral vs. edge-based mechanisms, evaluated against an ERA5 reference spectrum, is a substantive diagnostic exercise absent from most prior ML-weather papers, which instead assert realism qualitatively. The finding that scale-awareness by any mechanism improves spectra, while the choice of multivariate score matters comparatively little, is a useful and non-obvious result for practitioners — precisely the kind of preliminary-but-honest finding the venue's guidelines say should not be penalized for modest scope.
+
+**Candour is a strength, not a hedge.** The paper flags ad hoc weighting, smaller models, and shortened schedules unprompted (Section 5) — exactly what the reviewer guidelines reward.
+
+**Resolvable in revision:** quantitative spectral summary statistics, an ablation of the anchor term, and confidence intervals — none require new experiments, only new analysis of existing runs.
+
+## Skeptic — round 1
+
+**Load-bearing objection (potentially FATAL as currently framed, FIXABLE with rewording+work):** Every quantitative claim in this paper — "forecast skill is broadly similar" (Fig. 2), the tropical ranking (graph energy best, global energy degraded), and "scale awareness substantially improves small-scale variability" (Figs. 3–14) — rests entirely on visual inspection of unreplicated single-run experiments. No report found evidence of multiple seeds, confidence intervals, or significance tests anywhere in the manuscript. With only 84 initialization dates and no error bars reported even there, the panel's own findings show the manuscript cannot currently distinguish "broadly similar skill" from "single-run noise," or "substantial improvement" from an artifact of one training run. Given the abstract's central claim — that multivariate scores are "a viable alternative" to CRPS — is precisely a claim of *equivalence*, the absence of any uncertainty quantification is not a stylistic gap but undermines the paper's own headline conclusion.
+
+**Compounding, non-independent confound:** The one place multivariate training shows an advantage (tropics, graph energy score) is never isolated from its 0.1×fES global anchor. No ablation tests fGES_graph alone. This means the paper's most favorable result for its own thesis cannot be attributed to the graph mechanism it is proposed to validate.
+
+**Panel blind spot:** No reviewer asked whether the twelve Section 3.2 experiments were run at equal computational/training cost — graph/edge-based losses require extra neighbourhood computation per step, so "same schedule" may not mean "same effective training." This confound is untested by author and panel alike.
+
+## Advocate — round 2
+
+The skeptic is right that no confidence intervals or seed-replication are reported — I won't defend that as sufficient. But "fatal to the headline conclusion" overstates what the abstract actually claims. The abstract's language is "suggest that multivariate scores are a viable alternative," and Section 4.1 explicitly reports the one place where the pattern is *not* uniform: "the graph energy score experiment appears to perform best, while the energy score experiment shows some degradation." A paper claiming statistical equivalence would suppress or minimize that asymmetry; this one states it plainly as a directional finding, alongside a qualified, non-inferential term ("suggest," "broadly similar"). That is descriptive reporting of a single well-controlled comparison, not a formal equivalence claim requiring pre-specified margins. The Data-Analysis reviewer's request for CIs and a non-inferiority test is a legitimate way to *strengthen* the claim — it is not evidence that the claim as worded is false or unsupported by what was actually run.
+
+On the anchor confound: I conceded this in round 1 and maintain that concession — it is a real limitation on the *mechanistic* interpretation (why graph energy wins in the tropics). It does not touch the *skill-comparison* finding itself, which is simply that the composite objective in Table 1, run end-to-end exactly as specified, produces comparable-or-better tropical skill than CRPS. The paper never claims the graph mechanism alone is responsible — Table 1 documents the composite loss transparently.
+
+The compute-parity point is a fair new question, but it is speculative: nothing in the manuscript or panel establishes that neighbourhood aggregation over k=16 materially changes gradient-step cost enough to alter convergence at 150k+30k+10k iterations. Raising it as an open question is appropriate; treating an untested possibility as grounds against acceptance is not the same as identifying an actual flaw in the reported results.
+
+None of this requires new training runs — bootstrap CIs over the 84 dates, and an ablation run of fGES_graph alone, are targeted revisions, not a redesign.
+
+## Skeptic — round 2
+
+The advocate's strongest move is conflating "nothing is concealed" with "the claim is supported." I'll concede the first and hold the line on the second. The manuscript does disclose the composite objective in Table 1, and it does hedge with words like "somewhat" and "some degradation" — that is honest reporting, not fraud. But honesty about *what was done* is not the same as evidence that *the claim is true*. The abstract's headline claim — multivariate scores are "a viable alternative" — is a claim of rough equivalence, and every panel report independently notes (from the same primary text, not new discovery) that this rests on unreplicated visual comparison with zero error bars, seeds, or significance tests, even though 84 initialization dates were available and a bootstrap CI over those dates would cost no new compute. That gap is genuinely FIXABLE without retraining.
+
+The ablation is a different matter, and here the advocate overreaches by lumping it in with "only new analysis of existing runs." Isolating the graph energy score from its 0.1×fES anchor requires a *new training run* — the manuscript reports no such run exists. That is not a data-analysis fix; it is a missing experiment, and it specifically undercuts the one result (tropical skill) that the paper leans on to argue multivariate objectives are viable rather than merely non-catastrophic. I'll concede this doesn't make the paper's design unsound — the comparison as specified is fair — but it does mean the causal story behind the paper's most favorable finding is untested, and no reviewer disputes this.
+
+Net: FIXABLE, not fatal, but the current text overclaims relative to what a single unreplicated run with a confounded positive result can support.
