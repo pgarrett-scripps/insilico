@@ -1,0 +1,287 @@
+{
+  "generated_at": "2026-09-01T14:26:31+00:00",
+  "pipeline": {
+    "sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "version": "0.5.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "",
+  "submitter_is_author": "",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 64405,
+    "section_source": "document",
+    "text_sha256": "572f2a47e48f63d415ef3294c9d7f771818b97b2ef23d439c0483771b4223f0f",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 2,
+        "preamble_share": 0.0115,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 64405,
+        "words": 8633,
+        "sentences": 431,
+        "blocks": 92,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 664,
+        "references_separable": true,
+        "main_text_words": 7969,
+        "reference_entries": 34
+      },
+      "density": {
+        "sentence_len_mean": 21.86,
+        "sentence_len_median": 21.0,
+        "sentence_len_p90": 40.0,
+        "long_sentence_share": 0.0861,
+        "numbers_per_1k": 54.33,
+        "citations": 30,
+        "citation_style": "numeric",
+        "citations_per_1k": 3.48,
+        "hedges_per_1k": 8.46,
+        "boosters_per_1k": 1.74,
+        "mattr": 0.5514,
+        "passive_per_sentence_approx": 0.3248,
+        "p_values_exact": 0,
+        "p_values_threshold": 4
+      },
+      "sections": {
+        "_preamble": {
+          "words": 98,
+          "sentences": 1,
+          "sentence_len_mean": 98.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 7870,
+          "sentences": 303,
+          "sentence_len_mean": 26.06,
+          "citations_per_1k": 3.81,
+          "hedges_per_1k": 9.15,
+          "boosters_per_1k": 1.78
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "1cdeac12f742e3511d54f77cfaf046ff97166b9474c007189516244e2865583d"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.6,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 1.5045948999999998,
+  "cost_by_node": {
+    "advocate": 0.27353,
+    "audit_citation_integrity": 0.060647,
+    "audit_methods_completeness": 0.04326,
+    "debate_synthesizer": 0.095985,
+    "desk_screen": 0.041097,
+    "editor": 0.51278,
+    "journal_recommender": 0.014665,
+    "reviewer_contribution_context": 0.123126,
+    "reviewer_data_analysis": 0.016595,
+    "reviewer_ethics": 0.005651,
+    "reviewer_reporting_reproducibility": 0.012254,
+    "reviewer_scientific_validity": 0.014365,
+    "skeptic": 0.290639
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "find_related_work",
+        "query": "patch-seq single-cell transcriptomics electrophysiology",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: unavailable (semantic_scholar HTTP 500); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "find_related_work",
+        "query": "patch-clamp proteomics mass spectrometry single neuron",
+        "hits": 0,
+        "error": "ResearchUnavailableError: find_related_work: every configured vendor failed \u2014 semantic_scholar: rate-limited (semantic_scholar HTTP 429); arxiv: unavailable (arxiv unavailable: HTTPSConnectionPool(host='export.arxiv.org', port=443): Read timed out. (read timeout=20))"
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "locus coeruleus sex differences proteomics patch-clamp",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Alzheimer's disease iPSC neurons patch-clamp proteomics hyperexcitable",
+        "hits": 0
+      }
+    ],
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "patch-clamp single-cell proteomics acute brain slices",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Patch-seq electrophysiology transcriptomics single neuron",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "patch-clamp proteomics soma retrieval brain tissue",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "single-cell proteomics mass spectrometry neurons ion channels",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "patch-clamp proteomics locus coeruleus Lee 2024",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Alzheimer's disease iPSC patch-clamp proteomics Ghatak 2024",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "patch-clamp capillary electrophoresis mass spectrometry Choi Nemes 2022",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "soma retrieval gigaseal preservation electrophysiology",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "data-independent acquisition DIA mass spectrometry single cell",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "SynGO synaptic gene ontology enrichment analysis",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "patch-clamp recording retrieval quality proteome yield",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "patch-clamp proteomics single neuron acute brain slice",
+        "hits": 4
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Patch-seq transcriptomics electrophysiology Cadwell",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "single-cell proteomics mass spectrometry ion channels GPCRs",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "soma retrieval mechanical disruption proteome recovery",
+        "hits": 0
+      }
+    ]
+  },
+  "errors": [
+    "editor degraded: initial prose decision was unusable; retained the successful schema-free prose retry"
+  ],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.1101/2025.09.15.675920v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.1101/2025.09.15.675920v4.full.pdf",
+    "identifier": "10.1101/2025.09.15.675920",
+    "doi": "10.1101/2025.09.15.675920",
+    "title": "Patch-Clamp Single-Cell Proteomics in Acute Brain Slices: A Framework for Recording, Retrieval, and Interpretation",
+    "authors": [
+      "Rodriguez, L.",
+      "Diedrich, J.",
+      "Sun, L.",
+      "Tsu, B.",
+      "Kairs, S.",
+      "Vlkolinsky, R.",
+      "Barnes, C. A.",
+      "Martins, A. M. A.",
+      "Roberto, M.",
+      "Yates, J. R."
+    ],
+    "abstract": "Single-cell proteomics (SCP) is a powerful method for interrogating the molecular composition of neurons, yet its application to acute brain slices has remained limited. Patch-clamp electrophysiology provides direct information on neuronal excitability, synaptic inputs, and ion channel function, making it a natural partner for SCP. However, combining these techniques introduces unique challenges. For instance, after patch-clamping a neuron, its soma must be physically retrieved, and variability during extraction from the brain slice may influence how well proteomic measurements reflect in situ physiology. Here, we introduce a framework for contextualizing patch-SCP outcomes, with an emphasis on retrieval quality (material yield and soma-enriched synaptic content). We used an indiscriminate shotgun strategy in which all patched neurons were collected regardless of electrophysiological outcome to assess soma retrieval in an exploratory dataset of rat medial prefrontal cortex pyramidal neurons. Capacitance during gigaseal-preserved retrieval correlated with protein identifications, suggesting that proteome yield could be linked to soma size. Preservation of neuronal spiking during relocation tended to be associated with broader synaptic enrichment and recovery of transmembrane proteins. By comparison, torn or aspirated neurons produced small proteomes with poor synaptic representation and neurons with little to no characterization displayed more variable outcomes. These results demonstrate that patch-SCP can be used to assess soma retrieval and they provide a framework for interpreting how electrophysiological context and soma retrieval quality shape single-neuron proteomic measurements in semi-intact circuits.",
+    "published": "2026-03-18",
+    "version": "4",
+    "pdf_sha256": "1cdeac12f742e3511d54f77cfaf046ff97166b9474c007189516244e2865583d",
+    "pdf_bytes": 7216146
+  }
+}
