@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260901-142631-patch-clamp-single-cell-proteomics-in-acute-brain-",
+  "manuscript_title": "Patch-Clamp Single-Cell Proteomics in Acute Brain Slices: A Framework for Recording, Retrieval, and Interpretation",
+  "manuscript_cache_key": "93924229e16632ab7ec07f17e3e97e3cca0598d2edf6e059f5c8869bef78f3fc",
+  "decision": "major",
+  "weighted_score": 3.619,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Resolve the reference proteome discrepancy.** The Methods state that a UniProt *Mus musculus* proteome was used to search samples from Wistar rats. Correct this if it is an error. If a mouse database was in fact used, justify the choice explicitly and quantify the consequence — e.g., report identifications from a re-search against the *Rattus norvegicus* reference and state how protein-level counts, and any claim depending on them, change. Also give the specific UniProt release identifier.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Re-report the capacitance–protein relationship descriptively.** Remove the F-statistic, p-value and adjusted R² from Figure 3D, its legend, the Results text and the Abstract. Report instead the three paired values (capacitance and protein identifications per neuron, identified by neuron number), state explicitly that a two-parameter model on three observations is saturated and that no inference about a population relationship is warranted, and rewrite the Abstract sentence so that it describes an observation in three neurons rather than a correlation. If additional gigaseal-preserved neurons exist in the dataset or can be added from existing recordings, include them and re-evaluate.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Test the soma-size confound on the spike-integrity claim.** Across all twelve neurons, report the relationship between the number of significantly enriched SynGO terms (BP and CC separately) and total protein identifications. Then state whether retrieval category or spike integrity adds anything beyond protein count. If enrichment breadth tracks protein count, revise the Abstract, Results and Conclusions to say so, and drop or explicitly downgrade the claim that spike preservation is associated with synaptic enrichment. Address neuron #7 directly in the text rather than only noting it: state whether it is consistent with the size explanation.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "**Disclose how the three gigaseal-preserved neurons were selected.** State whether they were consecutive attempts or identified post hoc, and report the overall success rate for gigaseal preservation across all attempts. If selection was post hoc, say so and discuss the resulting bias.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "**Substantiate or remove the 25–50% soma-loss estimate.** Either show the calculation (e.g., the capacitance change from in situ to retrieval-time measurement per neuron, with the assumptions made in converting capacitance to material) or delete the numeric range and describe the loss qualitatively.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**Reconcile the descriptive/predictive framing of the framework.** The statement that categorical retrieval outcome does not reliably predict proteome content is inconsistent with presenting the framework as prospectively actionable. Revise the Conclusions and Abstract to position the framework as a post hoc interpretive and benchmarking aid, and state what evidence would be needed to make it predictive.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**Report the statistics that are currently absent, or state that no test was performed.** Specifically: (a) for Figure 5A, give median and range of protein identifications per retrieval category with the n per category, and either perform a named test or state explicitly that the group sizes preclude testing and the comparison is descriptive; (b) for Figures 5C–D, report the correlation coefficient and 95% CI alongside the p-value, and state whether the torn neurons (#11, #12) were included in the regression — if included, show the fit with and without them; (c) for the PCA in Figure 6A, report the variance explained by PC1 and PC2, and the scaling/centering used.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Specify the SynGO/GSEA analysis sufficiently to reproduce it.** Give the SynGO version or download date, the GSEA variant and any permutation settings, the background gene set used, the multiple-testing correction method, and whether correction was applied within each neuron only or also across neurons when comparing enrichment breadth. State whether the \"top terms\" in Figures 4C and 6B were pre-specified or selected post hoc for display; if post hoc, say so in the legend.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Complete the mass spectrometry and LC reporting.** Add: protein/peptide input quantification (or state that none was performed and that trypsin amount was fixed empirically); any post-digestion cleanup or desalting, or a statement that none was used; mobile phase A and B composition and the full gradient profile with column temperature; precursor and fragment mass tolerances; enzyme specificity as set in DIA-NN; minimum peptides per protein group; whether FDR was applied globally across runs or per run; and the MaxLFQ normalisation setting.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**Complete the electrophysiology and imaging reporting.** Add: sex of the animals; pClamp version; pipette puller model and pulling parameters (or cite a specific protocol); recording temperature; sampling rate and filter settings; the microscope, objective and NA used for DIC imaging; and criteria used for adjusting negative pressure within the −50 to −140 mmHg range. State whether neuron selection or the classification of retrievals from video was performed blind to MS results, and give the operational criteria used to assign a retrieval to \"stable,\" \"compromised\" or \"torn.\"",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "**Fix the reference list.** Remove or explain reference 30 (Guo et al., saxitoxin synthesis, *Nature* 2025), which is cited among the electrophysiology protocol references but has no evident bearing on the delegated methods. Indicate which of references 10 and 26–31 contains the definitive slice-preparation and recording protocol, and note any deviations from it. Provide a stable, citable locator (DOI, Zenodo, institutional repository) for NeuroExpress (ref. 15) or cite it as a personal communication. Confirm the publication status of references 9 and 29.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "**Report software versions for the R analysis stack** (ComplexHeatmap, ggplot2, UpSetR, the PCA function or package used) and provide a commit hash or release tag for the GitHub repository corresponding to the analyses in this manuscript, and confirm the repository is public.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "The panel noted a concurrent preprint on aspiration-based patch proteomics (Johnson et al., 2026, bioRxiv) that appears to address overlapping questions about retrieval and proteome recovery. If it is genuinely concurrent, a brief acknowledgement would strengthen the positioning; this is a courtesy, not a requirement, and I would not hold the paper for it.",
+    "A short paragraph comparing your DIA-based transmembrane-protein recovery to the DDA-based recovery reported by Lee et al. and Ghatak et al. would help readers judge whether the improved coverage reflects acquisition mode, sample preparation, or instrument generation. A qualitative comparison against published counts is sufficient; no new experiments are needed.",
+    "Figure 7 invites an obvious analysis that is not performed: whether the number or identity of detected ion-channel subunits tracks spike properties or synaptic enrichment. Even a null result here would be informative and would sit naturally with the paper's honest framing.",
+    "Consider reporting vendor and catalogue numbers for the salts, DDM and formic acid. This is not essential for reproducibility but is inexpensive to add.",
+    "Housing conditions, genotype/background, and a statement on how n=12 was arrived at (practical constraint versus planning) would round out the animal reporting.",
+    "Video metadata (frame rate, duration, resolution) in the Supporting Information legends would help readers who wish to use the deposited videos as an independent check on retrieval classification.",
+    "The claim in the Conclusions that the shotgun approach \"reduces the risk of overinterpreting protein counts in isolation\" is plausible but not demonstrated on these data. Either soften it or, if feasible, show what a selective-inclusion analysis of the same twelve neurons would have concluded differently."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "None identified. The manuscript contains no ethics or compliance gaps. All required approvals are named with identifiers, all funding is disclosed with grant numbers, all competing interests are declared, and no human subjects, clinical claims, or restricted data are involved."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Figure 3D: Are the three gigaseal-preserved neurons a pre-specified subset, or were they selected post hoc from a larger attempt pool? If post hoc, what was the selection criterion?",
+        "Methods: Was the UniProt Mus musculus database chosen because rat sequences are not available, or for another reason? How many peptides map to both species?",
+        "Figure 5: Why are neurons #11 and #12 (torn) included in the correlation analysis in panels C–D if they are described as negative controls? Should they be excluded from the regression?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "In Figure 3D, were the three gigaseal-preserved neurons selected from a larger set of attempted gigaseal retrievals, or are these the only three gigaseal-preserved neurons in the dataset? If the former, what was the success rate for gigaseal preservation, and does this affect the representativeness of the n=3 sample?",
+        "For the claim that \"preservation of neuronal spiking during relocation tended to be associated with broader synaptic enrichment\" (Abstract), is \"tended to be\" supported by a statistical test, or is this a visual observation? If the latter, what is the effect size (e.g., difference in number of enriched terms between neurons with preserved vs. compromised spiking)?",
+        "The manuscript states that \"25–50% of the soma could be lost over the course of collection\" (Results section) but does not provide a calculation or reference for this estimate. How was this range derived, and what is the uncertainty?",
+        "In Figure 7, the binary heatmap shows ion channel detection across neurons, but the manuscript does not report whether the presence/absence of specific channels (e.g., SCN2A) correlates with electrophysiological properties (e.g., spike amplitude or frequency). Was this analysis performed, and if not, why not?"
+      ]
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Figure 3D: Were the three gigaseal-preserved neurons selected prospectively (consecutive attempts) or identified post-hoc as successful retrievals? If post-hoc, does the correlation hold for all attempted gigaseal retrievals, including failed ones?",
+        "Figure 4C: Neuron #7 shows reduced spike amplitude but overlaps with neuron #4 in synaptic BP enrichment. How does this fit the claim that spike integrity predicts synaptic recovery, and what explains the discrepancy?",
+        "Methods: What is the operational definition of a \"torn\" neuron (Figure 5B), and was this assessment made blind to MS results? Were torn neurons included in any of the correlation analyses?",
+        "Figure 7: Does the number of detected ion channel subunits correlate with spike integrity or synaptic enrichment (Figure 4C)? If not, what explains the variation in transmembrane protein recovery?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "**Figure 3D**: Can you provide the raw data and fit diagnostics for the capacitance–protein correlation (n=3)? The r² = 0.998 is unusually high; are there any outliers, and does the fit remain significant if one neuron is removed?",
+        "**Figure 4C**: Neuron #7 shows robust synaptic GO enrichment despite poor spike integrity during retrieval, contradicting the hypothesis that spike preservation predicts synaptic enrichment. How do you reconcile this?",
+        "**Methods**: What is the basis for the 25–50% soma loss estimate? Can you provide quantitative measurements (e.g., from capacitance changes, protein recovery curves, or imaging) to support this range?",
+        "**Supplementary data**: Are the raw DIA-NN outputs (report.pg_matrix.tsv) and custom analysis scripts available at the GitHub link provided, and have they been tested for reproducibility by an independent user?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "572f2a47e48f63d415ef3294c9d7f771818b97b2ef23d439c0483771b4223f0f",
+  "manuscript_file_sha256": "1cdeac12f742e3511d54f77cfaf046ff97166b9474c007189516244e2865583d",
+  "prior_job_id": "",
+  "desk_rejected": false
+}
