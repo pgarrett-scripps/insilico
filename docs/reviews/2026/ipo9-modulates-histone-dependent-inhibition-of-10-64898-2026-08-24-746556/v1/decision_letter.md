@@ -1,0 +1,65 @@
+# VERDICT: major
+
+## Summary of Evaluation
+
+This manuscript reports a phenotypic screen that yields SR-218, a cell-active inhibitor of dsDNA-induced cGAS–STING signalling; chemical-proteomic target identification pointing to importin-9 (IPO9); biochemical evidence that IPO9 reverses free H2A-H2B dimer-mediated — but not nucleosome-mediated — inhibition of cGAS; and a 4.3 Å cryo-EM structure of a cGAS:H2A-H2B complex that rationalises the inhibition and, by comparison with the published IPO9:H2A-H2B structure, suggests how IPO9 might release cGAS.
+
+The panel was consistent and largely positive. The target-identification chemistry is the strongest part of the paper: the photoaffinity probe, the competition series with matched active and inactive analogues, cross-competition by a structurally unrelated IPO9 ligand (dbk-032A), the loss of labelling on shRNA knockdown, and the negative results for IPO5 and IPO11 together make a convincing case that this chemical series binds IPO9 and that binding SAR tracks phenotypic SAR. The in vitro dissociation of H2A-H2B-mediated from NCP-mediated inhibition (Fig. 3d) is a clean, internally controlled result and is the paper's most important biochemical contribution. The cryo-EM structure, with its limitations candidly stated, adds a plausible structural frame. The authors' explicit enumeration of three non-exclusive mechanisms for IPO9-mediated release is exactly the kind of candour this venue is meant to reward, and I have not treated it as a new weakness.
+
+Two things nevertheless keep this from being a minor revision.
+
+**First, the causal link between IPO9 engagement and the cellular phenotype of SR-218 is inferred, never tested.** The manuscript's framing — from the title through the abstract ("a small molecule inhibitor of cGAS activity that functions by an atypical mechanism involving direct binding to and disruption of IPO9") — asserts that IPO9 is the operative target mediating SR-218's cellular effect. The evidence offered is (i) target engagement, (ii) SAR correlation, and (iii) knockdown phenocopy. None of these is an epistasis test. The single decisive experiment — does SR-218 still inhibit dsDNA-induced STING phosphorylation (or cGAMP production) in IPO9-depleted cells? — is absent, and the correlation argument is weakened by the fact that the phenocopy itself is statistically marginal as reported (Fig. 3c: dsDNA condition, NT P = 0.0602, sh1 P = 0.0465, sh2 P = 0.0092; the SR-717 controls sit at P = 0.095 and P = 0.074, which is the right direction for a specificity control but is not the clean null the text implies). This is a new experiment, and its outcome could change a stated conclusion; it is therefore a major-revision item rather than a text fix. A defensible alternative, if the epistasis experiment proves technically intractable in the knockdown lines, is substantial retitling and reframing so that the cellular claim is stated as a correlation and the load-bearing claims become the biochemical and structural ones — but the panel and I judge the epistasis test to be both feasible and clearly the better route.
+
+**Second, the phospho-STING knockdown data as currently reported do not support the word "phenocopy."** This is partly a reporting problem (no raw fold-changes, no CIs, no knockdown-efficiency quantification for sh1 versus sh2) and partly a claims problem. Fixing the reporting may be sufficient; if the effect sizes turn out to be small, the text must change with them.
+
+Beyond these, the mechanistic ambiguity flagged by four reports (displacement vs. sequestration vs. DNA competition) is, in my reading, already appropriately scoped by the authors and does not on its own require new experiments — though the specific, cheap controls listed below would materially strengthen it and I have asked for two of them. The 4.3 Å resolution limit is likewise handled honestly in most places, but the text slips into mechanistic assertion at two points (the H2A residue-level contacts and the H18-19 loop displacement model) that need requalification.
+
+The compliance audits identify a substantial list of documentation gaps. Two — IACUC and human-subjects documentation — are non-negotiable and must be supplied. The proteomics reporting and deposition gaps are serious because Fig. 2b is a load-bearing figure whose supporting data are currently not inspectable anywhere. The remainder are ordinary reporting items. None of these are grounds for rejection; all fold into the revision.
+
+The contribution is real and worth publishing once the framing matches the evidence. IPO9 as a modulator of cGAS activation is a genuinely new regulatory axis, and the H2A-H2B-versus-NCP distinction is a useful and non-obvious result.
+
+## Required Revisions
+
+**Experimental**
+
+1. **Perform an epistasis/rescue test for the cellular mechanism.** Treat IPO9-knockdown (sh1 and sh2) and control cells with SR-218 in dose–response and measure dsDNA-induced phospho-STING (and, if feasible, intracellular 2'3'-cGAMP). Report whether SR-218 retains activity in IPO9-depleted cells or whether knockdown occludes further inhibition. If IPO9 knockdown does not occlude SR-218 activity, revise the title, abstract and Results framing to state that IPO9 engagement correlates with, rather than mediates, the compound's cellular effect. A complementary IPO9 re-expression rescue in knockdown cells would strengthen the result but is not required.
+
+2. **Report the IPO9 knockdown phenotype quantitatively and requalify the "phenocopy" claim.** For Fig. 3b–c, provide per-experiment raw values, fold-changes with 95% CIs, and quantified IPO9 protein reduction for sh1 and sh2 separately. State explicitly that the SR-717 comparison does not reach significance rather than describing it only as an absent effect. Adjust the accompanying text so the strength of the wording matches the effect sizes obtained.
+
+3. **Add the two low-cost BLI controls that bear directly on mechanism.** (i) IPO9 added to immobilised cGAS in the absence of H2A-H2B, to establish whether the transient signal increase in Extended Data Fig. 5f–g is complex-dependent or a sensor/solution artefact; and (ii) IPO9 pre-incubated with H2A-H2B before exposure to immobilised cGAS, which tests sequestration against displacement. Report the amplitude and timescale of the transient signal. If these do not resolve the ambiguity, say so; the Discussion's three-mechanism framing is acceptable, but it should be constrained by these controls rather than left entirely open.
+
+**Claims and text**
+
+4. **Requalify the residue-level and H18-19 loop statements.** At 4.3 Å with a docked model built from 7C0M and 7PII, the H2A acidic-patch/cGAS R236–R255 contacts and the IPO9 H18-19 loop displacement model are hypotheses derived from superposition, not observations. State in both the Results and the abstract that these are inferred from docking of higher-resolution coordinates. Specifically, the abstract sentence beginning "comparison with the IPO9:H2A-H2B structure reveals that the H18-19 loop of IPO9 engages the acidic patch…" should be rewritten to make the inferential status explicit. Report local resolution at the cGAS:H2A-H2B interface, and state whether the map supports the docked orientation independently of the reference structures.
+
+5. **Address the 2:1 versus 2:2 stoichiometry.** State the particle counts and relative populations of the 2:1 and 2:2 classes, and explain the basis for modelling the 2:2 species. Note explicitly in the text that the 2:2 assembly is incompatible with the proposed IPO9 displacement mechanism (as Extended Data Fig. 6c shows), and say how the authors reconcile this — currently the model and the mechanism sit uneasily together.
+
+6. **Cite and position Cho et al. 2024 (MRE11 liberates cGAS from nucleosome sequestration, Nature 625:585–592) in the Results or Discussion relative to the IPO9 axis.** The reference is present in the list and mentioned once in the Discussion; the relationship between the two release mechanisms — one acting on NCPs, the proposed IPO9 axis explicitly not — deserves a sentence or two of direct comparison, since it is the closest prior work.
+
+7. **Temper the in vivo claim.** Fig. 1g rests on n = 2 independent experiments with an indirect pharmacodynamic readout and a compound the authors themselves state cannot achieve steady-state coverage. Report both experiments separately (or pooled with per-experiment breakdown), state exact n per group, and describe the result as a single-timepoint pharmacodynamic observation rather than evidence of disease-relevant efficacy. Add the mouse liver microsome/hepatocyte half-life and clearance values to Extended Data Fig. 3a in numerical form.
+
+**Compliance and reporting (all text/file-level)**
+
+8. **Supply an IACUC approval statement** — institution, committee, and protocol number — for the Trex1−/− mouse work, together with animal sex, age at dosing, exact n per group, the interval between the four intraperitoneal injections, and any randomisation or blinding used (or an explicit statement that none was used).
+
+9. **Supply human-subjects documentation for the PBMC work** — IRB approval number or a documented exemption determination, and the consent mechanism under which the donor material was collected.
+
+10. **Deposit the raw proteomics data** (PRIDE, MassIVE or equivalent) and give the accession. Add to the Methods: mass spectrometer model, acquisition mode, search database and version, Proteome Discoverer version, peptide- and protein-level FDR thresholds, fixed and variable modifications, and mass tolerances. Report how many proteins were quantified in total, how many passed the log2 < −1 competition threshold, and where IPO9 ranked. Fig. 2b is load-bearing and its underlying data are currently not inspectable.
+
+11. **Complete the cryo-EM reporting.** State software versions (cryoSPARC, Phenix, ChimeraX), the number of classes used in 2D classification, ab-initio reconstruction and heterogeneous refinement, the final particle count for the refined class, the FSC threshold used for the reported resolution, and standard model-validation statistics (MolProbity/clash score, Ramachandran).
+
+12. **Complete reagent traceability.** Add: RRIDs, host species and clonality for all primary and secondary antibodies; sources for G140 and SR-717; shRNA target sequences (clone IDs alone are insufficient for readers outside the Sigma catalogue); cell line sources for HEK293T and Lenti-X, with mycoplasma-testing and authentication status for all lines; and synthesis, purification and characterisation data (NMR, HRMS, purity) for SR-051, SR-218, SR-432 and the analogues in Fig. 2h and Extended Data Fig. 1, as supplementary chemistry.
+
+13. **Complete assay reporting.** For the malachite green assay: state the ATP/GTP Km values (measured or cited) justifying the 50 µM choice, describe the positive and negative control reactions, and confirm linearity over the 30-min reaction. For BLI: state the curve-fitting model and software used for the 110 nM EC50, with its 95% CI, and report kon/koff or Kd where the data permit. For RT-qPCR: confirm that technical replicates were averaged before statistical testing, and state the instrument and analysis software.
+
+14. **Add a complete funding statement.** The CIRM acknowledgement covers one author only.
+
+## Minor Suggestions
+
+- Reporting cellular IPO9 abundance and an estimate of free (non-nucleosomal) H2A-H2B, even from published proteomic datasets, would help readers judge whether the in vitro EC50 and the 500 nM rescue condition are within a physiologically plausible range. This is a discussion-level addition, not a required experiment.
+- Kd values for cGAS:H2A-H2B versus cGAS:NCP would clarify whether the comparable inhibition in Fig. 3d reflects comparable affinity or saturation at the single concentration tested; a dose–response for both inhibitors would serve the same purpose more cheaply.
+- The "moonlighting" language in the Discussion currently outruns the data, since nothing distinguishes a novel cGAS-directed function from IPO9's canonical chaperone activity acting on a substrate that happens to inhibit cGAS. Consider softening.
+- A test of whether RanGTP modulates IPO9-mediated release would be a natural extension and is flagged in the Discussion; it is not required here but would be a strong addition to a follow-up.
+- Quantify the rhodamine-labelling gels by densitometry where they are used to support SAR conclusions (Fig. 2f), even if only as a supplementary panel.
+- Provide the pinpoint location (supplementary table or figure) for dbk-032A within ref. 70, so readers can verify the cross-competition claim without reading the whole paper.
+- Consider stating explicitly whether SR-218 or IPO9 knockdown perturbs bulk nucleosome assembly or chromatin composition over the assay timeframe; a negative result here would close off a plausible confound for the cellular phenotype.
