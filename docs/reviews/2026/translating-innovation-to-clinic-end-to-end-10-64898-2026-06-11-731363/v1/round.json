@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260901-144854-translating-innovation-to-clinic-end-to-end-biopro",
+  "manuscript_title": "Translating Innovation to Clinic: End-to-End Bioprocess Development and cGMP Manufacturing of N332-GT5 HIV Vaccine Candidate for First-in-Human Trials HVTN144",
+  "manuscript_cache_key": "c0be716c3e11f51dab6091b9f45815cac131bab802a48769964abddd2c1e325d",
+  "decision": "minor",
+  "weighted_score": 3.8095,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Report the genetic stability data.** Add to Results the actual outcomes of the 60-PD study described in Section 2.3.8: transgene copy number, productivity, and mRNA/sequence identity for PD0, PD60+Gln and PD60−Gln, with the acceptance criteria applied. If the study was not completed for clone C235, say so and remove the claim from the abstract. As written, a headline abstract claim has no supporting data in the manuscript.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Correct the cGMP batch-number and reproducibility language.** The abstract states \"consistent product quality across multiple cGMP batches\"; the manuscript describes one cGMP batch. Revise the abstract, Conclusions and Section 3.2.3/3.4 so that consistency claims are scaled to what was run: one GMP batch, one MCB demonstration run, one RCB supply run. Retain and make explicit the claims that *are* supported — comparable growth kinetics, comparable within-run harvest yields, and comparable BDS quality attributes between the demonstration and GMP batches (Table 11).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Address the reference-standard confound explicitly.** Either (a) provide a cross-calibration between lots 19Apr0088, S-20210314-0001-SD2-E-M and P65 (e.g. BLI titre of a common sample measured against all three, with agreement stated), or (b) add an explicit statement in Section 3.2.3 that absolute titres across the three runs are not directly comparable, identify which downstream figures depend on titre (notably the step yields in Figure 16 and the >100% 2G12 yield), and restrict the productivity comparison accordingly. Also state which reference lot was used for the twelve Ambr®250 conditions in Figure 13, and confirm it was the same lot throughout; if not, the ranking of those conditions must be requalified.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "**Quantify the nsEM result.** Report the total number of particles picked, the number entering and surviving each round of 2D classification, the fraction assigned to native-like trimer classes, and the morphological criteria used for that assignment. Replace \"nearly 100% native-like trimers\" with the measured fraction and its basis. If no particles were rejected as non-trimeric, state that as a number.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "**Reframe or substantiate the BLI contribution to the purity claim.** BLI titre and BG18_GL0 binding are relative measurements against a reference standard that is not characterised in this manuscript. Either provide SE-HPLC/RP-HPLC characterisation of the reference lots, or state clearly that the >99% trimer claim rests on SE-HPLC and nsEM and that BLI is reported as relative potency/antigenicity rather than as a purity measure.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**State the numerical LOQ for every assay reporting \"<LOQ.\"** This applies at minimum to residual Triton X-100 (\"<0.002%\" — give the corresponding ppm), residual Protein A, residual 2G12, residual HCP and residual DNA, in Tables 9, 10 and 11. Without the numerical limits, the reader cannot judge whether clearance meets specification or merely falls below detection.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**Justify the hold-time and potency acceptance criteria.** State whether the 0.7% HMW/LMW change threshold (Section 2.5.3/3.3.3) and the 15% relative-potency variation criterion were pre-specified before data collection, and give their basis (internal specification, regulatory guidance, or assay variability). Also state the numerical target potency range for the BDS referred to in Section 3.3.3.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Make the viral clearance claim checkable.** Provide the estimated RVLP/mL in the bioreactor supernatant, the clinical dose volume and the harvest volume used to derive \"less than one viral particle per 250 million doses.\" Also state, for each unit operation in Table 12, the number of independent spike experiments contributing to the reported mean ± SD, and note explicitly that the study was performed on one cGMP batch using a scale-down model.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Clarify the preparative SEC removal comparison.** State whether the Control and SEC-Removal arms in Table 10 were run in parallel on a single split load, and label the compared intermediates so that the comparison is unambiguous (the current table compares SEC Load/Flowthrough against UF/DF Load/Final Retentate). State the pre-specified tolerance used to judge the two arms \"comparable,\" and confirm unambiguously in Section 3.4 and Figure 16 that the cGMP batch was manufactured without the SEC step.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**State the n and the selection basis for clone ranking and Ambr®250 optimisation.** For Section 3.1.3, state that each of the 24 clones was assessed in a single 14-day run, give the quantitative ranking values for the top five clones, and state the thresholds used. For Section 3.2.2, state that each of the twelve conditions was a single vessel, and remove or requalify language implying that Control + 7a bolus was demonstrably superior to the next-best conditions (752 vs 721 vs 715 mg/L) where no replication or test supports the ordering.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "**Temper the novelty framing.** Section 2.5 states the downstream process was developed from the published BG505 SOSIP.664 process (Dey et al., 2018), and the upstream and purification unit operations are established platform technologies. Revise \"manufacturing paradigm\" and \"advancing the field toward rational vaccine design based on germline-targeting principles\" in the abstract and Conclusions so that the manufacturing contribution — enabling a designed immunogen to reach the clinic, with a documented and transferable process — is distinguished from the immunogen design advance, which belongs to Steichen et al. (2019, 2024).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "**Add a data availability statement, and deposit the mass spectrometry raw data** (PRIDE, MassIVE or equivalent) with an accession quoted in the manuscript. State where bioreactor logs, chromatograms, EM micrographs and analytical raw data can be obtained, or state plainly that they are available on request from a named contact.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-13",
+      "text": "**Complete key reagent and method identifiers.** Specifically: (i) antibody provenance for PGT145, BG18_GL0, DEN3 and 2G12 — expression source or supplier, and identifiers where they exist; vendor and catalogue number for the AP- and HRP-conjugated secondaries in Sections 2.2.4 and 2.2.7, with working dilutions; (ii) cell line provenance statement including whether the HD BIOP3-derived C235 clone and the MCB were tested for mycoplasma and adventitious agents (this is routine for a cGMP bank and presumably documented); (iii) primer and probe sequences for the residual CHO DNA qPCR and the RT-PCR transcript analysis, or a statement that they are proprietary and why; (iv) MS acquisition parameters for both glycoproteomics methods (resolution, AGC, precursor and fragment mass tolerances), enzyme sources and digestion/deglycosylation conditions, database version, and software versions for IP2/ProLuCID/Census2/GlycoMSQuant and Byos; (v) EM processing parameters — defocus range, exposure/dose, number of 2D classes — and the CryoSPARC version.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-14",
+      "text": "**Fix the citation defects identified in the audit.** Correct the malformed DOIs for Ramezani-Rad et al. 2025 (ref. 18) and Parks et al. 2025 (ref. 32); add a DOI or preprint identifier for Bale et al. 2025 (ref. 3), which is cited as the comparator for the nsEM claim and must be reachable; add the year to Sanders et al. (ref. 33); and confirm the publication status of all 2025-dated references. Also correct the CryoSPARC attribution — the reference given as \"Pujani et al., 2017\" is presumably Punjani et al., 2017.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Benchmark the final BDS attributes (%trimer, HCP, DNA, endotoxin, glycan profile) against the published BG505 SOSIP.664 cGMP batch (Dey et al., 2018) and, if reachable, Bale et al. (2025). This would let readers judge whether the achieved quality is state-of-the-art or routine for this molecule class, and would strengthen the platform argument at no experimental cost.",
+    "Quantify furin cleavage by densitometry or MS rather than describing it as \"close to complete\" from gel appearance (Figures 8, 11).",
+    "Discuss the DeGlyPHER/LC-MS occupancy discordance at N185e, N611 and N625 more substantively: state which method you treat as reference for occupancy and why, and whether the discordance has any bearing on the relative-potency result or on the epitope-relevant glycans (N332, N301, N137).",
+    "Report error representation consistently across figures; several panels (Figure 14, Figure 10) currently carry none, while others report SEM.",
+    "Consider stating briefly whether the achieved >99% trimer purity is expected to matter for the immunogenicity objectives of HVTN 144, or whether it is above the threshold where further purification would be consequential. A sentence would help readers outside bioprocessing calibrate the result.",
+    "Sections 3.1.1 and the paragraph immediately following Figure 7 repeat the same two sentences about BG18/PGT145 comparability and SDS-PAGE loading volumes; delete the duplicate.",
+    "Tables 1, 2, 6, 7, 8 and 9 have suffered layout corruption in the current PDF (column alignment lost, stray line numbers embedded in cells). These tables carry much of the paper's evidentiary weight and should be rebuilt before resubmission."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "**Clone ranking (Section 3.1.3)**: Were the top 5 clones re-tested in a second independent 14-day fed-batch run to confirm the ranking, or was C235 selected based on a single run per clone?",
+        "**Ambr250 reference standard (Figure 13)**: Were all 12 Ambr250 conditions assayed with the same BLI reference standard, or were titers normalized post-hoc to account for standard drift?",
+        "**Viral clearance replication (Table 12)**: How many independent spike experiments (not assay replicates) were performed per unit operation, and was the study repeated on a second cGMP batch?",
+        "**Hold-time stability threshold (Section 3.3.3)**: Was the 0.7% HMW/LMW change criterion pre-specified before data collection, or determined post-hoc from the observed data?",
+        "**EM particle classification (Section 3.6.2)**: What fraction of the 6,086 particles were classified as trimers vs. other oligomeric states, and what is the inter-rater or algorithmic agreement for the 2D classification?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": [
+        "**BLI titer reference standards (Section 3.2.3, Figure 14):** Can the authors provide a cross-calibration between the three reference standards used (IAVI/Scripps Lot 19Apr0088, KBI Lot S-20210314-0001, KBI Lot P65) or re-analyze all three runs using a single standard to establish whether the titer differences reflect true process variation?",
+        "**Genetic stability results (Section 2.3.8):** What were the productivity, transgene copy number, and mRNA identity outcomes for the PD60 stability cultures, and did they meet predefined acceptance criteria?",
+        "**Potency acceptance range (Section 3.3.3, Figure 15c):** What is the specified potency range for the bulk drug substance, and how was the 0.7% HMW/LMW change threshold selected?",
+        "**Glycosylation site occupancy (Section 3.6.1, Figures 17–18):** Which method (DeGlyPHER or LC-MS) is considered the reference for sites where occupancy differs (N625, N611, N185e), and what explains the discrepancy?",
+        "**nsEM quantitation (Section 3.6.2, Figure 19):** What percentage of the 6,086 particles analyzed were classified as native-like trimers, and were any rejected as non-native or misfolded?"
+      ]
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "**Reference material traceability:** Were the three reference lots (19Apr0088, S-20210314-0001-SD2-E-M, P65) all characterized by the same analytical methods (SE-HPLC, RP-HPLC, BLI), and if so, are the results available for cross-comparison?",
+        "**Preparative SEC removal justification:** In Table 10, were the \"Control\" and \"Preparative SEC Removal\" runs performed on the same load material (split into two parallel paths) or on different batches, and were they run on the same calendar date?",
+        "**Genetic stability completion:** Was the 60 population doubling study (Section 2.3.8) completed for clone C235, and if so, what were the results for transgene copy number and mRNA identity at PD0, PD60+Gln, and PD60-Gln?",
+        "**nsEM classification:** What were the specific morphological criteria used to classify particles as \"native-like trimers\" vs. other oligomeric states, and how many of the 6,086 particles were rejected as non-trimeric?",
+        "**Capto adhere worst-case yield:** Section 3.3.1 reports that Capto adhere yield dropped from ~60% (centerpoint) to ~24% (worst-case yield); was this worst-case condition actually used in the cGMP run, or were conditions adjusted to avoid it, and if so, what were the actual loading and pH conditions used?"
+      ]
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "What are the transgene copy numbers and sequencing results (including any variants detected) from the genetic stability study at PD0, PD60+Gln, and PD60-Gln?",
+        "For the viral clearance study, what is the expected retroviral load per dose (RVLP/mL) in the bioreactor supernatant, and what clinical dose volume and bioreactor harvest volume were assumed in calculating \"one particle per 250 million doses\"?",
+        "Was a second independent GMP batch manufactured and characterized, or does the cGMP data represent a single production run?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Section 3.1.2 reports \"Productivity, transgene copy numbers, and N332 and furin mRNA identities were used as stability indicators\" for the 60 PD study—please provide the actual data (copy number, mRNA sequence confirmation, and productivity values) for PD0, PD60+Gln, and PD60-Gln to support the stability claim in the abstract.",
+        "Was the final cGMP batch manufactured with or without the preparative SEC step, and if without, was this decision validated in a full-scale robustness study or only in the small-scale comparison shown in Table 10?",
+        "For the glycosylation sites where DeGlyPHER and LC-MS methods disagree (N185e, N611, N625), which method is considered the reference standard, and does the discordance affect the relative potency assay or other quality attributes?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "9496c7e0d60aa87bbd0c29d07bca19510476312856fe12b9ceb773cd4efa2b1c",
+  "manuscript_file_sha256": "97653fad067d3a52cec2170211dd3e81b031b5da686a54c85e1fdf8f2ab4ab34",
+  "prior_job_id": "",
+  "desk_rejected": false
+}
