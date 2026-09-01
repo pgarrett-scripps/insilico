@@ -87,16 +87,15 @@ const title = TITLES[entry.id] || entry.id;
     color: var(--ink-dim);
   }
 
-  /* The editorial pages open with an <h1> in their own markdown, which would
-     duplicate the title block above. */
-  .prose :global(h1:first-child) {
+  /* The Markdown pipeline demotes the document's opening h1 to h2. The page
+     title above already names the document, so hide that repeated heading. */
+  .prose :global(h2:first-child) {
     display: none;
   }
 
-  .prose :global(h2:first-child),
   .prose :global(h3:first-child),
   .prose :global(h4:first-child),
-  .prose :global(h1:first-child + h2) {
+  .prose :global(h2:first-child + h3) {
     margin-top: 0;
   }
 </style>
