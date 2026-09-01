@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Queue a re-review of every published paper under the current pipeline.
+# Queue a review of every paper in the launch corpus under the current
+# pipeline. The corpus was cleared before the 0.5.0 batch, so each run is a
+# fresh first review; if a bundle for the current draft already exists, pass
+# "/review replace" as the command input instead.
 #
-# Dispatches one review.yml run per URL with `/review replace`, so a draft we
-# already reviewed is overwritten by a fresh run and a draft the archive has
-# since updated becomes a new round instead (replace never crosses drafts).
 # Dispatches are staggered so a dozen panels do not hit the API rate limit at
 # once; runs still overlap, which is fine.
 #
@@ -31,7 +31,7 @@ URLS=(
 
 for url in "${URLS[@]}"; do
   echo "dispatching: $url"
-  gh workflow run review.yml -f url="$url" -f command="/review replace"
+  gh workflow run review.yml -f url="$url"
   if [ "$url" != "${URLS[-1]}" ]; then
     sleep "$STAGGER"
   fi

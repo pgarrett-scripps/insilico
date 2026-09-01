@@ -1,8 +1,0 @@
-# Methods Completeness & Reagent Traceability Auditor
-
-## Summary
-Categories in play: cross-cutting items (sample size, statistics, error bars, software versions, data/code availability), Model organisms/in vivo, Chemicals/drugs/dosing, Mass spec (proteomics), and Protocol provenance (multiple 'as previously described' citations). The manuscript is strong on mass-spec traceability (instrument, DIA mode, DIA-NN v2.1.0, Uniprot mouse proteome with download date and entry count, 1% FDR, MassIVE accession C5GX4573B) and on in-vivo basics (strain, source, sex, IACUC #, housing, n per group). Hard gaps: animal age is absent (only body weight given), no randomization/blinding statement, no injection vehicle stated for any of the three i.p. treatments, no mass-tolerance values for the DIA-NN search, and no named statistical test for the group comparisons (analysis is detection-frequency based). Protocol-provenance citations for CIE-2BC and the FASP protocol have broken numbering relative to the reference list, so which references actually contain the delegated protocols cannot be confirmed from the manuscript alone. Code availability is stated but the GitHub repository is private until publication. Antibodies/immunodetection, cell lines, human subjects, genomics/sequencing, and microscopy/imaging categories were not triggered (the anti-IL-6R antibody is a therapeutic agent, not a detection reagent, and is therefore audited under Chemicals/drugs/dosing).
-
-**HARD gaps (blocking): 0** · SOFT gaps: 0 · unverifiable: 0
-
-_No applicable checklist items were missing._

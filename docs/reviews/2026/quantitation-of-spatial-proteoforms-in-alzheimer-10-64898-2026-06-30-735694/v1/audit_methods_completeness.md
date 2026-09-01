@@ -1,8 +1,0 @@
-# Methods Completeness & Reagent Traceability Auditor
-
-## Summary
-This is a quantitative proteomics study (TMT-LC-MS) combining human post-mortem hippocampus tissue, an AD mouse model with AHA pulse-labeling (QUAD), immunoblotting, ELISA, and WGCNA-based bioinformatics. Categories triggered: cross-cutting reporting, antibodies/immunodetection, model organisms/in vivo, human subjects/clinical, chemicals/dosing, mass spectrometry, computational analysis, and protocol provenance. The manuscript is strong on sample sizes (13 AD vs 14 NA human; N=4 pooled biological replicates per mouse group), mouse strain/genotype/age/sex, mass-spec instrument and search parameters, and statistical test naming. The main HARD gaps are: no IACUC protocol number, no randomization/blinding statement, no IRB approval/informed-consent statement, no inclusion/exclusion criteria, no antibody dilutions/clones/RRIDs/host-clonality, no mass-tolerance values, no mass-spec repository accession, no explicit error-bar definition, and missing versions for several software tools. Data/code availability statements are absent (SOFT). Several key methods (AHA diet, click chemistry, immunoblot development/quantitation, QUAD) are delegated to resolvable DOI-bearing references; these are unverifiable from the manuscript alone and should be confirmed with the authors, but none are dead or circular.
-
-**HARD gaps (blocking): 0** · SOFT gaps: 0 · unverifiable: 0
-
-_No applicable checklist items were missing._

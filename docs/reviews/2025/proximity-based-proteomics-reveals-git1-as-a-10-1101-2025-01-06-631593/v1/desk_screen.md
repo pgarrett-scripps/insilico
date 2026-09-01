@@ -1,7 +1,0 @@
-DESK DECISION: proceed
-
-This manuscript is a research article reporting a proximity-labeling proteomics study of Smoothened (Smo) signaling, with functional follow-up on a newly identified interactor, Git1. The work is within scope for *In Silico*: it is an original research manuscript whose claims are evaluable from the manuscript itself, and the central evidence (proteomics data, imaging, biochemical assays, and functional readouts) is presented or deposited in a manner that a careful reader can inspect.
-
-The manuscript is complete and intelligible. The experimental design is coherent, the controls are described, and the claims are scaled to the evidence presented. The authors identify a limitation of their own system (elevated Smo levels in the stable cell line) and address it explicitly, which is the kind of candor the venue rewards. The work is not obviously duplicative of prior publications, and the time-resolved proteomic dataset is positioned as a resource for the field.
-
-There is no threshold problem that would justify desk rejection. Whether the conclusions fully outrun the evidence, whether the statistical treatment is adequate, and whether the functional claims are fully supported are questions for the review panel, not for a desk screen. The manuscript should proceed to full review.
