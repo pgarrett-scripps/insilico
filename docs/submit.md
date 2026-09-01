@@ -1,5 +1,3 @@
-# Submitting a preprint
-
 ## What you need
 
 A preprint on arXiv, bioRxiv or medRxiv:
