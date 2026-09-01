@@ -34,9 +34,9 @@ const TITLES = {
 };
 
 const LEDES = {
-  submit: "How to get a preprint reviewed, what happens to it, and what you can do if the panel gets it wrong.",
+  submit: "A preprint URL is all you need to request a review.",
   criteria: "The standards every submission is held to, and what each of the ten reports is actually asked to judge.",
-  policy: "Scope, limitations, what we publish, what we store, and how to contest a review.",
+  policy: "Scope, limitations, what we publish, what we store, and how to remove a review.",
   development: "Building the site, running the panel on your own machine, and reviewing a paper before you submit it anywhere.",
 };
 
@@ -91,5 +91,10 @@ const title = TITLES[entry.id] || entry.id;
      duplicate the title block above. */
   .prose :global(h1:first-child) {
     display: none;
+  }
+
+  .prose :global(h2:first-child),
+  .prose :global(h1:first-child + h2) {
+    margin-top: 0;
   }
 </style>

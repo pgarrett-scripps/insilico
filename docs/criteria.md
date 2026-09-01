@@ -135,14 +135,13 @@ a file rather than defiance: this pipeline reviews whatever draft an archive
 serves it, and the authors have usually never seen the decision letter.
 
 Nothing an author writes reaches the panel
-([why](submit.md#why-we-do-not-accept-a-response-letter)). The recourse that
-exists instead is [contesting a review](policy.md#contesting-a-review).
+([why](submit.md#why-we-do-not-accept-a-response-letter)). Review removal is
+handled by a person under the [editorial policy](policy.md#removing-a-review).
 
-## Disagreeing with a review
+## Removing a review
 
-If the panel misread your paper, say so on the review's pull request. Factual
-errors about what your manuscript says get corrected; a recommendation you
-dislike does not.
+Anyone who submitted the paper, or an author of the paper, can ask us to remove
+the review from the site. No explanation is required.
 
 If you think this page describes the wrong criteria, open an issue against
 `journals/insilico.toml`. That is a more interesting argument and we would

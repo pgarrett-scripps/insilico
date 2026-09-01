@@ -44,8 +44,8 @@ the review.
    checks and a triage pass for scope.
 4. **A bot opens a pull request** with the full review and posts a summary to
    your issue.
-5. **You get a say.** Comment if the panel misread something. A human editor
-   reads it, and a serious objection can trigger a re-review. No AI reads it.
+5. **You can comment.** The submission issue is the place for questions or a
+   request to remove the review.
 6. **The editor merges or closes.** Merged means published. Closed means
    declined, and nothing appears.
 
@@ -68,9 +68,8 @@ by a claim that it was handled. Items still open keep their original numbers, so
 `R1-03` stays `R1-03` however many rounds it takes. The editor decides on that
 list, the previous recommendation, and this round's panel.
 
-The earlier review is never edited or removed; it stays published as the record
-of that version, and the paper's page shows the whole arc. **Cap of three
-rounds.**
+The earlier review stays published as the record of that version unless you ask
+us to remove it. The paper's page shows the whole arc. **Cap of three rounds.**
 
 ### Why we do not accept a response letter
 
@@ -84,27 +83,6 @@ with no letter, the same auditor read the paper and got all ten items right.
 
 So the panel reads the new draft and nothing else. If you want a change noticed,
 put it in the manuscript.
-
-## If the review got something wrong
-
-This does not go back through the panel — the paper has not changed, so there is
-nothing new for a referee to read. Say what went wrong on your submission issue.
-A person reads it. Neither route asks an AI to weigh your account against the
-referees'.
-
-**We take it down.** Where the panel clearly misread the paper — say, claiming
-you reported no effect sizes when they are in Table 2 — the review is removed
-from the site. Nothing is re-scored: the fix for a misreading is a correct
-reading, not another attempt.
-
-**We review it again.** A fresh review of the unchanged paper with no author
-input. It can land anywhere, including exactly where the first one did. There is
-no thumb on the scale, which is what makes the result worth anything. It is
-published alongside the original.
-
-A factual error about what your paper says is the one failure we treat as
-disqualifying, and it gets the review pulled. A disagreement about judgement
-does not: we will not remove a recommendation because you dispute it.
 
 ### If your submission is stopped at the desk
 
@@ -126,15 +104,11 @@ read, with no model involved and no opinion in them. It is there so a reader
 holding your PDF can confirm the panel read the same document, which is the one
 thing an overlay journal cannot otherwise prove.
 
-We publish unflattering reviews too, as long as the paper is in scope and the
-review holds together. If you would rather that not happen, do not submit. We
-will not take a review down because you dislike the recommendation. We will take
-one down if it is factually wrong about what your paper says.
-
-## Withdrawing
+## Removing a submission or review
 
 Comment on your issue before the review is merged and we close it, no questions
-asked. After merging, ask and we take it down.
+asked. After publication, ask on the same issue and we remove the review from
+the site.
 
 ## Reviewing your own work first
 

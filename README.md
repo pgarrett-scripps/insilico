@@ -61,8 +61,8 @@ improved.
 - **Nothing you write reaches the panel.** No response letter, no appeal — the
   referees only ever see the paper
   ([why](docs/submit.md#why-we-do-not-accept-a-response-letter)).
-- **If a review misreads your paper, tell us.** Say so on your submission issue
-  and a human reads it. We take down reviews that misread the work.
+- **You can ask us to remove a review.** Comment on the submission issue and we
+  take the review off the site. No explanation is required.
 - **It's free**, and every review publishes its own bill.
 
 ## Want the details?
@@ -71,7 +71,7 @@ improved.
 |---|---|
 | [`docs/submit.md`](docs/submit.md) | how to submit, and what to expect |
 | [`docs/criteria.md`](docs/criteria.md) | what the panel looks for |
-| [`docs/policy.md`](docs/policy.md) | editorial policy, limitations, how to contest a review |
+| [`docs/policy.md`](docs/policy.md) | editorial policy, limitations, how to remove a review |
 | [`docs/development.md`](docs/development.md) | how it works under the hood, and running it yourself |
 
 ## License

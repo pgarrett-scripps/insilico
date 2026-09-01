@@ -85,9 +85,8 @@ Submitting a rival's work to attach a public criticism to it is not a use we
 support. An editor reads every submission before starting a run, and declines
 any that reads as score-settling.
 
-If you find an unrequested review of your work, open an issue. If it misreads
-the paper we correct it. If you object to it existing at all we take it down —
-a lower bar than for reviews the authors asked for.
+If you find an unrequested review of your work, open an issue. If you object to
+it existing at all, we take it down.
 
 ## The desk
 
@@ -148,24 +147,15 @@ preprint metadata. You can re-run the panel yourself. Output will not be
 identical — the models are not deterministic — but the configuration is fully
 disclosed.
 
-A published bundle is never edited. Where a review is wrong, it comes down. A
-fresh run is published beside the old one, never over it, and so is a
-[revision round](criteria.md#revision-rounds).
+A published bundle is never edited. A fresh run is published separately, and so
+is a [revision round](criteria.md#revision-rounds).
 
-## Contesting a review
+## Removing a review
 
-Comment on the review PR, or on your submission issue if it is already merged.
-Nothing you write is shown to the panel
-([why](submit.md#why-we-do-not-accept-a-response-letter)). Two things can then
-happen, and both are decided by a person:
-
-- **We take it down.** Where the panel clearly misread the paper, the review is
-  removed from the site. A factually false statement about your paper is the one
-  failure we treat as disqualifying. We will not remove a review because you
-  disagree with the recommendation.
-- **We review it again.** A fresh review of the unchanged paper, with no author
-  input, published alongside the original. It can land anywhere, including
-  exactly where the first one did.
+Anyone who submitted the paper, or an author of the paper, can ask us to remove
+the review. Comment on the review pull request or submission issue. Before
+publication, we close it. After publication, we remove the review from the
+site. No explanation is required.
 
 ## Conflicts and cost
 
