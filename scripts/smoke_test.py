@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 REPO = Path(__file__).resolve().parent.parent
 
 from fetch_preprint import Preprint, resolve  # noqa: E402
+from preview_submission import COMMENT_MARKER, build_preview  # noqa: E402
 from run_review import (  # noqa: E402
     BUNDLE_FILES,
     CommandError,
@@ -1128,6 +1129,64 @@ def check_bare_doi_picks_the_right_server() -> None:
     assert p.source == "biorxiv"
 
 
+def check_submission_preview() -> None:
+    """Submission comments resolve metadata and recommend the safe command."""
+    preprint = Preprint(
+        url="https://arxiv.org/abs/2608.12345",
+        source="arxiv",
+        pdf_url="https://arxiv.org/pdf/2608.12345v2",
+        identifier="2608.12345",
+        doi="10.48550/arXiv.2608.12345",
+        title="A [linked] title with a | table character by @reviewer",
+        authors=["Ada Lovelace", "Alan Turing"],
+        published="2026-08-30",
+        version="2",
+    )
+    seen: list[str] = []
+
+    def fake_resolve(url: str) -> Preprint:
+        seen.append(url)
+        return preprint
+
+    with tempfile.TemporaryDirectory() as raw:
+        reviews = Path(raw)
+        body = """### Preprint link
+
+https://arxiv.org/abs/2608.12345
+
+### Are you an author of, or affiliated with, this paper?
+
+Yes
+"""
+        preview = build_preview(body, resolver=fake_resolve, reviews_root=reviews)
+        assert seen == ["https://arxiv.org/abs/2608.12345"]
+        assert preview.startswith(COMMENT_MARKER)
+        assert "A \\[linked\\] title with a \\| table character" in preview
+        assert "@\u200breviewer" in preview
+        assert "Ada Lovelace, Alan Turing" in preview
+        assert "| Current draft | v2 |" in preview
+        assert "Use `/review` to run the configured referee panel" in preview
+        assert "`/review replace`" not in preview
+
+        bundle = reviews / "2026" / "paper" / "v2"
+        bundle.mkdir(parents=True)
+        (bundle / "provenance.json").write_text(
+            json.dumps({"preprint": preprint.to_dict()}), encoding="utf-8"
+        )
+        preview = build_preview(body, resolver=fake_resolve, reviews_root=reviews)
+        assert "| Published In Silico reviews | v2 |" in preview
+        assert "Use `/review replace` only" in preview
+
+        preprint.version = "3"
+        preview = build_preview(body, resolver=fake_resolve, reviews_root=reviews)
+        assert "Earlier draft v2 has been reviewed" in preview
+        assert "revision round for v3" in preview
+
+    bad = build_preview("No link here", resolver=fake_resolve)
+    assert "metadata could not be resolved" in bad
+    assert "no URL found" in bad
+
+
 def main() -> int:
     for title in NASTY_TITLES:
         check(title)
@@ -1165,6 +1224,8 @@ def main() -> int:
     print("ok  every browser link form yields the same identifier")
     check_bare_doi_picks_the_right_server()
     print("ok  a bare DOI resolves to the server that actually holds it")
+    check_submission_preview()
+    print("ok  submission issues get one safe editor command preview")
     check_metadata_fetch_retries_throttling()
     print("ok  a throttled metadata lookup is retried, a missing one is not")
     check_pdf_download_retries_a_flaky_server()

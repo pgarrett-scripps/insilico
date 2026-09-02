@@ -29,11 +29,15 @@ you can export a readable PDF and ask for another run.
 1. **Open a submission issue** using the
    [submission form](https://github.com/pgarrett-scripps/insilico/issues/new?template=submit.yml).
    One preprint per issue.
-2. **An editor starts the panel** by commenting `/review`.
-3. **The submission passes [the desk](policy.md#the-desk).**
-4. **A bot opens a pull request** with the full review and posts a summary to
+2. **A bot checks the link** and posts the title, authors, archive date, current
+   draft, prior In Silico reviews, and the commands available to an editor. This
+   lookup is free and does not download the PDF or call a model. Editing the
+   issue refreshes the same preview comment.
+3. **An editor starts the panel** by commenting `/review`.
+4. **The submission passes [the desk](policy.md#the-desk).**
+5. **A bot opens a pull request** with the full review and posts a summary to
    your issue.
-5. **The review goes to the editor.** The
+6. **The review goes to the editor.** The
    [editorial policy](policy.md#authority) governs publication.
 
 ## Submitting a revised draft
