@@ -32,7 +32,7 @@ to gatekeep, and it would grant more of them.
 The line is drawn on the editor's verdict rather than on the panel's mean
 score, but on the evidence so far the two barely differ. Across the 20 reviews
 by a graded panel, every paper scoring 3.75 or below was returned at major
-revision and every paper scoring 4.00 or above at minor; the only overlap is a
+revision and every paper scoring 4.00 or above at minor. The only overlap is a
 single paper at 3.88 that went each way on different runs. A threshold at 3.9
 would reproduce the editor's verdict 19 times out of 20.
 
@@ -63,7 +63,7 @@ evidence can be checked, not the field.
 
 **Out of scope.**
 
-- **Anything where a wrong machine-generated review could affect patient care** —
+- **Anything where a wrong machine-generated review could affect patient care**:
   clinical trial reports, diagnostic or treatment guidance, dosing
   recommendations. This is the one hard line, and it is not about field: a
   computational paper that outputs a dosing recommendation is out, a
@@ -103,7 +103,7 @@ do not look for it.
 
 We used to. The scan compared a text run's colour against a threshold without
 checking what was drawn behind it, so white labels on a dark figure read as
-concealed text — and on a real submission it reported that the authors had
+concealed text. On a real submission it reported that the authors had
 hidden eleven thousand characters, which were the axis labels of a heatmap. The
 matching half was a list of phrasings: it caught the payload copied off a blog
 and nothing rewritten. A check that reliably accuses honest authors and
@@ -135,7 +135,7 @@ Every review ships a `provenance.json`: provider, the model at each stage and
 any per-agent override, pipeline version and commit SHA, debate rounds, active
 desk screens, per-reviewer scores, total and per-agent cost, and the resolved
 preprint metadata. You can re-run the panel yourself. Output will not be
-identical — the models are not deterministic — but the configuration is fully
+identical because the models are not deterministic. The configuration is fully
 disclosed.
 
 A published bundle is never edited. A fresh run is published separately, and so
@@ -158,7 +158,7 @@ promise the project outlives the author's interest in it.
 ## Data
 
 We store the preprint URL and its public metadata, the review bundle, the GitHub
-issue thread, and your reply if you send one. We do not store PDFs — they are
+issue thread, and your reply if you send one. We do not store PDFs. They are
 fetched to a temporary directory at review time and deleted afterwards.
 
 Paper text is sent to a third-party AI provider, currently Anthropic. Since we
@@ -167,4 +167,4 @@ only take already-public preprints, this should not come up.
 ## License
 
 Reviews and site content are CC BY 4.0. Preprints stay under whatever license
-their authors chose; we host none of them.
+their authors chose. We host none of them.

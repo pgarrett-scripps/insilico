@@ -33,14 +33,14 @@ export const VERDICT = {
 };
 
 /**
- * In Silico accepts a paper the panel returns at accept or minor revision, and
- * declines the rest.
+ * In Silico accepts a paper the panel returns at accept or minor revision.
+ * Papers returned for major revision appear publicly as needing revision.
  *
  * The editor is never told this rule. It returns one of the four standard
  * verdicts with nothing hanging on it, and the mapping is applied here,
- * afterwards — which is the only reason the split is worth trusting. An editor
- * told that "minor" means acceptance is an editor being asked to gatekeep, and
- * it would grant more minors.
+ * afterwards. That separation is the only reason the split is worth trusting.
+ * An editor told that "minor" means acceptance is an editor being asked to
+ * gatekeep, and it would grant more minors.
  *
  * This binarises the editor's judgement, not the panel's arithmetic. The two
  * are not the same: minor bundles score 3.88 to 4.12 and major bundles 2.50 to
@@ -48,9 +48,9 @@ export const VERDICT = {
  * mean would classify those three differently, which is exactly the judgement
  * a score cannot see.
  *
- * "Declined", never "rejected". The editor declined to accept; it did not
- * reject, and some of these papers were submitted by someone other than their
- * authors.
+ * The internal `declined` key remains stable for filters and corpus statistics.
+ * The public label is constructive because some of these papers were submitted
+ * by someone other than their authors.
  */
 const ACCEPTED_VERDICTS = new Set(["accept", "minor"]);
 
@@ -116,7 +116,7 @@ export function titleFromFilename(name) {
  *
  * On a desk reject the pipeline writes the same body to decision_letter and
  * desk_screen, so those arrive byte-identical. Each distinct body is listed
- * once — a reader following a direct link still finds the file, but the page
+ * once. A reader following a direct link still finds the file, but the page
  * doesn't show one text under two headings.
  */
 function readDocuments(bundleDir) {
@@ -217,9 +217,9 @@ function readPaper(year, slug) {
   // Which review carries In Silico's answer on this paper.
   //
   // Not simply the newest. A single-model run is a published experiment, not
-  // an editorial decision — the review page says so in those words, that
-  // nothing checked the referees that was any better than the referees — and
-  // one of these sits on top of a graded panel that reached a different
+  // an editorial decision. The review page says that nothing checked the
+  // referees that was any better than the referees. One of these experiments
+  // sits on top of a graded panel that reached a different
   // verdict. Letting it decide would hand a free model the casting vote over
   // the panel it was run to compare against.
   //

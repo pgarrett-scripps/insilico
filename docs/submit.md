@@ -49,6 +49,6 @@ it.
 
 ## Reviewing your own work first
 
-Encouraged. Run the panel locally before submitting anywhere — see
+Encouraged. Run the panel locally before submitting anywhere. See
 [`development.md`](development.md#running-a-review-locally). Nothing is
 submitted or published by running it yourself.

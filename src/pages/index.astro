@@ -52,7 +52,7 @@ const STAGES = [
         <div class="readouts__item">
           <dt class="label">Mean panel score</dt>
           <dd class="mono">
-            {stats.meanScore !== null ? stats.meanScore.toFixed(2) : "—"}
+            {stats.meanScore !== null ? stats.meanScore.toFixed(2) : "N/A"}
             <span class="readouts__scale">/5</span>
           </dd>
         </div>
@@ -74,8 +74,9 @@ const STAGES = [
         </p>
         <p>
           Here every submission that clears the desk gets five specialist
-          reports, a recorded debate and an editor's verdict — public,
-          versioned, and reproducible down to the model that wrote each line.
+          reports, a recorded debate and an editor's verdict. The record is
+          public, versioned, and reproducible down to the model that wrote each
+          line.
         </p>
       </div>
     </section>
@@ -119,7 +120,7 @@ const STAGES = [
                   <span class="row__score mono">
                     {paper.latest.meanScore !== null
                       ? paper.latest.meanScore.toFixed(1)
-                      : "—"}
+                      : "N/A"}
                   </span>
                 </a>
               </li>
@@ -139,8 +140,8 @@ const STAGES = [
         </p>
         <p>
           Not certification, not a substitute for peer review, not evidence a
-          result is correct — a machine-generated second opinion, published so
-          you can judge the reasoning yourself.
+          result is correct. It is a machine-generated second opinion, published
+          so you can judge the reasoning yourself.
         </p>
       </div>
     </section>

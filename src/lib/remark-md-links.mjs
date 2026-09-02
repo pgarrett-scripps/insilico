@@ -2,7 +2,7 @@
  * Rewrite `policy.md#anchor` into a real site URL at build time.
  *
  * The editorial pages link to each other the way a file on disk does, because
- * that is also how they read on GitHub — `policy.md#the-desk` resolves there,
+ * that is also how they read on GitHub. `policy.md#the-desk` resolves there,
  * and a repo whose docs only work once deployed is worse than one whose docs
  * work in both places. MkDocs used to rewrite those links on the way out;
  * Astro does not, so after the migration seven of them shipped pointing at
@@ -14,7 +14,7 @@
  * page added later cannot quietly reintroduce this.
  *
  * Only same-directory relative links are touched. Anything absolute, external,
- * or reaching into another directory is left exactly as written — this is a
+ * or reaching into another directory is left exactly as written. This is a
  * convention-fixer, not a link rewriter.
  */
 

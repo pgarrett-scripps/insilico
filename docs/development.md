@@ -1,7 +1,7 @@
 # Development
 
 Everything needed to run the site or the review pipeline yourself. Authors do not
-need any of this; see [`submit.md`](submit.md) instead.
+need any of this. See [`submit.md`](submit.md) instead.
 
 ## How the repo fits together
 
@@ -71,7 +71,7 @@ npm run dev      # http://localhost:4321/insilico/
 ```
 
 The dev server reads `docs/reviews/` directly, so the whole published corpus is
-there to design against — no fixtures, no seeding. `npm run build` writes to
+there to design against. No fixtures or seeding are needed. `npm run build` writes to
 `dist/`.
 
 Everything visual is a token in `src/styles/global.css`, redefined for light and
@@ -86,7 +86,7 @@ owners, members and collaborators can trigger it.
 |---|---|
 | `/review` | reviews whatever draft the archive serves now |
 | `/review replace` | redoes a draft already reviewed, overwriting it |
-| `/review openrouter vendor/model` | the paid budget is spent — that one named model, for every agent |
+| `/review openrouter vendor/model` | every agent uses that one named model against the paid budget |
 
 Whether a run is a first look or a new round is not something an editor
 declares. A bundle is named after the draft it read, so a draft we have not
@@ -98,7 +98,7 @@ and nothing checked the referees that was any better than the referees.
 
 ## Running a review locally
 
-`requirements.txt` deliberately does not pin the referee panel; the workflow pins
+`requirements.txt` deliberately does not pin the referee panel. The workflow pins
 it per run to an exact commit, so every review records the code that produced it.
 Install it separately:
 
@@ -111,7 +111,7 @@ export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 ```
 
-`v<N>` is the draft the archive served, not a count of our runs — `v3` is our
+`v<N>` is the draft the archive served, not a count of our runs. `v3` is our
 review of the authors' third draft. `resolve()` always reports the current
 draft and refuses to go backwards, so the number only ever increases and folder
 order can never disagree with the order the drafts were written in.
@@ -138,7 +138,7 @@ published bundle goes unrendered.
 ## Configuration
 
 Model selection lives in [`peerreview.toml`](../peerreview.toml), not in the
-workflow, which passes no model flags on purpose — anything on the command line
+workflow, which passes no model flags on purpose. Anything on the command line
 would override that file and collapse every stage onto one model.
 
 Read the comments in that file first. Its layout matters: a top-level key written
@@ -161,7 +161,7 @@ tables beat `reasoning_model`, so leaving them in place would send every agent t
 OpenRouter asking for `claude-haiku-4-5`: the model you named would review
 nothing, and the run would either fail strangely or bill someone for Claude.
 
-The model name is required and always will be — OpenRouter's free tier is a
+The model name is required and always will be. OpenRouter's free tier is a
 rotating set of specific models, not a stable alias.
 
 `parse_command` in `run_review.py` does the parsing, never the workflow. An issue
@@ -197,7 +197,7 @@ Every conversion is measured, deterministically and with no model:
 | broken | the run stops at the desk before a referee is paid, and nothing is published |
 
 A stop raises `ManuscriptUnreadable` rather than desk-rejecting. A desk rejection
-is a verdict on a manuscript and gets a published bundle; this is a fact about a
+is a verdict on a manuscript and gets a published bundle. This is a fact about a
 file and gets none. The workflow exits 3, posts a note on the issue, and opens no
 pull request. `conversion_gate = "off"` in `peerreview.toml` reviews the file
 anyway.
@@ -222,9 +222,9 @@ verdict on the most expensive one.
 `debate_rounds` is 2, and the advocate and skeptic argue in parallel within
 each round: two blind opening cases in round 1, two rebuttals in round 2 after
 each side reads the other. Because the rounds are parallel, two rounds cost
-two serial steps — the same wall-clock depth the old sequential single round
-had — and a synthesizer then condenses the exchange into the record the
-editor reads in place of the raw transcript.
+two serial steps, the same wall-clock depth the old sequential single round
+had. A synthesizer then condenses the exchange into the record the editor reads
+in place of the raw transcript.
 
 Every review records its own per-agent spend in `provenance.json`. A desk
 rejection ends the run before the other 14.

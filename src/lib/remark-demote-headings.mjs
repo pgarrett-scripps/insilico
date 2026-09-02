@@ -2,7 +2,7 @@
  * Push every heading in a rendered markdown document down one level.
  *
  * Each markdown file on this site is embedded in a page that has already
- * emitted its own `<h1>` — the review documents under a header naming the
+ * emitted its own `<h1>`. Review documents sit under a header naming the
  * document and its paper, the editorial pages under their page title. The
  * markdown then opens with its own `#`, so every one of those pages shipped
  * two `<h1>` elements: "Methodology" from the page, "Methodology Reviewer"
@@ -15,7 +15,7 @@
  * opening with `# Methodology Reviewer` is right when read as a file on
  * GitHub, and right again once nested under a page heading here.
  *
- * h6 stays h6 — there is no h7, and silently emitting one would trade a
+ * h6 stays h6 because there is no h7. Silently emitting one would trade a
  * duplicate-heading problem for an invalid-element one.
  */
 export default function remarkDemoteHeadings() {

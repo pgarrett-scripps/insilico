@@ -2,7 +2,7 @@
 
 The pipeline reads
 [`journals/insilico.toml`](https://github.com/pgarrett-scripps/insilico/blob/main/journals/insilico.toml).
-This page is the readable version; that file is the real instruction, and every
+This page is the readable version. That file is the real instruction, and every
 review records the commit it ran at.
 
 ## The five things, in order
@@ -38,9 +38,9 @@ These are the failure modes a language model falls into by default.
 ## Calibration
 
 **Score the paper, not your memory of it.** On *Attention Is All You Need* the
-panel returned a mean of 4.88; on an obscure TB preprint, 2.5. Some of that gap
-is real and some is very likely recognition. Familiarity is a reason to re-check
-the reasoning against the text, not a reason to score high.
+panel returned a mean of 4.88. On an obscure TB preprint, it returned 2.5. Some
+of that gap is real and some is very likely recognition. Familiarity is a reason
+to re-check the reasoning against the text, not a reason to score high.
 
 **Use the whole scale.** Left alone, LLM referees compress everything into 4s
 and 5s, which makes a score meaningless.
@@ -48,7 +48,7 @@ and 5s, which makes a score meaningless.
 ## When a dimension doesn't apply
 
 Every manuscript gets all five referees, and some contain nothing in a given
-dimension — a qualitative interview study has no statistics to judge. Those
+dimension. A qualitative interview study has no statistics to judge. Those
 referees return **not applicable**, which is left out of the mean rather than
 counted as a good score, and the page says how many referees the mean covers.
 
@@ -70,7 +70,7 @@ this", and to say which they mean.
 | Cannot run code | Reproducibility reflects what the paper *claims* about availability |
 | Cannot execute experiments | Wet-lab claims judged on internal consistency and reporting |
 | Cannot check derivations | Maths assessed for plausibility and presentation |
-| Cannot see figures | Ingest is text-only; a claim resting on a figure is under-assessed |
+| Cannot see figures | Ingest is text-only. A claim resting on a figure is under-assessed |
 | Search is not exhaustive | Absence of a literature hit is not evidence of novelty |
 
 ## Who does what
@@ -107,7 +107,7 @@ Continuity lives on the editor's numbered required revisions instead, which is
 the actual contract with the authors. An item keeps the id it was born with:
 `R1-03` is the third ask of round 1 for the life of the manuscript, still called
 `R1-03` in round 3. A compliance auditor rules on each one against the new
-draft, and to call an item addressed it must quote manuscript text — the quote
+draft, and to call an item addressed it must quote manuscript text. The quote
 is then searched for in the manuscript, and one that is not there is recorded as
 unsubstantiated and counts as still open.
 
@@ -118,10 +118,10 @@ the resampling noise of a fresh panel. The account of what happened to the asks
 is the compliance audit and the decision letter.
 
 An unchanged resubmission is caught by comparing the manuscript file's SHA-256
-against the one the previous round recorded — no re-reading, no converter that
-could disagree with itself. The editor is told plainly that this is a fact about
-a file rather than defiance: this pipeline reviews whatever draft an archive
-serves it, and the authors have usually never seen the decision letter.
+against the one the previous round recorded. There is no re-reading or converter
+that could disagree with itself. The editor is told plainly that this is a fact
+about a file rather than defiance: this pipeline reviews whatever draft an
+archive serves it, and the authors have usually never seen the decision letter.
 
 ### Why the panel does not receive response letters
 

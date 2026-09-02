@@ -1,11 +1,11 @@
-/* In Silico — visual system.
+/* In Silico visual system.
  *
  * The organising idea is instrumentation. "In silico" means performed on
  * computer, and what this journal can show that a conventional one cannot is
  * the machinery of its own judgement: a specialist panel with scores and
  * confidences, the models that wrote each report, the cost of each agent, a
  * fingerprint of the exact file that was read. So the chrome around a review
- * is built like a readout — monospaced, gridded, tabular — while the review
+ * is built like a readout: monospaced, gridded, and tabular. The review
  * itself stays a quiet serif column, because the reports are long and someone
  * has to actually read them.
  *
@@ -17,7 +17,7 @@
 
 /* --- Fonts --------------------------------------------------------------- */
 
-/* Instrument Serif is display only — high contrast, and it falls apart below
+/* Instrument Serif is display only. It has high contrast and falls apart below
  * about 24px, so it never sets anything but headings. Source Serif carries
  * every word of running text. Plex Mono carries every number. */
 
@@ -422,9 +422,8 @@ main {
 .verdict--desk { --v: var(--v-desk); }
 
 /* In Silico's own answer, as opposed to the verdict the editor recommended.
-   Declined borrows the major-revision amber rather than the reject red: the
-   editor declined to accept, it did not reject, and most declined papers were
-   returned for revision by a letter that reads constructively. */
+   Revision needed borrows the major-revision amber because the letter explains
+   what the manuscript needs before it can be accepted. */
 .verdict--accepted { --v: var(--v-accept); }
 .verdict--declined { --v: var(--v-major); }
 
