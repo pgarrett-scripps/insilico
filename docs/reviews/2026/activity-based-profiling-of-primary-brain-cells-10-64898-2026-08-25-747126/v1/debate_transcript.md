@@ -1,0 +1,43 @@
+# Debate Transcript
+
+## Advocate — round 1
+
+I'll make the case for acceptance, grounded in what the panel itself found.
+
+**The panel converges on soundness.** All five reviewers score this 4/5 (ethics 5/5), and every reviewer independently characterizes the manuscript as "methodologically sound," "well-executed," "thorough and well-controlled." No reviewer identifies a claim that is *unsupported* by evidence—only claims whose wording could be tightened or whose mechanism could be probed further. That distinction matters: the scientific_validity reviewer's most serious charge (that "spares basal activity" is in tension with reduced sag ratio in slices) is a wording/interpretation issue, not a data fabrication or logical failure — the authors themselves report the sag-ratio data plainly in Figure 6J-K and offer a physiological explanation (loss of tonic depolarizing Ih), which is a legitimate scientific interpretation open to debate, not a concealment.
+
+**The core contributions are real and independently corroborated by multiple validation layers, not just statistics.** The HCN finding is not a single assay: gel-ABPP site mapping (Figure 5A-C), cysteine mutagenesis, cAMP competition (Figure 5E), heterologous patch clamp across three isoforms and two species (Figure 6B-D), inside-out patches isolating direct channel action (Figure 6G-H), *and* native hippocampal recordings (Figure 6J-K) all point the same direction. The DPYSL2 complexoform result survives co-expression screens, point mutation (C504A), and orthogonal CRISPR knockouts in two independent cell lines (Figure 4D-J) — the reporting_reproducibility reviewer calls this "a well-controlled demonstration of complex-dependence."
+
+**Weaknesses raised are explicitly revisable, not disqualifying.** Reviewers ask for quantification of slice-replication counts, stoichiometry estimates, FDR correction reporting, and animal-count clarification for n's — all addressable by mining data the authors already collected (Dataset S2) or by minor rephrasing of claims (e.g., "reduces Ih" rather than "spares basal activity"). None require new experiments to salvage the paper's central message: that intact-cell ABPP surfaces CNS-restricted, functionally consequential covalent sites.
+
+**Ethics is unblemished (5/5, conf 5/5).** This is a genuine, checkable methodological advance that should be published with revisions addressing the itemized clarifications above.
+
+## Skeptic — round 1
+
+## Case against acceptance (or at least against acceptance without revision)
+
+**Lead objection (FIXABLE, but load-bearing): the "sparing basal activity" claim is in tension with the paper's own ex vivo data.** This is one of four headline Highlights ("Stereoprobes block cAMP modulation of HCN channels while sparing basal activity"). Yet in hippocampal slices — the only native-tissue readout — WX-02-679 (no exogenous cAMP added) produces a "stereoselective decrease in Vsag, Vrebound, and sag ratio" (Fig 6J-K), plus changes in resting membrane potential, input resistance, and firing frequency (Fig S6E-F). The Discussion explains this as "loss of the tonic depolarizing Ih," which is precisely a change in *basal* channel output, not merely blockade of an exogenously-added cAMP shift. The scientific_validity reviewer flagged this directly as an internal contradiction; no other reviewer or the manuscript resolves it (e.g., with an adenylyl-cyclase inhibitor control, or basal current amplitude at fixed voltage without cAMP, in slices). As written, the title-level claim overstates specificity relative to the neuronal evidence actually shown.
+
+**Second, compounding issue (FIXABLE): possible pseudoreplication in the one dataset meant to generalize the finding to native tissue.** The slice n is reported as cells (N=8–10) with no stated animal count (data_analysis reviewer's Q5); if few animals contributed many cells, the statistics for exactly the experiment that should ground the "basal activity spared" claim are compromised.
+
+**Third (FIXABLE): the core methodological premise — that brainocyte-restricted liganding reflects genuine cell-context dependence, not lower probe uptake artifact (Fig S2A) — is validated only by a "pilot" slice experiment on 7 of 28 candidates, with no quantitative replication rate reported.**
+
+None of these is individually fatal, but together they mean the paper's two headline claims (novel platform validity; basal-sparing pharmacology) both rest on incompletely closed loops. I'd want explicit quantification (replication rate for slice-validated hits; animal-level n for electrophysiology; basal current amplitude data without cAMP in slices) before accepting the claims as stated rather than as "suggestive."
+
+## Advocate — round 2
+
+I concede the sag-ratio point has real force: the Highlights phrase "sparing basal activity of HCN channels" is broader than what the slice data alone support, and the Discussion's "loss of the tonic depolarizing Ih" is, as the skeptic says, a description of a basal-conductance effect. That is a genuine wording problem, not something I can argue away.
+
+But look at what actually establishes the claim versus what extends it. The heterologous patch-clamp data are the load-bearing evidence for "spares basal activity," and there the claim holds cleanly: WX-02-679 alone yields HCN2 V1/2 = −95.0 ± 1.8 mV versus DMSO control −92.1 ± 2.0 mV (Figure 6C) — indistinguishable — while blocking the cAMP-induced shift to −83.5 mV. That comparison is exactly the right control (compound alone vs. vehicle alone, no cAMP) and it says basal gating is unaffected in three isoforms and two species. The slice experiment is a *different, harder* question — native Ih in intact neurons, where the compound may also act on channels tonically bound by endogenous cAMP or TRIP8b — and finding an effect there is not a contradiction of the heterologous result, it's a boundary condition on how far "basal" extends. Fixing this requires narrowing one sentence (e.g., "spares basal gating in the absence of cAMP-dependent modulation" or explicitly flagging that in neurons, where a fraction of channels are tonically cAMP-modulated, the drug also reduces native Ih), not retracting a finding.
+
+Same structure applies to the slice-replication and animal-n objections: both are requests for numbers the authors plausibly already have (Dataset S2, raw slice counts) or trivial disclosures, not requests for new experiments or evidence the paper lacks in principle. No reviewer argues the underlying gel-ABPP, mutagenesis, cAMP-competition, or inside-out patch data are wrong — only that the outermost, most ambitious claims need tighter scoping. That is squarely a "revise wording and add a supplementary count" situation, consistent with four independent 4/5 scores.
+
+## Skeptic — round 2
+
+The advocate concedes ground I should acknowledge in return: the HCN mechanism and DPYSL2 complexoform findings are genuinely multi-modal, not single-assay artifacts, and I don't dispute that.
+
+But the advocate mischaracterizes my lead objection as a "wording" fix. It isn't. "Sparing basal activity" is a Highlight-level claim positioning this compound against pore blockers like ivabradine — it is the paper's stated differentiator, not an incidental phrase. The panel's own citation of Figure 6J-K and S6E-F shows WX-02-679 alone (no exogenous cAMP) decreases sag ratio, rebound depolarization, shifts RMP, raises input resistance, and increases firing frequency in CA1 neurons. That is a measured change in basal Ih, not merely blocked modulation. The Discussion's "loss of tonic depolarizing Ih" explanation is honest, but it concedes the very point the Highlight denies. Until the authors either reconcile this (e.g., voltage-clamp Ih amplitude without cAMP) or retract "sparing basal activity" as a general claim and restrict it to the heterologous-cell dataset where it does hold, the significance claim is overstated relative to the native-tissue evidence presented. This is FIXABLE by rewording plus one clarifying experiment/analysis — not fatal — but it must happen before publication, not after.
+
+Second, the advocate's claim that all gaps are "addressable by mining existing data" doesn't hold for the slice animal-count question (data_analysis Q5): if cell-level pseudoreplication is real, no reanalysis of Dataset S2 fixes it — new recordings may be needed.
+
+Collective blind spot: every reviewer flags stereoprobe specificity as a concern, but none confirms an orthogonal check for off-target cysteine engagement in the slice preparation itself — repeated concern, not independent verification.
