@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260901-213600-ipo9-modulates-histone-dependent-inhibition-of-cga",
+  "manuscript_title": "IPO9 modulates histone-dependent inhibition of cGAS",
+  "manuscript_cache_key": "914cea8b0ba2361b73f170a7e746c2d63391012eab82ee14e5801dbe0eb1e9ef",
+  "decision": "major",
+  "weighted_score": 4.2381,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Perform an epistasis/rescue test for the cellular mechanism.** Treat IPO9-knockdown (sh1 and sh2) and control cells with SR-218 in dose–response and measure dsDNA-induced phospho-STING (and, if feasible, intracellular 2'3'-cGAMP). Report whether SR-218 retains activity in IPO9-depleted cells or whether knockdown occludes further inhibition. If IPO9 knockdown does not occlude SR-218 activity, revise the title, abstract and Results framing to state that IPO9 engagement correlates with, rather than mediates, the compound's cellular effect. A complementary IPO9 re-expression rescue in knockdown cells would strengthen the result but is not required.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Report the IPO9 knockdown phenotype quantitatively and requalify the \"phenocopy\" claim.** For Fig. 3b–c, provide per-experiment raw values, fold-changes with 95% CIs, and quantified IPO9 protein reduction for sh1 and sh2 separately. State explicitly that the SR-717 comparison does not reach significance rather than describing it only as an absent effect. Adjust the accompanying text so the strength of the wording matches the effect sizes obtained.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Add the two low-cost BLI controls that bear directly on mechanism.** (i) IPO9 added to immobilised cGAS in the absence of H2A-H2B, to establish whether the transient signal increase in Extended Data Fig. 5f–g is complex-dependent or a sensor/solution artefact; and (ii) IPO9 pre-incubated with H2A-H2B before exposure to immobilised cGAS, which tests sequestration against displacement. Report the amplitude and timescale of the transient signal. If these do not resolve the ambiguity, say so; the Discussion's three-mechanism framing is acceptable, but it should be constrained by these controls rather than left entirely open.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "**Requalify the residue-level and H18-19 loop statements.** At 4.3 Å with a docked model built from 7C0M and 7PII, the H2A acidic-patch/cGAS R236–R255 contacts and the IPO9 H18-19 loop displacement model are hypotheses derived from superposition, not observations. State in both the Results and the abstract that these are inferred from docking of higher-resolution coordinates. Specifically, the abstract sentence beginning \"comparison with the IPO9:H2A-H2B structure reveals that the H18-19 loop of IPO9 engages the acidic patch…\" should be rewritten to make the inferential status explicit. Report local resolution at the cGAS:H2A-H2B interface, and state whether the map supports the docked orientation independently of the reference structures.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "**Address the 2:1 versus 2:2 stoichiometry.** State the particle counts and relative populations of the 2:1 and 2:2 classes, and explain the basis for modelling the 2:2 species. Note explicitly in the text that the 2:2 assembly is incompatible with the proposed IPO9 displacement mechanism (as Extended Data Fig. 6c shows), and say how the authors reconcile this — currently the model and the mechanism sit uneasily together.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**Cite and position Cho et al. 2024 (MRE11 liberates cGAS from nucleosome sequestration, Nature 625:585–592) in the Results or Discussion relative to the IPO9 axis.** The reference is present in the list and mentioned once in the Discussion; the relationship between the two release mechanisms — one acting on NCPs, the proposed IPO9 axis explicitly not — deserves a sentence or two of direct comparison, since it is the closest prior work.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**Temper the in vivo claim.** Fig. 1g rests on n = 2 independent experiments with an indirect pharmacodynamic readout and a compound the authors themselves state cannot achieve steady-state coverage. Report both experiments separately (or pooled with per-experiment breakdown), state exact n per group, and describe the result as a single-timepoint pharmacodynamic observation rather than evidence of disease-relevant efficacy. Add the mouse liver microsome/hepatocyte half-life and clearance values to Extended Data Fig. 3a in numerical form.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Supply an IACUC approval statement** — institution, committee, and protocol number — for the Trex1−/− mouse work, together with animal sex, age at dosing, exact n per group, the interval between the four intraperitoneal injections, and any randomisation or blinding used (or an explicit statement that none was used).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Supply human-subjects documentation for the PBMC work** — IRB approval number or a documented exemption determination, and the consent mechanism under which the donor material was collected.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**Deposit the raw proteomics data** (PRIDE, MassIVE or equivalent) and give the accession. Add to the Methods: mass spectrometer model, acquisition mode, search database and version, Proteome Discoverer version, peptide- and protein-level FDR thresholds, fixed and variable modifications, and mass tolerances. Report how many proteins were quantified in total, how many passed the log2 < −1 competition threshold, and where IPO9 ranked. Fig. 2b is load-bearing and its underlying data are currently not inspectable.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "**Complete the cryo-EM reporting.** State software versions (cryoSPARC, Phenix, ChimeraX), the number of classes used in 2D classification, ab-initio reconstruction and heterogeneous refinement, the final particle count for the refined class, the FSC threshold used for the reported resolution, and standard model-validation statistics (MolProbity/clash score, Ramachandran).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "**Complete reagent traceability.** Add: RRIDs, host species and clonality for all primary and secondary antibodies; sources for G140 and SR-717; shRNA target sequences (clone IDs alone are insufficient for readers outside the Sigma catalogue); cell line sources for HEK293T and Lenti-X, with mycoplasma-testing and authentication status for all lines; and synthesis, purification and characterisation data (NMR, HRMS, purity) for SR-051, SR-218, SR-432 and the analogues in Fig. 2h and Extended Data Fig. 1, as supplementary chemistry.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-13",
+      "text": "**Complete assay reporting.** For the malachite green assay: state the ATP/GTP Km values (measured or cited) justifying the 50 µM choice, describe the positive and negative control reactions, and confirm linearity over the 30-min reaction. For BLI: state the curve-fitting model and software used for the 110 nM EC50, with its 95% CI, and report kon/koff or Kd where the data permit. For RT-qPCR: confirm that technical replicates were averaged before statistical testing, and state the instrument and analysis software.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-14",
+      "text": "**Add a complete funding statement.** The CIRM acknowledgement covers one author only.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Reporting cellular IPO9 abundance and an estimate of free (non-nucleosomal) H2A-H2B, even from published proteomic datasets, would help readers judge whether the in vitro EC50 and the 500 nM rescue condition are within a physiologically plausible range. This is a discussion-level addition, not a required experiment.",
+    "Kd values for cGAS:H2A-H2B versus cGAS:NCP would clarify whether the comparable inhibition in Fig. 3d reflects comparable affinity or saturation at the single concentration tested; a dose–response for both inhibitors would serve the same purpose more cheaply.",
+    "The \"moonlighting\" language in the Discussion currently outruns the data, since nothing distinguishes a novel cGAS-directed function from IPO9's canonical chaperone activity acting on a substrate that happens to inhibit cGAS. Consider softening.",
+    "A test of whether RanGTP modulates IPO9-mediated release would be a natural extension and is flagged in the Discussion; it is not required here but would be a strong addition to a follow-up.",
+    "Quantify the rhodamine-labelling gels by densitometry where they are used to support SAR conclusions (Fig. 2f), even if only as a supplementary panel.",
+    "Provide the pinpoint location (supplementary table or figure) for dbk-032A within ref. 70, so readers can verify the cross-competition claim without reading the whole paper.",
+    "Consider stating explicitly whether SR-218 or IPO9 knockdown perturbs bulk nucleosome assembly or chromatin composition over the assay timeframe; a negative result here would close off a plausible confound for the cellular phenotype."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "**Figure 3c:** Please report fold-changes with 95% confidence intervals for all conditions in Fig. 3b–c, and disclose the IPO9 knockdown efficiency (% reduction in IPO9 protein) for both sh1 and sh2 lines.",
+        "**Figure 4c inset:** Which reference structure (PDB ID) was used to assign sidechain positions for the acidic patch residues, and was the superposition validated by an orthogonal method such as cross-linking mass spectrometry or mutagenesis?",
+        "**Extended Data Fig. 3a:** What is the half-life and intrinsic clearance of SR-218 in mouse liver microsomes, and does this explain why steady-state dosing was not achieved in the Trex1−/− experiment?",
+        "**Figure 2b:** What was the family-wise error rate or false discovery rate threshold applied during hit prioritization in the TMT proteomics screen, and how many candidate proteins met the filtering criteria before IPO9 was selected?"
+      ]
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "In the TMT proteomics experiment (Fig. 2b), how many total proteins were quantified, and how many passed the log2 < −1 competition threshold before IPO9 was prioritized?",
+        "For the BLI experiment in Fig. 3f, what is the kon and koff for IPO9-induced dissociation of the cGAS:H2A-H2B complex, and how does the EC50 (110 nM) compare to the Kd of IPO9:H2A-H2B binding reported in prior work?",
+        "In Extended Data Fig. 5f–g, can the authors quantify the amplitude and timescale of the transient BLI signal increase upon IPO9 addition, and provide a control where IPO9 is added to cGAS alone?",
+        "What is the local resolution of the cryo-EM map at the H2A-H2B acidic patch and the proposed IPO9 H18-19 loop contact region, and does it support sidechain-level modeling of the interaction?"
+      ]
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "**Figure 3f:** Does IPO9 retain the ability to disrupt cGAS:H2A-H2B binding in the presence of RanGTP, and if so, does RanGTP modulate the EC50?",
+        "**Figure 3d:** What are the Kd values for cGAS:H2A-H2B and cGAS:NCP binding, and do they differ in a way that explains why IPO9 rescues one but not the other?",
+        "**Extended Data Fig. 6a:** What is the relative abundance of the 2:2 vs. 2:1 cGAS:H2A-H2B populations, and do they have different functional properties in the malachite green assay?",
+        "**Figure 1g:** Is the reduction in cardiac cGAMP dose-dependent, and does it correlate with improved survival or reduced inflammatory markers in the Trex1−/− mice?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "What are the cellular concentrations of IPO9 and free H2A-H2B dimers, and do they support the in vitro EC50 values observed?",
+        "Does mutation of the IPO9 H18-19 loop abolish its ability to disrupt cGAS:H2A-H2B binding in vitro and rescue cGAS activity in cells?",
+        "What is the Kd for cGAS:H2A-H2B interaction, and how does it compare to cGAS:NCP?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "a1cf3cdb5a270624767b1600e0f8981c2a835ba7f93f8d1018ae4a2c8531935f",
+  "manuscript_file_sha256": "7a7c8d6afaafe5c144d5e4b2a5ed5392b3224eb21c414dd8cf1a38ed293eaff6",
+  "prior_job_id": "",
+  "desk_rejected": false
+}
