@@ -44,14 +44,15 @@ answer.
 ## What you get back
 
 Each paper gets its own page: the verdict, the decision letter, the specialist
-reports, and a citable link that always points to the latest review of your
-paper.
+reports, and the complete review history. Manuscript versions and independent
+review attempts are tracked separately, and earlier attempts are never edited.
 
 [![A review record page](media/review-record.png)](https://pgarrett-scripps.github.io/insilico/reviews/2026/patch-clamp-single-cell-proteomics-in-acute-brain-10-1101-2025-09-15-675920/)
 
 Posted a new draft since? Ask on your submission issue and the new version gets
 a fresh review, published beside the old one. The record shows how the paper
-improved.
+improved. The newest eligible editorial review of the previous draft becomes
+the comparison baseline for the new draft.
 
 ## The ground rules
 

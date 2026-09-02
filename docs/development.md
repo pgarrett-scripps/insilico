@@ -13,8 +13,9 @@ looks never means touching the program that produces one.
 ```
 docs/                     # the record, written by the pipeline
 ├── policy.md  criteria.md  submit.md  development.md
-└── reviews/<year>/<slug>/v<N>/     # our review of the authors' Nth draft
-    ├── provenance.json   # verdict, scores, models, cost, PDF fingerprint
+└── reviews/<year>/<slug>/v<N>/r<M>/ # manuscript draft, then review attempt
+    ├── provenance.json   # verdict, models, code and configuration fingerprints
+    ├── manifest.json     # SHA-256 for every published artifact
     ├── round.json        # machine-readable record a later round rules on
     ├── summary.md  decision_letter.md  desk_screen.md
     ├── debate_transcript.md  journal_recommendations.md
@@ -85,13 +86,13 @@ owners, members and collaborators can trigger it.
 | Command | What happens |
 |---|---|
 | `/review` | reviews whatever draft the archive serves now |
-| `/review replace` | redoes a draft already reviewed, overwriting it |
+| `/review replace` | adds an independent review attempt for the same draft |
 | `/review openrouter vendor/model` | every agent uses that one named model against the paid budget |
 
-Whether a run is a first look or a new round is not something an editor
-declares. A bundle is named after the draft it read, so a draft we have not
-reviewed is a new round and one we have needs `replace` said out loud before
-anything is overwritten.
+Whether a run is a first look or a revision round is not something an editor
+declares. The archive version selects `v<N>`. A same-draft re-review requires
+`replace` and creates the next `r<M>`. The command name is retained for
+compatibility, but no published attempt is replaced.
 
 A review run on a single model says so on its page: one model wrote all of it,
 and nothing checked the referees that was any better than the referees.
@@ -111,10 +112,16 @@ export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 ```
 
-`v<N>` is the draft the archive served, not a count of our runs. `v3` is our
-review of the authors' third draft. `resolve()` always reports the current
-draft and refuses to go backwards, so the number only ever increases and folder
-order can never disagree with the order the drafts were written in.
+`v<N>` is the draft the archive served, not a count of our runs. `v3` is the
+authors' third draft. `r<M>` is our attempt number for that exact draft. A
+second independent read of draft 3 is `v3/r2`, while the first review of draft
+4 is `v4/r1`.
+
+The newest eligible editorial attempt on the newest earlier draft is the
+baseline for a revision. A single-model experiment stays public but cannot set
+the paper's status or become the baseline for the next draft. The revision
+pipeline receives that selected bundle through its existing `revision_of`
+input, which activates the built-in compliance comparison.
 
 - `--dry-run` resolves the URL and downloads the PDF without calling a model. It
   does not check the PDF has extractable text, so a scanned paper passes this and
@@ -124,9 +131,9 @@ order can never disagree with the order the drafts were written in.
   which is what the workflow does. A run made to see what a prompt change did
   is a question about the pipeline, and answering it should not add a review to
   someone's paper.
-- `--replace` re-reviews a draft that already has a review, overwriting it. It
-  can only ever hit a review of the *same* draft: if the authors have posted a
-  new version since, the draft number differs and you get a new round instead.
+- `--replace` re-reviews a draft that already has a review. It creates the next
+  immutable attempt and keeps every earlier attempt. If the authors have posted
+  a new version, the draft number differs and the run becomes a revision round.
 - `--provider openrouter --model <cheap-model>` routes a run through a cheap
   model on a personal key. Use this for prompt work rather than editing
   `peerreview.toml`.
@@ -146,7 +153,8 @@ below a `[table]` header silently becomes part of that table.
 
 The panel is held to In Silico's own profile in
 [`journals/insilico.toml`](../journals/insilico.toml). Each review records the
-exact pipeline commit in `provenance.json`, so the
+exact PeerReviewAgents commit, the In Silico commit, a hash of the journal
+profile, and the resolved semantic configuration with its hash. The
 [DOI](https://doi.org/10.5281/zenodo.21781895) identifies the software and the
 sha identifies the run.
 
@@ -178,7 +186,7 @@ Behind the loader the PDF becomes markdown, and that is what the referees read.
 The converter is [rustypaper](https://github.com/pgarrett-scripps/rustypaper), a
 per-platform wheel with no Rust toolchain to install. It is required and has no
 fallback: one that will not install stops the run rather than quietly degrading
-it. The workflow pins an exact version, and the pin is what `replace` rests on:
+it. The workflow pins an exact version, and the pin is what a re-review rests on:
 a rerun proves it is reading the same draft by comparing the converted text
 against the previous run's, so a converter that changed how it reads a
 two-column page would refuse the correct draft. It is also what makes

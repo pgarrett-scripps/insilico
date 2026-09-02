@@ -3,7 +3,8 @@
     python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
     python scripts/run_review.py --issue-body "$ISSUE_BODY" --submission-id 12
 
-Output lands in ``docs/reviews/<year>/<slug>/v<N>/`` and is what the bot commits.
+Output lands in ``docs/reviews/<year>/<slug>/v<N>/r<M>/`` and is what the bot
+commits.
 ``--dry-run`` resolves and downloads without calling a model, so you can check a
 URL is reviewable before spending anything.
 """
@@ -13,6 +14,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -150,18 +152,64 @@ def paper_slug(preprint: Preprint, title: str) -> str:
     return slug or "submission"
 
 
+def _published_provenance_paths() -> list[Path]:
+    """Every legacy and attempt-aware provenance record in the corpus."""
+    return sorted(
+        list(REVIEWS.glob("*/*/v*/provenance.json"))
+        + list(REVIEWS.glob("*/*/v*/r*/provenance.json"))
+    )
+
+
+def _paper_dir_for_bundle(bundle: Path) -> Path:
+    """Return the paper directory for either ``vN`` or ``vN/rN``."""
+    version_dir = bundle.parent if re.fullmatch(r"r\d+", bundle.name) else bundle
+    return version_dir.parent
+
+
+def _bundle_coordinates(bundle: Path) -> tuple[int, int]:
+    """Return manuscript version and review attempt for one bundle."""
+    if re.fullmatch(r"r\d+", bundle.name):
+        return int(bundle.parent.name[1:]), int(bundle.name[1:])
+    return int(bundle.name[1:]), 1
+
+
+def _read_provenance(bundle: Path) -> dict:
+    try:
+        return json.loads((bundle / "provenance.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def baseline_eligible(bundle: Path) -> bool:
+    """Whether a review may define status and anchor the next revision.
+
+    New records state this directly. Legacy records use the existing policy:
+    a configured role split is an editorial panel, while a single-model run is
+    an experiment. Withdrawn and superseded records never become baselines.
+    """
+    provenance = _read_provenance(bundle)
+    review = provenance.get("review") or {}
+    lifecycle = str(review.get("lifecycle") or "active")
+    if lifecycle in {"withdrawn", "superseded"}:
+        return False
+    explicit = review.get("baseline_eligible")
+    if isinstance(explicit, bool):
+        return explicit
+    models = provenance.get("models")
+    return isinstance(models, dict) and bool(models)
+
+
 def find_paper_dir(preprint: Preprint) -> Path | None:
     """The directory already holding this paper's reviews, if any.
 
-    Matched on the preprint's identifier rather than the slug, for the reason
-    :func:`find_prior_bundle` gives: the slug embeds the title and authors
-    retitle between drafts, so a slug lookup misses its own earlier rounds for
-    exactly the papers most likely to have them.
+    Matched on the preprint's identifier rather than the slug. The slug embeds
+    the title, and authors retitle between drafts, so a slug lookup can miss
+    the earlier reviews of the same paper.
     """
     wanted = (preprint.identifier or preprint.doi or "").strip().lower()
     if not wanted:
         return None
-    for prov_path in sorted(REVIEWS.glob("*/*/v*/provenance.json")):
+    for prov_path in _published_provenance_paths():
         try:
             prov = json.loads(prov_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -169,53 +217,8 @@ def find_paper_dir(preprint: Preprint) -> Path | None:
         pp = prov.get("preprint") or {}
         got = str(pp.get("identifier") or pp.get("doi") or "").strip().lower()
         if got and got == wanted:
-            return prov_path.parent.parent
+            return _paper_dir_for_bundle(prov_path.parent)
     return None
-
-
-def find_prior_bundle(preprint: Preprint, title: str) -> Path | None:
-    """The most recent revisable round already published for this preprint.
-
-    Searched across all year directories, not just this preprint's own year:
-    a revised preprint can carry a later posting date than the version we
-    reviewed, which would put v2 in a different year folder from v1 and make
-    the paper's own history invisible to it.
-
-    Only bundles with a round record count. A review published before round
-    records existed cannot be the basis of a revision round, and silently
-    treating it as round 1 would produce a round 2 that had nothing to rule on.
-
-    Matched on the preprint's identifier, never on the directory name. The
-    slug embeds the title, and authors retitle between versions routinely — so
-    a slug lookup would miss its own round 1 for exactly the papers most
-    likely to be revised, report "no revisable round", and quietly restart at
-    round 1. The panel would not notice — it reads every draft cold — but the
-    editor's numbered required revisions are the whole lineage of a
-    manuscript, and a round that cannot find them severs it.
-    """
-    del title  # kept for call-site symmetry; the identifier is what matches
-    wanted = (preprint.identifier or preprint.doi or "").strip().lower()
-    if not wanted:
-        return None
-
-    best: tuple[int, Path] | None = None
-    for record_path in sorted(REVIEWS.glob(f"*/*/v*/{ROUND_RECORD}")):
-        bundle = record_path.parent
-        try:
-            prov = json.loads(
-                (bundle / "provenance.json").read_text(encoding="utf-8")
-            )
-            record = json.loads(record_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        pre = prov.get("preprint") or {}
-        found = str(pre.get("identifier") or pre.get("doi") or "").strip().lower()
-        if found != wanted:
-            continue
-        rnd = int(record.get("round", 1))
-        if best is None or rnd > best[0]:
-            best = (rnd, bundle)
-    return best[1] if best else None
 
 
 def _rerun_provenance(bundle: str) -> dict | None:
@@ -344,13 +347,40 @@ def draft_number(preprint: Preprint) -> int:
         return 1
 
 
-def existing_bundles(paper_dir: Path) -> dict[int, Path]:
-    """Draft number -> bundle, for every review already published of a paper."""
-    out: dict[int, Path] = {}
-    for p in sorted(paper_dir.glob("v*")):
-        if p.is_dir() and p.name[1:].isdigit():
-            out[int(p.name[1:])] = p
+def existing_bundles(paper_dir: Path) -> dict[int, list[Path]]:
+    """Draft number to immutable review attempts, oldest first."""
+    out: dict[int, list[Path]] = {}
+    for version_dir in sorted(paper_dir.glob("v*")):
+        if not version_dir.is_dir() or not version_dir.name[1:].isdigit():
+            continue
+        draft = int(version_dir.name[1:])
+        attempts: list[Path] = []
+        if (version_dir / "provenance.json").is_file():
+            attempts.append(version_dir)
+        attempts.extend(
+            sorted(
+                (
+                    p for p in version_dir.glob("r*")
+                    if p.is_dir() and p.name[1:].isdigit()
+                    and (p / "provenance.json").is_file()
+                ),
+                key=lambda p: int(p.name[1:]),
+            )
+        )
+        if attempts:
+            out[draft] = attempts
     return out
+
+
+def latest_baseline(
+    published: dict[int, list[Path]], *, before_draft: int
+) -> Path | None:
+    """Newest eligible review of the newest earlier manuscript version."""
+    for draft in sorted((n for n in published if n < before_draft), reverse=True):
+        for bundle in reversed(published[draft]):
+            if (bundle / ROUND_RECORD).is_file() and baseline_eligible(bundle):
+                return bundle
+    return None
 
 
 @dataclass
@@ -359,16 +389,17 @@ class Plan:
 
     dest: Path
     draft: int
+    attempt: int = 1
     # The bundle this round rules against, or None for a first look. Set only
     # when an earlier draft was reviewed AND left a round record.
     prior: Path | None = None
-    # True when we are overwriting our own earlier review of this same draft.
-    replacing: bool = False
+    # The previous attempt when this is a fresh review of identical text.
+    previous_attempt: Path | None = None
 
     @property
     def kind(self) -> str:
-        if self.replacing:
-            return "replacement"
+        if self.previous_attempt:
+            return "same-draft re-review"
         return "revision round" if self.prior else "first review"
 
 
@@ -383,11 +414,10 @@ def plan_review(
     - no review of this draft, an earlier one exists      -> revision round
     - a review of this draft already exists              -> needs ``replace``
 
-    The last case is the only one that can destroy anything, and it is
-    deliberately narrow: it can only ever overwrite a review of the *same*
-    draft. If the authors have posted a new version since, the draft number
-    differs, so ``--replace`` silently becomes a new round rather than
-    clobbering the record of a draft nobody can read any more.
+    The last case creates another immutable attempt for the same manuscript
+    version. Despite the legacy command name, it never replaces or edits the
+    prior attempt. If the authors have posted a new version, the draft number
+    differs and the run becomes a revision round instead.
 
     ``publishing`` is false for a run that lands in ``runs/``, and then that
     refusal does not apply: there is no bundle at stake, because the run
@@ -397,30 +427,45 @@ def plan_review(
     result to compare against.
     """
     published = existing_bundles(paper_dir)
-    dest = paper_dir / f"v{draft}"
+    same_draft = published.get(draft, [])
+    attempt = max(
+        (_bundle_coordinates(bundle)[1] for bundle in same_draft),
+        default=0,
+    ) + 1
+    dest = paper_dir / f"v{draft}" / f"r{attempt}"
 
-    if draft in published and publishing:
+    if same_draft and publishing:
         if not replace:
+            latest = same_draft[-1]
             raise CommandError(
                 f"Draft v{draft} of this paper has already been reviewed "
-                f"({dest.relative_to(REPO) if dest.is_relative_to(REPO) else dest}). "
+                f"({latest.relative_to(REPO) if latest.is_relative_to(REPO) else latest}). "
                 "The archive still serves that draft, so there is nothing new "
                 "to read. Pass --replace (or `/review replace`) to review it "
-                "again and overwrite, or wait for the authors to post a new "
-                "version."
+                "again as a new immutable attempt, or wait for the authors "
+                "to post a new version."
             )
-        return Plan(dest=dest, draft=draft, replacing=True)
+        return Plan(
+            dest=dest,
+            draft=draft,
+            attempt=attempt,
+            previous_attempt=same_draft[-1],
+        )
+
+    if same_draft and replace:
+        return Plan(
+            dest=dest,
+            draft=draft,
+            attempt=attempt,
+            previous_attempt=same_draft[-1],
+        )
 
     # A revision round rules against the newest earlier draft that left a
     # round record. Reviews published before round records existed cannot be
     # ruled against — there is nothing in them for a referee to check off — so
     # those fall through to a fresh look rather than a broken second round.
-    prior = None
-    for n in sorted((v for v in published if v < draft), reverse=True):
-        if (published[n] / ROUND_RECORD).is_file():
-            prior = published[n]
-            break
-    return Plan(dest=dest, draft=draft, prior=prior)
+    prior = latest_baseline(published, before_draft=draft)
+    return Plan(dest=dest, draft=draft, attempt=attempt, prior=prior)
 
 
 # A model slug an editor may name in a comment. Deliberately strict: the
@@ -518,6 +563,11 @@ def parse_command(body: str) -> dict:
             "`vendor/model`, optionally with a `:tag` — for example "
             "`nvidia/nemotron-3-ultra:free`."
         )
+    if len(rest) > 2:
+        raise CommandError(
+            f"`{command} openrouter <model>` takes exactly one model. Remove "
+            "the extra text after the model slug."
+        )
     out["model"] = model
     return out
 
@@ -547,6 +597,100 @@ def pipeline_version() -> dict[str, str]:
     except Exception:  # noqa: BLE001 - metadata is best-effort
         info["version"] = "unknown"
     return info
+
+
+def insilico_version() -> dict[str, str]:
+    """Identify the journal code and configuration that launched the run."""
+    sha = os.environ.get("GITHUB_SHA", "").strip()
+    dirty = ""
+    try:
+        import subprocess  # noqa: PLC0415
+
+        if not sha:
+            sha = subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                cwd=REPO,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=True,
+            ).stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=True,
+        ).stdout.strip()
+    except Exception:  # noqa: BLE001
+        pass
+    return {"sha": f"{sha}+dirty" if sha and dirty else sha or "unknown"}
+
+
+_RUNTIME_CONFIG_KEYS = {"output_dir", "checkpoint_dir", "resume"}
+
+
+def _public_config_value(value):
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Path):
+        try:
+            return str(value.resolve().relative_to(REPO))
+        except ValueError:
+            return str(value)
+    if isinstance(value, dict):
+        return {
+            str(key): _public_config_value(item)
+            for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+            if not any(
+                secret in str(key).lower()
+                for secret in ("key", "token", "secret", "password")
+            )
+        }
+    if isinstance(value, (list, tuple)):
+        return [_public_config_value(item) for item in value]
+    return str(value)
+
+
+def configuration_record(config: dict | None) -> dict:
+    """Canonical semantic configuration, excluding runtime paths and secrets."""
+    public = {
+        key: _public_config_value(value)
+        for key, value in sorted((config or {}).items())
+        if key not in _RUNTIME_CONFIG_KEYS
+        and not any(secret in key.lower() for secret in ("key", "token", "secret", "password"))
+    }
+    for key in ("journals_dir", "revision_of"):
+        value = public.get(key)
+        if not isinstance(value, str) or not value:
+            continue
+        path = Path(value)
+        if not path.is_absolute():
+            continue
+        try:
+            public[key] = str(path.resolve().relative_to(REPO))
+        except ValueError:
+            pass
+    encoded = json.dumps(public, sort_keys=True, separators=(",", ":")).encode()
+    return {"sha256": hashlib.sha256(encoded).hexdigest(), "resolved": public}
+
+
+def journal_profile_record(config: dict | None) -> dict:
+    """Hash the exact local journal profile supplied to the panel."""
+    config = config or {}
+    journal = str(config.get("target_journal") or "")
+    directory = Path(config.get("journals_dir") or REPO / "journals")
+    if not directory.is_absolute():
+        directory = REPO / directory
+    path = directory / f"{journal}.toml"
+    if not journal or not path.is_file():
+        return {"journal": journal, "sha256": ""}
+    return {
+        "journal": journal,
+        "path": str(path.relative_to(REPO)) if path.is_relative_to(REPO) else str(path),
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
 
 
 def _installed_pipeline_sha() -> str:
@@ -717,11 +861,17 @@ def write_bundle(
     submitter_is_author: str = "",
     ingest: dict | None = None,
     research: dict[str, list[dict]] | None = None,
+    config: dict | None = None,
+    review: dict | None = None,
 ) -> None:
+    source_version = insilico_version()
+    if dest.exists() and any(dest.iterdir()):
+        raise FileExistsError(f"refusing to overwrite existing review bundle: {dest}")
     dest.mkdir(parents=True, exist_ok=True)
     cost_by_node = cost_by_node or {}
     revision = revision or {}
     research = research or {}
+    review = review or {}
 
     # Every document is copied, including the ones a desk reject makes
     # byte-identical (it sets decision_letter and desk_screen to the same
@@ -745,8 +895,13 @@ def write_bundle(
     numeric = [s["score"] for s in scores if isinstance(s.get("score"), (int, float))]
 
     provenance = {
+        "schema_version": 2,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "pipeline": pipeline_version(),
+        "insilico": source_version,
+        "configuration": configuration_record(config),
+        "journal_profile": journal_profile_record(config),
+        "review": review,
         "provider": os.environ.get("REVIEW_PROVIDER", "anthropic"),
         "model": os.environ.get("REVIEW_MODEL", ""),
         # Which model each stage actually ran on. Without these a reader sees
@@ -807,6 +962,36 @@ def write_bundle(
     # the program that produces reviews.
     (dest / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
 
+    # Published prose follows the journal's permanent punctuation rule. Apply
+    # it after every source has been copied so model output, manuscript
+    # metadata, and machine-readable records all receive the same treatment.
+    em_dash = chr(0x2014)
+    replacements = {
+        em_dash: ",",
+        chr(59): ".",
+    }
+    for path in sorted(dest.iterdir()):
+        if path.suffix not in {".json", ".md"}:
+            continue
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(rf"\|\s*{em_dash}\s*(?=\|)", "| N/A ", text)
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        text = text.replace(" ,", ",")
+        path.write_text(text, encoding="utf-8")
+
+    manifest = {
+        "schema_version": 1,
+        "files": {
+            path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in sorted(dest.iterdir())
+            if path.is_file() and path.name != "manifest.json"
+        },
+    }
+    (dest / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
@@ -845,7 +1030,7 @@ def main() -> int:
     ap.add_argument(
         "--replace",
         action="store_true",
-        help="re-review a draft that already has a review, overwriting it. "
+        help="re-review a draft that already has a review as a new immutable attempt. "
              "Use after changing prompts, models or config. Cannot touch a "
              "review of a different draft: if the authors have posted a new "
              "version since, this writes a new round instead.",
@@ -939,7 +1124,10 @@ def _run(args, workdir: Path) -> int:
         except CommandError as exc:
             print(f"{exc}", file=sys.stderr)
             return 4
-        print(f"plan      {plan.kind}: draft v{plan.draft}", file=sys.stderr)
+        print(
+            f"plan      {plan.kind}: manuscript v{plan.draft}, review r{plan.attempt}",
+            file=sys.stderr,
+        )
         return 0
 
     # Stop before the panel if the metadata lookup came back empty. The
@@ -983,8 +1171,11 @@ def _run(args, workdir: Path) -> int:
                 fh.write(f"already_reviewed_reason={' '.join(str(exc).split())}\n")
         return 4
     print(
-        f"plan      {plan.kind}: draft v{plan.draft}"
-        + (f", ruling against {plan.prior.name}" if plan.prior else ""),
+        f"plan      {plan.kind}: manuscript v{plan.draft}, review r{plan.attempt}"
+        + (
+            f", ruling against {plan.prior.relative_to(paper_dir)}"
+            if plan.prior else ""
+        ),
         file=sys.stderr,
     )
 
@@ -1002,11 +1193,10 @@ def _run(args, workdir: Path) -> int:
         # atomically. The key includes manuscript content + semantic config,
         # so unrelated papers or model settings never share outputs.
         "checkpoint_dir": str(RUNS / ".checkpoints"),
-        # `replace` exists to redo a review — after one was taken down, or
-        # because an editor wants a fresh look at the same draft. Resuming
-        # there would replay the recorded panel byte-for-byte and hand back
-        # the review being replaced, so a replacement always samples fresh.
-        "resume": not args.replace,
+        # `replace` is the legacy command for a fresh review of the same draft.
+        # Resuming would replay the recorded panel byte-for-byte, so a new
+        # immutable attempt always samples fresh.
+        "resume": not bool(plan.previous_attempt),
     }
     if args.provider:
         overrides["provider"] = args.provider
@@ -1036,23 +1226,23 @@ def _run(args, workdir: Path) -> int:
 
     config = get_config(**overrides)
 
-    if plan.replacing:
+    if plan.previous_attempt is not None:
         # Round 1, and no `revision_of` in the config. Both are the point.
         # `revision_of` hands the editor the earlier round's decision, score
         # and required-revisions list as its reference point, and a re-review
         # that inherits the verdict it exists to test tests nothing.
-        old = _rerun_provenance(str(plan.dest)) or {}
+        old = _rerun_provenance(str(plan.previous_attempt)) or {}
         revision = {
             "round": 1,
             "kind": "rerun",
-            "replaced": plan.dest.name,
+            "previous_attempt": str(plan.previous_attempt.relative_to(paper_dir)),
             "prior_decision": str(old.get("decision") or ""),
             "prior_mean_score": old.get("mean_score"),
             "prior_pipeline_sha": (old.get("pipeline") or {}).get("sha") or "",
             "prior_reviewed_at": str(old.get("generated_at") or "")[:10],
         }
         print(
-            f"replacing {plan.dest.name} "
+            f"re-reviewing {plan.previous_attempt.relative_to(paper_dir)} "
             f"({revision['prior_decision'] or 'no decision'}, "
             f"mean {revision['prior_mean_score']})",
             file=sys.stderr,
@@ -1060,7 +1250,7 @@ def _run(args, workdir: Path) -> int:
         # The draft number matched, so the archive says this is the same
         # version. Confirm the text as well: a server that quietly reposted
         # different content under one version number would otherwise let a
-        # replacement claim to be a like-for-like comparison when it is not.
+        # re-review claim to be a like-for-like comparison when it is not.
         if old and not _same_draft(pdf, old, config):
             return 1
 
@@ -1069,7 +1259,7 @@ def _run(args, workdir: Path) -> int:
         prior_round = int(prior.get("round", 1))
         revision = {
             "round": prior_round + 1,
-            "prior_bundle": prior_bundle.name,
+            "prior_bundle": str(prior_bundle.relative_to(paper_dir)),
             "prior_decision": str(prior.get("decision", "")),
             "prior_round": int(prior.get("round", 1)),
             # The count the PREVIOUS round asked for. This round's own count
@@ -1088,8 +1278,9 @@ def _run(args, workdir: Path) -> int:
             )
             return 1
         print(
-            f"revision  round {revision['round']} of {prior_bundle.name}"
-            f" — {revision['prior_required_revisions']} required revision(s)"
+            f"revision  round {revision['round']} of "
+            f"{prior_bundle.relative_to(paper_dir)}"
+            f", {revision['prior_required_revisions']} required revision(s)"
             " carried in",
             file=sys.stderr,
         )
@@ -1184,13 +1375,29 @@ def _run(args, workdir: Path) -> int:
     # — which is exactly how this corpus acquired four reviews of one draft.
     if args.publish:
         dest = plan.dest
-        if plan.replacing and dest.exists():
-            # Removed rather than written over: the old bundle's specialist
-            # reports would otherwise survive alongside the new ones and be
-            # read as part of this review.
-            shutil.rmtree(dest)
     else:
         dest = RUNS / f"{slug}-v{version}-{dt.datetime.now():%Y%m%d-%H%M%S}"
+
+    graded = bool(config.get("models"))
+    if plan.previous_attempt:
+        review_kind = "editorial_rereview" if graded else "experiment"
+    elif plan.prior:
+        review_kind = "revision"
+    else:
+        review_kind = "initial" if graded else "experiment"
+    review_record = {
+        "id": str(dest.relative_to(REPO)),
+        "manuscript_version": plan.draft,
+        "attempt": plan.attempt,
+        "kind": review_kind,
+        "baseline_eligible": graded,
+        "lifecycle": "active",
+        "previous_review_id": (
+            str(plan.previous_attempt.relative_to(REPO))
+            if plan.previous_attempt else ""
+        ),
+        "revision_of": str(plan.prior.relative_to(REPO)) if plan.prior else "",
+    }
 
     write_bundle(
         preprint, state, run_dir, dest,
@@ -1198,6 +1405,8 @@ def _run(args, workdir: Path) -> int:
         submitter_is_author=args.submitter_is_author,
         ingest=state.get("ingest"),
         research=telemetry.research,
+        config=config,
+        review=review_record,
     )
     rel = dest.relative_to(REPO)
     desk_rejected = bool(state.get("desk_rejected"))

@@ -2,9 +2,9 @@
  * The published corpus, read straight out of `docs/reviews/`.
  *
  * The Python pipeline owns that directory and writes two kinds of thing into
- * each `<year>/<slug>/v<N>/` bundle: the referee documents as plain markdown,
- * and `provenance.json` as the machine-readable record of the run. This module
- * turns that on-disk layout into the shape the site renders from.
+ * each `<year>/<slug>/v<N>/r<M>/` bundle: the referee documents as plain
+ * markdown, and `provenance.json` as the machine-readable record of the run.
+ * Legacy bundles directly under `v<N>` remain readable.
  *
  * Deliberately reading the pipeline's own output rather than a copy under
  * `src/`: a review bundle is the published artifact and the thing a citation
@@ -23,7 +23,8 @@ import path from "node:path";
 // import.meta.url points into generated build output rather than src/lib.
 // The build and development commands both run from the repository root.
 export const REPO = process.cwd();
-export const REVIEWS_DIR = path.join(REPO, "docs", "reviews");
+export const REVIEWS_DIR = process.env.INSILICO_REVIEWS_DIR
+  || path.join(REPO, "docs", "reviews")
 
 export const VERDICT = {
   accept: "Accept",
@@ -64,10 +65,11 @@ export const STATUS = {
   accepted: "Accepted",
   declined: "Revision needed",
   desk: "Desk reject",
+  experimental: "Experimental only",
 };
 
 export function statusOf(review) {
-  if (!review) return "declined";
+  if (!review) return "experimental"
   if (review.deskRejected) return "desk";
   return isAccepted(review) ? "accepted" : "declined";
 }
@@ -156,30 +158,48 @@ function readDocuments(bundleDir) {
   };
 }
 
-/** One review of one revision: a `v<N>` directory. */
-function readBundle(paperDir, versionName) {
-  const dir = path.join(paperDir, versionName);
+/** One immutable review attempt, normally a `v<N>/r<M>` directory. */
+function readBundle(paperDir, versionName, attemptName = "") {
+  const dir = path.join(paperDir, versionName, attemptName)
   const provenance = readJSON(path.join(dir, "provenance.json"));
   if (!provenance) return null;
 
   const round = readJSON(path.join(dir, "round.json"));
   const preprint = provenance.preprint || {};
   const revision = provenance.revision || {};
+  const review = provenance.review || {}
+  const attemptNumber = attemptName
+    ? Number(attemptName.slice(1))
+    : Number(review.attempt || 1)
+  const route = attemptName ? `${versionName}/${attemptName}` : versionName
+  const graded = Boolean(provenance.models && Object.keys(provenance.models).length)
+  const lifecycle = String(review.lifecycle || "active")
+  const baselineEligible = typeof review.baseline_eligible === "boolean"
+    ? review.baseline_eligible
+    : graded
 
   return {
     version: versionName,
     versionNumber: Number(versionName.slice(1)),
+    attempt: attemptName || `r${attemptNumber}`,
+    attemptNumber,
+    route,
+    label: attemptName ? `${versionName}/${attemptName}` : versionName,
+    contentId: route,
     dir,
     provenance,
     preprint,
     revision,
+    review,
     round: Number(provenance.round || 1),
     decision: provenance.decision || "unknown",
     deskRejected: Boolean(provenance.desk_rejected),
     // An empty model table means every agent ran on one model, with nothing
     // stronger checking the referees. Provenance.astro warns about it on the
     // page; readPaper uses it to decide which review speaks for the paper.
-    graded: Boolean(provenance.models && Object.keys(provenance.models).length),
+    graded,
+    baselineEligible: baselineEligible && lifecycle === "active",
+    lifecycle,
     // Derived here rather than at each call site so the rule has one home.
     // `decision` stays exactly as the editor wrote it; this sits beside it.
     get accepted() {
@@ -207,9 +227,18 @@ function readPaper(year, slug) {
   const paperDir = path.join(REVIEWS_DIR, year, slug);
   const bundles = readDirs(paperDir)
     .filter((name) => /^v\d+$/.test(name))
-    .map((name) => readBundle(paperDir, name))
+    .flatMap((name) => {
+      const versionDir = path.join(paperDir, name)
+      const nested = readDirs(versionDir)
+        .filter((attempt) => /^r\d+$/.test(attempt))
+        .map((attempt) => readBundle(paperDir, name, attempt))
+      const legacy = readBundle(paperDir, name)
+      return [...(legacy ? [legacy] : []), ...nested]
+    })
     .filter(Boolean)
-    .sort((a, b) => b.versionNumber - a.versionNumber);
+    .sort((a, b) =>
+      b.versionNumber - a.versionNumber || b.attemptNumber - a.attemptNumber
+    )
 
   if (!bundles.length) return null;
 
@@ -223,9 +252,8 @@ function readPaper(year, slug) {
   // verdict. Letting it decide would hand a free model the casting vote over
   // the panel it was run to compare against.
   //
-  // Where every review of a paper is single-model there is nothing better to
-  // fall back to, and the newest stands.
-  const decisive = bundles.find((b) => b.graded) || latest;
+  // A paper with only experiments has a public record but no editorial status.
+  const decisive = bundles.find((b) => b.baselineEligible) || null
   return {
     year,
     slug,
@@ -283,7 +311,8 @@ export function statistics() {
     papers: papers.length,
     reviews: reviews.length,
     accepted,
-    declined: papers.length - accepted,
+    declined: papers.filter((p) => p.status === "declined").length,
+    experimental: papers.filter((p) => p.status === "experimental").length,
     reports: reviews.reduce(
       (n, r) => n + r.documents.reviewers.length + r.documents.audits.length,
       0,

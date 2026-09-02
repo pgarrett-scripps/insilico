@@ -18,6 +18,7 @@ from __future__ import annotations
 import contextlib
 import datetime as dt
 import email.utils
+import hashlib
 import json
 import os
 import sys
@@ -34,6 +35,7 @@ from preview_submission import COMMENT_MARKER, build_preview  # noqa: E402
 from run_review import (  # noqa: E402
     BUNDLE_FILES,
     CommandError,
+    configuration_record,
     draft_number,
     paper_slug,
     plan_review,
@@ -117,6 +119,15 @@ def check(title: str) -> None:
         # Which model wrote which report is a disclosure, not a nicety.
         assert prov["models"]["reviewer"]["model"] == "claude-haiku-4-5"
         assert prov["models"]["synthesis"]["model"] == "claude-opus-5"
+        assert prov["schema_version"] == 2
+        assert prov["insilico"]["sha"]
+        assert len(prov["configuration"]["sha256"]) == 64
+
+        manifest = json.loads((dest / "manifest.json").read_text(encoding="utf-8"))
+        assert manifest["schema_version"] == 1
+        assert manifest["files"]["provenance.json"] == hashlib.sha256(
+            (dest / "provenance.json").read_bytes()
+        ).hexdigest()
 
         for name in BUNDLE_FILES:
             assert (dest / name).exists(), f"missing bundle file {name}"
@@ -124,6 +135,39 @@ def check(title: str) -> None:
         assert len(list(dest.glob("audit_*.md"))) == 2, "audit reports not copied"
 
         assert slugify(title), f"title produced an empty slug: {title!r}"
+
+
+def check_provenance_is_portable_and_secret_free() -> None:
+    """Configuration hashes describe the run without leaking its machine."""
+    record = configuration_record({
+        "revision_of": str(REPO / "docs" / "reviews" / "paper" / "v1" / "r2"),
+        "journals_dir": str(REPO / "journals"),
+        "api_key": "do-not-publish",
+        "nested": {"token": "also-secret", "kept": 3},
+        "output_dir": "/tmp/runtime-only",
+    })
+    resolved = record["resolved"]
+    assert resolved["revision_of"] == "docs/reviews/paper/v1/r2"
+    assert resolved["journals_dir"] == "journals"
+    assert "api_key" not in resolved
+    assert "token" not in resolved["nested"]
+    assert "output_dir" not in resolved
+    assert len(record["sha256"]) == 64
+
+
+def check_published_bundle_cannot_be_overwritten() -> None:
+    """A second write to one record must fail before changing any artifact."""
+    with tempfile.TemporaryDirectory() as tmp:
+        dest = Path(tmp) / "v1" / "r1"
+        build_fixture("First review", dest)
+        before = (dest / "provenance.json").read_bytes()
+        try:
+            build_fixture("Second review", dest)
+        except FileExistsError:
+            pass
+        else:
+            raise AssertionError("an existing review bundle was overwritten")
+        assert (dest / "provenance.json").read_bytes() == before
 
 
 def check_unscorable_dimension_is_not_a_good_score() -> None:
@@ -349,7 +393,7 @@ def check_versioning() -> None:
                 preprint,
                 {"decision": decision, "manuscript_title": "A paper",
                  "total_cost": 1.0, "errors": [], "reports": []},
-                run_dir, paper / f"v{v}", "1", "octocat",
+                run_dir, paper / f"v{v}" / "r1", "1", "octocat",
             )
             return v
 
@@ -359,7 +403,8 @@ def check_versioning() -> None:
 
         # A draft we have not seen lands beside the others; one we have needs
         # asking for. v1 and v2 both exist by now.
-        assert plan_review(paper, 3, replace=False).dest.name == "v3"
+        planned = plan_review(paper, 3, replace=False)
+        assert planned.dest.parent.name == "v3" and planned.dest.name == "r1"
         for seen in (1, 2):
             try:
                 plan_review(paper, seen, replace=False)
@@ -369,19 +414,20 @@ def check_versioning() -> None:
             except CommandError:
                 pass
         again = plan_review(paper, 1, replace=True)
-        assert again.replacing and again.dest.name == "v1", \
-            "--replace must overwrite the review of that same draft"
+        assert again.previous_attempt == paper / "v1" / "r1"
+        assert again.dest == paper / "v1" / "r2", \
+            "--replace must create a second immutable review attempt"
         assert again.prior is None, \
-            "a replacement is round 1: it must not inherit the round it tests"
+            "a same-draft re-review is round 1 and inherits no prior verdict"
 
-        v1 = provenance_of(paper / "v1")
-        v2 = provenance_of(paper / "v2")
+        v1 = provenance_of(paper / "v1" / "r1")
+        v2 = provenance_of(paper / "v2" / "r1")
         assert v1["decision"] == "reject", "v1 verdict was overwritten by the re-review"
         assert v2["decision"] == "accept", "v2 verdict not recorded"
         assert v1["preprint"]["version"] == "1"
         assert v2["preprint"]["version"] == "2"
 
-        bled = sorted(p.name for p in (paper / "v2").glob("review_*.md"))
+        bled = sorted(p.name for p in (paper / "v2" / "r1").glob("review_*.md"))
         assert bled == ["review_methodology.md"], f"v1 reports bled into v2: {bled}"
 
         # Both bundles sit side by side under the paper, which is what the site
@@ -412,19 +458,19 @@ def check_round_is_not_version() -> None:
                  "total_cost": 1.0, "errors": [], "reports": []}
 
         paper = Path(tmp) / "2026" / "a-paper"
-        # Second bundle, still round 1 — a re-review, not a revision.
-        write_bundle(preprint, state, run_dir, paper / "v1", "1", "me")
-        write_bundle(preprint, state, run_dir, paper / "v2", "1", "me")
-        v2 = json.loads((paper / "v2" / "provenance.json").read_text())
+        # Second attempt, still round 1, a re-review, not a revision.
+        write_bundle(preprint, state, run_dir, paper / "v1" / "r1", "1", "me")
+        write_bundle(preprint, state, run_dir, paper / "v1" / "r2", "1", "me")
+        v2 = json.loads((paper / "v1" / "r2" / "provenance.json").read_text())
         assert v2["round"] == 1, f"v2 must not imply round 2: {v2['round']}"
 
         # Now a genuine round 2.
         write_bundle(
-            preprint, state, run_dir, paper / "v3", "1", "me", None,
+            preprint, state, run_dir, paper / "v2" / "r1", "1", "me", None,
             {"round": 2, "prior_decision": "major", "kind": "revision",
              "prior_required_revisions": 7},
         )
-        v3 = provenance_of(paper / "v3")
+        v3 = provenance_of(paper / "v2" / "r1")
         assert v3["round"] == 2, "explicit round not recorded"
         # The panel reads every round cold, so what the previous round decided
         # and how many revisions it required is the only continuity a reader
@@ -433,6 +479,35 @@ def check_round_is_not_version() -> None:
         assert v3["revision"]["prior_decision"] == "major"
         assert v3["revision"]["prior_required_revisions"] == 7, \
             "the previous round's asks must reach the record"
+
+
+def check_latest_editorial_attempt_is_the_revision_baseline() -> None:
+    """A new manuscript draft follows the latest eligible editorial review."""
+    with tempfile.TemporaryDirectory() as tmp:
+        paper = Path(tmp) / "2026" / "a-paper"
+
+        def attempt(number: int, eligible: bool) -> Path:
+            bundle = paper / "v1" / f"r{number}"
+            bundle.mkdir(parents=True)
+            (bundle / "provenance.json").write_text(json.dumps({
+                "models": {"reviewer": {"model": "graded"}} if eligible else {},
+                "review": {
+                    "baseline_eligible": eligible,
+                    "lifecycle": "active",
+                },
+            }))
+            (bundle / "round.json").write_text(json.dumps({"round": 1}))
+            return bundle
+
+        first = attempt(1, True)
+        latest_editorial = attempt(2, True)
+        experiment = attempt(3, False)
+
+        plan = plan_review(paper, 2, replace=False)
+        assert plan.prior == latest_editorial
+        assert plan.prior != first
+        assert plan.prior != experiment
+        assert plan.dest == paper / "v2" / "r1"
 
 
 def check_site_never_injects_raw_html() -> None:
@@ -957,8 +1032,8 @@ def check_command_parsing_is_strict() -> None:
     # /revise survives only as muscle memory and does nothing extra.
     assert parse_command("/revise") == parse_command("/review")
 
-    # Overwriting a published review is the one destructive thing an editor
-    # can ask for, so it has to be said out loud and never inferred.
+    # A same-draft re-review must be requested explicitly. It creates a new
+    # immutable attempt and is never inferred from a bare command.
     assert parse_command("/review replace")["replace"] is True
     assert parse_command("/review")["replace"] is False
     assert parse_command("/review replace openrouter x/y:free") == {
@@ -975,6 +1050,7 @@ def check_command_parsing_is_strict() -> None:
         "/review openrouter ../../etc/passwd",   # path
         "/review openrouter $(rm -rf /)",        # shell
         "/review openrouter no-vendor",          # not vendor/model
+        "/review openrouter x/y:free extra",     # trailing input
     ):
         try:
             parse_command(bad)
@@ -1056,7 +1132,7 @@ def check_rerun_refuses_a_moved_draft() -> None:
 
 
 def check_rerun_does_not_inherit_the_prior_round() -> None:
-    """A replacement must not be wired as a revision.
+    """A same-draft re-review must not be wired as a revision.
 
     Two properties, both load-bearing. It stays round 1, because nothing was
     revised. And `revision_of` never reaches the pipeline config, because that
@@ -1064,7 +1140,7 @@ def check_rerun_does_not_inherit_the_prior_round() -> None:
     required revisions as its reference point — a re-review that inherits the
     verdict it exists to test is not a test.
 
-    `plan_review` enforces the second structurally: a replacement carries no
+    `plan_review` enforces the second structurally: a re-review carries no
     prior, and only a prior sets `revision_of`. Asserted there as well as
     here, because the two could drift apart.
     """
@@ -1073,7 +1149,7 @@ def check_rerun_does_not_inherit_the_prior_round() -> None:
     import run_review
 
     src = inspect.getsource(run_review._run)
-    block = src[src.index("if plan.replacing:"):]
+    block = src[src.index("if plan.previous_attempt is not None:"):]
     block = block[: block.index("if prior_bundle is not None:")]
     # Comments stripped, or this matches the comment explaining the absence
     # rather than the absence. It did, the first time it ran.
@@ -1081,10 +1157,10 @@ def check_rerun_does_not_inherit_the_prior_round() -> None:
         line for line in block.splitlines()
         if not line.lstrip().startswith("#")
     )
-    assert '"round": 1' in code, "a replacement is round 1"
+    assert '"round": 1' in code, "a same-draft re-review is round 1"
     assert '"kind": "rerun"' in code, "the page needs to know what this is"
     assert "revision_of" not in code, \
-        "a replacement must not anchor the panel to the round it is testing"
+        "a same-draft re-review must not inherit the verdict it is testing"
 
 
 def check_bare_doi_picks_the_right_server() -> None:
@@ -1198,8 +1274,12 @@ def main() -> int:
     print("ok  how the manuscript was read is always recorded")
     check_desk_reject()
     print("ok  desk reject records no panel and keeps every body")
+    check_provenance_is_portable_and_secret_free()
+    print("ok  provenance is portable and excludes secrets")
+    check_published_bundle_cannot_be_overwritten()
+    print("ok  published review bundles cannot be overwritten")
     check_versioning()
-    print("ok  re-review adds v2 without touching v1")
+    print("ok  manuscript versions and immutable review attempts stay separate")
     check_slug_uniqueness()
     print("ok  distinct papers get distinct directories")
     check_staleness_scan_finds_bundles()
@@ -1208,6 +1288,8 @@ def main() -> int:
     print("ok  a re-stamped bioRxiv PDF is not reported as stale")
     check_round_is_not_version()
     print("ok  bundle version and review round stay distinct")
+    check_latest_editorial_attempt_is_the_revision_baseline()
+    print("ok  a revision follows the latest eligible editorial review")
     check_solicitation_is_labelled()
     print("ok  the solicitation claim is recorded, all three ways")
     check_metadata_is_sanitised_at_ingestion()

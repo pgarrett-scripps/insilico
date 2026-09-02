@@ -420,6 +420,7 @@ main {
 .verdict--major { --v: var(--v-major); }
 .verdict--reject { --v: var(--v-reject); }
 .verdict--desk { --v: var(--v-desk); }
+.verdict--experimental { --v: var(--ink-faint); }
 
 /* In Silico's own answer, as opposed to the verdict the editor recommended.
    Revision needed borrows the major-revision amber because the letter explains

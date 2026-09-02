@@ -132,15 +132,24 @@ contains `manuscript_stats.md`, which records counts over the text the panel
 read so a reader can compare that text with the source PDF.
 
 Every review ships a `provenance.json`: provider, the model at each stage and
-any per-agent override, pipeline version and commit SHA, debate rounds, active
-desk screens, per-reviewer scores, total and per-agent cost, and the resolved
-preprint metadata. You can re-run the panel yourself. Output will not be
-identical because the models are not deterministic. The configuration is fully
-disclosed.
+any per-agent override, PeerReviewAgents version and commit SHA, In Silico
+commit SHA, resolved configuration and hash, journal profile hash, debate
+rounds, active desk screens, per-reviewer scores, total and per-agent cost, and
+the resolved preprint metadata. A `manifest.json` fingerprints every artifact
+in the bundle. You can re-run the panel yourself. Output will not be identical,
+because the models are not deterministic, but the inputs are disclosed.
 
-A published bundle is never edited. A fresh run is published separately, and so
-is a [revision round](criteria.md#revision-rounds). Revision bundles include a
-`round.json` record of what was carried forward.
+A published bundle is never edited. Records use two coordinates. `v<N>` is the
+manuscript version and `r<M>` is an independent review attempt of that version.
+A same-version re-review creates a new attempt and does not inherit the earlier
+attempt's verdict or score.
+
+The newest eligible editorial attempt on the newest earlier manuscript version
+is the baseline for a [revision round](criteria.md#revision-rounds). That exact
+bundle is passed to PeerReviewAgents through its built-in revision comparison.
+Single-model experiments remain visible but do not set the paper's status and
+cannot become a revision baseline. Revision bundles include a `round.json`
+record of what was carried forward.
 
 ## Removing a review
 

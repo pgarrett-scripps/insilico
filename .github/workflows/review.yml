@@ -61,8 +61,10 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request == null &&
-       (startsWith(github.event.comment.body, '/review') ||
-        startsWith(github.event.comment.body, '/revise')) &&
+       (github.event.comment.body == '/review' ||
+        startsWith(github.event.comment.body, '/review ') ||
+        github.event.comment.body == '/revise' ||
+        startsWith(github.event.comment.body, '/revise ')) &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -145,8 +147,8 @@ jobs:
       # runner whose workspace starts empty. Restoring a checkpoint that does
       # not match — another paper, a new draft, changed models — is inert by
       # construction, and `/review replace` restores but deliberately ignores
-      # them: the runner passes resume=False so a replacement samples fresh
-      # instead of replaying the review being replaced.
+      # them: the runner passes resume=False so a new attempt samples fresh
+      # instead of replaying the prior attempt.
       - name: Restore panel checkpoints
         uses: actions/cache/restore@v4
         with:
