@@ -1,7 +1,7 @@
 name: CI
 
 # Review PRs are machine-generated, so the site build has to be checked *before*
-# merge — a bundle the site can't render would otherwise take down the deploy
+# merge. A bundle the site cannot render would otherwise take down the deploy
 # only once it had already landed on main.
 on:
   pull_request:
@@ -42,8 +42,11 @@ jobs:
       - name: Site builds
         run: npm run build
 
+      - name: Project prose contains no forbidden punctuation
+        run: npm run check:punctuation
+
       # Astro will happily build a site with zero review pages if the corpus
-      # reader stops matching the layout the pipeline writes — which is exactly
+      # reader stops matching the layout the pipeline writes. This is exactly
       # the silent failure that has bitten this repo before. Assert the corpus
       # actually made it into the output.
       - name: Every published review rendered
@@ -52,25 +55,32 @@ jobs:
           # are both four levels below their respective reviews/ root.
           expected=$(find docs/reviews -mindepth 4 -maxdepth 4 -name provenance.json | wc -l)
           actual=$(find dist/reviews -mindepth 4 -maxdepth 4 -path '*/v*/index.html' | wc -l)
-          echo "bundles on disk: $expected · review pages built: $actual"
+          echo "bundles on disk: $expected, review pages built: $actual"
           if [ "$expected" -ne "$actual" ]; then
             echo "::error::$expected review bundles exist but $actual pages were built."
             exit 1
           fi
           if [ "$expected" -eq 0 ]; then
-            echo "::warning::No review bundles found — nothing to check."
+            echo "::warning::No review bundles found. Nothing to check."
           fi
 
       # The editorial pages link to each other as `policy.md#anchor` so they
-      # read correctly on GitHub; a remark plugin rewrites those into site URLs
+      # read correctly on GitHub. A remark plugin rewrites those into site URLs
       # at build time. When that plugin stops matching a link, the page still
-      # builds and the link still looks right in the source — it just 404s for
+      # builds and the link still looks right in the source. It just 404s for
       # every reader. Seven of them shipped that way once.
-      - name: No unrewritten .md links escaped into the build
+      - name: No unrewritten internal .md links escaped into the build
         run: |
-          if grep -rlE 'href="[^"]*\.md([#"?]|$)' dist/ >/dev/null 2>&1; then
+          bad_links="$(
+            grep -rhoE 'href="[^"]*\.md[^"]*"' dist/ \
+              | grep -vE '^href="https?://' \
+              | sort -u \
+              || true
+          )"
+          if [ -n "$bad_links" ]
+          then
             echo "::error::These links point at .md files and will 404:"
-            grep -rhoE 'href="[^"]*\.md[^"]*"' dist/ | sort -u
+            echo "$bad_links"
             exit 1
           fi
-          echo "no .md hrefs in the built site"
+          echo "no internal .md hrefs in the built site"

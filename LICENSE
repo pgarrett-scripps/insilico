@@ -1,11 +1,11 @@
 In Silico is licensed in two parts.
 
 ================================================================================
-Reviews and site content — CC BY 4.0
+Reviews and site content: CC BY 4.0
 ================================================================================
 
-Everything under docs/ — the published reviews, the referee bundles, and the
-journal's own pages — is licensed under the Creative Commons Attribution 4.0
+Everything under docs/, including the published reviews, referee bundles, and
+journal pages, is licensed under the Creative Commons Attribution 4.0
 International License.
 
 You are free to share and adapt this material for any purpose, including
@@ -15,7 +15,7 @@ made.
 Full text: https://creativecommons.org/licenses/by/4.0/legalcode
 
 ================================================================================
-Site software and automation — MIT
+Site software and automation: MIT
 ================================================================================
 
 All source code, site templates, configuration, scripts, and workflows outside

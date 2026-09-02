@@ -5,7 +5,7 @@
  * This is the thing In Silico can publish that a conventional journal cannot.
  * A normal paper gets three referees whose scores you never see; here there
  * the full panel is visible, and the interesting signal is usually not the mean but the
- * *spread* — a paper at 3.5 because every referee said 3.5 is a different
+ * *spread*. A paper at 3.5 because every referee said 3.5 is a different
  * paper from one at 3.5 because methodology said 2 and novelty said 5.
  *
  * So each row is coloured by its own score rather than by the panel's verdict.
@@ -13,7 +13,7 @@
  * disagreement a reader should notice.
  *
  * Nothing here decides anything. The verdict comes from the editor's decision
- * letter and is not computed from these numbers — a 3.9 mean has been ruled a
+ * letter and is not computed from these numbers. A 3.9 mean has been ruled a
  * major revision more often than a minor one. The colours are a scale, not a
  * prediction, and are named so they cannot be read as one.
  *
@@ -42,8 +42,8 @@ const rows = panel
       score,
       confidence,
       // A null score means the dimension had nothing to judge in this
-      // manuscript. It is shown, not hidden — that a paper has no statistics
-      // to check is a fact about the paper — but it carries no meter and no
+      // manuscript. It is shown, not hidden. That a paper has no statistics
+      // to check is a fact about the paper, but it carries no meter and no
       // colour, because it is not a point on the scale.
       notApplicable: score === null,
       reason: String(entry.not_applicable_reason || "").trim(),
@@ -79,7 +79,7 @@ const meanTier = tierFor(meanScore);
         <div class="readout__aggregate">
           <div class={`readout__mean readout__mean--${meanTier}`}>
             <span class="readout__meanValue mono">
-              {meanScore !== null ? meanScore.toFixed(1) : "—"}
+              {meanScore !== null ? meanScore.toFixed(1) : "N/A"}
             </span>
             <span class="readout__meanScale mono">/ {SCALE}</span>
           </div>
@@ -134,10 +134,10 @@ const meanTier = tierFor(meanScore);
               </span>
 
               <span class="readout__score mono">
-                {row.score !== null ? row.score.toFixed(1) : "—"}
+                {row.score !== null ? row.score.toFixed(1) : "N/A"}
               </span>
 
-              <span class="readout__conf" title={`Confidence ${row.confidence ?? "—"} of ${SCALE}`}>
+              <span class="readout__conf" title={`Confidence ${row.confidence ?? "N/A"} of ${SCALE}`}>
                 <span class="sr-only">
                   Confidence {row.confidence ?? "unrecorded"} of {SCALE}
                 </span>
@@ -163,7 +163,7 @@ const meanTier = tierFor(meanScore);
           <>
             {" "}
             <span class="label">n/a</span> means that referee found nothing in
-            its dimension to judge here — it is left out of the mean rather
+            its dimension to judge here. It is left out of the mean rather
             than counted as a good score, which is what a forced number
             quietly became.
           </>
@@ -208,9 +208,9 @@ const meanTier = tierFor(meanScore);
     color: var(--v);
   }
 
-  /* The site's verdict palette, reused as a five-step ramp because it is the
+  /* The site's verdict palette is reused as a five-step ramp because it is the
      one warm-to-cool scale the design already has. A score tinted like an
-     accept is not an accept — see the tier comment above. */
+     accept is not an accept. See the tier comment above. */
   .readout__mean--s5 { --v: var(--v-accept); }
   .readout__mean--s4 { --v: var(--v-minor); }
   .readout__mean--s3 { --v: var(--v-major); }

@@ -1,7 +1,7 @@
 # In Silico
 
-**An open journal of AI-written peer reviews. Send us a preprint link, get a
-full referee report back — and everything is published.**
+**An open journal of AI-written peer reviews. Send us a preprint link and get a
+full referee report back. Everything is published.**
 
 [**Browse the reviews →**](https://pgarrett-scripps.github.io/insilico/reviews/)
 
@@ -19,9 +19,9 @@ journal's reviewers would: five specialists each take one question, two
 fact-checkers audit the citations and methods, the findings are argued out in a
 debate, and an editor writes the decision letter.
 
-Then we publish *all of it* — the letter, every report, the debate, and a
-record of exactly which models did the work and what it cost — next to a link
-to your paper.
+Then we publish *all of it*: the letter, every report, the debate, and a record
+of exactly which models did the work and what it cost. It all appears next to a
+link to your paper.
 
 [![The published reviews page](media/reviews.png)](https://pgarrett-scripps.github.io/insilico/reviews/)
 
@@ -31,13 +31,15 @@ You don't need to know how to code. You need a free GitHub account and a link.
 
 1. **[Open a submission issue](../../issues/new?template=submit.yml)** and
    paste your preprint link.
-2. **A human editor starts the review.** The panel runs on its own from there.
-3. **The review is published** on the site, where you can read every word the
+2. **A bot checks the public metadata** and shows the editor which command fits
+   the current draft.
+3. **A human editor starts the review.** The panel runs on its own from there.
+4. **The review is published** on the site, where you can read every word the
    panel wrote.
 
-That's it. Anyone can submit any public preprint, including one they didn't
-write — the form asks whether you're an author, and every review says which it
-was.
+That's it. Anyone can submit any public preprint, including one they did not
+write. The form asks whether you are an author, and every review records the
+answer.
 
 ## What you get back
 
@@ -48,7 +50,7 @@ paper.
 [![A review record page](media/review-record.png)](https://pgarrett-scripps.github.io/insilico/reviews/2026/patch-clamp-single-cell-proteomics-in-acute-brain-10-1101-2025-09-15-675920/)
 
 Posted a new draft since? Ask on your submission issue and the new version gets
-a fresh review, published beside the old one — the record shows how the paper
+a fresh review, published beside the old one. The record shows how the paper
 improved.
 
 ## The ground rules
@@ -57,9 +59,9 @@ improved.
   the paper is about. The one exception: we don't review work where a wrong
   machine-generated review could affect patient care.
 - **The AI's words are never edited.** A human editor publishes a review or
-  declines to; nobody rewrites what the panel said.
-- **Nothing you write reaches the panel.** No response letter, no appeal — the
-  referees only ever see the paper
+  declines to. Nobody rewrites what the panel said.
+- **Nothing you write reaches the panel.** No response letter and no appeal.
+  The referees only ever see the paper
   ([why](docs/submit.md#why-we-do-not-accept-a-response-letter)).
 - **You can ask us to remove a review.** Comment on the submission issue and we
   take the review off the site. No explanation is required.

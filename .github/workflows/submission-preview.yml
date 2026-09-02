@@ -1,0 +1,52 @@
+name: Preview preprint submission
+
+on:
+  issues:
+    types: [opened, edited, labeled, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: submission-preview-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: contains(github.event.issue.labels.*.name, 'submission')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Resolve public preprint metadata
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python scripts/preview_submission.py --issue-body "$ISSUE_BODY" > /tmp/submission-preview.md
+
+      - name: Create or refresh the preview comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          comment_id="$(
+            gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments?per_page=100" \
+              --jq '[.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- insilico-submission-preview -->")) | .id][0] // empty'
+          )"
+
+          if [ -n "$comment_id" ]
+          then
+            gh api --method PATCH \
+              "repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}" \
+              -F body=@/tmp/submission-preview.md
+          else
+            gh api --method POST \
+              "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" \
+              -F body=@/tmp/submission-preview.md
+          fi

@@ -3,7 +3,7 @@ import "../styles/global.css";
 
 const {
   title,
-  description = "An open, AI-refereed overlay journal. Any field; the whole review published.",
+  description = "An open, AI-refereed overlay journal. Any field. The whole review published.",
   ogType = "website",
   wide = false,
 } = Astro.props;
@@ -11,7 +11,7 @@ const {
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const site = Astro.site ? new URL(base + "/", Astro.site).href.replace(/\/$/, "") : base;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? "http://localhost").href;
-const fullTitle = title ? `${title} — In Silico` : "In Silico";
+const fullTitle = title ? `${title}, In Silico` : "In Silico";
 
 const nav = [
   { href: `${base}/reviews/`, label: "Reviews" },
@@ -49,8 +49,8 @@ const path = Astro.url.pathname;
     <link rel="sitemap" href={`${base}/sitemap-index.xml`} />
 
     {/* Applied before first paint so a stored preference never flashes the
-        wrong ground. Inline and synchronous on purpose — deferring it is
-        exactly what causes the flash. */}
+        wrong ground. It is inline and synchronous because deferring it causes
+        the flash. */}
     <script is:inline>
       (function () {
         try {

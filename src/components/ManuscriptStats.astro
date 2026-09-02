@@ -9,8 +9,8 @@
  * without that a quoted sentence that does not match the paper is
  * indistinguishable from a referee having misread it.
  *
- * Every figure is deterministic — counted at ingest with no model involved —
- * and none of it reached a referee except four rough numbers given to the
+ * Every figure is deterministic and counted at ingest with no model involved.
+ * None of it reached a referee except four rough numbers given to the
  * clarity reviewer under heavy caveat. So this is evidence about the text,
  * not a second opinion about the paper, and it is written to read that way:
  * no adjectives, no thresholds, no "good" or "poor".
@@ -27,8 +27,8 @@ const health = stats.health || {};
 const has = (v) => typeof v === "number" && Number.isFinite(v);
 const show = Boolean(counts.words);
 
-const int = (n) => (has(n) ? n.toLocaleString("en-US") : "—");
-const pct = (n) => (has(n) ? `${Math.round(n * 100)}%` : "—");
+const int = (n) => (has(n) ? n.toLocaleString("en-US") : "N/A");
+const pct = (n) => (has(n) ? `${Math.round(n * 100)}%` : "N/A");
 
 // Size first: it is the number a reader is most likely to want and the one
 // least likely to be wrong.
@@ -49,17 +49,17 @@ const size = [
 // sentence full of equations drags a mean and leaves a median alone.
 const shape = density
   ? [
-      { label: "Median sentence", value: has(density.sentence_len_median) ? `${density.sentence_len_median} words` : "—" },
-      { label: "Longest tenth", value: has(density.sentence_len_p90) ? `${density.sentence_len_p90} words` : "—" },
+      { label: "Median sentence", value: has(density.sentence_len_median) ? `${density.sentence_len_median} words` : "N/A" },
+      { label: "Longest tenth", value: has(density.sentence_len_p90) ? `${density.sentence_len_p90} words` : "N/A" },
       { label: "Over 40 words", value: pct(density.long_sentence_share) },
-      { label: "Passive", value: has(density.passive_per_sentence_approx) ? `~${density.passive_per_sentence_approx}/sentence` : "—", note: "regex approximation" },
+      { label: "Passive", value: has(density.passive_per_sentence_approx) ? `~${density.passive_per_sentence_approx}/sentence` : "N/A", note: "regex approximation" },
     ]
   : [];
 
 // Hedges against boosters is the only pair here worth drawing rather than
 // listing: the ratio is the interesting quantity and two numbers in a table
-// do not show a ratio. It is drawn without a verdict attached — no band, no
-// threshold — because what counts as too many boosters is a judgment and this
+// do not show a ratio. It is drawn without a verdict, band, or threshold.
+// What counts as too many boosters is a judgment, and this
 // component does not make judgments.
 const hedges = has(density?.hedges_per_1k) ? density.hedges_per_1k : null;
 const boosters = has(density?.boosters_per_1k) ? density.boosters_per_1k : null;
@@ -75,12 +75,12 @@ const evidence = density
           ? "this venue most likely sets them as superscript numerals, which convert to bare digits"
           : `${density.citations_per_1k} per 1000 words, ${density.citation_style.replace("_", "–")} style`,
       },
-      { label: "Numbers", value: has(density.numbers_per_1k) ? `${density.numbers_per_1k}` : "—", note: "per 1000 words" },
+      { label: "Numbers", value: has(density.numbers_per_1k) ? `${density.numbers_per_1k}` : "N/A", note: "per 1000 words" },
       {
         label: "p-values",
         value: has(density.p_values_exact) || has(density.p_values_threshold)
           ? `${density.p_values_exact} exact, ${density.p_values_threshold} threshold`
-          : "—",
+          : "N/A",
       },
     ]
   : [];

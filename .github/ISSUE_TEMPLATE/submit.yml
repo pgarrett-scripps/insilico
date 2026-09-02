@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        One preprint per issue. Paste the link — we fetch the PDF and pull the
-        title, authors and version ourselves.
+        One preprint per issue. Paste the link. We fetch the PDF and pull the
+        title, authors, and version ourselves.
 
         An editor starts each run by hand, so expect a wait. **The review is
         published whatever it says**, and we will not take one down because you

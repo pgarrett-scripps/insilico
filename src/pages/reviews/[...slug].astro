@@ -2,7 +2,7 @@
 /**
  * Every page under /reviews/, at all three depths:
  *
- *   <year>/<slug>/                 the paper — its whole review history
+ *   <year>/<slug>/                 the paper and its whole review history
  *   <year>/<slug>/v<N>/            one review of one revision
  *   <year>/<slug>/v<N>/<document>/ one document from that review
  *
@@ -75,17 +75,17 @@ if (kind === "paper") {
     paper.latest.meanScore !== null ? ` · mean panel score ${paper.latest.meanScore}/5` : ""
   }. ${paper.reviewCount > 1 ? `${paper.reviewCount} reviews on record. ` : ""}AI referee panel. Advisory, not a certification.`;
 } else if (kind === "review") {
-  pageTitle = `${paper.title} — ${bundle.version}`;
+  pageTitle = `${paper.title}, ${bundle.version}`;
   pageDescription = `${verdictOf(bundle)}${
     bundle.meanScore !== null ? ` · mean panel score ${bundle.meanScore}/5` : ""
   }. AI referee panel. Advisory, not a certification.`;
 } else {
   // The version belongs in the title. Without it every document of a revised
-  // paper shares a title with its round-1 counterpart — 52 pages on the
-  // current corpus — so a search result, a bookmark, or a second browser tab
+  // paper shares a title with its round-1 counterpart. That affects 52 pages
+  // in the current corpus, so a search result, bookmark, or second browser tab
   // cannot tell round 1 from round 2. Distinguishing the rounds is the entire
   // point of running one.
-  pageTitle = `${doc.label} (${bundle.version}) — ${paper.title}`;
+  pageTitle = `${doc.label} (${bundle.version}), ${paper.title}`;
   pageDescription = `${doc.label} from the In Silico referee panel's review of "${paper.title}" (${bundle.version}).`;
 }
 
@@ -113,8 +113,8 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           )}
           {/* Two facts, never collapsed into one. The chip is what In Silico
               did; the line under it is what the editor recommended and which
-              review that came from. A reader who sees only "Declined" over a
-              constructive letter should be able to find the major-revision
+              review that came from. A reader who sees "Revision needed" over
+              a constructive letter should be able to find the major-revision
               recommendation it was derived from. */}
           <div class="head__chips">
             <span class={`verdict verdict--${paper.status}`}>
@@ -185,7 +185,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                         {rerun && <span class="dim"> (re-review)</span>}
                       </td>
                       <td class="mono">
-                        {b.preprint.version ? `v${b.preprint.version}` : "—"}
+                        {b.preprint.version ? `v${b.preprint.version}` : "N/A"}
                       </td>
                       <td>
                         <span class={`verdict verdict--${verdictClass(b)}`}>
@@ -193,7 +193,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                         </span>
                       </td>
                       <td class="mono">
-                        {b.meanScore !== null ? b.meanScore.toFixed(1) : "—"}
+                        {b.meanScore !== null ? b.meanScore.toFixed(1) : "N/A"}
                       </td>
                       <td class="mono dim">{b.reviewedAt}</td>
                     </tr>
@@ -205,7 +205,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           <p class="history__note">
             One review per revision of the manuscript. A re-review under an
             updated pipeline replaces its row (marked
-            <span class="dim">re-review</span> above); reviews of superseded
+            <span class="dim">re-review</span> above). Reviews of superseded
             drafts stand as the record of what the panel said at the time.
           </p>
         </section>
@@ -219,7 +219,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           reviewedVersion={String(paper.latest.preprint.version || "")}
           noteExtra={
             paper.reviewCount > 1
-              ? `${paper.reviewCount} reviews on record; this URL shows ${paper.latest.version}`
+              ? `${paper.reviewCount} reviews on record. This URL shows ${paper.latest.version}`
               : ""
           }
           evergreen={true}

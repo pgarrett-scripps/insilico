@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260901-234014-conclusions",
+  "manuscript_title": "CONCLUSIONS",
+  "manuscript_cache_key": "3e3e310c6ccb6b295f2d9cd4973ee17e82d143fdd15e526bc073fdb373a86c2f",
+  "decision": "minor",
+  "weighted_score": 4.0,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Scale the enablement claims to the evidence.** Revise the abstract, the introduction's contribution paragraph, and the conclusions so that \"enables,\" \"lowers the barrier,\" and similar phrasing is explicitly framed as demonstrated feasibility on two worked examples rather than validated reliability. Add one or two sentences stating (a) whether the two transcripts are representative of typical sessions or selected successes, (b) whether the reported workflows succeeded on first attempt or required reformulation/retries, and (c) that success rate, routing accuracy and failure modes across the full graph set have not yet been quantified.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Fix the ontology-expansion claim.** Either report the count of *unique* datasets in the expanded result, the count in the root-only result, and their overlap (i.e. how many datasets the naive query actually missed); or narrow the claim to \"increases recall relative to root-term-only filtering.\" In either case, remove or qualify \"preserving recall,\" which asserts an unmeasured property. Also state explicitly whether \">10,000\" counts unique dataset records or dataset–disease pairs, and clarify the 284-condition tabulation accordingly. Acknowledge the precision/intent trade-off of automatic subtree expansion in one or two sentences.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Specify the division of labour between server and client.** For each step of Case Study 1, state which operations were performed by mcp-proto-okn tools (with the tool name) and which by the LLM assistant's own reasoning or external services: specifically the mouse→human ortholog mapping, the identification of the 322 concordant genes, result merging across the 80 NDE batches, and the generation of assay-design diagrams and concordance plots. A short table or numbered tool-call sequence in Methods or supplementary text would satisfy this.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "**Document the provenance of the Case Study 1 statistics.** State whether the differential-expression results were retrieved as precomputed values from spoke-genelab or recomputed within the session. If precomputed, cite the pipeline and thresholds as recorded by the source repository. Define the r = 0.80 statistic precisely: what quantities were correlated (e.g. log fold changes), across which n (state n = 322 if so), and whether any significance test was applied. If no test was applied, say so and describe the correlation as descriptive; do not describe it as evidence of a \"sustained response\" without stating the basis. Also state the significance threshold and multiple-testing correction behind \"thousands of significant genes,\" and name the source of the ortholog mapping (e.g. Ensembl, HomoloGene) with the release used.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "**Provide a data and materials availability statement with persistent identifiers.** Include: the NASA OSDR/GeneLab accession for OSD-244 with a resolvable URL and, if available, a citation to the study's primary publication (to which wet-lab and animal-care methods are properly delegated); the query date for the NDE and UberGraph queries; and a deposited copy of the query result tables underlying the Case Study 2 tabulation. State explicitly that the Proto-OKN graphs are live services and that results are time-stamped rather than frozen.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**Pin versions.** In Methods, report the Python version, the FastMCP version, the mcp-proto-okn release tag or commit hash used for the case studies, and a pointer to the dependency specification in the repository. Report the LLM model and version used in each case study (e.g. the specific Claude or GPT model), and note that LLM outputs are non-deterministic so transcripts represent single sessions.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**Archive the transcripts and repository snapshot at a persistent, non-GitHub-dependent location.** Deposit the two verbatim transcripts and a code snapshot with a DOI (e.g. Zenodo, Software Heritage) and cite it. The transcripts are the paper's central evidentiary artifact; a `main`-branch blob URL is mutable and may not resolve for future readers.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Sharpen the positioning against TogoMCP and Emonet et al.** Replace the asserted distinction with a candid statement of what is shared (schema-guided LLM SPARQL generation, MCP tool orchestration, ontology-based term expansion — all established) and what is specific here (application to a non-curated, cross-domain graph collection with no shared schema convention; graph routing across 30+ graphs; provenance annotation of multi-graph results). If no head-to-head comparison was performed, say so and say why. Also state whether any query validation step (schema checking, dry-run, syntax validation) is performed before execution, and if not, how hallucinated SPARQL is detected — the Emonet et al. framework's validation step invites this comparison directly.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Document the ontology-expansion mechanics.** State the batch size used (80 batches of what size), the default and configurable expansion bounds, the trigger logic (always expand when a recognised ontology identifier is present, or conditionally), whether descendants are cached or fetched per query, and whether any batches failed or returned partial results in Case Study 2.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**Substantiate or soften the \"coordinated multi-graph querying\" and `get_join_strategy` claims.** Neither case study exercises `multi_graph_query` or `get_join_strategy`; Case Study 1 queries two graphs sequentially. Either add a brief worked example (a transcript excerpt suffices) or state clearly in the text that these tools are implemented but not exercised in the presented use cases, and define what \"coordinated\" means operationally (sequential, parallel, or join across results).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "**Verify the reference list.** Confirm the bioRxiv identifier and status for Kinjo et al. (the given identifier, 2026.03.19.713030, could not be resolved by the citation audit) and confirm the years for Madrigal et al. 2026, Tsueng et al. 2026 and Gebre et al. 2025 as advance/final publications. Check that the Gao et al. citation supports the specific characterisation \"BioBricks toxicology graphs,\" or reword to match what that reference actually describes.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "A held-out evaluation — say 30–50 natural-language questions spanning the graph set, with reported routing accuracy, first-attempt SPARQL validity, and failure taxonomy — would convert the paper's central claim from demonstrated to measured. I have not made this a condition of acceptance, but it is the single highest-value addition available and would be the natural core of a follow-up paper.",
+    "Report indicative wall-clock times for representative queries, including the 80-batch expansion, and any endpoint timeouts or downtime encountered during development. Practical latency matters to users deciding whether to adopt the tool.",
+    "Give one concrete example of the \"query-analysis metadata and warnings about common issues\" returned by the `query` tool; the feature is claimed but never illustrated.",
+    "Describe how the assistant handles ambiguous routing (e.g. \"genes\" matching both spoke-okn and spoke-genelab): clarification prompt, both graphs, or heuristic choice.",
+    "Consider a short paragraph on how the system behaves when two graphs use the same predicate with divergent semantics, since this is the failure mode most specific to the uncurated setting the paper claims as its distinguishing context.",
+    "State the repository licence in the manuscript's availability section.",
+    "In Case Study 1, report how many mouse genes mapped to human orthologs, how many were ambiguous or unmapped, and whether ambiguity was resolved or propagated."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "ethics",
+      "score": null,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "In Case Study 1, how were the \"thousands of significant genes\" identified—by what statistical threshold and multiple-testing correction?",
+        "Does the server cache UberGraph descendants or fetch them fresh on each query, and what is the latency impact?",
+        "The paper mentions \"configurable expansion bounds\" for ontology expansion; what are the defaults and how are they set?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 3.0,
+      "weaknesses": [],
+      "questions": [
+        "For the spaceflight case study, what is the source of the Pearson correlation coefficient (r = 0.80), and is it a correlation between the log-fold-change values of the 322 genes across the two timepoints, or something else?",
+        "In Case 2, how many of the >10,000 datasets retrieved by the expanded query were *not* retrieved by the naive single-URI query, and is that number the key metric for the claim?",
+        "Were the SPARQL queries generated by the assistant manually inspected for correctness, and if so, what fraction were correct on first attempt?",
+        "The paper states that the assistant \"generated assay-design diagrams, concordance plots, disease-association summaries\" — are these outputs of the MCP server itself, or are they generated by the LLM client after receiving results from the server?"
+      ]
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "The chat transcripts are linked but not included in the manuscript; can you confirm they are permanently archived and accessible to readers who may not have GitHub access?",
+        "In Case Study 2, what was the wall-clock time to execute the expanded query across 80 batches, and did the assistant present all 10,000+ results to the user or summarize them?",
+        "How does the system handle cases where a user's natural-language question is ambiguous between two graphs (e.g., \"genes\" could refer to spoke-okn or spoke-genelab)—does the assistant ask for clarification, query both, or use heuristics to choose?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "How does the routing mechanism (route_query tool) decide which graphs are relevant to a natural-language question, and has this been evaluated against a held-out set of questions with ground-truth graph assignments?",
+        "The cardiovascular disease case study expanded MONDO:0004995 to 1,592 descendants; what is the computational cost and latency of this expansion, and are there configurable bounds to prevent runaway expansion?",
+        "TogoMCP is cited as prior work but the manuscript does not report a direct comparison (e.g., same question posed to both systems, success/failure rates, query quality); what prevents such a comparison, and how would readers distinguish the two systems' capabilities?",
+        "The case studies reference \"chat transcripts\" in the GitHub repository; are these verbatim LLM outputs, or have they been curated or edited, and if edited, what changes were made?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "ee214bca4533128997df7b156b9cc384c55526b473665c7a1aaf11b155548ef7",
+  "manuscript_file_sha256": "17730e4ffd5ace71eb3e0921bd1f182411f938ddbc16c8b355fc3270ac6a50be",
+  "prior_job_id": "",
+  "desk_rejected": false
+}

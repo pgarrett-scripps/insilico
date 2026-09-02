@@ -37,7 +37,7 @@ const notices = [];
 if (provenance.desk_rejected) {
   notices.push({
     tone: "danger",
-    title: "Rejected at the desk — no referee panel was convened",
+    title: "Rejected at the desk: no referee panel was convened",
     body: [
       "Stopped before review, so there are no specialist reports below. The editor's reasoning is the whole record of this submission.",
     ],
@@ -45,9 +45,9 @@ if (provenance.desk_rejected) {
 }
 
 // A rerun is round 1 of the same draft under a changed pipeline. It has to
-// announce itself, because a second bundle on a paper's page otherwise reads
-// as a revision — as though the authors had done something, when the only
-// thing that moved was us.
+// announce itself because a second bundle on a paper's page otherwise reads
+// as a revision. That would imply the authors had changed something when only
+// the review pipeline changed.
 if (revision.kind === "rerun") {
   const body = [
     "The same draft, reviewed again after the pipeline changed. The authors revised nothing, and nothing from the earlier review reached this one, so the difference between the two is us, not the work.",

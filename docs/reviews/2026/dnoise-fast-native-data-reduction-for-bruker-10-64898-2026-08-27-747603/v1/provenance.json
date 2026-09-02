@@ -1,0 +1,344 @@
+{
+  "generated_at": "2026-09-02T19:18:57+00:00",
+  "pipeline": {
+    "sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "version": "0.5.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "minor",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "yes",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 41597,
+    "section_source": "document",
+    "text_sha256": "153a61e612e0d2b7698b4458147d216edd4e53419b55f8457a26f4925b836fb1",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 22,
+        "preamble_share": 0.0183,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 41597,
+        "words": 5526,
+        "sentences": 317,
+        "blocks": 148,
+        "display_math": 0,
+        "table_rows": 4,
+        "reference_words": 1012,
+        "references_separable": true,
+        "main_text_words": 4514,
+        "reference_entries": 36
+      },
+      "density": {
+        "sentence_len_mean": 17.49,
+        "sentence_len_median": 16.0,
+        "sentence_len_p90": 29.0,
+        "long_sentence_share": 0.0443,
+        "numbers_per_1k": 145.67,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 1.81,
+        "boosters_per_1k": 0.36,
+        "mattr": 0.5335,
+        "passive_per_sentence_approx": 0.1924,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 82,
+          "sentences": 2,
+          "sentence_len_mean": 41.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 240,
+          "sentences": 10,
+          "sentence_len_mean": 24.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "introduction": {
+          "words": 510,
+          "sentences": 26,
+          "sentence_len_mean": 19.62,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 5.88,
+          "boosters_per_1k": 0.0
+        },
+        "experimental": {
+          "words": 1084,
+          "sentences": 64,
+          "sentence_len_mean": 16.94,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 1.85,
+          "boosters_per_1k": 0.0
+        },
+        "results": {
+          "words": 1795,
+          "sentences": 102,
+          "sentence_len_mean": 17.6,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 1.67,
+          "boosters_per_1k": 1.11
+        },
+        "limitations": {
+          "words": 160,
+          "sentences": 8,
+          "sentence_len_mean": 20.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 12.5,
+          "boosters_per_1k": 0.0
+        },
+        "conclusion": {
+          "words": 633,
+          "sentences": 27,
+          "sentence_len_mean": 23.44,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "2021124d8f1c84bb742f887e55f603af612cb77adfe9b7b105ca34981e337843"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 4.2,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 1.4212748,
+  "cost_by_node": {
+    "advocate": 0.231,
+    "audit_citation_integrity": 0.056672,
+    "audit_methods_completeness": 0.026185,
+    "debate_synthesizer": 0.095343,
+    "desk_screen": 0.034149,
+    "editor": 0.474785,
+    "journal_recommender": 0.013066,
+    "reviewer_contribution_context": 0.140852,
+    "reviewer_data_analysis": 0.01552,
+    "reviewer_ethics": 0.005576,
+    "reviewer_reporting_reproducibility": 0.015664,
+    "reviewer_scientific_validity": 0.012695,
+    "skeptic": 0.299769
+  },
+  "research_by_node": {
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "timsTOF denoising data reduction preprocessing",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ion mobility mass spectrometry native format point removal",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "PASEF acquisition denoising filtering proteomics",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "timsTOF data reduction native format Bruker",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "PNNL PreProcessor ion mobility denoising",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Bruker timsTOF data processing software tools",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "spectral simplification peak detection feature finding mass spectrometry",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "timsTOF PASEF data reduction preprocessing",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "ion mobility spectrometry denoising filtering proteomics",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Wilding-McBride spectral simplification timsTOF",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Wilding-McBride simplifying MS1 MS2 spectra timsTOF",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Bilbao preprocessing ion mobility mass spectrometry PNNL",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bilbao preprocessing tool ion mobility enhanced omics",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "PNNL PreProcessor ion mobility denoising",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "MaxQuant ion mobility timsTOF data processing",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "mzML conversion peak detection feature finding LC-MS",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Bilbao preprocessing enhanced ion mobility mass spectrometry omics workflows 2022",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "native format data reduction mass spectrometry storage",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "label-free quantification timsTOF PASEF proteomics",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Prianichnikov MaxQuant ion mobility enhanced shotgun proteomics",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Demichev DIA-NN neural networks interference correction deep proteome",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Sage proteomics searching quantification open source",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "data compression lossless mass spectrometry raw data storage",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Lazear Sage open source proteomics searching quantification",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "IonQuant label-free quantification match-between-runs",
+        "hits": 5
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.08.27.747603v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.08.27.747603v1.full.pdf",
+    "identifier": "10.64898/2026.08.27.747603",
+    "doi": "10.64898/2026.08.27.747603",
+    "title": "dnoise: Fast Native Data Reduction for Bruker timsTOF",
+    "authors": [
+      "Garrett, P. T.",
+      "Diedrich, J. K.",
+      "Yates, J. R."
+    ],
+    "abstract": "Bruker timsTOF acquisitions produce dense native .d files whose storage, transfer, and archival become substantial at high throughput. We present dnoise, an open-source Rust tool that removes points directly from timsTOF frames and writes a native-compatible .d directory. dnoise retains ions that form coherent streaks across the ion-mobility dimension and applies acquisition-aware gates to signal that cannot be selected for fragmentation. On a three-species benchmark spanning ddaPASEF and diaPASEF at 5- and 15-minute gradients, default MS1-only denoising reduced the frame binary by 35 to 53%. Label-free quantification accuracy was preserved in both modes. ddaPASEF peptide-spectrum-match, peptide, and protein-group counts were unchanged, as expected with the searched MS/MS spectra untouched, and diaPASEF precursor and protein-group counts changed only slightly. Every tested processing run completed in 69 seconds or less on the benchmark workstation. Optional MS/MS denoising produced greater reduction but sacrificed several percent of identifications. Thus, a substantial fraction of native timsTOF frame data can be removed with little analytical change.",
+    "published": "2026-09-01",
+    "version": "1",
+    "pdf_sha256": "2021124d8f1c84bb742f887e55f603af612cb77adfe9b7b105ca34981e337843",
+    "pdf_bytes": 3210972
+  }
+}
