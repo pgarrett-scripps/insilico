@@ -31,12 +31,14 @@ src/                      # the site
 
 scripts/
 ├── fetch_preprint.py     # URL to PDF and metadata
+├── preview_submission.py # issue metadata and editor command preview
 ├── run_review.py         # fetch, review, write the bundle
 ├── check_updates.py      # find reviews whose preprint has changed since
 ├── smoke_test.py         # the pipeline/site data contract, offline
 └── _pinned_review.py     # test helper: review a named version, not the latest
 
 .github/workflows/
+├── submission-preview.yml # metadata preview on new or edited submissions
 ├── review.yml            # /review, opens a review PR
 ├── ci.yml                # checks the data contract and that the site builds
 ├── publish.yml           # builds and deploys on merge
@@ -45,6 +47,21 @@ scripts/
 
 Pages are generated from `provenance.json`, so a review bundle is the only source
 of truth and there is no index to keep in step.
+
+## Submission previews
+
+Opening or editing an issue with the `submission` label runs
+`submission-preview.yml`. The workflow resolves public archive metadata without
+downloading the PDF or calling a model. It then creates or updates one bot
+comment. The comment reports the title, authors, posting date, current draft,
+and any published In Silico drafts. It also recommends `/review`, `/review
+replace`, or a revision round based on the archive version and the bundles
+already in `docs/reviews/`.
+
+The comment carries a hidden marker, so an edit refreshes the existing comment
+instead of adding another. The issue body is untrusted input. It reaches Python
+through an environment variable, and the existing preprint resolver accepts
+only arXiv, bioRxiv, and medRxiv identifiers.
 
 ## Working on the site
 

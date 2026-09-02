@@ -31,8 +31,10 @@ You don't need to know how to code. You need a free GitHub account and a link.
 
 1. **[Open a submission issue](../../issues/new?template=submit.yml)** and
    paste your preprint link.
-2. **A human editor starts the review.** The panel runs on its own from there.
-3. **The review is published** on the site, where you can read every word the
+2. **A bot checks the public metadata** and shows the editor which command fits
+   the current draft.
+3. **A human editor starts the review.** The panel runs on its own from there.
+4. **The review is published** on the site, where you can read every word the
    panel wrote.
 
 That's it. Anyone can submit any public preprint, including one they didn't
