@@ -1,0 +1,382 @@
+{
+  "generated_at": "2026-09-02T19:34:18+00:00",
+  "pipeline": {
+    "sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "version": "0.5.0"
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "minor",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "no",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 156450,
+    "section_source": "document",
+    "text_sha256": "daa3cdc2b8ce600542b03d7ff0888130e21e6d993270fbe3067b8ef181f67676",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.05,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 33,
+        "preamble_share": 0.0082,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 156450,
+        "words": 21679,
+        "sentences": 1228,
+        "blocks": 806,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 0,
+        "references_separable": false,
+        "main_text_words": null,
+        "reference_entries": 0
+      },
+      "density": {
+        "sentence_len_mean": 20.05,
+        "sentence_len_median": 14.0,
+        "sentence_len_p90": 43.0,
+        "long_sentence_share": 0.1175,
+        "numbers_per_1k": 129.25,
+        "citations": 1,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.05,
+        "hedges_per_1k": 2.12,
+        "boosters_per_1k": 0.69,
+        "mattr": 0.4602,
+        "passive_per_sentence_approx": 0.2891,
+        "p_values_exact": 2,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 165,
+          "sentences": 4,
+          "sentence_len_mean": 41.25,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "introduction": {
+          "words": 483,
+          "sentences": 11,
+          "sentence_len_mean": 43.91,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 4.14,
+          "boosters_per_1k": 2.07
+        },
+        "results": {
+          "words": 3617,
+          "sentences": 90,
+          "sentence_len_mean": 40.19,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 7.19,
+          "boosters_per_1k": 1.66
+        },
+        "discussion": {
+          "words": 814,
+          "sentences": 18,
+          "sentence_len_mean": 45.22,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 11.06,
+          "boosters_per_1k": 1.23
+        },
+        "limitations": {
+          "words": 528,
+          "sentences": 17,
+          "sentence_len_mean": 31.06,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 7.58,
+          "boosters_per_1k": 1.89
+        },
+        "acknowledgements": {
+          "words": 9984,
+          "sentences": 875,
+          "sentence_len_mean": 13.71,
+          "citations_per_1k": 0.1,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.6
+        },
+        "experimental": {
+          "words": 6074,
+          "sentences": 215,
+          "sentence_len_mean": 28.25,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.82,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "63b3b5f8c165631c88fa00335fd74f6a418fecbe93ac8059c0b7553a545616c6"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 4.2,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 2.9490971,
+  "cost_by_node": {
+    "advocate": 0.56289,
+    "audit_citation_integrity": 0.157922,
+    "audit_methods_completeness": 0.052018,
+    "debate_synthesizer": 0.094628,
+    "desk_screen": 0.11145,
+    "editor": 1.01224,
+    "journal_recommender": 0.018374,
+    "reviewer_contribution_context": 0.223858,
+    "reviewer_data_analysis": 0.019233,
+    "reviewer_ethics": 0.010789,
+    "reviewer_reporting_reproducibility": 0.018537,
+    "reviewer_scientific_validity": 0.020788,
+    "skeptic": 0.646374
+  },
+  "research_by_node": {
+    "audit_citation_integrity": [
+      {
+        "tool": "find_related_work",
+        "query": "activity-based protein profiling ABPP covalent ligands Cravatt",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "HCN channels cyclic nucleotide binding domain cAMP modulation",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "DPYSL2 CRMP2 collapsin response mediator protein",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Wainger DeGennaro Santoro Siegelbaum cAMP HCN pacemaker channels Nature 2001",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Lee MacKinnon HCN1 hyperpolarization-activated channel structure Cell 2017",
+        "hits": 3
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Pelizaeus-Merzbacher disease PLP1 proteolipid protein mutations",
+        "hits": 3
+      }
+    ],
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "activity-based protein profiling ABPP brain cells primary neurons",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "covalent ligands HCN channels cyclic nucleotide binding domain",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "stereoprobes cysteine-targeted electrophilic small molecules proteomics",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "ABPP brain tissue primary cells chemical proteomics",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "tryptoline acrylamide stereoprobes protein liganding",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "complexoform-restricted liganding adaptor proteins DPYSL CRMP",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Cravatt activity-based protein profiling covalent ligands",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "serine hydrolase ABPP brain lysates endocannabinoid",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "activity-based protein profiling ABPP primary cells intact",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "HCN channel allosteric modulation cAMP cyclic nucleotide binding",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "covalent inhibitors HCN channels ivabradine pore blockers",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "ABPP activity-based protein profiling cancer cells immune cells",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "cysteine-directed ABPP iodoacetamide-desthiobiotin IA-DTB",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "DPYSL2 CRMP2 collapsin response mediator protein",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "PLP1 proteolipid protein myelin palmitoylation",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "PDE7B phosphodiesterase cAMP brain neuroprotection",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Vinogradova activity-guided map electrophile-cysteine primary T cells",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Backus proteome-wide covalent ligand discovery native biological systems",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Weerapana quantitative reactivity profiling functional cysteines proteomes",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "TRIP8b HCN1 epilepsy gain-of-function cAMP antagonistic",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Vinogradova 2020 activity-guided map electrophile-cysteine Cell",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Njomen tryptoline acrylamide stereoprobes cancer cells",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Spradlin reimagining druggability chemoproteomic platforms",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Niphakis ligand discovery activity-based protein profiling",
+        "hits": 0
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.08.25.747126v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.08.25.747126v1.full.pdf",
+    "identifier": "10.64898/2026.08.25.747126",
+    "doi": "10.64898/2026.08.25.747126",
+    "title": "Activity-based profiling of primary brain cells identifies covalent allosteric modulators of HCN channels",
+    "authors": [
+      "Ye, E.",
+      "Russo, A.",
+      "Castelli, R.",
+      "Westlake, G. T.",
+      "Jiang, X.",
+      "Spiro, D. A.",
+      "Quejido, S.",
+      "Henry, C. L.",
+      "Blankman, J. L.",
+      "Simon, G. M.",
+      "Melillo, B.",
+      "Santoro, B.",
+      "Moroni, A.",
+      "Cravatt, B. F."
+    ],
+    "abstract": "Chemical proteomics can provide global portraits of small molecule-protein interactions in native biological systems. Such ligandability maps have, however, been mostly restricted to readily accessible cell lines and primary immune cells. Here, we describe an activity-based protein profiling (ABPP) strategy for mapping the covalent ligandability of primary brain cells isolated from mice. By investigating sets of stereochemically defined electrophilic small molecules (stereoprobes), we identify liganding events for diverse brain cell proteins, including many with nervous system-enriched expression. In this category were multiple hyperpolarization-activated cyclic nucleotide-gated (HCN) ion channels, which we show are covalently liganded by tryptoline acrylamide stereoprobes at a conserved cysteine in their cyclic nucleotide-binding domain. The stereoprobes were found to block cAMP-dependent shifts in voltage dependence while sparing basal activity of HCN channels. We thus describe an advanced ABPP platform for identifying ligands targeting nervous system-enriched proteins, including chemical probes that modulate HCN channel function in cells.",
+    "published": "2026-08-26",
+    "version": "1",
+    "pdf_sha256": "63b3b5f8c165631c88fa00335fd74f6a418fecbe93ac8059c0b7553a545616c6",
+    "pdf_bytes": 5395411
+  }
+}

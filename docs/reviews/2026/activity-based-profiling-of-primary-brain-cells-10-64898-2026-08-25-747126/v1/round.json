@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260902-193418-activity-based-profiling-of-primary-brain-cells-id",
+  "manuscript_title": "Activity-based profiling of primary brain cells identifies covalent allosteric",
+  "manuscript_cache_key": "aa508de82b3cbaad315e034f7ba41b1f9b7538dbecad55106fcd7c9b9772ef14",
+  "decision": "minor",
+  "weighted_score": 4.2381,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Scope the \"spares basal activity\" claim to the dataset that supports it, and reconcile it with the slice data in the main text.** Revise the Highlight, Summary, Significance section and the corresponding Results sentence so the claim is explicitly attributed to heterologous expression systems (HEK293T, three isoforms, two species). In Results, state plainly that in CA1 pyramidal neurons WX-02-679 reduces sag ratio, rebound depolarization and related passive properties in the absence of exogenous cAMP, and give the interpretation you already offer in the Discussion (a tonically cAMP-modulated fraction of native channels) at the point where the slice data are first presented, not only later. The current arrangement, in which the Highlight asserts sparing and the Discussion explains a reduction, is the specific inconsistency to remove.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Report animal-level replication for the hippocampal slice recordings and, if cells are clustered, account for it.** For Figures 6J–K and S6E–G, state the number of animals and slices contributing to each condition alongside the cell counts. If multiple cells derive from the same animal, either report the primary comparisons at the animal level (or with a model that accounts for clustering) or state explicitly that cells were treated as independent units and that this may understate variance. Adjust the strength of the native-tissue statements to match whatever the animal-level analysis shows.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Quantify the brainocyte-versus-lysate and brainocyte-versus-slice comparisons rather than describing them qualitatively.** Replace \"generally recapitulated\" (Figure S1D) with numbers: how many of the 28 brainocyte-unique enantioenriched proteins were quantified in the acute-slice experiment, how many reproduced the stereoselectivity, and how many did not. Where a protein was not quantified in slices, say so. All of this is derivable from Dataset S2.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "**Address the probe-uptake confound explicitly.** Figure S2A shows lower overall stereoprobe reactivity in brainocytes than in HEK293T cells but does not quantify it. Provide a quantitative statement of the uptake difference (e.g., integrated lane signal normalized to protein) and state in Results that a detection-threshold shift is an alternative explanation for a portion of the brainocyte-versus-lysate differences, indicating what the acute-slice data do and do not exclude. Where available, report abundance (from the unenriched proteomics used for Figure 2E) for brainocyte-unique versus lysate-unique hits.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "**Justify or bound the relaxed liganding thresholds.** The 33% (rather than 50%) parent-competition criterion is defended by lower uptake; state how many of the 114 liganded proteins, and how many of the 28 CNS-enriched hits in Table 1, would survive the stricter 50% criterion. A single supplementary column in Dataset S2 flagging threshold class is sufficient and would let readers apply their own stringency.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**Support the \"not seen in prior ABPP studies\" claim with a cross-reference table.** For each CNS-enriched liganded protein in Table 1, indicate whether it was (i) quantified and liganded, (ii) quantified but not liganded, or (iii) not quantified in the prior datasets you cite (refs 13, 31, 37, 38; PXD042541). Table 1 currently carries a binary Y/N column that conflates (ii) and (iii); separating them determines whether the brainocyte advantage is new ligandability or new coverage, and the claim in Results should be worded accordingly.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**Report multiple-comparison handling for the IP-MS analyses.** For Figure 3I (and Figure S4D), state how many proteins were tested, whether FDR correction was applied, and if so the method and threshold. If uncorrected p-values are shown, label them as such in the caption and note that the highlighted interactors (PRKAR1A, AKAP8, AKAP8L) are nominated hypotheses.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Provide the missing primer sequences.** The Methods state that site-directed mutagenesis used \"the primers shown below,\" but no primer table is present. Supply mutagenesis and cloning primer sequences for all constructs used (at minimum PLP1 C6A/C7A/C6A-C7A, PDE7B C3A/C136A/C321A/C325A/C328A, DPYSL2 C504A, HCN1 C542A, HCN2 C611A/C611S, HCN4 C662A/C662S), together with plasmid identifiers (Addgene numbers or backbone sequences/maps where non-commercial).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Provide the flow-cytometry gating strategy.** For the ~90% viability figure, give the gating logic (scatter gates, LIVE/DEAD channel and threshold), the laser/detector assignment, the analysis software, and the number of independent preparations with a mean and range or SD rather than a single approximate value.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**Resolve reference 133 and the incomplete in-press citations.** Reference 133 is cited in the inside-out patch clamp Methods but does not appear in the reference list. Also update refs 14, 15, 75, 88 and 93 with final citations if now published, or label them clearly as preprints/in press.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "**Complete the mass-spectrometry search reporting.** Add the ProLuCID version, precursor and fragment mass tolerances, the complete variable/fixed modification list, missed-cleavage allowance, and the DTASelect filter settings used to reach <1% peptide FDR. State whether protein-level FDR was also controlled.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "**Correct the numerical and notation errors flagged by the citation audit.** The reported HCN2 V₁/₂ values include impossible negative error terms (\"−83.5 ± −0.8 mV\", \"−84.0 ± −0.8 mV\"); correct these. Harmonise the WX-02-46 IC₅₀ between text (14 µM) and Figure 5L (14.4 µM). For the gel-ABPP IC₅₀ fits, report the fitting model, Hill slope and goodness-of-fit alongside the confidence intervals.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-13",
+      "text": "**Report n explicitly for figures currently labelled only \"representative.\"** For each gel-ABPP panel and for the inside-out recording in Figure 6H, state the number of independent experiments and, for Figure 6H, the number of patches and the variability across them, rather than showing a single trace with no replication figure.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-14",
+      "text": "**State replicate structure and negative-control detail for the PDE7B activity assay.** For Figure S3F, report n, the positive-control inhibition achieved by IBMX and BRL-50481 (as percentage or IC₅₀), and the assay's dynamic range, so that the null result for WX-03-57 can be distinguished from insufficient assay sensitivity.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Temper the DPYSL2 forward-looking language. The claim that these compounds \"may offer chemical tools to study the specific functions of the DPYSL2:DPYSL5 complex\" would be better supported with an estimate of complex abundance relative to total DPYSL2 (from your existing co-IP or IP-MS data, even semi-quantitatively). Absent that, \"may enable\" is preferable to any wording implying an established tool.",
+    "Similarly, the structural interpretation in Figure 4H (C504 at the hetero-interface) is a reasonable inference from the homo-tetramer structure but is not demonstrated; label it explicitly as a model.",
+    "Consider reporting whether an orthogonal check for off-target cysteine engagement was performed in the slice preparation, or noting its absence as a limitation. The ivabradine/RO-275 controls establish that the stereoprobes do not act at the pore site but do not speak to proteome-wide selectivity at 20 µM in tissue.",
+    "Explain, even speculatively but with reference to structure, why the CNBD cysteine-to-alanine/serine mutants are basally dysfunctional (Figures S6A, S6C). Readers will ask whether the mutation perturbs cAMP binding, folding or trafficking, and the current single sentence leaves the alternative that C542 is structurally load-bearing unexamined.",
+    "Report the cellular composition of the brainocyte suspension (neuron/astrocyte/oligodendrocyte/microglia fractions), even approximately from your flow data or marker immunoblots. This would considerably strengthen the interpretation of Figure 2G, which currently infers cell-type origin from public RNA-seq alone.",
+    "Note in the CNS-enrichment methods that thresholds (Z > 4 in ≥2 datasets; signal > 150 bioGPS / > 10 GTEx) are post-hoc, and state whether the composition of Table 1 is robust to modest changes in them.",
+    "The slice pre-incubation is described in oxygenated ACSF, but the acute-slice ABPP experiments used DMEM (Figure S1C). Briefly justify the DMEM choice or note it as a possible source of physiological divergence from the slice electrophysiology.",
+    "Add RRIDs for antibodies and state STR authentication and mycoplasma status for the cell lines; add a code-availability statement covering the R/MATLAB analysis scripts.",
+    "Consider adding a brief statement of whether recordings and slice treatments were blinded to compound identity. Given that the key controls are matched enantiomers, blinding would materially strengthen the stereoselectivity claims and its absence is worth acknowledging."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [
+        {
+          "id": "ethics-1",
+          "text": "None identified. All required compliance statements are present, specific, and internally consistent. No contradictions between methods and approvals. No silence on triggered categories."
+        }
+      ],
+      "questions": []
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "For the 28 brainocyte-unique liganded proteins (Figure 1D), how many were recapitulated in acute brain slices (Figure S1D), and does the authors' definition of \"generally recapitulated\" correspond to a quantitative threshold (e.g., >50% of proteins)?",
+        "In the HCN2 patch-clamp experiments, what is the magnitude of cAMP's V₁/₂ shift in vehicle-treated cells (control vs. control + cAMP), and how does WX-02-679's potency compare to published IC₅₀ or EC₅₀ values for TRIP8b or other HCN modulators?",
+        "For DPYSL2:DPYSL5 complexes in brainocytes, what is the estimated stoichiometry or molar ratio relative to total DPYSL2, and does this abundance support the claim that tryptoline acrylamides are tools for studying the complex's function?",
+        "In the IP-MS experiment (Figure 3I), was a multiple-hypothesis correction (e.g., Benjamini–Hochberg FDR) applied to the co-enriched protein list, and if so, what is the corrected significance threshold?",
+        "For hippocampal slice recordings (Figure 6J–K), how many animals contributed cells to each condition, and were cells from the same animal treated as independent replicates or grouped by animal in the statistical model?"
+      ]
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "For the brainocyte-restricted liganding events (Figure 1D–F), can the authors report the distribution of protein abundance (by quantitative proteomics) for brainocyte-unique vs. lysate-unique hits, to test whether detection differences correlate with expression level?",
+        "Does WX-02-679 directly compete with cAMP for binding to the isolated CNBD, or does it act allosterically to prevent cAMP-induced conformational change? A direct binding assay would clarify the mechanism.",
+        "For the DPYSL2:DPYSL5 complex, is there structural or biochemical evidence (cross-linking MS, co-immunoprecipitation under native conditions, or modeling) that C504 is positioned at the hetero-interface?",
+        "What are the exact ProLuCID search parameters (precursor and fragment mass tolerance, modification list, and DTASelect thresholds) used for the proteomics data processing?",
+        "Why do HCN cysteine-to-alanine mutations cause loss of channel function, and does this reflect a general destabilization or a specific role of the cysteine in cAMP binding or gating?"
+      ]
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Figure 4H shows C504 at the DPYSL2 homo-tetramer interface; is C504 also at the DPYSL2:DPYSL5 hetero-interface, or does hetero-oligomerization induce a conformational change that exposes C504 to solvent?",
+        "In the inside-out patch clamp experiment (Figure 6H), was the membrane potential held constant during cAMP and WX-02-679 application, and were multiple voltage steps tested to confirm the effect is voltage-independent?",
+        "The authors state WX-02-679 \"partially rescued\" the WT/M153I HCN1 variant (Figure S6D); what is the quantitative definition of \"partial,\" and does the residual shift correlate with the degree of gain-of-function in the unliganded mutant?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Figure 1D reports 82 enantioenriched proteins total (35 shared, 19 lysate-unique, 28 brainocyte-unique); what is the distribution of these proteins across the four stereoisomeric configurations (Figure 2B–D), and do brainocyte-unique proteins show different stereoisomeric preferences than shared proteins?",
+        "For the brainocyte-unique liganded proteins (28 total), how many are validated by cysteine-directed ABPP, and for those that are not, what is the evidence that the protein-directed enrichment is not a false positive from co-enrichment of a nearby protein?",
+        "In the PDE7B IP-MS experiment (Figure 3I), the authors report stereoselective enhancement of interactions with PRKAR1A, AKAP8L, and AKAP8; are these interactions specific to the WT-PDE7B:C136A comparison, or do they also occur with the enantiomeric stereoprobe WX-03-59?",
+        "For the HCN channel experiments, what is the IC₅₀ of WX-02-679 for engagement of off-target cysteine-containing proteins in the brainocyte proteome, and is there evidence that the compound is selective for HCN channels in the cellular context?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "daa3cdc2b8ce600542b03d7ff0888130e21e6d993270fbe3067b8ef181f67676",
+  "manuscript_file_sha256": "63b3b5f8c165631c88fa00335fd74f6a418fecbe93ac8059c0b7553a545616c6",
+  "prior_job_id": "",
+  "desk_rejected": false
+}
