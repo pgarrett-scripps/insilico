@@ -66,11 +66,18 @@ jobs:
       # at build time. When that plugin stops matching a link, the page still
       # builds and the link still looks right in the source — it just 404s for
       # every reader. Seven of them shipped that way once.
-      - name: No unrewritten .md links escaped into the build
+      - name: No unrewritten internal .md links escaped into the build
         run: |
-          if grep -rlE 'href="[^"]*\.md([#"?]|$)' dist/ >/dev/null 2>&1; then
+          bad_links="$(
+            grep -rhoE 'href="[^"]*\.md[^"]*"' dist/ \
+              | grep -vE '^href="https?://' \
+              | sort -u \
+              || true
+          )"
+          if [ -n "$bad_links" ]
+          then
             echo "::error::These links point at .md files and will 404:"
-            grep -rhoE 'href="[^"]*\.md[^"]*"' dist/ | sort -u
+            echo "$bad_links"
             exit 1
           fi
-          echo "no .md hrefs in the built site"
+          echo "no internal .md hrefs in the built site"
