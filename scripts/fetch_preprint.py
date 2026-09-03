@@ -108,6 +108,10 @@ class Preprint:
     abstract: str = ""
     published: str = ""
     version: str = ""
+    # Official machine-readable or browser full text for this exact revision.
+    # The review runner prefers these over reconstructing prose from a PDF.
+    jats_url: str = ""
+    html_url: str = ""
     # Fingerprint of the exact bytes reviewed, filled in by download(). A
     # review is only meaningful against a specific revision of a manuscript,
     # and "we reviewed arxiv.org/abs/1706.03762" does not name one — authors
@@ -329,6 +333,7 @@ def _resolve_arxiv(url: str, arxiv_id: str) -> Preprint:
         url=url,
         source="arxiv",
         pdf_url=f"https://arxiv.org/pdf/{bare}",
+        html_url=f"https://arxiv.org/html/{bare}",
         identifier=bare,
     )
     try:
@@ -342,6 +347,7 @@ def _resolve_arxiv(url: str, arxiv_id: str) -> Preprint:
         if m:
             pp.version = m.group("version")
             pp.pdf_url = f"https://arxiv.org/pdf/{m.group('id')}v{pp.version}"
+            pp.html_url = f"https://arxiv.org/html/{m.group('id')}v{pp.version}"
         pp.title = _clean(_text(entry, "a:title"))
         pp.abstract = _clean(_text(entry, "a:summary"))
         pp.published = _text(entry, "a:published")[:10]
@@ -434,6 +440,16 @@ def _resolve_rxiv(
         pp.pdf_url = (
             f"https://www.{server}.org/content/{doi}v{pp.version or 1}.full.pdf"
         )
+        base = f"https://www.{server}.org/content/{doi}v{pp.version or 1}"
+        raw_jats = str(rec.get("jatsxml") or "").strip()
+        pp.jats_url = (
+            urllib.parse.urljoin(f"https://www.{server}.org", raw_jats)
+            if raw_jats
+            else f"{base}.full.xml"
+        )
+        if pp.jats_url.startswith("http://"):
+            pp.jats_url = "https://" + pp.jats_url.removeprefix("http://")
+        pp.html_url = f"{base}.full"
     except (urllib.error.URLError, json.JSONDecodeError, TimeoutError):
         pass
     return pp

@@ -6,8 +6,8 @@ A preprint on arXiv, bioRxiv or medRxiv:
 - `https://www.biorxiv.org/content/10.64898/2026.04.28.721232v1`
 - `https://www.medrxiv.org/content/10.1101/2020.03.24.20042937v1`
 
-That is the whole submission. We fetch the PDF and pull the title, authors,
-abstract and version from the server ourselves.
+That is the whole submission. We pull the title, authors, abstract, version,
+official full text when available, and PDF from the server ourselves.
 
 Not a bare PDF link: a review has to name an exact, permanent version. A
 preprint server gives us a DOI, a version number and a file we can checksum. A
@@ -15,14 +15,15 @@ bare link can go dead and leave a review pointing at nothing.
 
 ## What we cannot read
 
-- Scanned or image-only PDFs. The panel has no OCR.
+- Scanned or image-only PDFs that also fail the OCR fallback.
 - Paywalled or login-gated links.
 - Postings so new the server has not indexed them. bioRxiv and medRxiv take
   about a day to serve a PDF.
 
-Every PDF is measured on conversion, and one that arrives as run-together
-letters stops the run before a referee sees it. We add a note to your issue so
-you can export a readable PDF and ask for another run.
+Every text source is checked against the archive title and abstract. If official
+full text, PDF conversion, and OCR all fail, the run stops before a referee sees
+it. We add a note to your issue so you can post a readable revision and ask for
+another run.
 
 ## What happens next
 

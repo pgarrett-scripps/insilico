@@ -117,19 +117,21 @@ concealed anything, because we are no longer in a position to make one.
 
 ### Editorial triage
 
-One fast pass decides whether the submission is in scope, intelligible,
-complete, and not fatally flawed on its face. It is told to reject sparingly and
-send anything borderline to the panel.
+One fast pass assesses whether the submission is in scope, intelligible,
+complete, and not fatally flawed on its face. It is told to reject sparingly.
+While the new manuscript text hierarchy is being validated, this pass is
+advisory and cannot stop the panel.
 
-A desk rejection is badged separately from a panel rejection. Nothing read the
-paper in depth and no specialist reports exist.
+If enforcement is restored, a desk rejection will be badged separately from a
+panel rejection. Nothing will have read the paper in depth and no specialist
+reports will exist.
 
 ## Publication record and reproducibility
 
 A published review contains the panel output described under
 [Who does what](criteria.md#who-does-what), plus the decision letter. It also
 contains `manuscript_stats.md`, which records counts over the text the panel
-read so a reader can compare that text with the source PDF.
+read so a reader can compare that text with the selected archive source.
 
 Every review ships a `provenance.json`: provider, the model at each stage and
 any per-agent override, PeerReviewAgents version and commit SHA, In Silico

@@ -23,14 +23,22 @@ import json
 import os
 import sys
 import tempfile
+import tomllib
 import urllib.error
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).parent))
 
 REPO = Path(__file__).resolve().parent.parent
 
 from fetch_preprint import Preprint, resolve  # noqa: E402
+from manuscript_source import (  # noqa: E402
+    html_to_markdown,
+    jats_to_markdown,
+    select_manuscript_source,
+    validate_text,
+)
 from preview_submission import COMMENT_MARKER, build_preview  # noqa: E402
 from run_review import (  # noqa: E402
     BUNDLE_FILES,
@@ -1207,7 +1215,9 @@ def check_bare_doi_picks_the_right_server() -> None:
         asked.append(server)
         # Only medRxiv holds it, which is the case the guess gets wrong.
         return [{"title": "T", "version": "2", "date": "2020-03-30",
-                 "authors": "A; B", "abstract": "x"}] if server == "medrxiv" else []
+                 "authors": "A" + chr(59) + " B", "abstract": "x",
+                 "jatsxml": "/content/10.1101/example.source.xml"}] \
+            if server == "medrxiv" else []
 
     original = fetch_preprint._rxiv_records
     fetch_preprint._rxiv_records = fake_records
@@ -1220,6 +1230,8 @@ def check_bare_doi_picks_the_right_server() -> None:
     assert p.source == "medrxiv", f"resolved to the wrong server: {p.source}"
     assert "medrxiv.org" in p.url, p.url
     assert "medrxiv.org" in p.pdf_url, p.pdf_url
+    assert "medrxiv.org" in p.jats_url, p.jats_url
+    assert "medrxiv.org" in p.html_url, p.html_url
 
     # A URL that *does* name its server is authoritative and must not be
     # second-guessed with an extra request.
@@ -1291,6 +1303,99 @@ Yes
     assert "no URL found" in bad
 
 
+def _full_text_fixture(preprint: Preprint) -> str:
+    body = " ".join(
+        [
+            "Fibroblast cultures showed reproducible neurotrophin signaling "
+            "after controlled treatment with matched controls and quantified "
+            "replicates."
+        ]
+        * 90
+    )
+    return f"{preprint.title}\n\n{preprint.abstract}\n\n{body}"
+
+
+def check_full_text_source_hierarchy() -> None:
+    """Official structured text wins and damaged PDF text reaches OCR."""
+    preprint = Preprint(
+        url="https://www.biorxiv.org/content/10.1101/2026.01.01.123456v1",
+        source="biorxiv",
+        pdf_url="https://www.biorxiv.org/content/10.1101/2026.01.01.123456v1.full.pdf",
+        identifier="10.1101/2026.01.01.123456",
+        title="Fibroblast neurotrophin signaling after controlled treatment",
+        abstract=(
+            "We measure fibroblast neurotrophin signaling after controlled "
+            "treatment using matched controls, quantified replicates, and "
+            "independent validation across multiple biological conditions."
+        ),
+        jats_url="https://www.biorxiv.org/content/10.1101/2026.01.01.123456v1.full.xml",
+        html_url="https://www.biorxiv.org/content/10.1101/2026.01.01.123456v1.full",
+    )
+    full_text = _full_text_fixture(preprint)
+    body = full_text.split("\n\n", 2)[2]
+    jats = (
+        "<article><front><article-meta><title-group><article-title>"
+        f"{preprint.title}</article-title></title-group><abstract><p>"
+        f"{preprint.abstract}</p></abstract></article-meta></front><body>"
+        f"<sec><title>Results</title><p>{body}</p></sec></body></article>"
+    ).encode()
+    rendered = jats_to_markdown(jats)
+    assert "## Abstract" in rendered
+    assert "## Results" in rendered
+    assert validate_text(rendered, preprint)["passed"]
+
+    html = (
+        "<html><body><nav>Skip this menu</nav><article>"
+        f"<h1>{preprint.title}</h1><h2>Abstract</h2><p>{preprint.abstract}</p>"
+        f"<h2>Results</h2><p>{body}</p></article></body></html>"
+    ).encode()
+    html_rendered = html_to_markdown(html)
+    assert "Skip this menu" not in html_rendered
+    assert validate_text(html_rendered, preprint)["passed"]
+
+    broken_pdf = SimpleNamespace(
+        text="7UHDWPHQW QHXURWURSKLQ VLJQDOLQJ" * 500,
+        ingest={"tool": "test PDF converter"},
+    )
+    with tempfile.TemporaryDirectory() as raw:
+        workdir = Path(raw)
+        pdf = workdir / "paper.pdf"
+        pdf.write_bytes(b"%PDF fixture")
+
+        source = select_manuscript_source(
+            preprint,
+            pdf,
+            workdir,
+            {},
+            fetcher=lambda url, **kwargs: jats,
+            loader=lambda path, config: broken_pdf,
+            ocr=lambda path, dest: full_text,
+        )
+        assert source.kind == "jats"
+
+        def unavailable(url: str, **kwargs) -> bytes:
+            raise urllib.error.URLError("not available")
+
+        source = select_manuscript_source(
+            preprint,
+            pdf,
+            workdir,
+            {},
+            fetcher=unavailable,
+            loader=lambda path, config: broken_pdf,
+            ocr=lambda path, dest: full_text,
+        )
+        assert source.kind == "ocr"
+        assert [attempt["kind"] for attempt in source.attempts] == [
+            "jats", "html", "pdf", "ocr",
+        ]
+
+
+def check_desk_screen_is_non_enforcing() -> None:
+    config = tomllib.loads((REPO / "peerreview.toml").read_text(encoding="utf-8"))
+    assert config["desk_screen_mode"] == "warm"
+
+
 def main() -> int:
     for title in NASTY_TITLES:
         check(title)
@@ -1338,6 +1443,10 @@ def main() -> int:
     print("ok  a bare DOI resolves to the server that actually holds it")
     check_submission_preview()
     print("ok  submission issues get one safe editor command preview")
+    check_full_text_source_hierarchy()
+    print("ok  official full text is preferred and damaged PDF text falls back to OCR")
+    check_desk_screen_is_non_enforcing()
+    print("ok  desk screening is temporarily non-enforcing")
     check_metadata_fetch_retries_throttling()
     print("ok  a throttled metadata lookup is retried, a missing one is not")
     check_pdf_download_retries_a_flaky_server()
