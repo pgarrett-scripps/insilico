@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260903-202327-1-4-1-5-1-6-1-7-1-8-1-9-20-21-22-23-24-25-26-27-28",
+  "manuscript_title": "1 4 1 5 1 6 1 7 1 8 1 9 20 21 22 23 24 25 26 27 28",
+  "manuscript_cache_key": "422acf034f552d105316ff1d7486bdfed01862fd86e396711efe35acf8ff2866",
+  "decision": "major",
+  "weighted_score": 4.1905,
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Provide a label-reliability estimate, or bound the claims to the label set as published.** Have a second annotator, working independently from the same integrated metadata text and the same four criteria (lines 800–813), label a random subset of at least 30 of the 150 projects. Report percent agreement and Cohen's κ, list the disagreements with the adjudicated outcome, and state whether any top-ranked model's F1 ordering changes if the disputed items are relabelled. If a second annotator is genuinely unavailable, say so explicitly and instead (a) publish the curator's list of borderline projects with the reasoning applied to each, and (b) restate all performance claims in the abstract and results as being relative to a single-curator label set, so that no reader takes \"near-perfect classification\" as agreement with an adjudicated standard.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Report threshold sensitivity for the confidence-based grouping.** Using the already-deposited self-reported probabilities, recompute HIGH-condition precision, recall, F1 and n′ across a grid of cut-offs (e.g. lower bounds 0.20/0.25/0.30/0.40 crossed with upper bounds 0.60/0.70/0.75/0.80) for all 17 models under prompt 2. State which conclusions are robust — in particular whether gpt-oss-120b_high, qwen3-30b-a3b-thinking-2507 and qwen3-next-80b-a3b-thinking retain F1 = 1.00, and how n′ moves. Because the outputs are discrete, also make explicit which discrete values each cut-off admits or excludes. If the perfect-F1 result is threshold-fragile, the corresponding claim in the abstract and discussion must be weakened accordingly.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Qualify the two abstract-level claims that currently outrun the evidence.**",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "Confidence: the abstract sentence \"self-reported confidence scores may help identify high-confidence cases that can be prioritized for automated processing\" must carry the model-dependence qualifier that the body already supplies. State in the abstract that this held for the higher-performing models tested but failed for gpt-3.5-turbo-0125 (HIGH-condition F1 = 0.286) and gpt-4o-mini-2024-07-18 (HIGH-condition F1 = 0.000), and that per-model validation on labelled data is a precondition for operational use.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "Parity: \"comparable to that of closed models\" should specify which closed models. gpt-5.1-2025-11-13 (F1 = 0.984) and gemini-2.5-pro (F1 = 1.000) match or exceed the best open-weight condition; the clean result is that 2025 open-weight models exceed the 2023–2024 closed models tested and approach the current ones on this task. Similarly, the title/abstract framing \"for screening RNA-seq metadata in public databases\" should be narrowed to the evaluated setting (one organism, one treatment, bulk RNA-seq, one retrieval strategy, n = 150).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**Fix the AUPRC reporting to match the data.** Given that scores take seven discrete values, state the tie-handling/interpolation used by your implementation, and either (a) report AUPRC together with a rank-agreement statistic against the all-sample F1 ranking (e.g. Spearman ρ with a CI) rather than asserting \"strong agreement\" from a count of rank differences within ±1, or (b) drop the numerical AUPRC values and present the analysis purely as a ranking check. The existing caveat in the discussion is appropriate but does not by itself license reporting AUPRC values to three decimals.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**State the design of the evaluation explicitly, and the provenance of the prompts.** Say in the Methods that all 150 projects served as a single evaluation set with no train/validation/test split and no held-out data. Then state whether prompts 1 and 2 were fixed a priori from the task definition or refined after inspecting outputs on these same 150 projects. If they were refined, disclose it and discuss the resulting overfitting risk for the reported F1 values; this is the single most consequential unstated methodological choice in the paper.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Flag the quantization confound in the open-versus-closed comparison.** Table 4 records the quantization scheme per model (MXFP4, MLX 4bit, Q4_K_M), but the text nowhere notes that quantized local models are being compared against full-precision provider-hosted models, and that no quantized-versus-unquantized check was performed. Add this as an explicit caveat where the open/closed comparison is drawn (Results and Discussion). A single-model ablation would be welcome but is not required.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Reframe the keyword baseline honestly.** State plainly that \"Keyword Search Only (Baseline)\" is a recall-upper-bound reference computed by treating every retrieved candidate as positive, not a method any practitioner would use, and that its recall of 1.00 is true only within the retrieved pool (you say this once at line 141 — it needs to be equally clear in the abstract and Table 1 caption). If it can be done from the deposited metadata text without new inference, add one cheap deterministic comparator — for example a rule requiring co-occurrence of an ABA-treatment term and a control/mock term at sample level — so the improvement attributable to *semantic* judgement, rather than to any filtering at all, can be seen.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**Repair the specific citation defects.** (a) Reference 11 (Vaswani et al., \"Attention is all you need\") carries `doi:10.65215/2q58a426`, which is not the arXiv DOI prefix; verify and correct. While doing so, check that this reference is the right support for the claim at lines 88–90 that \"LLMs learn from large text corpora and can capture complex patterns in natural languages\" — the transformer paper supports the architecture, not that statement as written. (b) Reference 16 (\"Arena Leaderboard\", https://arena.ai/ja/leaderboard) needs an access date in the reference entry, and references 17 and 18 need arXiv identifiers. (c) Confirm that the reference list renders completely in the deposited PDF; our automated extraction returned entries 1–5 in fragments, which we believe is a layout artefact, but please check.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "**Position the contribution against the existing LLM-metadata-curation literature in the introduction, not only the discussion.** State plainly that LLM-assisted extraction and classification of repository metadata is an established and active line of work (references 13 and 14 already cover part of it), and that the delta here is a controlled open-weight-versus-closed benchmark under local execution on a defined plant-stress screening task. If concurrent work on LLM classification of sequencing-record sample origin or on automated ChIP-seq metadata extraction is relevant, cite it; if you judge it out of scope, that is an acceptable answer, but the framing should not leave a reader with the impression that the approach itself is new.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "**Add dispersion to the runtime results.** Supplementary Table 5 and Figure 2(e) report mean per-project runtime only. Add SD or median and range, and note that closed-model latencies (provider-managed hardware, network round-trip) are not comparable to local wall-clock times, so the two should not be read off the same axis.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Spot-check the sample-attribute extraction feature on 10–20 projects against the integrated metadata text and report a rough error rate. You are right that full evaluation is hard, but a bounded spot-check converts an unevaluated feature into a weakly evaluated one, which is considerably more useful to a reader.",
+    "Report the coverage cost of HIGH-confidence filtering as a fraction (e.g. qwen3-30b-a3b-thinking-2507 retains 88/150 = 59% at perfect F1), since an operational reader needs coverage and reliability side by side.",
+    "Add binomial or bootstrap confidence intervals to the F1 values in Table 1. At n = 150 with 63 positives, several of the top-ranked differences (0.992 vs 0.984 vs 0.968) are almost certainly within sampling noise, and stating this would strengthen rather than weaken your argument.",
+    "Extend the five-run reproducibility check to at least one dense model and one instruct model, and to the full 150 projects for one model, so that the drift you honestly report for gpt-oss-120b_low can be placed in context.",
+    "Report input token counts after metadata integration (distribution across the 150 projects) and note the compression achieved by consolidating redundant sample fields; this bears on whether context length constrained any model.",
+    "Give concrete cost figures: total API spend per model condition, and local wall-clock hours for the full 150-project sweep. The cost argument in the discussion is currently qualitative.",
+    "Consider reporting whether performance differed between the 104 projects present in both GEO and BioProject and the 46 unique to one source, as a cheap probe of metadata-quality sensitivity.",
+    "A second organism/treatment pair (e.g. rice/drought, given reference 6) would be the single most valuable extension for a follow-up paper. It is not required here — the pilot framing is honest and the claims are scaled to it — but the manuscript would be more persuasive if it named this as the concrete next validation step rather than a general call for \"additional validation.\""
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "For the three models achieving perfect F1 in the HIGH condition (gpt-oss-120b_high, qwen3-30b-a3b-thinking, qwen3-next-80b-a3b-thinking), how many projects fall into the HIGH-confidence subset on average, and does this vary substantially across independent runs or sessions?",
+        "Can you report the per-model distribution of input token counts (after metadata integration) to clarify whether model size or context-window constraints affected performance?",
+        "Would you be willing to test the workflow on a second organism or treatment condition (e.g., rice and drought stress, or tomato and pathogen infection) to validate whether model rankings and absolute F1 scores remain stable?"
+      ]
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Were the binary classifications in Table 1 stable across the original single run and a later rerun on the full 150-project set, or was reproducibility tested only on the 50-project subset?",
+        "For the three models where self-reported confidence achieved perfect F1 in the HIGH condition, how many projects were excluded (n′), and what fraction of the original 150 projects does this represent—i.e., what is the coverage cost of filtering for high confidence?",
+        "Can the authors provide a spot-check (e.g., 10–20 projects) showing whether the extracted sample attributes in Supplementary Table 7 match the ground truth from the integrated metadata, to bound the accuracy of the extraction feature?",
+        "How sensitive are the F1 scores in Table 1 to the specific quantization scheme (GGUF vs. MLX 4bit) used for open-weight models, and were the quantized versions validated against unquantized baselines?"
+      ]
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "**Table 1, gpt-5.1-2025-11-13:** This model was released in November 2025, the same month the search was executed (December 7, 2025)—was it available for testing at the time, or was it added post-hoc? If post-hoc, does this affect the claim that open-weight models match \"current\" closed models?",
+        "**Supplementary Table 1:** The discrete probability values (0.05, 0.40, 0.60, 0.75, 0.80, 0.90, 0.95) appear to be hard-coded in the prompt guidance; can you provide the exact prompt text that elicited these values, and did you test whether continuous probabilities would improve AUPRC?",
+        "**Figure 3c and Table 1:** Among the top-performing models (F1 ≥ 0.98), is there a pattern in model size, architecture (dense vs. MoE), or reasoning mode that predicts which will show reliable confidence scores (Table 3, HIGH condition F1=1.0)?",
+        "**Supplementary Table 8:** The 150 projects include 104 common to both GEO and BioProject and 23 unique to each database; did you test whether model performance differs between the two sources, or whether the mapping process (GEO→BioProject) introduced errors?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "**Inter-rater agreement (line 673)**: Did a second curator label any subset of the 150 projects? If so, what was the agreement statistic? If not, how confident are you that the ground-truth labels are stable?",
+        "**Confidence threshold optimization (lines 259, 817)**: Why were 0.25 and 0.75 chosen specifically, and have you tested sensitivity to these thresholds (e.g., 0.20, 0.30, 0.80, 0.70)?",
+        "**Discrete vs. continuous probabilities (line 309)**: Given that self-reported probabilities are discrete, should AUPRC be reported as a ranking metric rather than a numerical value, or should the scores be interpolated before computing AUPRC?",
+        "**Baseline comparison (line 412)**: Would a rule-based filter or a simpler LLM prompt (e.g., \"Is this ABA-treated Arabidopsis RNA-seq with controls? Answer yes or no.\") serve as a more realistic baseline than keyword search alone?",
+        "**Generalization scope (lines 639–660)**: The task is specific to Arabidopsis + ABA + bulk RNA-seq. Have you tested the workflow on a different organism, treatment, or data type to assess whether model rankings and prompt effects generalize?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": [
+        "**Line 189–190**: Were prompts 1 and 2 designed a priori based on the task definition, or were they selected after observing initial results on the 150-project dataset? If the latter, was the dataset split into train/validation to avoid overfitting?",
+        "**Line 673**: What was the inter-annotator agreement between the single curator and a second independent annotator on a subset of the 150 projects? This is essential for validating the ground truth.",
+        "**Table 3, gpt-3.5-turbo-0125 HIGH condition**: The model reports high confidence (p < 0.25 or p > 0.75) for only 30 of 150 projects, yet achieves F1 = 0.286 on those 30. What is the distribution of true positives and false positives in this high-confidence subset? This would clarify whether the model is systematically wrong or just uncertain.",
+        "**Line 596–597**: The authors state that self-reported probabilities \"did not behave as precise continuous probability values\" and were concentrated at discrete values. Was this discrete distribution specified in the prompt, or did it emerge from the model's behavior? If specified, what was the exact wording?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "57026cbdd7ca81523100bef57a43accdc782c9a8be40e0444160f5a752f2eb23",
+  "manuscript_file_sha256": "f4abfcf42553c618cc971f4ee74ef610f644fd728b223e96e6996fc493ec454a",
+  "prior_job_id": "",
+  "desk_rejected": false
+}

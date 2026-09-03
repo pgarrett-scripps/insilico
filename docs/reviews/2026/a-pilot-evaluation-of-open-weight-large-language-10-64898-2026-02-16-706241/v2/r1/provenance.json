@@ -1,0 +1,344 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-09-03T20:23:27+00:00",
+  "pipeline": {
+    "sha": "",
+    "version": "0.5.1"
+  },
+  "insilico": {
+    "sha": "c6cd6372016b3d6cd05019296cd20a2ec7e2b879"
+  },
+  "configuration": {
+    "sha256": "8c26c06db0291e4bd8d4b689c1dbf1041938792935f90be0e45acbb4e99b24ef",
+    "resolved": {
+      "agent_models": {
+        "debate_synthesizer": {
+          "model": "claude-sonnet-5"
+        },
+        "journal_recommender": {
+          "model": "claude-haiku-4-5"
+        }
+      },
+      "article_type": "",
+      "cache_ttl": "1h",
+      "caveman": "off",
+      "conversion_gate": "broken",
+      "data_vendors": {
+        "biomedical": "pubmed,biorxiv",
+        "paper_search": "semantic_scholar,arxiv",
+        "preprints": "biorxiv,arxiv"
+      },
+      "desk_screen": false,
+      "desk_screen_mode": "gate",
+      "enable_debate": true,
+      "enable_journal_recommender": true,
+      "manuscript_char_budget": null,
+      "markdown_attempts": 3,
+      "max_debate_rounds": 2,
+      "max_node_cost_usd": 5.0,
+      "max_output_tokens": 12000,
+      "max_rounds": 3,
+      "models": {
+        "audit": {
+          "model": "claude-haiku-4-5"
+        },
+        "debate": {
+          "model": "claude-sonnet-5"
+        },
+        "reviewer": {
+          "model": "claude-haiku-4-5"
+        },
+        "synthesis": {
+          "model": "claude-opus-5"
+        }
+      },
+      "only_reviewers": [],
+      "panel_quorum_fraction": 1.0,
+      "provider": "anthropic",
+      "reasoning_model": "claude-sonnet-5",
+      "request_timeout_s": 120.0,
+      "research_enabled": true,
+      "review_strictness": 3,
+      "revision_mode": "revision",
+      "single_model": false,
+      "synthesis_word_budget": 1200,
+      "target_journal": "insilico",
+      "temperature": null,
+      "tool_vendors": {},
+      "openai_base_url": null
+    }
+  },
+  "journal_profile": {
+    "journal": "insilico",
+    "path": "journals/insilico.toml",
+    "sha256": "c416856b2c4af80d00644c108454e670522da142db8f8fb0d5159dd278096256"
+  },
+  "review": {
+    "id": "docs/reviews/2026/a-pilot-evaluation-of-open-weight-large-language-10-64898-2026-02-16-706241/v2/r1",
+    "manuscript_version": 2,
+    "attempt": 1,
+    "kind": "initial",
+    "baseline_eligible": true,
+    "lifecycle": "active",
+    "previous_review_id": "",
+    "revision_of": ""
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "no",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 90223,
+    "section_source": "document",
+    "text_sha256": "57026cbdd7ca81523100bef57a43accdc782c9a8be40e0444160f5a752f2eb23",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 74,
+        "preamble_share": 0.1115,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 90223,
+        "words": 11678,
+        "sentences": 478,
+        "blocks": 299,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 343,
+        "references_separable": true,
+        "main_text_words": 11335,
+        "reference_entries": 5
+      },
+      "density": {
+        "sentence_len_mean": 25.44,
+        "sentence_len_median": 23.0,
+        "sentence_len_p90": 40.0,
+        "long_sentence_share": 0.0893,
+        "numbers_per_1k": 191.47,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 7.96,
+        "boosters_per_1k": 2.57,
+        "mattr": 0.4867,
+        "passive_per_sentence_approx": 0.3515,
+        "p_values_exact": 11,
+        "p_values_threshold": 6
+      },
+      "sections": {
+        "_preamble": {
+          "words": 1300,
+          "sentences": 54,
+          "sentence_len_mean": 24.53,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 11.54,
+          "boosters_per_1k": 2.31
+        },
+        "results": {
+          "words": 8761,
+          "sentences": 341,
+          "sentence_len_mean": 25.69,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 8.9,
+          "boosters_per_1k": 3.08
+        },
+        "supplementary": {
+          "words": 91,
+          "sentences": 1,
+          "sentence_len_mean": 91.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "acknowledgements": {
+          "words": 1119,
+          "sentences": 19,
+          "sentence_len_mean": 58.89,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "f4abfcf42553c618cc971f4ee74ef610f644fd728b223e96e6996fc493ec454a"
+  },
+  "screens": {
+    "desk_screen_mode": "gate"
+  },
+  "panel": [
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 5.0
+    }
+  ],
+  "mean_score": 4.2,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 1.9324966000000001,
+  "cost_by_node": {
+    "advocate": 0.340095,
+    "audit_citation_integrity": 0.064661,
+    "audit_methods_completeness": 0.02587,
+    "debate_synthesizer": 0.105126,
+    "desk_screen": 0.053408,
+    "editor": 0.7074,
+    "journal_recommender": 0.013448,
+    "reviewer_contribution_context": 0.120052,
+    "reviewer_data_analysis": 0.018035,
+    "reviewer_ethics": 0.015767,
+    "reviewer_reporting_reproducibility": 0.014945,
+    "reviewer_scientific_validity": 0.013761,
+    "skeptic": 0.439929
+  },
+  "research_by_node": {
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "LLM large language model metadata curation screening classification",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "RNA-seq metadata extraction standardization public databases",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "LLM metadata curation biological data extraction",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "language model GEO SRA dataset screening filtering",
+        "hits": 4
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Ikeda biological terms BioSample LLM extraction metadata",
+        "hits": 2
+      },
+      {
+        "tool": "find_related_work",
+        "query": "PubTator semantic search biomedical literature AI",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Riquelme ontology annotation biological samples LLM",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "open-weight models local inference metadata classification",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "CistromeMeta ChIP-seq metadata extraction GEO",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "GEOmetadb pysRADB metadata retrieval query",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "prompt engineering classification precision recall trade-off",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Wei PubTator 3.0 AI-powered literature biomedical",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Riquelme annotation biological samples ontologies LLM",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Gaio microbiome sample origins LLM semantic classification",
+        "hits": 1
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.02.16.706241v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.02.16.706241v2.full.pdf",
+    "identifier": "10.64898/2026.02.16.706241",
+    "doi": "10.64898/2026.02.16.706241",
+    "title": "A Pilot Evaluation of Open-Weight Large Language Models for Screening RNA-seq Metadata in Public Databases",
+    "authors": [
+      "Shintani, M.",
+      "Andrade, D.",
+      "Bono, H."
+    ],
+    "abstract": "Although the Gene Expression Omnibus and other public repositories are expanding rapidly, curation across these databases has not kept pace. Data reuse is often hindered by unstandardized metadata comprising unstructured text. To address this, we developed a workflow that combines retrieval via application programming interfaces with semantic filtering using large language models (LLMs) to support metadata screening as an initial step in broader curation workflows. As a focused pilot evaluation, we benchmarked multiple LLMs using metadata from 150 candidate Arabidopsis RNA-seq projects to classify projects containing exogenous ABA-treated samples and matched untreated controls. Simple keyword searches yielded many false positives (F1=0.59); classification using LLMs significantly improved performance. Several open-weight models achieved near-perfect classification performance in this defined task (F1>0.98), comparable to that of closed models. We also found that, for some high-performing models, self-reported confidence scores may help identify high-confidence cases that can be prioritized for automated processing. These results suggest that open-weight LLMs can support scalable metadata screening in local environments as an initial step in broader curation workflows, providing a foundation for accelerating public dataset reuse.",
+    "published": "2026-05-05",
+    "version": "2",
+    "pdf_sha256": "f4abfcf42553c618cc971f4ee74ef610f644fd728b223e96e6996fc493ec454a",
+    "pdf_bytes": 2261526
+  }
+}
