@@ -17,6 +17,10 @@ const TAG_LABEL = {
 };
 
 const pipeline = provenance.pipeline || {};
+const insilico = provenance.insilico || {}
+const configuration = provenance.configuration || {}
+const journalProfile = provenance.journal_profile || {}
+const review = provenance.review || {}
 const preprint = provenance.preprint || {};
 const fallback = provenance.model || "unspecified";
 const modelName = (value) =>
@@ -98,6 +102,9 @@ const conversion = health.verdict && health.verdict !== "clean"
   ? { verdict: health.verdict, notes: health.notes || [] }
   : null;
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
+const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""
+const configSha = configuration.sha256 ? String(configuration.sha256).slice(0, 12) : ""
+const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
 ---
 
 <section class="prov panel" aria-labelledby="prov-heading">
@@ -111,6 +118,16 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
   </div>
 
   <div class="prov__grid">
+    {review.manuscript_version && (
+      <div class="prov__cell">
+        <p class="label">Review record</p>
+        <p class="prov__value mono">
+          v{review.manuscript_version}/r{review.attempt || 1}
+        </p>
+        <p class="prov__hash">{String(review.kind || "editorial").replace(/_/g, " ")}</p>
+      </div>
+    )}
+
     <div class="prov__cell">
       <p class="label">Reviewed file</p>
       <p class="prov__value mono">
@@ -145,7 +162,7 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
       <p class="prov__hash">{ingestNote}</p>
       {conversion && (
         <p class="prov__warn">
-          Conversion {conversion.verdict}: {conversion.notes.join("; ")}. The
+          Conversion {conversion.verdict}: {conversion.notes.join(". ")}. The
           panel read damaged text, and the damage is the converter's, not the
           authors'.
         </p>
@@ -156,6 +173,28 @@ const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
       <div class="prov__cell">
         <p class="label">Desk screen</p>
         <p class="prov__value mono">triage {screens.desk_screen_mode}</p>
+      </div>
+    )}
+
+    {insilicoSha && (
+      <div class="prov__cell">
+        <p class="label">In Silico commit</p>
+        <p class="prov__value mono" title={insilico.sha}>{insilicoSha}</p>
+      </div>
+    )}
+
+    {configSha && (
+      <div class="prov__cell">
+        <p class="label">Configuration</p>
+        <p class="prov__value mono" title={configuration.sha256}>sha256 {configSha}</p>
+      </div>
+    )}
+
+    {journalSha && (
+      <div class="prov__cell">
+        <p class="label">Journal profile</p>
+        <p class="prov__value mono">{journalProfile.journal || "unspecified"}</p>
+        <p class="prov__hash mono" title={journalProfile.sha256}>sha256 {journalSha}</p>
       </div>
     )}
   </div>

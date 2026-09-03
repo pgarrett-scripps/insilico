@@ -13,7 +13,7 @@ import { glob } from "astro/loaders";
 // page itself from provenance.json instead.
 const reports = defineCollection({
   loader: glob({
-    pattern: ["**/v[0-9]*/*.md", "!**/index.md"],
+    pattern: ["**/v[0-9]*/*.md", "**/v[0-9]*/r[0-9]*/*.md", "!**/index.md"],
     base: "./docs/reviews",
   }),
 });

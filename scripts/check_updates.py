@@ -75,8 +75,9 @@ RESTAMPING_SOURCES = {"biorxiv", "medrxiv"}
 def published() -> list[tuple[Path, dict]]:
     """The most recent review of each published paper, where it can be re-checked.
 
-    Bundles live at ``docs/reviews/<year>/<slug>/v<N>/``, so the glob has to
-    reach the version directory. It matched only two levels until this was
+    Bundles live at ``docs/reviews/<year>/<slug>/v<N>/r<M>/``. Legacy bundles
+    may still live directly under ``v<N>``. The scan accepts both layouts.
+    It matched only two levels until this was
     fixed, which meant it silently found nothing at all once reviews became
     versioned — the check reported "no published reviews" every month and the
     corpus went unwatched.
@@ -86,10 +87,17 @@ def published() -> list[tuple[Path, dict]]:
     that has ever been revised as stale forever, which is noise that would
     train an editor to ignore the report.
     """
-    latest: dict[Path, tuple[int, Path, dict]] = {}
-    for prov_path in sorted(REVIEWS.glob("*/*/v*/provenance.json")):
+    latest: dict[Path, tuple[int, int, Path, dict]] = {}
+    paths = sorted(
+        list(REVIEWS.glob("*/*/v*/provenance.json"))
+        + list(REVIEWS.glob("*/*/v*/r*/provenance.json"))
+    )
+    for prov_path in paths:
         bundle = prov_path.parent
-        if not bundle.name[1:].isdigit():
+        version_dir = bundle.parent if bundle.name.startswith("r") else bundle
+        if not version_dir.name[1:].isdigit():
+            continue
+        if bundle != version_dir and not bundle.name[1:].isdigit():
             continue
         try:
             prov = json.loads(prov_path.read_text(encoding="utf-8"))
@@ -98,14 +106,15 @@ def published() -> list[tuple[Path, dict]]:
             continue
         if not prov.get("preprint", {}).get("url"):
             continue
-        version = int(bundle.name[1:])
-        paper = bundle.parent
-        if paper not in latest or version > latest[paper][0]:
-            latest[paper] = (version, bundle, prov)
+        version = int(version_dir.name[1:])
+        attempt = int(bundle.name[1:]) if bundle != version_dir else 1
+        paper = version_dir.parent
+        if paper not in latest or (version, attempt) > latest[paper][:2]:
+            latest[paper] = (version, attempt, bundle, prov)
     return [
         (bundle, prov)
         for bundle, prov in sorted(
-            ((b, p) for _, b, p in latest.values()), key=lambda e: str(e[0])
+            ((b, p) for _, _, b, p in latest.values()), key=lambda e: str(e[0])
         )
     ]
 

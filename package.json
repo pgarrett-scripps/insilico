@@ -18,6 +18,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "check:attempts": "node scripts/check_review_attempts.mjs",
+    "check:markdown": "node scripts/check_markdown_security.mjs",
+    "check:schema": "node scripts/check_review_schema.mjs",
     "check:punctuation": "python3 scripts/check_project_punctuation.py dist"
   },
   "dependencies": {
@@ -28,6 +31,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "ajv": "^8.20.0",
     "typescript": "^6.0.3"
   }
 }

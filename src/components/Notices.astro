@@ -18,6 +18,7 @@ const VERDICT = {
 };
 
 const revision = provenance.revision || {};
+const review = provenance.review || {}
 const round = Number(provenance.round || 1);
 const claim = provenance.submitter_is_author || "";
 const panelSize = Array.isArray(provenance.panel) ? provenance.panel.length : 0;
@@ -61,6 +62,16 @@ if (revision.kind === "rerun") {
     );
   }
   notices.push({ tone: "info", title: "Re-review under an updated pipeline", body });
+}
+
+if (review.kind === "experiment" || review.baseline_eligible === false) {
+  notices.push({
+    tone: "warning",
+    title: "Supplementary review",
+    body: [
+      "This run is published for comparison. It does not define the paper's editorial status and will not become the baseline for a later manuscript revision.",
+    ],
+  })
 }
 
 if (round > 1) {

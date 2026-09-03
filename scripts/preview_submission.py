@@ -54,7 +54,9 @@ def _reviewed_drafts(preprint: Preprint, reviews_root: Path) -> list[int]:
         return []
 
     found: set[int] = set()
-    for path in reviews_root.glob("*/*/v*/provenance.json"):
+    paths = list(reviews_root.glob("*/*/v*/provenance.json"))
+    paths += list(reviews_root.glob("*/*/v*/r*/provenance.json"))
+    for path in paths:
         try:
             provenance = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -67,7 +69,12 @@ def _reviewed_drafts(preprint: Preprint, reviews_root: Path) -> list[int]:
         }
         if wanted.isdisjoint(identifiers):
             continue
-        version = str(recorded.get("version") or path.parent.name.removeprefix("v"))
+        if path.parent.name.startswith("r") and not path.parent.name[1:].isdigit():
+            continue
+        version_dir = (
+            path.parent.parent if path.parent.name.startswith("r") else path.parent
+        )
+        version = str(recorded.get("version") or version_dir.name.removeprefix("v"))
         try:
             found.add(max(1, int(version)))
         except (TypeError, ValueError):
@@ -79,9 +86,10 @@ def _commands(current_draft: int, reviewed: list[int]) -> str:
     if current_draft in reviewed:
         primary = (
             f"Draft v{current_draft} already has a published review. Use "
-            "`/review replace` only if you intend to overwrite that review with "
-            "a fresh panel run. If the authors have a newer draft, wait for the "
-            "archive to serve it and use `/review`."
+            "`/review replace` only if you intend to add a fresh, independent "
+            "review attempt for the same draft. The existing attempt stays on "
+            "the record. If the authors have a newer draft, wait for the archive "
+            "to serve it and use `/review`."
         )
     elif reviewed:
         previous = ", ".join(f"v{number}" for number in reviewed)

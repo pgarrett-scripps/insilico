@@ -26,6 +26,9 @@ jobs:
       - name: Bundle rendering is well-formed
         run: python scripts/smoke_test.py
 
+      - name: Published artifact manifests are valid
+        run: python scripts/check_review_manifests.py
+
   site:
     name: Site
     runs-on: ubuntu-latest
@@ -39,6 +42,15 @@ jobs:
 
       - run: npm ci
 
+      - name: Published review provenance matches its schema
+        run: npm run check:schema
+
+      - name: Generated Markdown is inert
+        run: npm run check:markdown
+
+      - name: Review attempts preserve their editorial baseline
+        run: npm run check:attempts
+
       - name: Site builds
         run: npm run build
 
@@ -51,13 +63,22 @@ jobs:
       # actually made it into the output.
       - name: Every published review rendered
         run: |
-          # <year>/<slug>/v<N>/provenance.json and <year>/<slug>/v<N>/index.html
-          # are both four levels below their respective reviews/ root.
-          expected=$(find docs/reviews -mindepth 4 -maxdepth 4 -name provenance.json | wc -l)
-          actual=$(find dist/reviews -mindepth 4 -maxdepth 4 -path '*/v*/index.html' | wc -l)
+          expected=$(find docs/reviews -name provenance.json | wc -l)
+          actual=0
+          while IFS= read -r provenance
+          do
+            route=${provenance#docs/reviews/}
+            route=${route%/provenance.json}
+            if [ -f "dist/reviews/${route}/index.html" ]
+            then
+              actual=$((actual + 1))
+            else
+              echo "::error::No review page was built for ${route}."
+            fi
+          done < <(find docs/reviews -name provenance.json -print)
           echo "bundles on disk: $expected, review pages built: $actual"
-          if [ "$expected" -ne "$actual" ]; then
-            echo "::error::$expected review bundles exist but $actual pages were built."
+          if [ "$expected" -ne "$actual" ]
+          then
             exit 1
           fi
           if [ "$expected" -eq 0 ]; then

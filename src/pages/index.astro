@@ -1,13 +1,10 @@
 ---
 import Base from "../layouts/Base.astro";
-import { corpus, VERDICT, statistics } from "../lib/corpus.js";
+import { corpus, STATUS, statistics } from "../lib/corpus.js"
 
 const stats = statistics();
 const papers = corpus().slice(0, 3);
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-
-const verdictOf = (b) => (b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision);
-const verdictKey = (b) => (b.deskRejected ? "desk" : b.decision);
 
 const STAGES = [
   { stage: "Desk", who: "Integrity scan · editorial triage", out: "Pass, or a desk rejection" },
@@ -110,21 +107,22 @@ const STAGES = [
             <a class="latest__all" href={`${base}/reviews/`}>All reviews →</a>
           </div>
           <ul class="latest__list">
-            {papers.map((paper) => (
-              <li>
-                <a class="row" href={`${base}/reviews/${paper.year}/${paper.slug}/`}>
-                  <span class={`verdict verdict--${verdictKey(paper.latest)}`}>
-                    {verdictOf(paper.latest)}
-                  </span>
-                  <span class="row__title">{paper.title}</span>
-                  <span class="row__score mono">
-                    {paper.latest.meanScore !== null
-                      ? paper.latest.meanScore.toFixed(1)
-                      : "N/A"}
-                  </span>
-                </a>
-              </li>
-            ))}
+            {papers.map((paper) => {
+              const display = paper.decisive || paper.latest
+              return (
+                <li>
+                  <a class="row" href={`${base}/reviews/${paper.year}/${paper.slug}/`}>
+                    <span class={`verdict verdict--${paper.status}`}>
+                      {STATUS[paper.status]}
+                    </span>
+                    <span class="row__title">{paper.title}</span>
+                    <span class="row__score mono">
+                      {display.meanScore !== null ? display.meanScore.toFixed(1) : "N/A"}
+                    </span>
+                  </a>
+                </li>
+              )
+            })}
           </ul>
         </section>
       )

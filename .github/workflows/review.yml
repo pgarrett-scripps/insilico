@@ -31,13 +31,9 @@ env:
   # Model selection lives in ./peerreview.toml, including the per-role split.
   # Setting REVIEW_MODEL here would override that file and collapse every
   # stage back onto one model, so it is deliberately unset.
-  PIPELINE_REPO: https://github.com/pgarrett-scripps/PeerReviewAgents.git
-  # Which ref to pin from. Normally `main`. Kept as a knob rather than
-  # hard-coded HEAD so the journal can be pointed at a branch to exercise
-  # pipeline work before it lands, without editing the resolution logic. The
-  # run records the SHA it resolved to either way, so a review always names
-  # exact code regardless of which ref produced it.
-  PIPELINE_REF: main
+  # PyPI release versions are immutable. Updating the panel therefore takes a
+  # reviewed change to this file instead of silently following upstream main.
+  PIPELINE_VERSION: "0.5.1"
   # PDF -> markdown converter, from PyPI. A per-platform wheel, so this needs
   # no Rust toolchain on the runner. Pinned rather than floating: the panel
   # reads whatever this produces, and a converter that changed how it reads a
@@ -61,8 +57,10 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.issue.pull_request == null &&
-       (startsWith(github.event.comment.body, '/review') ||
-        startsWith(github.event.comment.body, '/revise')) &&
+       (github.event.comment.body == '/review' ||
+        startsWith(github.event.comment.body, '/review ') ||
+        github.event.comment.body == '/revise' ||
+        startsWith(github.event.comment.body, '/revise ')) &&
        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -85,20 +83,8 @@ jobs:
           python-version: "3.12"
           cache: pip
 
-      - name: Pin the referee panel
-        id: pipeline
+      - name: Install the pinned referee panel
         run: |
-          # `set -e` doesn't fire on a failure inside a command substitution,
-          # so an unreachable repo used to yield an empty sha and surface as
-          # pip complaining about an "empty revision" — pointing at the URL
-          # rather than at the outage that actually caused it.
-          if ! sha="$(git ls-remote "$PIPELINE_REPO" "$PIPELINE_REF" | cut -f1)" \
-             || [ -z "$sha" ]; then
-            echo "::error::Could not read $PIPELINE_REPO @ $PIPELINE_REF."
-            exit 1
-          fi
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-          echo "Pinning PeerReviewAgents @ $sha"
           # [research] pulls the arXiv client. Without it the contribution
           # referee's arXiv vendor degrades to a one-line "arxiv
           # unavailable" note and the router silently falls through to the
@@ -107,8 +93,14 @@ jobs:
           # matters most for the computational half of the corpus. It fails
           # quietly by design, which is exactly why it has to be installed
           # explicitly rather than assumed.
-          pip install --quiet "peerreviewagents[research] @ git+${PIPELINE_REPO}@${sha}"
+          pip install --quiet "peerreviewagents[research]==${PIPELINE_VERSION}"
           pip install --quiet pyyaml
+
+          installed="$(python -c 'from importlib.metadata import version; print(version("peerreviewagents"))')"
+          if [ "$installed" != "$PIPELINE_VERSION" ]; then
+            echo "::error::Expected PeerReviewAgents $PIPELINE_VERSION, got $installed."
+            exit 1
+          fi
 
           # The manuscript converter, and the only one: the pipeline reads
           # PDFs through rustypaper and has no fallback, because the fallback
@@ -145,8 +137,8 @@ jobs:
       # runner whose workspace starts empty. Restoring a checkpoint that does
       # not match — another paper, a new draft, changed models — is inert by
       # construction, and `/review replace` restores but deliberately ignores
-      # them: the runner passes resume=False so a replacement samples fresh
-      # instead of replaying the review being replaced.
+      # them: the runner passes resume=False so a new attempt samples fresh
+      # instead of replaying the prior attempt.
       - name: Restore panel checkpoints
         uses: actions/cache/restore@v4
         with:
@@ -163,7 +155,6 @@ jobs:
           # Absent, that command fails with an authentication error rather
           # than silently falling back to a paid Anthropic run.
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          PEERREVIEW_PIPELINE_SHA: ${{ steps.pipeline.outputs.sha }}
           # Untrusted input reaches the script through the environment, never
           # through shell interpolation.
           ISSUE_BODY: ${{ github.event.issue.body }}

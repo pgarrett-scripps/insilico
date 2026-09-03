@@ -2,9 +2,9 @@
 /**
  * Every page under /reviews/, at all three depths:
  *
- *   <year>/<slug>/                 the paper and its whole review history
- *   <year>/<slug>/v<N>/            one review of one revision
- *   <year>/<slug>/v<N>/<document>/ one document from that review
+ *   <year>/<slug>/                 the paper, its whole review history
+ *   <year>/<slug>/v<N>/r<M>/            one immutable review attempt
+ *   <year>/<slug>/v<N>/r<M>/<document>/ one document from that attempt
  *
  * They are one route because they are one tree, and splitting them would mean
  * three copies of the logic that finds a bundle and its metadata.
@@ -31,7 +31,7 @@ export async function getStaticPaths() {
 
     for (const bundle of paper.bundles) {
       paths.push({
-        params: { slug: `${paper.year}/${paper.slug}/${bundle.version}` },
+        params: { slug: `${paper.year}/${paper.slug}/${bundle.route}` },
         props: { kind: "review", paper, bundle },
       });
 
@@ -41,7 +41,7 @@ export async function getStaticPaths() {
         ...bundle.documents.audits,
       ];
       for (const doc of documents) {
-        const id = `${paper.year}/${paper.slug}/${bundle.version}/${doc.slug}`;
+        const id = `${paper.year}/${paper.slug}/${bundle.contentId}/${doc.slug}`
         const entry = byId.get(id);
         if (!entry) continue;
         paths.push({
@@ -71,11 +71,12 @@ const bibKey = (extra = "") =>
 let pageTitle = paper.title;
 let pageDescription = "";
 if (kind === "paper") {
-  pageDescription = `${verdictOf(paper.latest)}${
-    paper.latest.meanScore !== null ? ` · mean panel score ${paper.latest.meanScore}/5` : ""
+  const summaryBundle = paper.decisive || paper.latest
+  pageDescription = `${paper.decisive ? verdictOf(paper.decisive) : "Experimental review only"}${
+    summaryBundle.meanScore !== null ? ` · mean panel score ${summaryBundle.meanScore}/5` : ""
   }. ${paper.reviewCount > 1 ? `${paper.reviewCount} reviews on record. ` : ""}AI referee panel. Advisory, not a certification.`;
 } else if (kind === "review") {
-  pageTitle = `${paper.title}, ${bundle.version}`;
+  pageTitle = `${paper.title}, ${bundle.label}`
   pageDescription = `${verdictOf(bundle)}${
     bundle.meanScore !== null ? ` · mean panel score ${bundle.meanScore}/5` : ""
   }. AI referee panel. Advisory, not a certification.`;
@@ -85,8 +86,8 @@ if (kind === "paper") {
   // in the current corpus, so a search result, bookmark, or second browser tab
   // cannot tell round 1 from round 2. Distinguishing the rounds is the entire
   // point of running one.
-  pageTitle = `${doc.label} (${bundle.version}), ${paper.title}`;
-  pageDescription = `${doc.label} from the In Silico referee panel's review of "${paper.title}" (${bundle.version}).`;
+  pageTitle = `${doc.label} (${bundle.label}), ${paper.title}`
+  pageDescription = `${doc.label} from the In Silico referee panel's review of "${paper.title}" (${bundle.label}).`
 }
 
 const { Content } = kind === "document" ? await render(entry) : { Content: null };
@@ -120,11 +121,14 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
             <span class={`verdict verdict--${paper.status}`}>
               {STATUS[paper.status]}
             </span>
-            {!paper.decisive.deskRejected && (
+            {paper.decisive && !paper.decisive.deskRejected && (
               <span class="label">
                 panel recommended {verdictOf(paper.decisive).toLowerCase()}
-                {paper.decisive !== paper.latest && ` · ${paper.decisive.version}`}
+                {paper.decisive !== paper.latest && ` · ${paper.decisive.label}`}
               </span>
+            )}
+            {!paper.decisive && (
+              <span class="label">no eligible editorial baseline</span>
             )}
             <span class="label">most recent · {paper.latest.reviewedAt}</span>
           </div>
@@ -175,9 +179,10 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                   return (
                     <tr>
                       <td>
-                        <a href={`${paperHref}${b.version}/`} class="mono">
-                          {b.version}
+                        <a href={`${paperHref}${b.route}/`} class="mono">
+                          {b.label}
                         </a>
+                        {b === paper.decisive && <span class="dim"> (current)</span>}
                       </td>
                       <td class="mono">
                         {b.round}
@@ -203,10 +208,9 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
             </table>
           </div>
           <p class="history__note">
-            One review per revision of the manuscript. A re-review under an
-            updated pipeline replaces its row (marked
-            <span class="dim">re-review</span> above). Reviews of superseded
-            drafts stand as the record of what the panel said at the time.
+            Manuscript versions and review attempts are separate. The newest
+            eligible editorial review is current. Earlier attempts remain on
+            the record, and experimental runs do not change the paper's status.
           </p>
         </section>
 
@@ -219,7 +223,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           reviewedVersion={String(paper.latest.preprint.version || "")}
           noteExtra={
             paper.reviewCount > 1
-              ? `${paper.reviewCount} reviews on record. This URL shows ${paper.latest.version}`
+              ? `${paper.reviewCount} reviews on record. This URL shows ${paper.latest.label}`
               : ""
           }
           evergreen={true}
@@ -237,12 +241,12 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           <span aria-hidden="true">/</span>
           <a href={paperHref}>This paper</a>
           <span aria-hidden="true">/</span>
-          <span aria-current="page">{bundle.version}</span>
+          <span aria-current="page">{bundle.label}</span>
         </nav>
 
         <header class="head">
           <p class="label head__eyebrow">
-            Review {bundle.version} · round {bundle.round}
+            Review {bundle.label} · round {bundle.round}
             {bundle.preprint.version && ` · manuscript v${bundle.preprint.version}`}
           </p>
           <h1 class="head__title">{paper.title}</h1>
@@ -305,7 +309,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           <ul class="docs__list">
             {bundle.documents.primary.map((d) => (
               <li>
-                <a class="doc" href={`${paperHref}${bundle.version}/${d.slug}/`}>
+                <a class="doc" href={`${paperHref}${bundle.route}/${d.slug}/`}>
                   <span class="doc__label">{d.label}</span>
                   {d.blurb && <span class="doc__blurb">{d.blurb}</span>}
                 </a>
@@ -324,7 +328,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                   );
                   return (
                     <li>
-                      <a class="chip" href={`${paperHref}${bundle.version}/${d.slug}/`}>
+                      <a class="chip" href={`${paperHref}${bundle.route}/${d.slug}/`}>
                         <span class="chip__label">{d.label}</span>
                         {scored && typeof scored.score === "number" && (
                           <span class="chip__score mono">{scored.score.toFixed(1)}</span>
@@ -347,7 +351,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
               <ul class="docs__grid">
                 {bundle.documents.audits.map((d) => (
                   <li>
-                    <a class="chip" href={`${paperHref}${bundle.version}/${d.slug}/`}>
+                    <a class="chip" href={`${paperHref}${bundle.route}/${d.slug}/`}>
                       <span class="chip__label">{d.label}</span>
                     </a>
                   </li>
@@ -363,9 +367,9 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
 
         <Citation
           title={paper.title}
-          url={`${siteRoot}/reviews/${paper.year}/${paper.slug}/${bundle.version}/`}
+          url={`${siteRoot}/reviews/${paper.year}/${paper.slug}/${bundle.route}/`}
           year={bundle.reviewedAt.slice(0, 4)}
-          key={bibKey(bundle.version)}
+          key={bibKey(bundle.label.replace("/", "-"))}
           reviewedDoi={bundle.preprint.doi || ""}
           reviewedVersion={String(bundle.preprint.version || "")}
           noteExtra={`Produced by PeerReviewAgents ${(bundle.provenance.pipeline || {}).version || "unknown"}`}
@@ -383,7 +387,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
           <span aria-hidden="true">/</span>
           <a href={paperHref}>This paper</a>
           <span aria-hidden="true">/</span>
-          <a href={`${paperHref}${bundle.version}/`}>{bundle.version}</a>
+          <a href={`${paperHref}${bundle.route}/`}>{bundle.label}</a>
           <span aria-hidden="true">/</span>
           <span aria-current="page">{doc.label}</span>
         </nav>
@@ -407,7 +411,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
 
         <nav class="pager" aria-label="Within this review">
           {prev ? (
-            <a class="pager__link" href={`${paperHref}${bundle.version}/${prev.slug}/`}>
+            <a class="pager__link" href={`${paperHref}${bundle.route}/${prev.slug}/`}>
               <span class="label">Previous</span>
               <span class="pager__title">{prev.label}</span>
             </a>
@@ -415,7 +419,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
             <span />
           )}
           {next ? (
-            <a class="pager__link pager__link--next" href={`${paperHref}${bundle.version}/${next.slug}/`}>
+            <a class="pager__link pager__link--next" href={`${paperHref}${bundle.route}/${next.slug}/`}>
               <span class="label">Next</span>
               <span class="pager__title">{next.label}</span>
             </a>
@@ -425,7 +429,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
         </nav>
 
         <p class="doc__back">
-          <a href={`${paperHref}${bundle.version}/`}>← All documents in this review</a>
+          <a href={`${paperHref}${bundle.route}/`}>← All documents in this review</a>
         </p>
       </article>
     )

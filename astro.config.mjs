@@ -4,6 +4,7 @@ import sitemap from "@astrojs/sitemap";
 import { unified } from "@astrojs/markdown-remark";
 import remarkDemoteHeadings from "./src/lib/remark-demote-headings.mjs";
 import remarkMdLinks from "./src/lib/remark-md-links.mjs";
+import remarkSafeMarkdown from "./src/lib/remark-safe-markdown.mjs"
 
 const BASE = "/insilico";
 
@@ -22,8 +23,12 @@ export default defineConfig({
     // Every markdown file here renders inside a page that already has an
     // <h1>, so the document's own `#` made a second one. See the plugin.
     processor: unified({
-      remarkPlugins: [[remarkMdLinks, { base: BASE }], remarkDemoteHeadings],
-      smartypants: true,
+      remarkPlugins: [
+        [remarkMdLinks, { base: BASE }],
+        remarkDemoteHeadings,
+        remarkSafeMarkdown,
+      ],
+      smartypants: false,
     }),
     // The panel writes plain markdown. Smartypants turns its quotes and dashes
     // into typographic ones, which matters when the output is set in a serif

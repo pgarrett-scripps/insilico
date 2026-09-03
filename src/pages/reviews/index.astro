@@ -14,7 +14,7 @@ const verdictOf = (b) => (b.deskRejected ? "Desk reject" : VERDICT[b.decision] |
 // Filtering is by status rather than by verdict: a reader scanning the corpus
 // wants the journal's answer, and offering all four verdicts alongside it
 // would be five buttons splitting nineteen papers.
-const ORDER = ["accepted", "declined", "desk"];
+const ORDER = ["accepted", "declined", "desk", "experimental"]
 const present = ORDER.map((k) => ({
   key: k,
   label: STATUS[k],
@@ -91,19 +91,19 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
                     data-verdict={paper.status}
                     data-date={paper.latest.reviewedAt}
                     data-title={paper.title.toLowerCase()}
-                    data-score={paper.latest.meanScore ?? ""}
+                    data-score={(paper.decisive || paper.latest).meanScore ?? ""}
                   >
                     <a class="card__link" href={`${base}/reviews/${paper.year}/${paper.slug}/`}>
                       <span class="card__top">
                         <span class={`verdict verdict--${paper.status}`}>
                           {STATUS[paper.status]}
                         </span>
-                        {!paper.decisive.deskRejected && (
+                        {paper.decisive && !paper.decisive.deskRejected && (
                           <span class="card__verdict">
                             {verdictOf(paper.decisive)}
                           </span>
                         )}
-                        {paper.decisive.meanScore !== null && (
+                        {paper.decisive && paper.decisive.meanScore !== null && (
                           <span class="card__score mono">
                             {paper.decisive.meanScore.toFixed(1)}
                             <span class="card__scoreScale">/5</span>
@@ -283,6 +283,7 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
   .filter--major { --v: var(--v-major); }
   .filter--reject { --v: var(--v-reject); }
   .filter--desk { --v: var(--v-desk); }
+  .filter--experimental { --v: var(--ink-faint); }
 
   .filter:hover {
     color: var(--ink-dim);
