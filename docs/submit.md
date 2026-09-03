@@ -7,7 +7,7 @@ A preprint on arXiv, bioRxiv or medRxiv:
 - `https://www.medrxiv.org/content/10.1101/2020.03.24.20042937v1`
 
 That is the whole submission. We pull the title, authors, abstract, version,
-official full text when available, and PDF from the server ourselves.
+official full text when available, and PDF when needed from the server ourselves.
 
 Not a bare PDF link: a review has to name an exact, permanent version. A
 preprint server gives us a DOI, a version number and a file we can checksum. A

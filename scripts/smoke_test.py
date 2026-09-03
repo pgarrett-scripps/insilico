@@ -1365,6 +1365,17 @@ def check_full_text_source_hierarchy() -> None:
 
         source = select_manuscript_source(
             preprint,
+            None,
+            workdir,
+            {},
+            fetcher=lambda url, **kwargs: jats,
+            loader=lambda path, config: broken_pdf,
+            ocr=lambda path, dest: full_text,
+        )
+        assert source.kind == "jats"
+
+        source = select_manuscript_source(
+            preprint,
             pdf,
             workdir,
             {},
