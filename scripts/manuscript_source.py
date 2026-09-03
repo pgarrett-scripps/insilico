@@ -22,6 +22,14 @@ class ManuscriptSourceUnreadable(RuntimeError):
     """No available representation passed the identity and completeness checks."""
 
 
+class OfficialFullTextUnavailable(RuntimeError):
+    """The archive supplied no structured full text that passed validation."""
+
+    def __init__(self, attempts: list[dict]):
+        self.attempts = list(attempts)
+        super().__init__("official full text was unavailable")
+
+
 @dataclass
 class ManuscriptSource:
     path: Path
@@ -334,21 +342,23 @@ def _ocr_pdf(pdf: Path, workdir: Path) -> str:
 
 def select_manuscript_source(
     preprint: Preprint,
-    pdf: Path,
+    pdf: Path | None,
     workdir: Path,
     config: dict,
     *,
     fetcher: Callable[..., bytes] = _get,
     loader: Callable | None = None,
     ocr: Callable[[Path, Path], str] = _ocr_pdf,
+    try_structured: bool = True,
+    previous_attempts: list[dict] | None = None,
 ) -> ManuscriptSource:
     """Choose JATS, HTML, validated PDF text, or validated OCR in that order."""
-    attempts: list[dict] = []
+    attempts: list[dict] = list(previous_attempts or [])
     structured = (
         ("jats", preprint.jats_url, jats_to_markdown),
         ("html", preprint.html_url, html_to_markdown),
     )
-    for kind, url, converter in structured:
+    for kind, url, converter in structured if try_structured else ():
         if not url:
             continue
         if not _trusted_full_text_url(url, preprint):
@@ -365,6 +375,9 @@ def select_manuscript_source(
                 return ManuscriptSource(path, kind, url, tool, validation, attempts)
         except (OSError, ValueError, ET.ParseError, urllib.error.URLError) as exc:
             attempts.append({"kind": kind, "url": url, "error": str(exc)})
+
+    if pdf is None:
+        raise OfficialFullTextUnavailable(attempts)
 
     if loader is None:
         from peerreviewagents.ingest.loader import load_manuscript_record

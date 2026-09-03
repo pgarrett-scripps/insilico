@@ -39,6 +39,7 @@ from fetch_preprint import (  # noqa: E402
 )
 from manuscript_source import (  # noqa: E402
     ManuscriptSourceUnreadable,
+    OfficialFullTextUnavailable,
     select_manuscript_source,
 )
 
@@ -1121,10 +1122,9 @@ def _run(args, workdir: Path) -> int:
     if preprint.title:
         print(f"title     {preprint.title}", file=sys.stderr)
 
-    pdf = download(preprint, workdir)
-    print(f"pdf       {pdf} ({pdf.stat().st_size // 1024} KiB)", file=sys.stderr)
-
     if args.dry_run:
+        pdf = download(preprint, workdir)
+        print(f"pdf       {pdf} ({pdf.stat().st_size // 1024} KiB)", file=sys.stderr)
         # Reports the plan too. --dry-run exists to check a URL is worth
         # spending on, and "we reviewed this draft already" is exactly that
         # kind of answer — worth getting before the panel, not after.
@@ -1250,8 +1250,39 @@ def _run(args, workdir: Path) -> int:
 
     config = get_config(**overrides)
 
+    pdf: Path | None = None
     try:
-        manuscript_source = select_manuscript_source(preprint, pdf, workdir, config)
+        manuscript_source = select_manuscript_source(preprint, None, workdir, config)
+    except OfficialFullTextUnavailable as structured_failure:
+        try:
+            pdf = download(preprint, workdir)
+        except ValueError as exc:
+            message = f"official full text and PDF fetch failed: {exc}"
+            print(f"unreadable: {message}", file=sys.stderr)
+            if out := os.environ.get("GITHUB_OUTPUT"):
+                reason = " ".join(message.split())
+                with open(out, "a", encoding="utf-8") as fh:
+                    fh.write("unreadable=true\n")
+                    fh.write(f"unreadable_reason={reason}\n")
+            return 3
+        print(f"pdf       {pdf} ({pdf.stat().st_size // 1024} KiB)", file=sys.stderr)
+        try:
+            manuscript_source = select_manuscript_source(
+                preprint,
+                pdf,
+                workdir,
+                config,
+                try_structured=False,
+                previous_attempts=structured_failure.attempts,
+            )
+        except ManuscriptSourceUnreadable as exc:
+            print(f"unreadable: {exc}", file=sys.stderr)
+            if out := os.environ.get("GITHUB_OUTPUT"):
+                reason = " ".join(str(exc).split())
+                with open(out, "a", encoding="utf-8") as fh:
+                    fh.write("unreadable=true\n")
+                    fh.write(f"unreadable_reason={reason}\n")
+            return 3
     except ManuscriptSourceUnreadable as exc:
         print(f"unreadable: {exc}", file=sys.stderr)
         if out := os.environ.get("GITHUB_OUTPUT"):
@@ -1293,7 +1324,10 @@ def _run(args, workdir: Path) -> int:
         # re-review claim to be a like-for-like comparison when it is not.
         if old:
             prior_source = ((old.get("ingest") or {}).get("source") or {}).get("kind")
+            if not prior_source and pdf is None:
+                pdf = download(preprint, workdir)
             check_path = manuscript if prior_source else pdf
+            assert check_path is not None
             if not _same_draft(check_path, old, config):
                 return 1
 
