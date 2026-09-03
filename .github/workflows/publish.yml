@@ -6,6 +6,7 @@ on:
     paths:
       - docs/**
       - src/**
+      - schemas/**
       - public/**
       - astro.config.mjs
       - package.json

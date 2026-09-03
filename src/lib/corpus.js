@@ -18,6 +18,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { assertValidProvenance } from "./reviewSchema.js";
 
 // Astro bundles server-side modules during a production build, so
 // import.meta.url points into generated build output rather than src/lib.
@@ -163,6 +164,7 @@ function readBundle(paperDir, versionName, attemptName = "") {
   const dir = path.join(paperDir, versionName, attemptName)
   const provenance = readJSON(path.join(dir, "provenance.json"));
   if (!provenance) return null;
+  assertValidProvenance(provenance, path.join(dir, "provenance.json"));
 
   const round = readJSON(path.join(dir, "round.json"));
   const preprint = provenance.preprint || {};

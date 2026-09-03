@@ -42,6 +42,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Published review provenance matches its schema
+        run: npm run check:schema
+
       - name: Generated Markdown is inert
         run: npm run check:markdown
 

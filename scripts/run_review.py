@@ -26,6 +26,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from queue import Empty, Queue
+from urllib.parse import urlsplit, urlunsplit
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -575,17 +576,10 @@ def parse_command(body: str) -> dict:
 def pipeline_version() -> dict[str, str]:
     """Identify exactly which referee panel produced a review.
 
-    The workflow sets ``PEERREVIEW_PIPELINE_SHA`` from the commit it pinned.
-    A local run has no such pin, and used to record an empty sha — which is
-    the wrong answer for the one thing reruns exist to do. Comparing two
-    reviews of the same draft is only informative if the record says which
-    two pipelines were compared, and "unrecorded" makes the comparison
-    unciteable.
-
-    So fall back to asking the installed package where it came from. That
-    works for an editable install off a checkout, which is how local runs are
-    set up, and returns nothing when the package came from a wheel — in which
-    case the empty string is the honest answer it always was.
+    Production installs an immutable package release, so its version is the
+    reproducibility identifier. Local editable installs also record the Git
+    revision when one is available, which distinguishes worktree experiments
+    made before a release exists.
     """
     info = {"sha": os.environ.get("PEERREVIEW_PIPELINE_SHA", "")}
     if not info["sha"]:
@@ -628,7 +622,55 @@ def insilico_version() -> dict[str, str]:
     return {"sha": f"{sha}+dirty" if sha and dirty else sha or "unknown"}
 
 
-_RUNTIME_CONFIG_KEYS = {"output_dir", "checkpoint_dir", "resume"}
+_PUBLIC_CONFIG_KEYS = {
+    "agent_models",
+    "article_type",
+    "cache_ttl",
+    "caveman",
+    "conversion_gate",
+    "data_vendors",
+    "desk_screen",
+    "desk_screen_mode",
+    "enable_debate",
+    "enable_journal_recommender",
+    "manuscript_char_budget",
+    "markdown_attempts",
+    "max_debate_rounds",
+    "max_node_cost_usd",
+    "max_output_tokens",
+    "max_rounds",
+    "models",
+    "only_reviewers",
+    "openai_base_url",
+    "panel_quorum_fraction",
+    "provider",
+    "reasoning_model",
+    "request_timeout_s",
+    "research_enabled",
+    "review_strictness",
+    "revision_mode",
+    "single_model",
+    "synthesis_word_budget",
+    "target_journal",
+    "temperature",
+    "tool_vendors",
+}
+
+
+def _public_url(value: object) -> str | None:
+    """Return a reproducible endpoint without credentials or query data."""
+    if value in (None, ""):
+        return None
+    try:
+        parsed = urlsplit(str(value))
+        host = parsed.hostname
+        if not parsed.scheme or not host:
+            return None
+        display_host = f"[{host}]" if ":" in host else host
+        netloc = f"{display_host}:{parsed.port}" if parsed.port else display_host
+        return urlunsplit((parsed.scheme.lower(), netloc, parsed.path, "", ""))
+    except ValueError:
+        return None
 
 
 def _public_config_value(value):
@@ -654,25 +696,20 @@ def _public_config_value(value):
 
 
 def configuration_record(config: dict | None) -> dict:
-    """Canonical semantic configuration, excluding runtime paths and secrets."""
+    """Canonical public configuration, excluding paths and undeclared fields."""
     public = {
         key: _public_config_value(value)
         for key, value in sorted((config or {}).items())
-        if key not in _RUNTIME_CONFIG_KEYS
-        and not any(secret in key.lower() for secret in ("key", "token", "secret", "password"))
+        if key in _PUBLIC_CONFIG_KEYS and key != "openai_base_url"
     }
-    for key in ("journals_dir", "revision_of"):
-        value = public.get(key)
-        if not isinstance(value, str) or not value:
-            continue
-        path = Path(value)
-        if not path.is_absolute():
-            continue
-        try:
-            public[key] = str(path.resolve().relative_to(REPO))
-        except ValueError:
-            pass
-    encoded = json.dumps(public, sort_keys=True, separators=(",", ":")).encode()
+    if "openai_base_url" in (config or {}):
+        public["openai_base_url"] = _public_url(config["openai_base_url"])
+    encoded = json.dumps(
+        public,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode()
     return {"sha256": hashlib.sha256(encoded).hexdigest(), "resolved": public}
 
 
@@ -961,24 +998,6 @@ def write_bundle(
     # which is why a change to how a review *looks* no longer means editing
     # the program that produces reviews.
     (dest / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
-
-    # Published prose follows the journal's permanent punctuation rule. Apply
-    # it after every source has been copied so model output, manuscript
-    # metadata, and machine-readable records all receive the same treatment.
-    em_dash = chr(0x2014)
-    replacements = {
-        em_dash: ",",
-        chr(59): ".",
-    }
-    for path in sorted(dest.iterdir()):
-        if path.suffix not in {".json", ".md"}:
-            continue
-        text = path.read_text(encoding="utf-8")
-        text = re.sub(rf"\|\s*{em_dash}\s*(?=\|)", "| N/A ", text)
-        for old, new in replacements.items():
-            text = text.replace(old, new)
-        text = text.replace(" ,", ",")
-        path.write_text(text, encoding="utf-8")
 
     manifest = {
         "schema_version": 1,

@@ -143,16 +143,44 @@ def check_provenance_is_portable_and_secret_free() -> None:
         "revision_of": str(REPO / "docs" / "reviews" / "paper" / "v1" / "r2"),
         "journals_dir": str(REPO / "journals"),
         "api_key": "do-not-publish",
-        "nested": {"token": "also-secret", "kept": 3},
+        "models": {"reviewer": {"model": "safe", "token": "also-secret"}},
+        "openai_base_url": "https://user:password@example.test/v1?api_key=secret",
         "output_dir": "/tmp/runtime-only",
     })
     resolved = record["resolved"]
-    assert resolved["revision_of"] == "docs/reviews/paper/v1/r2"
-    assert resolved["journals_dir"] == "journals"
+    assert "revision_of" not in resolved
+    assert "journals_dir" not in resolved
     assert "api_key" not in resolved
-    assert "token" not in resolved["nested"]
+    assert "token" not in resolved["models"]["reviewer"]
     assert "output_dir" not in resolved
-    assert len(record["sha256"]) == 64
+    assert resolved["openai_base_url"] == "https://example.test/v1"
+    canonical = json.dumps(
+        resolved,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode()
+    assert record["sha256"] == hashlib.sha256(canonical).hexdigest()
+
+
+def check_published_artifacts_are_preserved() -> None:
+    """Reviewer prose and metadata must survive publication byte for byte."""
+    with tempfile.TemporaryDirectory() as tmp:
+        run_dir = Path(tmp) / "run"
+        run_dir.mkdir()
+        exact = f"finding {chr(0x2014)} evidence{chr(59)} citation"
+        for name in BUNDLE_FILES:
+            (run_dir / name).write_text(exact, encoding="utf-8")
+        preprint = Preprint(
+            url="https://arxiv.org/abs/0000.00000",
+            source="arxiv",
+            pdf_url="https://arxiv.org/pdf/0000.00000",
+            title=exact,
+        )
+        dest = Path(tmp) / "bundle"
+        write_bundle(preprint, {"decision": "major"}, run_dir, dest, "1", "octocat")
+        assert (dest / BUNDLE_FILES[0]).read_text(encoding="utf-8") == exact
+        assert provenance_of(dest)["preprint"]["title"] == exact
 
 
 def check_published_bundle_cannot_be_overwritten() -> None:
@@ -1276,6 +1304,8 @@ def main() -> int:
     print("ok  desk reject records no panel and keeps every body")
     check_provenance_is_portable_and_secret_free()
     print("ok  provenance is portable and excludes secrets")
+    check_published_artifacts_are_preserved()
+    print("ok  published reviewer output and metadata are preserved")
     check_published_bundle_cannot_be_overwritten()
     print("ok  published review bundles cannot be overwritten")
     check_versioning()

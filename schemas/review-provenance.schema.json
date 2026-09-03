@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://insilico.science/schemas/review-provenance.schema.json",
+  "title": "In Silico review provenance",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "generated_at",
+    "pipeline",
+    "insilico",
+    "configuration",
+    "journal_profile",
+    "review",
+    "provider",
+    "models",
+    "agent_models",
+    "debate_rounds",
+    "decision",
+    "desk_rejected",
+    "round",
+    "revision",
+    "submitter",
+    "submitter_is_author",
+    "ingest",
+    "screens",
+    "panel",
+    "mean_score",
+    "scored_count",
+    "panel_size",
+    "total_cost_usd",
+    "cost_by_node",
+    "research_by_node",
+    "errors",
+    "preprint"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "generated_at": { "type": "string", "minLength": 1 },
+    "pipeline": {
+      "type": "object",
+      "required": ["version", "sha"],
+      "properties": {
+        "version": { "type": "string", "minLength": 1 },
+        "sha": { "type": "string" }
+      }
+    },
+    "insilico": {
+      "type": "object",
+      "required": ["sha"],
+      "properties": { "sha": { "type": "string", "minLength": 1 } }
+    },
+    "configuration": {
+      "type": "object",
+      "required": ["sha256", "resolved"],
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "resolved": { "type": "object" }
+      }
+    },
+    "journal_profile": { "type": "object" },
+    "review": { "type": "object" },
+    "provider": { "type": "string", "minLength": 1 },
+    "model": { "type": "string" },
+    "models": { "type": "object" },
+    "agent_models": { "type": "object" },
+    "debate_rounds": { "type": "integer", "minimum": 0 },
+    "decision": { "enum": ["accept", "minor", "major", "reject"] },
+    "desk_rejected": { "type": "boolean" },
+    "round": { "type": "integer", "minimum": 1 },
+    "revision": { "type": "object" },
+    "submitter": { "type": "string" },
+    "submitter_is_author": { "enum": ["", "yes", "no"] },
+    "ingest": { "type": "object" },
+    "screens": { "type": "object" },
+    "panel": { "type": "array", "items": { "type": "object" } },
+    "mean_score": { "type": ["number", "null"] },
+    "scored_count": { "type": "integer", "minimum": 0 },
+    "panel_size": { "type": "integer", "minimum": 0 },
+    "total_cost_usd": { "type": ["number", "null"], "minimum": 0 },
+    "cost_by_node": { "type": "object" },
+    "research_by_node": { "type": "object" },
+    "errors": { "type": "array", "items": { "type": "string" } },
+    "preprint": {
+      "type": "object",
+      "required": ["url", "source", "title"],
+      "properties": {
+        "url": { "type": "string", "minLength": 1 },
+        "source": { "enum": ["arxiv", "biorxiv", "medrxiv"] },
+        "title": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
