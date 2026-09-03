@@ -73,25 +73,19 @@ target_journal = "insilico"
 # The desk — before any reviewer is assigned
 # ---------------------------------------------------------------------------
 
-# Editorial triage — a single fast pass that desk-rejects work plainly
-#    below the bar before spending the full panel on it.
+# Editorial triage. The fast pass currently runs in advisory mode while the
+#    manuscript source hierarchy is validated in production.
 #
-#    On even though a human editor already ran `/review`, because those are
-#    two different decisions: the editor decides whether a submission is worth
-#    *considering*, the desk screen decides whether it clears the bar for full
-#    review.
+#    It still runs because it warms the model cache and records shadow results
+#    that can be inspected before enforcement is restored.
 #
-#    It is also close to free, and may be cheaper than not running it. The
-#    screen deliberately shares the reviewers' model and manuscript prefix, so
-#    its call warms the prompt cache that all 5 specialists then read on their
-#    parallel fan-out — which would otherwise race and largely miss. And a
-#    desk reject short-circuits the run before 14 further calls (5 reviewers,
-#    2 auditors, two parallel debate rounds of 2, synthesizer, editor, scout).
+#    The screen shares the reviewers' model and manuscript prefix, so its call
+#    warms the prompt cache that the specialists then read.
 #
 #    "gate" enforces the verdict; "warm" runs it for the cache but ignores the
 #    verdict; "off" skips the call. The upstream prompt is explicitly
 #    reject-sparingly and errs toward sending borderline work to the panel.
-desk_screen_mode = "gate"
+desk_screen_mode = "warm"
 # A degraded conversion still carries readable manuscript text. Continue with
 # a disclosed warning and withhold section-keyed statistics. Only stop when
 # the conversion is broken enough that the panel would review damaged text.

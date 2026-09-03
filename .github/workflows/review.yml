@@ -34,12 +34,8 @@ env:
   # PyPI release versions are immutable. Updating the panel therefore takes a
   # reviewed change to this file instead of silently following upstream main.
   PIPELINE_VERSION: "0.5.1"
-  # PDF -> markdown converter, from PyPI. A per-platform wheel, so this needs
-  # no Rust toolchain on the runner. Pinned rather than floating: the panel
-  # reads whatever this produces, and a converter that changed how it reads a
-  # two-column page between two rounds of the same paper would show up as the
-  # authors having rewritten it. Kept as a knob so a fix can be pulled from a
-  # branch without editing the install step.
+  # PDF converter used when official full text is unavailable. It is pinned so
+  # fallback behavior cannot change silently between rounds.
   RUSTYPAPER_SPEC: "rustypaper==0.2.0"
   # The text as written. Compression was measured and reverted: under `light`
   # the clarity reviewer reported "grammatical errors that obscure the main
@@ -83,6 +79,11 @@ jobs:
           python-version: "3.12"
           cache: pip
 
+      - name: Install OCR fallback
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes poppler-utils tesseract-ocr
+
       - name: Install the pinned referee panel
         run: |
           # [research] pulls the arXiv client. Without it the contribution
@@ -102,16 +103,9 @@ jobs:
             exit 1
           fi
 
-          # The manuscript converter, and the only one: the pipeline reads
-          # PDFs through rustypaper and has no fallback, because the fallback
-          # fused ~2% of words together and flattened every heading and table
-          # into prose. A panel given that reviews a document the authors did
-          # not write, so a converter that will not install has to stop the
-          # run rather than quietly downgrade it.
-          #
-          # peerreviewagents depends on rustypaper too, so this normally lands
-          # with it; the explicit install is what pins the version and what
-          # turns a resolution failure into a message naming the converter.
+          # peerreviewagents depends on rustypaper. This explicit install pins
+          # the PDF fallback version and gives installation failures a clear
+          # message.
           pip install --quiet "$RUSTYPAPER_SPEC" || {
             echo "::error::rustypaper did not install, so there is no way to"\
                  "read the manuscript. Nothing is published from this run."
@@ -186,10 +180,9 @@ jobs:
           # refuses anything that is not a known constant or a validated model
           # slug. Bash only ever handles it as an environment variable.
           #
-          # Exit 3 is not a failure. It means the PDF converted too badly to
-          # review — a scanned or image-only file, almost always — and the
-          # panel was never started. That is a fact about the file, so it gets
-          # a plain note on the issue rather than a red run and a stack trace.
+          # Exit 3 is not a failure. It means no available text source passed
+          # validation and the panel was never started. That is a technical
+          # result, so it gets a plain note rather than a published verdict.
           # Exit 2 is a command nobody could act on; exit 4 is a draft already
           # reviewed. Same treatment: say so, do not fail the run.
           set +e
@@ -255,16 +248,16 @@ jobs:
           REASON: ${{ steps.run.outputs.unreadable_reason }}
         run: |
           gh issue comment "${{ github.event.issue.number }}" --body \
-            "**No review was run.** This preprint's PDF could not be converted
-          into text the panel could read, so nothing was sent to a referee and
-          nothing is published. This is not an assessment of the work.
+            "**No review was run.** No manuscript text source passed validation,
+          so nothing was sent to a referee and nothing is published. This is
+          not an assessment of the work.
 
           > $REASON
 
-          The usual cause is a scanned or image-only PDF: the pages are
-          pictures of text, and we have no OCR. If you are an author, posting a
-          version exported from your writing software rather than scanned will
-          fix it. Say so here and an editor will re-run the panel."
+          The archive full text, PDF conversion, and OCR fallback all failed
+          validation against the archive title and abstract. If you are an
+          author, posting a text-based revision will usually fix it. Say so
+          here and an editor will re-run the panel."
 
       - name: Open the review pull request
         id: pr

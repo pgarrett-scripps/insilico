@@ -176,39 +176,36 @@ rotating set of specific models, not a stable alias.
 comment is untrusted text, and the parser accepts only known provider names and
 model slugs matching a strict pattern.
 
-## The PDF converter
+## Manuscript text hierarchy
 
-`run_review.py` hands the pipeline the PDF itself, never a conversion of it.
-Every run records which converter read the manuscript, and a conversion done
-here would be recorded as though the pipeline's own converter produced it.
+`run_review.py` prefers the archive's official full text. The order is JATS XML,
+archive HTML, validated PDF conversion, then OCR. Every candidate must contain
+the archive title and abstract and clear minimum length checks before a model
+sees it. The selected source and validation result are recorded in provenance.
 
-Behind the loader the PDF becomes markdown, and that is what the referees read.
-The converter is [rustypaper](https://github.com/pgarrett-scripps/rustypaper), a
-per-platform wheel with no Rust toolchain to install. It is required and has no
-fallback: one that will not install stops the run rather than quietly degrading
-it. The workflow pins an exact version, and the pin is what a re-review rests on:
-a rerun proves it is reading the same draft by comparing the converted text
-against the previous run's, so a converter that changed how it reads a
-two-column page would refuse the correct draft. It is also what makes
-`manuscript_stats.md` comparable between two reviews of one paper.
+JATS and HTML headings are source structure. PDF and OCR section guesses do not
+control prompt assembly. Every reviewer receives the complete selected text.
+
+The PDF converter is
+[rustypaper](https://github.com/pgarrett-scripps/rustypaper), a per-platform
+wheel with no Rust toolchain to install. The workflow pins its exact version.
+OCR uses Poppler and Tesseract and runs only when the PDF conversion fails
+validation.
 
 ```bash
 uv pip install rustypaper
 ```
 
-Every conversion is measured, deterministically and with no model:
+Every representation is measured deterministically and with no model:
 
 | verdict | what happens |
 |---|---|
 | clean | nothing. No warning appears anywhere. |
 | degraded | the run proceeds, the panel is told what the converter mangled, and the review page carries a note |
-| broken | the run stops at the desk before a referee is paid, and nothing is published |
+| broken | the runner tries the next source, then stops before review if none pass |
 
-A stop raises `ManuscriptUnreadable` rather than desk-rejecting. A desk rejection
-is a verdict on a manuscript and gets a published bundle. This is a fact about a
-file and gets none. The workflow exits 3, posts a note on the issue, and opens no
-pull request. `conversion_gate = "off"` in `peerreview.toml` reviews the file
-anyway.
+A final stop is a technical failure, never a desk rejection. The workflow exits
+3, posts a note on the issue, and opens no pull request.
 
 The measurements go to `manuscript_stats.md` and into `provenance.json` under
 `ingest.prose`. They reach no prompt: an agent handed "8.4 boosters per 1000

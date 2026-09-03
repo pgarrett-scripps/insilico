@@ -37,6 +37,10 @@ from fetch_preprint import (  # noqa: E402
     extract_url,
     resolve,
 )
+from manuscript_source import (  # noqa: E402
+    ManuscriptSourceUnreadable,
+    select_manuscript_source,
+)
 
 # Written by the pipeline next to the markdown. It is what makes a review
 # revisable — the machine-readable record of what this round asked for, with
@@ -255,7 +259,7 @@ def _rerun_provenance(bundle: str) -> dict | None:
     return prov
 
 
-def _same_draft(pdf: Path, prior: dict, config: dict) -> bool:
+def _same_draft(manuscript: Path, prior: dict, config: dict) -> bool:
     """Whether the manuscript just fetched is the one the prior round read.
 
     A rerun exists to hold the manuscript fixed and vary the pipeline, so this
@@ -279,7 +283,7 @@ def _same_draft(pdf: Path, prior: dict, config: dict) -> bool:
     from peerreviewagents.ingest.loader import load_manuscript_record
 
     ok, message = draft_matches(
-        prior.get("ingest") or {}, load_manuscript_record(str(pdf), config).ingest
+        prior.get("ingest") or {}, load_manuscript_record(str(manuscript), config).ingest
     )
     print(message if ok else f"{message}\n{_REVISE_HINT}", file=sys.stderr)
     return ok
@@ -967,11 +971,9 @@ def write_bundle(
         # say which. Recorded as a claim, because nothing here verifies it.
         "submitter": submitter,
         "submitter_is_author": submitter_is_author,
-        # How the manuscript was read, as the pipeline recorded it. The panel
-        # is given a markdown rendering of the PDF rather than the PDF itself,
-        # and under compression a quoted sentence will be missing its articles
-        # and copulas — so a reader checking a quotation against the paper
-        # needs to know this before concluding the referee misquoted it.
+        # How the manuscript was read, including the selected archive source
+        # and validation result. A reader checking a quotation needs to know
+        # which representation the panel saw.
         "ingest": ingest or {},
         "screens": json.loads(os.environ.get("REVIEW_SCREENS") or "{}"),
         "panel": scores,
@@ -1208,6 +1210,9 @@ def _run(args, workdir: Path) -> int:
     # to ./peerreview.toml, which is where the [models.*] tables live.
     overrides = {
         "output_dir": str(workdir / "reports"),
+        # Every reviewer gets the complete selected text. Section maps remain
+        # navigation metadata and never decide which prose reaches the model.
+        "manuscript_char_budget": None,
         # Survives ordinary local reruns and records each successful agent
         # atomically. The key includes manuscript content + semantic config,
         # so unrelated papers or model settings never share outputs.
@@ -1245,6 +1250,22 @@ def _run(args, workdir: Path) -> int:
 
     config = get_config(**overrides)
 
+    try:
+        manuscript_source = select_manuscript_source(preprint, pdf, workdir, config)
+    except ManuscriptSourceUnreadable as exc:
+        print(f"unreadable: {exc}", file=sys.stderr)
+        if out := os.environ.get("GITHUB_OUTPUT"):
+            reason = " ".join(str(exc).split())
+            with open(out, "a", encoding="utf-8") as fh:
+                fh.write("unreadable=true\n")
+                fh.write(f"unreadable_reason={reason}\n")
+        return 3
+    manuscript = manuscript_source.path
+    print(
+        f"text      {manuscript_source.kind}: {manuscript_source.tool}",
+        file=sys.stderr,
+    )
+
     if plan.previous_attempt is not None:
         # Round 1, and no `revision_of` in the config. Both are the point.
         # `revision_of` hands the editor the earlier round's decision, score
@@ -1270,8 +1291,11 @@ def _run(args, workdir: Path) -> int:
         # version. Confirm the text as well: a server that quietly reposted
         # different content under one version number would otherwise let a
         # re-review claim to be a like-for-like comparison when it is not.
-        if old and not _same_draft(pdf, old, config):
-            return 1
+        if old:
+            prior_source = ((old.get("ingest") or {}).get("source") or {}).get("kind")
+            check_path = manuscript if prior_source else pdf
+            if not _same_draft(check_path, old, config):
+                return 1
 
     if prior_bundle is not None:
         prior = json.loads((prior_bundle / ROUND_RECORD).read_text(encoding="utf-8"))
@@ -1335,22 +1359,16 @@ def _run(args, workdir: Path) -> int:
     state: dict = {}
     try:
         with _telemetry_recorder(graph.run_id) as telemetry:
-            # The PDF, not a conversion of it. The pipeline converts it to
-            # markdown internally; handing it a .md instead would record a
-            # converter that did not read this file, and would change the
-            # manuscript cache key that the next round re-derives to recover
-            # this draft.
+            # The selected representation has already passed an identity and
+            # completeness check against archive metadata.
             # Keep the latest accumulated snapshot. If a later graph node
             # fails, the completed reviewer/auditor results and their exact
             # errors remain available instead of disappearing with invoke().
-            for _node, snapshot in graph.stream(str(pdf)):
+            for _node, snapshot in graph.stream(str(manuscript)):
                 state = snapshot
     except ManuscriptUnreadable as exc:
-        # No bundle, no verdict, nothing published. A scanned or image-only
-        # PDF is the usual cause, and docs/submit.md already tells authors we
-        # cannot read one — this is that promise being kept at the point it
-        # can be checked, instead of a panel reviewing the converter's output
-        # and a reader discovering it by comparing a quotation to the PDF.
+        # No bundle, no verdict, nothing published. This final guard catches a
+        # selected representation that the pipeline itself still cannot read.
         print(f"unreadable: {exc}", file=sys.stderr)
         if out := os.environ.get("GITHUB_OUTPUT"):
             # Flattened: a newline in a `key=value` output line silently
@@ -1361,6 +1379,17 @@ def _run(args, workdir: Path) -> int:
                 fh.write("unreadable=true\n")
                 fh.write(f"unreadable_reason={reason}\n")
         return 3
+
+    source_record = manuscript_source.record()
+    ingest = dict(state.get("ingest") or {})
+    state["ingest"] = ingest
+    ingest["source"] = source_record
+    ingest["tool"] = manuscript_source.tool
+    ingest["source_format"] = manuscript_source.kind
+    if manuscript_source.kind in {"jats", "html"}:
+        ingest["section_source"] = f"official_{manuscript_source.kind}"
+    else:
+        ingest["section_source"] = "none"
 
     # A valid-looking editor verdict is not enough. Older PRA versions could
     # continue after a reviewer failed and issue a decision from seven of the
