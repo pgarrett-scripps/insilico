@@ -11,6 +11,7 @@
  */
 import { getCollection, render } from "astro:content";
 import Base from "../../layouts/Base.astro";
+import EditorialScore from "../../components/EditorialScore.astro";
 import PanelReadout from "../../components/PanelReadout.astro";
 import Notices from "../../components/Notices.astro";
 import ManuscriptStats from "../../components/ManuscriptStats.astro";
@@ -67,18 +68,24 @@ const verdictClass = (b) => (b.deskRejected ? "desk" : b.decision);
 const bibKey = (extra = "") =>
   `insilico-${paper.slug.replace(/[^A-Za-z0-9-]+/g, "-").toLowerCase()}${extra ? `-${extra}` : ""}`;
 
+const scoreDescription = (b) => {
+  if (b.readinessScore !== null) return `publication readiness ${b.readinessScore}/100`
+  if (b.meanScore !== null) return `legacy panel mean ${b.meanScore}/5`
+  return ""
+}
+
 // --- page metadata ---------------------------------------------------------
 let pageTitle = paper.title;
 let pageDescription = "";
 if (kind === "paper") {
   const summaryBundle = paper.decisive || paper.latest
   pageDescription = `${paper.decisive ? verdictOf(paper.decisive) : "Experimental review only"}${
-    summaryBundle.meanScore !== null ? ` · mean panel score ${summaryBundle.meanScore}/5` : ""
+    scoreDescription(summaryBundle) ? ` · ${scoreDescription(summaryBundle)}` : ""
   }. ${paper.reviewCount > 1 ? `${paper.reviewCount} reviews on record. ` : ""}AI referee panel. Advisory, not a certification.`;
 } else if (kind === "review") {
   pageTitle = `${paper.title}, ${bundle.label}`
   pageDescription = `${verdictOf(bundle)}${
-    bundle.meanScore !== null ? ` · mean panel score ${bundle.meanScore}/5` : ""
+    scoreDescription(bundle) ? ` · ${scoreDescription(bundle)}` : ""
   }. AI referee panel. Advisory, not a certification.`;
 } else {
   // The version belongs in the title. Without it every document of a revised
@@ -198,7 +205,11 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                         </span>
                       </td>
                       <td class="mono">
-                        {b.meanScore !== null ? b.meanScore.toFixed(1) : "N/A"}
+                        {b.readinessScore !== null
+                          ? `${b.readinessScore}/100`
+                          : b.meanScore !== null
+                            ? `${b.meanScore.toFixed(1)}/5 panel`
+                            : "N/A"}
                       </td>
                       <td class="mono dim">{b.reviewedAt}</td>
                     </tr>
@@ -285,9 +296,17 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
 
         <Notices provenance={bundle.provenance} />
 
+        <EditorialScore
+          readinessScore={bundle.readinessScore}
+          readinessBreakdown={bundle.readinessBreakdown}
+          contributionProfile={bundle.contributionProfile}
+          rationale={bundle.scoreDecisionRationale}
+        />
+
         <PanelReadout
           panel={bundle.panel}
           meanScore={bundle.meanScore}
+          legacy={bundle.readinessScore === null}
           decision={bundle.decision}
           deskRejected={bundle.deskRejected}
         />

@@ -11,11 +11,21 @@ The panel's rubric and method limits are documented under
 
 ## Authority
 
-**The panel decides the verdict. A human decides whether to publish it.**
+**The Editor-in-Chief agent decides the verdict and readiness score. A human
+decides whether to publish the review.**
 
 The editor agent recommends accept, minor revision, major revision or reject,
-and we publish it word for word. It binds nobody. Merging the pull request is
-the decision to publish. An editor may decline to publish a review that is
+and assigns a publication-readiness score from 0 to 100. Specialist scores are
+advisory inputs. The readiness score measures the current manuscript through
+scientific validity, methods and evidence, reproducibility and reporting, and
+clarity and completeness. Novelty, significance, and usefulness are reported
+separately as a contribution profile.
+
+No score range determines the recommendation. The recommendation follows the
+work required to make the manuscript publishable. Low novelty or significance
+does not prevent acceptance when the work is valid, useful, and ready. We
+publish the decision letter word for word. It binds nobody. Merging the pull
+request is the decision to publish. A human editor may decline to publish a review that is
 incoherent, that misreads the paper badly enough to mislead, or that came from a
 mangled ingest.
 
@@ -29,18 +39,10 @@ verdicts with nothing hanging on the answer, and the line is drawn afterwards.
 An editor told that "minor revision" means acceptance is an editor being asked
 to gatekeep, and it would grant more of them.
 
-The line is drawn on the editor's verdict rather than on the panel's mean
-score, but on the evidence so far the two barely differ. Across the 20 reviews
-by a graded panel, every paper scoring 3.75 or below was returned at major
-revision and every paper scoring 4.00 or above at minor. The only overlap is a
-single paper at 3.88 that went each way on different runs. A threshold at 3.9
-would reproduce the editor's verdict 19 times out of 20.
-
-We use the verdict anyway, because it is a judgement about the manuscript and
-the mean is an average that happens to track it. The published evidence cited
-above came from the historical eight-reviewer graded panel. New reviews use the
-current panel. Nobody should read the current acceptance line as evidence
-that the editor is doing something the arithmetic could not.
+The line is drawn on the editor's recommendation, never on the readiness score
+or the specialist-panel mean. Historical reviews retain their 1 to 5 panel
+mean and label it as a legacy value. It is not converted into a readiness
+score.
 
 "Declined" rather than "rejected", because that is what happened: the editor
 declined to accept, and most declined papers carry a letter setting out what

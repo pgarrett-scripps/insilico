@@ -978,6 +978,14 @@ def write_bundle(
         "ingest": ingest or {},
         "screens": json.loads(os.environ.get("REVIEW_SCREENS") or "{}"),
         "panel": scores,
+        # The Editor-in-Chief owns the official publication-readiness score.
+        # Specialist scores remain visible as advisory evidence below it.
+        "readiness_score": state.get("readiness_score"),
+        "readiness_breakdown": state.get("readiness_breakdown") or {},
+        "contribution_profile": state.get("contribution_profile") or {},
+        "score_decision_rationale": state.get("score_decision_rationale") or "",
+        # Kept for older bundles and panel-level analysis. This is not the
+        # publication-readiness score and does not determine the decision.
         "mean_score": round(sum(numeric) / len(numeric), 2) if numeric else None,
         # How many referees the mean is actually over. A 4.1 across eight
         # referees and a 4.1 across three are different claims, and without

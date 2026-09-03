@@ -47,16 +47,24 @@ const STAGES = [
           <dd class="mono">{stats.declined}</dd>
         </div>
         <div class="readouts__item">
-          <dt class="label">Mean panel score</dt>
+          <dt class="label">
+            {stats.meanReadiness !== null ? "Mean readiness" : "Legacy panel mean"}
+          </dt>
           <dd class="mono">
-            {stats.meanScore !== null ? stats.meanScore.toFixed(2) : "N/A"}
-            <span class="readouts__scale">/5</span>
+            {stats.meanReadiness !== null
+              ? stats.meanReadiness.toFixed(1)
+              : stats.meanScore !== null
+                ? stats.meanScore.toFixed(2)
+                : "N/A"}
+            <span class="readouts__scale">
+              {stats.meanReadiness !== null ? "/100" : "/5"}
+            </span>
           </dd>
         </div>
       </dl>
       <p class="readouts__note">
-        In Silico accepts a paper the panel returns at <strong>minor revision or
-        better</strong>. Papers requiring major revision are marked as needing revision.
+        The Editor-in-Chief assigns publication readiness and a separate
+        recommendation. The recommendation follows revision burden, not a score cutoff.
       </p>
     </div>
   </div>
@@ -117,7 +125,11 @@ const STAGES = [
                     </span>
                     <span class="row__title">{paper.title}</span>
                     <span class="row__score mono">
-                      {display.meanScore !== null ? display.meanScore.toFixed(1) : "N/A"}
+                      {display.readinessScore !== null
+                        ? `${display.readinessScore}/100`
+                        : display.meanScore !== null
+                          ? `${display.meanScore.toFixed(1)}/5 panel`
+                          : "N/A"}
                     </span>
                   </a>
                 </li>

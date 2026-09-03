@@ -21,7 +21,13 @@
  * held with low confidence is a weaker claim than the same score held firmly,
  * and folding them together would hide that.
  */
-const { panel = [], meanScore = null, decision = "", deskRejected = false } = Astro.props;
+const {
+  panel = [],
+  meanScore = null,
+  decision = "",
+  deskRejected = false,
+  legacy = false,
+} = Astro.props;
 
 const SCALE = 5;
 
@@ -85,8 +91,8 @@ const meanTier = tierFor(meanScore);
           </div>
           <p class="label">
             {naRows.length > 0
-              ? `Mean over ${scores.length} of ${rows.length}`
-              : "Mean panel score"}
+              ? `${legacy ? "Legacy" : "Advisory"} mean over ${scores.length} of ${rows.length}`
+              : legacy ? "Legacy panel mean" : "Advisory specialist mean"}
           </p>
 
           {spread !== null && (
