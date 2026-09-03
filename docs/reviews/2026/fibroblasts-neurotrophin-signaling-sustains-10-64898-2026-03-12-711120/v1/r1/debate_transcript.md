@@ -1,0 +1,49 @@
+# Debate Transcript
+
+## Advocate — round 1
+
+# The Case for Acceptance
+
+This manuscript makes a genuine, mechanistically-grounded contribution that deserves publication with revision, not rejection. The panel's own findings, taken together, support this.
+
+**The central clinical observation is real and important.** Every reviewer accepts the core finding: paired pre/post-treatment spatial transcriptomics across 22 RA patients show that capillary, arteriolar, pericyte, and VSMC densities do not decline after 6 months of csDMARD or TNFi therapy (Fig. 1G-H). Even the data_analysis reviewer's concern about multiple-comparison correction is a fixable reporting issue, not a refutation — several of the reported effects (pericytes p=1.6e-05, VSMCs p=0.0031) would survive even conservative Bonferroni correction across 12 tests (threshold ≈0.004). This finding alone — that a treatment-resistant vascular compartment persists independent of remission status — is clinically consequential and, as the contribution reviewer notes, "clinically important" and directly motivates the mechanistic work.
+
+**The mechanistic chain is unusually complete for a single paper.** The manuscript doesn't merely correlate neurotrophin receptors with mural cells; it establishes the pathway with convergent orthogonal methods: spatial transcriptomics, RNAscope, IHC (Fig. 2), co-culture with siRNA/CRISPR loss-of-function (Fig. 3, Fig. 5), NGFR overexpression gain-of-function with phosphorylation readout (Fig. 5F-H), and — critically — functional validation in intact human RA explants with pharmacologic agonists and antagonists spanning the whole receptor family (Fig. S9, Fig. 6). The scientific_validity reviewer, while pressing for more direct proof of NOTCH3→NGF transactivation, concedes the DLL4/DAPT/NOTCH3-KO triangulation (Fig. 5C-E) is "consistent with NOTCH activation." That is exactly the kind of converging, multi-modal evidence this venue should reward, even where a ChIP-seq confirmation is reasonably requested as a next step.
+
+**The translational hook is concrete and immediately testable by others.** Using FDA-approved larotrectinib and entrectinib in human tissue explants (Fig. 6C-G) is a legitimate, low-risk repurposing proposal — not a claim of clinical efficacy — appropriately hedged as ex vivo evidence.
+
+The reviewers' concerns (correction for multiple comparisons, precise quantification definitions, sample sizes, deposited data/code, healthy-donor drug controls) are substantive but are additions and clarifications, not evidence against the core claims. None of the panel disputes the qualitative direction of any headline result.
+
+## Skeptic — round 1
+
+The strongest case against acceptance is that the paper's central causal chain—NOTCH3 → NGF → NGFR/TRKA → mural differentiation → sustained pathological vasculature that treatment fails to reverse—is asserted with mechanistic language ("drives," "initiates," "sustains," "reverses") that the evidence does not support at each critical link, and the panel independently converged on this from statistics, reproducibility, and validity angles.
+
+**FATAL, unless substantially reframed: the core "persistence despite treatment" claim may not be the comparison actually tested.** The reporting_reproducibility reviewer flags that Figure 1G's stated p-values ("p = 0.00036... compared to healthy") appear to compare post-treatment to healthy, not pre- vs. post-treatment within patients, despite the Methods stating a paired Wilcoxon test was used. If the headline claim—that 6 months of therapy "did not reduce the density of synovial microvasculature" and instead caused "significant interval increase"—is not backed by an explicit pre-vs-post-treatment contrast with correction for the ~12 simultaneous comparisons (data_analysis reviewer's point on multiple comparisons, family-wise error ~0.46 uncorrected), the paper's foundational motivating observation is unverified from the text as written. This is fatal to the framing (though fixable by clarifying which contrasts were run and applying correction) because the entire therapeutic rationale (TRK inhibitors for "treatment-resistant" vasculature) depends on this specific claim.
+
+**FATAL to the mechanistic claim as stated, FIXABLE for a narrower claim: "reversal" is not demonstrated.** Both the validity and contribution reviewers converge (independently, from different angles) that Figure 6's 3-day explant TRK-inhibitor experiments show acute pharmacodynamic suppression of aSMA/PECAM1 signal, not reversal of an established mature vasculature toward a normal state, and no healthy-donor explant control exists to establish RA-specificity versus generic anti-angiogenic toxicity. The word "reverse" appears in the title-level claims and abstract; the data support "acutely suppresses markers in short-term culture."
+
+**Panel blind spot:** no reviewer interrogated whether the aSMA/marker-based readouts in explants could reflect cell loss/toxicity rather than dedifferentiation — this alternative is named but never excluded by any specialist, and it undercuts both the neurotrophin-agonist and TRK-inhibitor explant results simultaneously.
+
+These are not stylistic nitpicks; they are the load-bearing claims in the abstract.
+
+## Skeptic — round 2
+
+I'll concede what the advocate has established before pressing the remaining case.
+
+**Conceded:** The mechanistic chain from NOTCH3 to receptor induction (Fig. 3C, Fig. 5C-E) is supported by convergent methods, and several Fig. 1G effects (pericytes p=1.6e-05, VSMCs p=0.0031) likely survive Bonferroni correction. The advocate is right that qualitative direction of most results is not disputed by any specialist.
+
+**But the advocate has not actually rebutted the two fatal points — they've asserted they're "fixable" without showing the fix exists in the text.**
+
+First, "persistence despite treatment" is the paper's entire clinical hook — it's why TRK inhibitors are framed as addressing "treatment-resistant" pathology rather than merely "RA-associated" pathology. The reporting_reproducibility reviewer's specific textual observation stands unaddressed: the Methods say a paired Wilcoxon was used, but the p-values reported in-text are explicitly labeled "compared to healthy," not pre-vs-post. The advocate's Bonferroni calculation defends the *healthy-vs-post* comparisons, which is not the claim being sold in the abstract ("6 months of immunosuppressive treatment... did not reduce the density"). That specific contrast's p-value is never disambiguated in the manuscript text as quoted. This is a textual gap, not a matter of interpretation — either the authors show pre-vs-post p-values explicitly or the persistence claim is unverified as written.
+
+Second, on "reversal": the advocate calls Fig. 6 "appropriately hedged as ex vivo evidence," but the manuscript's own language — Discussion: "TRK inhibitors effectively reverses vascular maturation," Fig. 6 title: "Reversal of pathological vascular maturation" — is not hedged. Three days of drug exposure reducing aSMA/PECAM1 signal in explants lacking a healthy-donor comparator or any dedifferentiation-vs-death discrimination (a gap the scientific_validity reviewer raises and no report resolves) supports "suppresses," not "reverses." No specialist report actually tested or excluded cytotoxicity as the mechanism — this remains a genuine panel blind spot, not resolved by the advocate's assertion that hedging exists.
+
+Both are fixable with textual clarification and one control experiment (healthy-donor explants), not fatal to the paper's survival — but they are fatal to the claims as currently worded, and that distinction matters for a public review record.
+
+## Advocate — round 2
+
+The skeptic's two "fatal" points are real observations but neither holds up as fatal when checked against what the text actually says.
+
+**On Fig. 1G's paired comparison:** the skeptic assumes the "interval increase" language isn't backed by a within-patient contrast. But look at the actual pattern across every cell type: "capillary ECs (p = 0.00036; and p=0.0042 compared to healthy)," "pericytes (p=1.6e-05, p = 0.029 compared to healthy)," "VSMCs (p = 0.0031, p=0.029 compared to healthy)." In each case, two p-values are given, and only the second is explicitly labeled "compared to healthy." The natural reading — consistent with the legend's explicit statement that "Wilcoxon matched-pairs signed-rank test" was used "for paired patient samples" — is that the *first* p-value in each pair is the pre-vs-post paired comparison the skeptic says is missing, and the second is the unpaired contrast against healthy controls. This is a labeling clarity problem, fixable by adding explicit subscripts to each p-value, not evidence the comparison was never run.
+
+**On "reversal" and the toxicity alternative:** the skeptic's blind-spot claim — that acute marker suppression could reflect cytotoxicity rather than dedifferentiation — is specifically pre-empted by the manuscript's own data: Fig. S9B reports a WST-1 viability assay showing "neither drugs exhibited evidence of cytotoxicity at concentrations below 100 µM" for entrectinib and larotrectinib. More importantly, the bidirectional pharmacology across Fig. S9C-F — agonists (7,8-DHF, LM22B-10) *increase* aSMA while antagonists (GW441756, ANA-12, GNF5837, DAPT) *decrease* it — is difficult to explain by nonspecific toxicity, which would not produce opposite effects from mechanistically paired compounds. "Reversal" should be softened to "acute suppression" in revision, but the mechanism is not undermined.

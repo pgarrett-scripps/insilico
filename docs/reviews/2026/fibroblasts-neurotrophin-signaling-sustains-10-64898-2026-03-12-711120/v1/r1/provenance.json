@@ -1,0 +1,463 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-09-03T21:16:32+00:00",
+  "pipeline": {
+    "sha": "",
+    "version": "0.5.1"
+  },
+  "insilico": {
+    "sha": "d743eed1cc743f6f5d4633f14f76245811bf14f2"
+  },
+  "configuration": {
+    "sha256": "b4d8c0eec9aeb1079463f1b401ad2e7cd334ca8b0a84eafa9b7dd8db0864ab89",
+    "resolved": {
+      "agent_models": {
+        "debate_synthesizer": {
+          "model": "claude-sonnet-5"
+        },
+        "journal_recommender": {
+          "model": "claude-haiku-4-5"
+        }
+      },
+      "article_type": "",
+      "cache_ttl": "1h",
+      "caveman": "off",
+      "conversion_gate": "broken",
+      "data_vendors": {
+        "biomedical": "pubmed,biorxiv",
+        "paper_search": "semantic_scholar,arxiv",
+        "preprints": "biorxiv,arxiv"
+      },
+      "desk_screen": false,
+      "desk_screen_mode": "warm",
+      "enable_debate": true,
+      "enable_journal_recommender": true,
+      "manuscript_char_budget": null,
+      "markdown_attempts": 3,
+      "max_debate_rounds": 2,
+      "max_node_cost_usd": 5.0,
+      "max_output_tokens": 12000,
+      "max_rounds": 3,
+      "models": {
+        "audit": {
+          "model": "claude-haiku-4-5"
+        },
+        "debate": {
+          "model": "claude-sonnet-5"
+        },
+        "reviewer": {
+          "model": "claude-haiku-4-5"
+        },
+        "synthesis": {
+          "model": "claude-opus-5"
+        }
+      },
+      "only_reviewers": [],
+      "panel_quorum_fraction": 1.0,
+      "provider": "anthropic",
+      "reasoning_model": "claude-sonnet-5",
+      "request_timeout_s": 120.0,
+      "research_enabled": true,
+      "review_strictness": 3,
+      "revision_mode": "revision",
+      "single_model": false,
+      "synthesis_word_budget": 1200,
+      "target_journal": "insilico",
+      "temperature": null,
+      "tool_vendors": {},
+      "openai_base_url": null
+    }
+  },
+  "journal_profile": {
+    "journal": "insilico",
+    "path": "journals/insilico.toml",
+    "sha256": "c416856b2c4af80d00644c108454e670522da142db8f8fb0d5159dd278096256"
+  },
+  "review": {
+    "id": "docs/reviews/2026/fibroblasts-neurotrophin-signaling-sustains-10-64898-2026-03-12-711120/v1/r1",
+    "manuscript_version": 1,
+    "attempt": 1,
+    "kind": "initial",
+    "baseline_eligible": true,
+    "lifecycle": "active",
+    "previous_review_id": "",
+    "revision_of": ""
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "major",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1
+  },
+  "submitter": "rgarciacarbonell",
+  "submitter_is_author": "no",
+  "ingest": {
+    "format": "markdown",
+    "tool": "official JATS XML",
+    "caveman": null,
+    "chars": 82401,
+    "text_sha256": "302a602fc7bba99010021f3aea131dcabbf2ad5dc25f9ae7524353621b43f552",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.36,
+        "markdown_headings": 28,
+        "preamble_share": 0.0012,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 82401,
+        "words": 11231,
+        "sentences": 517,
+        "blocks": 86,
+        "display_math": 0,
+        "table_rows": 0,
+        "reference_words": 1909,
+        "references_separable": true,
+        "main_text_words": 9322,
+        "reference_entries": null
+      },
+      "density": {
+        "sentence_len_mean": 21.72,
+        "sentence_len_median": 19.0,
+        "sentence_len_p90": 39.0,
+        "long_sentence_share": 0.087,
+        "numbers_per_1k": 70.61,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 2.4,
+        "boosters_per_1k": 0.98,
+        "mattr": 0.4651,
+        "passive_per_sentence_approx": 0.412,
+        "p_values_exact": 42,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 10,
+          "sentences": 1,
+          "sentence_len_mean": 10.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 209,
+          "sentences": 9,
+          "sentence_len_mean": 23.22,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 4.78,
+          "boosters_per_1k": 0.0
+        },
+        "introduction": {
+          "words": 308,
+          "sentences": 13,
+          "sentence_len_mean": 23.69,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 3.25,
+          "boosters_per_1k": 0.0
+        },
+        "results": {
+          "words": 5216,
+          "sentences": 242,
+          "sentence_len_mean": 21.55,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 2.68,
+          "boosters_per_1k": 1.53
+        },
+        "discussion": {
+          "words": 805,
+          "sentences": 33,
+          "sentence_len_mean": 24.39,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 13.66,
+          "boosters_per_1k": 3.73
+        },
+        "methods": {
+          "words": 2764,
+          "sentences": 123,
+          "sentence_len_mean": 22.47,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "cb370b3a8a9f8a6230b910059dac836e42f1eb0c3bd29cf2a69e3d8b3246eedb",
+    "source": {
+      "kind": "jats",
+      "url": "https://www.biorxiv.org/content/early/2026/03/15/2026.03.12.711120.source.xml",
+      "tool": "official JATS XML",
+      "sha256": "cb370b3a8a9f8a6230b910059dac836e42f1eb0c3bd29cf2a69e3d8b3246eedb",
+      "validation": {
+        "passed": true,
+        "chars": 82401,
+        "words": 9140,
+        "title_recall": 1.0,
+        "abstract_recall": 0.99,
+        "reasons": []
+      },
+      "attempts": [
+        {
+          "kind": "jats",
+          "url": "https://www.biorxiv.org/content/early/2026/03/15/2026.03.12.711120.source.xml",
+          "validation": {
+            "passed": true,
+            "chars": 82401,
+            "words": 9140,
+            "title_recall": 1.0,
+            "abstract_recall": 0.99,
+            "reasons": []
+          }
+        }
+      ]
+    },
+    "source_format": "jats",
+    "section_source": "official_jats"
+  },
+  "screens": {
+    "desk_screen_mode": "warm"
+  },
+  "panel": [
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "mean_score": 3.6,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 2.0040970000000002,
+  "cost_by_node": {
+    "advocate": 0.377045,
+    "audit_citation_integrity": 0.071067,
+    "audit_methods_completeness": 0.055118,
+    "debate_synthesizer": 0.098456,
+    "desk_screen": 0.05826,
+    "editor": 0.719025,
+    "journal_recommender": 0.016248,
+    "reviewer_contribution_context": 0.189955,
+    "reviewer_data_analysis": 0.020538,
+    "reviewer_ethics": 0.007064,
+    "reviewer_reporting_reproducibility": 0.018447,
+    "reviewer_scientific_validity": 0.016413,
+    "skeptic": 0.356459
+  },
+  "research_by_node": {
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "neurotrophin signaling vascular maturation",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "NGF BDNF pericyte smooth muscle cell differentiation",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "NOTCH3 vascular maturation mural cells",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "rheumatoid arthritis synovial vascularization treatment resistance",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "neurotrophin TRK inhibitors vascular fibroblasts",
+        "hits": 1
+      },
+      {
+        "tool": "search_preprints",
+        "query": "rheumatoid arthritis synovial fibroblasts vascular remodeling",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "NOTCH3 fibroblast differentiation arthritis Wei",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "TRK inhibitors larotrectinib entrectinib vascular",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "neurotrophin receptor pericyte vascular smooth muscle differentiation",
+        "hits": 4
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "NOTCH3 vascular maturation pericyte recruitment",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "synovial fibroblast endothelial cell crosstalk NOTCH",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "NGF BDNF NT3 vascular development mural cell",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "rheumatoid arthritis vascular maturation treatment resistance",
+        "hits": 5
+      },
+      {
+        "tool": "search_preprints",
+        "query": "spatial transcriptomics RA synovial fibroblasts endothelial",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Notch signaling drives synovial fibroblast identity arthritis pathology Nature 2020",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "fibroblast endothelial crosstalk synovial tissue RA",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "sensory nerve growth synovial fibroblasts pain RA",
+        "hits": 2
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "TRKB BDNF pericyte migration vascular development",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "neurotrophin-3 NT3 vascular smooth muscle development",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "NGFR p75 neurotrophin receptor vascular",
+        "hits": 1
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "TRKB null mice pericyte vascular development Donovan",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "NT3 null mice vascular abnormalities cardiac morphogenesis Tessarollo",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "mural cell pericyte VSMC differentiation endothelial signals",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "larotrectinib entrectinib NTRK fusion cancer vascular effects",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "NGF rheumatoid arthritis inflammation pain",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "neurotrophin signaling arthritis joint inflammation",
+        "hits": 4
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.03.12.711120v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.03.12.711120v1.full.pdf",
+    "identifier": "10.64898/2026.03.12.711120",
+    "doi": "10.64898/2026.03.12.711120",
+    "title": "Fibroblasts neurotrophin signaling sustains pathological vascular maturation in rheumatoid arthritis.",
+    "authors": [
+      "Khedgikar, V.",
+      "Qin, Q.",
+      "Tran, M.",
+      "Kazerounian, S.",
+      "Ce, G.",
+      "Prell, S. A.",
+      "McIntyre, A. B. R.",
+      "Bhamidipati, K.",
+      "Presti, S.",
+      "Blazar, P. E.",
+      "Lange, J. K.",
+      "Jones, M. H.",
+      "Gravallese, E. M.",
+      "Wechalekar, M. D.",
+      "Wei, K."
+    ],
+    "abstract": "Treatment failures in rheumatoid arthritis (RA) leads to undesirable morbidity associated with immunosuppression. Recent studies of synovial tissue from refractory RA patients highlight the role of synovial fibroblasts and vascular endothelium in driving treatment failure. Utilizing high-dimensional spatial transcriptomics, we uncovered a crucial role for neurotrophin signaling in driving abnormal vascular maturation in RA synovia. Neurotrophins, including nerve growth factor (NGF), brain-derived neurotrophic factor (BDNF), and neurotrophin-3 (NT3), induce differentiation of synovial fibroblasts into mural cells - pericytes and vascular smooth muscle cells. Mechanistically, NOTCH3 signaling activates a cascade of neurotrophin signaling through transcriptional induction of NGFR, a co-receptor for NGF. In RA synovial tissue explants, stimulation with NGF, BDNF, or NT3 leads to a dramatic increase in maturation of synovial tissue vasculature. Conversely, pharmacologic inhibition with neurotrophin inhibitors drastically abolished maturation of vascularization in RA synovial explants. Notably, the FDA-approved tropomyosin receptor kinase (TRK) inhibitors larotrectinib and entrectinib effectively reverse synovial vascular maturation in human RA tissue explants.Our findings suggest that fibroblast-derived neurotrophin signaling is a critical pathway in sustaining mature blood vessels in RA synovia, and that neurotrophin inhibitors reverse abnormal vascular maturation in RA. One Sentence SummaryIn rheumatoid arthritis, fibroblast neurotrophin signaling drives abnormal vascular maturation by inducing differentiation of fibroblasts into vascular mural cells.",
+    "published": "2026-03-15",
+    "version": "1",
+    "jats_url": "https://www.biorxiv.org/content/early/2026/03/15/2026.03.12.711120.source.xml",
+    "html_url": "https://www.biorxiv.org/content/10.64898/2026.03.12.711120v1.full",
+    "pdf_sha256": "",
+    "pdf_bytes": 0
+  }
+}
