@@ -210,6 +210,14 @@ function readBundle(paperDir, versionName, attemptName = "") {
     get status() {
       return statusOf(this);
     },
+    readinessScore: typeof provenance.readiness_score === "number"
+      ? provenance.readiness_score
+      : null,
+    readinessBreakdown: provenance.readiness_breakdown || {},
+    contributionProfile: provenance.contribution_profile || {},
+    scoreDecisionRationale: String(provenance.score_decision_rationale || ""),
+    // Older reviews predate the editorial readiness score. Their panel mean
+    // remains visible as a legacy value and is never relabeled as readiness.
     meanScore: typeof provenance.mean_score === "number" ? provenance.mean_score : null,
     panel: Array.isArray(provenance.panel) ? provenance.panel : [],
     reviewedAt: String(provenance.generated_at || "").slice(0, 10),
@@ -301,6 +309,7 @@ export function statistics() {
   const papers = corpus();
   const reviews = papers.flatMap((p) => p.bundles);
   const scored = reviews.filter((r) => r.meanScore !== null);
+  const readinessScored = reviews.filter((r) => r.readinessScore !== null)
   const byVerdict = {};
   for (const review of reviews) {
     const key = review.deskRejected ? "desk" : review.decision;
@@ -321,6 +330,9 @@ export function statistics() {
     ),
     meanScore: scored.length
       ? scored.reduce((n, r) => n + r.meanScore, 0) / scored.length
+      : null,
+    meanReadiness: readinessScored.length
+      ? readinessScored.reduce((n, r) => n + r.readinessScore, 0) / readinessScored.length
       : null,
     byVerdict,
   };

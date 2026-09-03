@@ -1,0 +1,161 @@
+---
+const {
+  readinessScore = null,
+  readinessBreakdown = {},
+  contributionProfile = {},
+  rationale = "",
+} = Astro.props
+
+const components = [
+  ["Scientific validity", "scientific_validity", 35],
+  ["Methods and evidence", "methods_and_evidence", 25],
+  ["Reproducibility and reporting", "reproducibility_and_reporting", 20],
+  ["Clarity and completeness", "clarity_and_completeness", 20],
+].filter(([, key]) => typeof readinessBreakdown[key] === "number")
+
+const contribution = ["novelty", "significance", "usefulness"]
+  .filter((key) => contributionProfile[key])
+---
+
+{
+  typeof readinessScore === "number" && (
+    <section class="editorial panel" aria-labelledby="editorial-score-heading">
+      <div class="panel__head">
+        <h2 id="editorial-score-heading" class="section__title">
+          Publication readiness
+        </h2>
+        <p class="label">assigned by the Editor-in-Chief</p>
+      </div>
+
+      <div class="editorial__body">
+        <div class="editorial__score mono">
+          <strong>{readinessScore}</strong><span>/100</span>
+        </div>
+
+        {components.length > 0 && (
+          <dl class="editorial__breakdown">
+            {components.map(([label, key, maximum]) => (
+              <div>
+                <dt>{label}</dt>
+                <dd class="mono">{readinessBreakdown[key]}/{maximum}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+
+      {contribution.length > 0 && (
+        <div class="editorial__profile">
+          <span class="label">Contribution profile</span>
+          {contribution.map((key) => (
+            <span class="editorial__tag">
+              {key} <strong>{contributionProfile[key]}</strong>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {rationale && <p class="editorial__rationale">{rationale}</p>}
+
+      <p class="editorial__foot">
+        Readiness measures the current manuscript. Novelty, significance, and
+        usefulness are shown separately. The recommendation follows the work
+        required for publication, not a score range.
+      </p>
+    </section>
+  )
+}
+
+<style>
+  .editorial {
+    overflow: hidden;
+  }
+
+  .editorial__body {
+    display: grid;
+    grid-template-columns: minmax(9rem, 0.35fr) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .editorial__score {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 9rem;
+    padding: 1.5rem;
+    color: var(--ink);
+    background: var(--surface-2);
+    border-right: 1px solid var(--rule);
+  }
+
+  .editorial__score strong {
+    font-size: clamp(3rem, 7vw, 5rem);
+    line-height: 1;
+  }
+
+  .editorial__score span {
+    color: var(--muted);
+  }
+
+  .editorial__breakdown {
+    margin: 0;
+    padding: 1rem 1.25rem;
+  }
+
+  .editorial__breakdown div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .editorial__breakdown div:last-child {
+    border-bottom: 0;
+  }
+
+  .editorial__breakdown dd {
+    margin: 0;
+  }
+
+  .editorial__profile {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.9rem 1.15rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .editorial__tag {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    text-transform: capitalize;
+  }
+
+  .editorial__rationale,
+  .editorial__foot {
+    margin: 0;
+    padding: 0.9rem 1.15rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .editorial__foot {
+    color: var(--muted);
+    font-size: var(--t--1);
+  }
+
+  @media (max-width: 650px) {
+    .editorial__body {
+      grid-template-columns: 1fr;
+    }
+
+    .editorial__score {
+      min-height: auto;
+      border-right: 0;
+      border-bottom: 1px solid var(--rule);
+    }
+  }
+</style>

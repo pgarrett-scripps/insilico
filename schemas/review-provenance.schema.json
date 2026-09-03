@@ -73,6 +73,27 @@
     "ingest": { "type": "object" },
     "screens": { "type": "object" },
     "panel": { "type": "array", "items": { "type": "object" } },
+    "readiness_score": { "type": ["integer", "null"], "minimum": 0, "maximum": 100 },
+    "readiness_breakdown": {
+      "type": "object",
+      "properties": {
+        "scientific_validity": { "type": "integer", "minimum": 0, "maximum": 35 },
+        "methods_and_evidence": { "type": "integer", "minimum": 0, "maximum": 25 },
+        "reproducibility_and_reporting": { "type": "integer", "minimum": 0, "maximum": 20 },
+        "clarity_and_completeness": { "type": "integer", "minimum": 0, "maximum": 20 }
+      },
+      "additionalProperties": false
+    },
+    "contribution_profile": {
+      "type": "object",
+      "properties": {
+        "novelty": { "enum": ["low", "moderate", "high"] },
+        "significance": { "enum": ["low", "moderate", "high"] },
+        "usefulness": { "enum": ["low", "moderate", "high"] }
+      },
+      "additionalProperties": false
+    },
+    "score_decision_rationale": { "type": "string" },
     "mean_score": { "type": ["number", "null"] },
     "scored_count": { "type": "integer", "minimum": 0 },
     "panel_size": { "type": "integer", "minimum": 0 },
@@ -89,5 +110,47 @@
         "title": { "type": "string", "minLength": 1 }
       }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": ["readiness_score"],
+        "properties": { "readiness_score": { "type": "integer" } }
+      },
+      "then": {
+        "required": [
+          "readiness_breakdown",
+          "contribution_profile",
+          "score_decision_rationale"
+        ],
+        "properties": {
+          "readiness_breakdown": {
+            "type": "object",
+            "properties": {
+              "scientific_validity": {},
+              "methods_and_evidence": {},
+              "reproducibility_and_reporting": {},
+              "clarity_and_completeness": {}
+            },
+            "required": [
+              "scientific_validity",
+              "methods_and_evidence",
+              "reproducibility_and_reporting",
+              "clarity_and_completeness"
+            ]
+          },
+          "contribution_profile": {
+            "type": "object",
+            "properties": {
+              "novelty": {},
+              "significance": {},
+              "usefulness": {}
+            },
+            "required": ["novelty", "significance", "usefulness"]
+          },
+          "score_decision_rationale": { "type": "string", "minLength": 40 }
+        }
+      }
+    }
+  ]
 }

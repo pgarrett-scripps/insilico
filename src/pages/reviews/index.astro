@@ -63,8 +63,12 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
             <select data-sort>
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
-              <option value="score-desc">Highest score</option>
-              <option value="score-asc">Lowest score</option>
+              {stats.meanReadiness !== null && (
+                <>
+                  <option value="score-desc">Highest readiness</option>
+                  <option value="score-asc">Lowest readiness</option>
+                </>
+              )}
               <option value="title">Title A–Z</option>
             </select>
           </label>
@@ -91,7 +95,7 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
                     data-verdict={paper.status}
                     data-date={paper.latest.reviewedAt}
                     data-title={paper.title.toLowerCase()}
-                    data-score={(paper.decisive || paper.latest).meanScore ?? ""}
+                    data-score={(paper.decisive || paper.latest).readinessScore ?? ""}
                   >
                     <a class="card__link" href={`${base}/reviews/${paper.year}/${paper.slug}/`}>
                       <span class="card__top">
@@ -103,10 +107,17 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
                             {verdictOf(paper.decisive)}
                           </span>
                         )}
-                        {paper.decisive && paper.decisive.meanScore !== null && (
+                        {paper.decisive && (
+                          paper.decisive.readinessScore !== null
+                          || paper.decisive.meanScore !== null
+                        ) && (
                           <span class="card__score mono">
-                            {paper.decisive.meanScore.toFixed(1)}
-                            <span class="card__scoreScale">/5</span>
+                            {paper.decisive.readinessScore !== null
+                              ? paper.decisive.readinessScore
+                              : paper.decisive.meanScore.toFixed(1)}
+                            <span class="card__scoreScale">
+                              {paper.decisive.readinessScore !== null ? "/100" : "/5 panel"}
+                            </span>
                           </span>
                         )}
                       </span>
@@ -174,8 +185,8 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
             if (mode === "score-desc" || mode === "score-asc") {
               var sa = scoreOf(a);
               var sb = scoreOf(b);
-              // Unscored reviews (desk rejects) sort last either way rather
-              // than pretending to a score of zero.
+              // Reviews without the new readiness score sort last. This
+              // includes desk rejects and legacy panel-mean records.
               if (sa === null && sb === null) return 0;
               if (sa === null) return 1;
               if (sb === null) return -1;

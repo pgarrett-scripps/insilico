@@ -33,7 +33,7 @@ env:
   # stage back onto one model, so it is deliberately unset.
   # PyPI release versions are immutable. Updating the panel therefore takes a
   # reviewed change to this file instead of silently following upstream main.
-  PIPELINE_VERSION: "0.5.1"
+  PIPELINE_VERSION: "0.6.0"
   # PDF converter used when official full text is unavailable. It is pinned so
   # fallback behavior cannot change silently between rounds.
   RUSTYPAPER_SPEC: "rustypaper==0.2.0"

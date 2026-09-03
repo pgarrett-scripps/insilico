@@ -91,6 +91,22 @@ def build_fixture(title: str, dest: Path) -> None:
     os.environ["REVIEW_AGENT_MODELS"] = "{}"
     state = {
         "decision": "major",
+        "readiness_score": 78,
+        "readiness_breakdown": {
+            "scientific_validity": 28,
+            "methods_and_evidence": 20,
+            "reproducibility_and_reporting": 15,
+            "clarity_and_completeness": 15,
+        },
+        "contribution_profile": {
+            "novelty": "moderate",
+            "significance": "moderate",
+            "usefulness": "high",
+        },
+        "score_decision_rationale": (
+            "The score reflects a sound foundation with unresolved work that "
+            "requires major revision before publication."
+        ),
         "manuscript_title": title,
         "total_cost": 1.23,
         "errors": [],
@@ -119,6 +135,9 @@ def check(title: str) -> None:
         # The index puts a score on every card and the panel readout needs the
         # per-referee detail; both come from here and nowhere else.
         assert prov["mean_score"] == 3.0, f"mean_score missing: {prov.get('mean_score')!r}"
+        assert prov["readiness_score"] == 78
+        assert sum(prov["readiness_breakdown"].values()) == 78
+        assert prov["contribution_profile"]["usefulness"] == "high"
         assert len(prov["panel"]) == 4, "per-referee scores not recorded"
         assert {p["reviewer"] for p in prov["panel"]} == {
             "methodology", "novelty", "clarity", "rigor",
