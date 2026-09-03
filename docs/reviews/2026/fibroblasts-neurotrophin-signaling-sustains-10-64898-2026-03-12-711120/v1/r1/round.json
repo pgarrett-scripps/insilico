@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260903-201740-fibroblasts-neurotrophin-signaling-sustains-pathol",
+  "manuscript_title": "Fibroblasts neurotrophin signaling sustains pathological vascular maturation in",
+  "manuscript_cache_key": "338fc7814f0363c22a054de5c55ad39a94ea5f3edbb3ee673f503a1acd117e58",
+  "decision": "reject",
+  "weighted_score": null,
+  "required_revisions": [],
+  "minor_suggestions": [],
+  "reviewer_reports": [],
+  "manuscript_text_sha256": "586023fd650a79ddb0af2b453ed0578ec0e12ccf0e1f58174a4b348668284722",
+  "manuscript_file_sha256": "5809412d7819ace01b12fde4b012949ff5d7521d72e156729a6074546f8ea1b7",
+  "prior_job_id": "",
+  "desk_rejected": true
+}
