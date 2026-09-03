@@ -1340,8 +1340,9 @@ def check_full_text_source_hierarchy() -> None:
         f"<sec><title>Results</title><p>{body}</p></sec></body></article>"
     ).encode()
     rendered = jats_to_markdown(jats)
-    assert "## Abstract" in rendered
-    assert "## Results" in rendered
+    assert f"# {preprint.title}\n\n## Abstract\n\n{preprint.abstract}" in rendered
+    assert f"## Results\n\n{body}" in rendered
+    assert "arthritis.## Abstract" not in rendered
     assert validate_text(rendered, preprint)["passed"]
 
     html = (

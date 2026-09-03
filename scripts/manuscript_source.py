@@ -201,7 +201,7 @@ def jats_to_markdown(data: bytes) -> str:
             for node in child.iter():
                 if _local_name(node.tag) == "abstract":
                     render(node)
-    return _clean_markdown(lines)
+    return _clean_markdown(["\n".join(lines)])
 
 
 class _FullTextHTMLParser(HTMLParser):
