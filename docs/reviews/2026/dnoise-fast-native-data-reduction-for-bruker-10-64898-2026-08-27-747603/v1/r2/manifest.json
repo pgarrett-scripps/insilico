@@ -1,0 +1,21 @@
+{
+  "files": {
+    "audit_citation_integrity.md": "da7fe4b6f3fbc7c66231a9a7ce79e654015ebc50cbc451b47621b274233ccbdd",
+    "audit_methods_completeness.md": "a03abf0db60ca85e8c175d5dcb96a94d1408afbe9ac6db3d1aa9f2938b37aaa1",
+    "debate_synthesis.md": "cf26a32317751cee35108c2ff136791bb185ace207854a6090ca472778b28f7e",
+    "debate_transcript.md": "d685053b77e62433c18d912b1d48bb09d1b685dc0674d9753eb15cf5f60f9119",
+    "decision_letter.md": "dd3f9b5b85bfbbecb3b7b091116f479f5c88accecdf92768964dedf24a631d28",
+    "desk_screen.md": "3b48aee97873f405565552757455b7f4bdcf20061916312c5bd3664f667aaa55",
+    "journal_recommendations.md": "dae58ff1d90668924fd91187785bede9a5bf93226d835a738a54b6bb49fb2787",
+    "manuscript_stats.md": "625448dd72cf8ad4ea4c8ebff3e2b1d9c5c363a97b32a634a265b5e694de2f26",
+    "provenance.json": "fb57f8c2db6753df88374325f897264dfa71b99e3bdee96216c56d0b93d35052",
+    "review_contribution_context.md": "87d64e4e8e3af40e6cce1fc4a38ce54a8ff10428812664313aad62039e573d43",
+    "review_data_analysis.md": "b965533a33a88e3be50fc09ecc9e6313390f1fb2b41b4a17664ddb3e77fa3189",
+    "review_ethics.md": "03244a4ab157d4f95527143d8f42fd10dea51e3179eb612599df125ddf10a0a8",
+    "review_reporting_reproducibility.md": "fbb5670ee5c723852c800d0c93bc256044eb63a0c77a1d67d059880f39b1098b",
+    "review_scientific_validity.md": "c721b76596ed0b49f6d29371e46c6d6207bce4e2ec7051c5800b0d055a44e3ff",
+    "round.json": "2d461406488e7433737db8cbc8aa840ac2fe8c7672aef62d7a7a7d3d14875c47",
+    "summary.md": "47971ff5cabf831c60930339d022676d54d92318a17d45479d178ebbdbe39a39"
+  },
+  "schema_version": 1
+}
