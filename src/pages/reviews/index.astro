@@ -1,6 +1,12 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { corpus, VERDICT, STATUS, statistics } from "../../lib/corpus.js";
+import {
+  corpus,
+  legacyScore100,
+  VERDICT,
+  STATUS,
+  statistics,
+} from "../../lib/corpus.js";
 
 const papers = corpus();
 const stats = statistics();
@@ -10,6 +16,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 // did with the paper; `verdict` is what the editor recommended, which is finer
 // grained and is the thing the decision letter argues for.
 const verdictOf = (b) => (b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision);
+const verdictClassOf = (b) => (b.deskRejected ? "desk" : b.decision);
 
 // Filtering is by status rather than by verdict: a reader scanning the corpus
 // wants the journal's answer, and offering all four verdicts alongside it
@@ -99,24 +106,30 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
                   >
                     <a class="card__link" href={`${base}/reviews/${paper.year}/${paper.slug}/`}>
                       <span class="card__top">
-                        <span class={`verdict verdict--${paper.status}`}>
-                          {STATUS[paper.status]}
+                        <span
+                          class={`verdict verdict--${paper.decisive
+                            ? verdictClassOf(paper.decisive)
+                            : paper.status}`}
+                        >
+                          {paper.decisive
+                            ? verdictOf(paper.decisive)
+                            : STATUS[paper.status]}
                         </span>
-                        {paper.decisive && !paper.decisive.deskRejected && (
-                          <span class="card__verdict">
-                            {verdictOf(paper.decisive)}
-                          </span>
-                        )}
                         {paper.decisive && (
                           paper.decisive.readinessScore !== null
                           || paper.decisive.meanScore !== null
                         ) && (
-                          <span class="card__score mono">
+                          <span
+                            class="card__score mono"
+                            title={paper.decisive.readinessScore !== null
+                              ? `Publication readiness ${paper.decisive.readinessScore} out of 100`
+                              : `Legacy scaled score ${legacyScore100(paper.decisive.meanScore)} out of 100. Converted from a ${paper.decisive.meanScore.toFixed(1)} out of 5 panel mean.`}
+                          >
                             {paper.decisive.readinessScore !== null
                               ? paper.decisive.readinessScore
-                              : paper.decisive.meanScore.toFixed(1)}
+                              : legacyScore100(paper.decisive.meanScore)}
                             <span class="card__scoreScale">
-                              {paper.decisive.readinessScore !== null ? "/100" : "/5 panel"}
+                              /100
                             </span>
                           </span>
                         )}
@@ -397,21 +410,15 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
     gap: 0.6rem;
   }
 
-  /* The editor's recommendation, subordinate to the status beside it: it is
-     the reasoning behind the decision, not the decision. Pushed against the
-     score so the two read as one group. */
-  .card__verdict {
-    margin-left: auto;
-    font-size: var(--t--2);
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .card__score {
+    display: inline-flex;
+    align-items: baseline;
+    flex: 0 0 auto;
+    gap: 0.1em;
+    margin-left: auto;
     font-size: var(--t-1);
     color: var(--ink);
+    white-space: nowrap;
   }
 
   .card__scoreScale {

@@ -34,6 +34,10 @@ export const VERDICT = {
   reject: "Reject",
 };
 
+export function legacyScore100(meanScore) {
+  return typeof meanScore === "number" ? Math.round(meanScore * 20) : null;
+}
+
 /**
  * In Silico accepts a paper the panel returns at accept or minor revision.
  * Papers returned for major revision appear publicly as needing revision.

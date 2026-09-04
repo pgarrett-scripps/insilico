@@ -1,0 +1,491 @@
+{
+  "schema_version": 2,
+  "generated_at": "2026-09-03T22:57:26+00:00",
+  "pipeline": {
+    "sha": "",
+    "version": "0.6.0"
+  },
+  "insilico": {
+    "sha": "6e25fe6a9672540f5f38046d2a3b91aad93e265c"
+  },
+  "configuration": {
+    "sha256": "b4d8c0eec9aeb1079463f1b401ad2e7cd334ca8b0a84eafa9b7dd8db0864ab89",
+    "resolved": {
+      "agent_models": {
+        "debate_synthesizer": {
+          "model": "claude-sonnet-5"
+        },
+        "journal_recommender": {
+          "model": "claude-haiku-4-5"
+        }
+      },
+      "article_type": "",
+      "cache_ttl": "1h",
+      "caveman": "off",
+      "conversion_gate": "broken",
+      "data_vendors": {
+        "biomedical": "pubmed,biorxiv",
+        "paper_search": "semantic_scholar,arxiv",
+        "preprints": "biorxiv,arxiv"
+      },
+      "desk_screen": false,
+      "desk_screen_mode": "warm",
+      "enable_debate": true,
+      "enable_journal_recommender": true,
+      "manuscript_char_budget": null,
+      "markdown_attempts": 3,
+      "max_debate_rounds": 2,
+      "max_node_cost_usd": 5.0,
+      "max_output_tokens": 12000,
+      "max_rounds": 3,
+      "models": {
+        "audit": {
+          "model": "claude-haiku-4-5"
+        },
+        "debate": {
+          "model": "claude-sonnet-5"
+        },
+        "reviewer": {
+          "model": "claude-haiku-4-5"
+        },
+        "synthesis": {
+          "model": "claude-opus-5"
+        }
+      },
+      "only_reviewers": [],
+      "panel_quorum_fraction": 1.0,
+      "provider": "anthropic",
+      "reasoning_model": "claude-sonnet-5",
+      "request_timeout_s": 120.0,
+      "research_enabled": true,
+      "review_strictness": 3,
+      "revision_mode": "revision",
+      "single_model": false,
+      "synthesis_word_budget": 1200,
+      "target_journal": "insilico",
+      "temperature": null,
+      "tool_vendors": {},
+      "openai_base_url": null
+    }
+  },
+  "journal_profile": {
+    "journal": "insilico",
+    "path": "journals/insilico.toml",
+    "sha256": "c416856b2c4af80d00644c108454e670522da142db8f8fb0d5159dd278096256"
+  },
+  "review": {
+    "id": "docs/reviews/2026/dnoise-fast-native-data-reduction-for-bruker-10-64898-2026-08-27-747603/v1/r2",
+    "manuscript_version": 1,
+    "attempt": 2,
+    "kind": "editorial_rereview",
+    "baseline_eligible": true,
+    "lifecycle": "active",
+    "previous_review_id": "docs/reviews/2026/dnoise-fast-native-data-reduction-for-bruker-10-64898-2026-08-27-747603/v1",
+    "revision_of": ""
+  },
+  "provider": "anthropic",
+  "model": "claude-sonnet-5",
+  "models": {
+    "audit": {
+      "model": "claude-haiku-4-5"
+    },
+    "debate": {
+      "model": "claude-sonnet-5"
+    },
+    "reviewer": {
+      "model": "claude-haiku-4-5"
+    },
+    "synthesis": {
+      "model": "claude-opus-5"
+    }
+  },
+  "agent_models": {
+    "debate_synthesizer": {
+      "model": "claude-sonnet-5"
+    },
+    "journal_recommender": {
+      "model": "claude-haiku-4-5"
+    }
+  },
+  "debate_rounds": 2,
+  "decision": "minor",
+  "desk_rejected": false,
+  "round": 1,
+  "revision": {
+    "round": 1,
+    "kind": "rerun",
+    "previous_attempt": "v1",
+    "prior_decision": "minor",
+    "prior_mean_score": 4.2,
+    "prior_pipeline_sha": "1cf5769056b230386579f0775a5356850a8110c2",
+    "prior_reviewed_at": "2026-09-02"
+  },
+  "submitter": "pgarrett-scripps",
+  "submitter_is_author": "yes",
+  "ingest": {
+    "format": "markdown",
+    "tool": "rustypaper 0.2.0",
+    "caveman": null,
+    "chars": 41597,
+    "section_source": "none",
+    "text_sha256": "153a61e612e0d2b7698b4458147d216edd4e53419b55f8457a26f4925b836fb1",
+    "prose": {
+      "health": {
+        "fused_per_1k": 0.0,
+        "hyphen_breaks_per_1k": 0.0,
+        "missing_space_per_1k": 0.0,
+        "markdown_headings": 22,
+        "preamble_share": 0.0183,
+        "verdict": "clean",
+        "notes": []
+      },
+      "counts": {
+        "chars": 41597,
+        "words": 5526,
+        "sentences": 317,
+        "blocks": 148,
+        "display_math": 0,
+        "table_rows": 4,
+        "reference_words": 1012,
+        "references_separable": true,
+        "main_text_words": 4514,
+        "reference_entries": 36
+      },
+      "density": {
+        "sentence_len_mean": 17.49,
+        "sentence_len_median": 16.0,
+        "sentence_len_p90": 29.0,
+        "long_sentence_share": 0.0443,
+        "numbers_per_1k": 145.67,
+        "citations": 0,
+        "citation_style": "undetected",
+        "citations_per_1k": 0.0,
+        "hedges_per_1k": 1.81,
+        "boosters_per_1k": 0.36,
+        "mattr": 0.5335,
+        "passive_per_sentence_approx": 0.1924,
+        "p_values_exact": 0,
+        "p_values_threshold": 0
+      },
+      "sections": {
+        "_preamble": {
+          "words": 82,
+          "sentences": 2,
+          "sentence_len_mean": 41.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "abstract": {
+          "words": 240,
+          "sentences": 10,
+          "sentence_len_mean": 24.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        },
+        "introduction": {
+          "words": 510,
+          "sentences": 26,
+          "sentence_len_mean": 19.62,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 5.88,
+          "boosters_per_1k": 0.0
+        },
+        "experimental": {
+          "words": 1084,
+          "sentences": 64,
+          "sentence_len_mean": 16.94,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 1.85,
+          "boosters_per_1k": 0.0
+        },
+        "results": {
+          "words": 1795,
+          "sentences": 102,
+          "sentence_len_mean": 17.6,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 1.67,
+          "boosters_per_1k": 1.11
+        },
+        "limitations": {
+          "words": 160,
+          "sentences": 8,
+          "sentence_len_mean": 20.0,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 12.5,
+          "boosters_per_1k": 0.0
+        },
+        "conclusion": {
+          "words": 633,
+          "sentences": 27,
+          "sentence_len_mean": 23.44,
+          "citations_per_1k": 0.0,
+          "hedges_per_1k": 0.0,
+          "boosters_per_1k": 0.0
+        }
+      },
+      "caveman": null
+    },
+    "file_sha256": "7efb5268ad9632b340a4e883cffd24896074fd916145c4ab2ce757cf8be730ac",
+    "source": {
+      "kind": "pdf",
+      "url": "https://www.biorxiv.org/content/10.64898/2026.08.27.747603v1.full.pdf",
+      "tool": "rustypaper 0.2.0",
+      "sha256": "7efb5268ad9632b340a4e883cffd24896074fd916145c4ab2ce757cf8be730ac",
+      "validation": {
+        "passed": true,
+        "chars": 41597,
+        "words": 5225,
+        "title_recall": 1.0,
+        "abstract_recall": 1.0,
+        "reasons": []
+      },
+      "attempts": [
+        {
+          "kind": "jats",
+          "url": "https://www.biorxiv.org/content/early/2026/09/01/2026.08.27.747603.source.xml",
+          "error": "JATS body is missing or too short"
+        },
+        {
+          "kind": "html",
+          "url": "https://www.biorxiv.org/content/10.64898/2026.08.27.747603v1.full",
+          "validation": {
+            "passed": false,
+            "chars": 4492,
+            "words": 543,
+            "title_recall": 1.0,
+            "abstract_recall": 1.0,
+            "reasons": [
+              "only 543 words"
+            ]
+          }
+        },
+        {
+          "kind": "pdf",
+          "validation": {
+            "passed": true,
+            "chars": 41597,
+            "words": 5225,
+            "title_recall": 1.0,
+            "abstract_recall": 1.0,
+            "reasons": []
+          }
+        }
+      ]
+    },
+    "source_format": "pdf"
+  },
+  "screens": {
+    "desk_screen_mode": "warm"
+  },
+  "panel": [
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 4.0,
+      "confidence": 5.0
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 4.0,
+      "confidence": 4.0
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0
+    }
+  ],
+  "readiness_score": 80,
+  "readiness_breakdown": {
+    "scientific_validity": 28,
+    "methods_and_evidence": 19,
+    "reproducibility_and_reporting": 16,
+    "clarity_and_completeness": 17
+  },
+  "contribution_profile": {
+    "novelty": "moderate",
+    "significance": "moderate",
+    "usefulness": "high"
+  },
+  "score_decision_rationale": "The central claim \u2014 that default MS1-only denoising removes a large fraction of native timsTOF frame data (35\u201353% of the frame binary) while leaving the tested proteomics results essentially unchanged \u2014 is supported by the evidence presented. For ddaPASEF it is close to mechanically guaranteed (the searched MS/MS spectra are untouched, and identification counts are identical), and the quantitative validation on a defined three-species mixture with known ratios, replicated six times per condition across two gradients and two acquisition modes, is a disciplined test of the part of the claim that could have failed. Runtime and memory claims are descriptive measurements on stated hardware and are correctly reported as such. The software is released under MIT with a versioned Zenodo archive, the raw data are public, and the round-trip fidelity check (point-for-point identity of an unfiltered pass) is exactly the control a reader wants to see for a tool that rewrites a proprietary binary.\n\nWhat lowers readiness is not the validity of the core result but the calibration of its presentation and several reporting gaps. The two geometric streak-filter parameters were selected on Condition A of the 15-minute ddaPASEF gradient, which then reappears inside the pooled headline result; the authors disclose this in Section 2.2 but the Abstract and Conclusion present a single pooled figure across all four arms without the qualifier. Related, the phrase \"LFQ accuracy was preserved in both modes\" implies symmetric evidentiary strength, whereas the diaPASEF case rests on a metric (fragment-based MaxLFQ) that MS1-only filtering does not directly touch, with the one MS1-sensitive check (Table S12) reported without the bootstrap treatment applied elsewhere. The DDA/DIA reduction differential is confounded by on-instrument denoising, which the manuscript warns against misreading but does not bound. Finally, the compliance audit identifies genuine gaps: search FDR thresholds are never stated, the analysis and figure-generation scripts are described but not deposited, the optional-mode `msms_*` parameters and centroider algorithms are underspecified, and two references have anomalous dates or DOIs.\n\nEvery one of these is fixable in text, tables, and deposited files. None requires a new acquisition, a new search, or a reanalysis whose outcome could overturn a conclusion. Where I would otherwise have asked for new work \u2014 a second sample type, a fair-stringency fragment control, a mechanistic test of the decoy-ratio inversion \u2014 the correct remedy at this venue is to scale the claim to the evidence rather than to demand the experiment, and I have routed those to suggestions and to a requalification requirement accordingly. That places this at minor revision. The score reflects a sound, useful, honestly reported tool paper whose current text overreaches its four benchmark arms in a few specific sentences and whose reproducibility record has repairable holes.",
+  "mean_score": 4.2,
+  "scored_count": 5,
+  "panel_size": 5,
+  "total_cost_usd": 1.4746226000000002,
+  "cost_by_node": {
+    "advocate": 0.22977,
+    "audit_citation_integrity": 0.060492,
+    "audit_methods_completeness": 0.02914,
+    "debate_synthesizer": 0.0944,
+    "desk_screen": 0.030744,
+    "editor": 0.44036,
+    "journal_recommender": 0.011671,
+    "reviewer_contribution_context": 0.191978,
+    "reviewer_data_analysis": 0.017535,
+    "reviewer_ethics": 0.006206,
+    "reviewer_reporting_reproducibility": 0.012879,
+    "reviewer_scientific_validity": 0.015105,
+    "skeptic": 0.334344
+  },
+  "research_by_node": {
+    "reviewer_contribution_context": [
+      {
+        "tool": "find_related_work",
+        "query": "timsTOF data reduction denoising preprocessing",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ion mobility mass spectrometry native format data compression",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "PASEF precursor selection filtering proteomics",
+        "hits": 10
+      },
+      {
+        "tool": "search_preprints",
+        "query": "timsTOF denoising data reduction",
+        "hits": 2
+      },
+      {
+        "tool": "search_preprints",
+        "query": "Bruker mass spectrometry native format preprocessing",
+        "hits": 2
+      },
+      {
+        "tool": "find_related_work",
+        "query": "Bruker timsTOF preprocessing peak detection feature finding",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "PNNL PreProcessor ion mobility denoising",
+        "hits": 10
+      },
+      {
+        "tool": "find_related_work",
+        "query": "spectral simplification Wilding-McBride timsTOF",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "timsTOF data reduction storage compression proteomics",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Wilding-McBride spectral simplification timsTOF",
+        "hits": 0
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "MaxQuant ion mobility TIMS proteomics",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "DIA-NN diaPASEF data-independent acquisition",
+        "hits": 5
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Sage proteomics search quantification label-free",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "mzML conversion peak detection feature finding mass spectrometry",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "native format data reduction mass spectrometry storage",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "ion mobility streak filter mobility coherence",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Aird-MSI compression mass spectrometry imaging",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "OpenMS peak detection feature finding preprocessing",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "MSFragger IonQuant timsTOF PASEF quantification",
+        "hits": 5
+      },
+      {
+        "tool": "find_related_work",
+        "query": "timsrust Bruker timsTOF native format reading library",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "AlphaTims Rustims timsTOF data access tools",
+        "hits": 0
+      },
+      {
+        "tool": "find_related_work",
+        "query": "halo artifact microchannel plate saturation time-of-flight",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Houthuijs detector oscillation artifacts time-of-flight mass spectrometry",
+        "hits": 1
+      },
+      {
+        "tool": "find_related_work",
+        "query": "label-free quantification LFQ accuracy benchmark three-species",
+        "hits": 10
+      },
+      {
+        "tool": "search_biomedical_literature",
+        "query": "Generation Beta benchmark human yeast E coli proteomics",
+        "hits": 0
+      }
+    ]
+  },
+  "errors": [],
+  "preprint": {
+    "url": "https://www.biorxiv.org/content/10.64898/2026.08.27.747603v1",
+    "source": "biorxiv",
+    "pdf_url": "https://www.biorxiv.org/content/10.64898/2026.08.27.747603v1.full.pdf",
+    "identifier": "10.64898/2026.08.27.747603",
+    "doi": "10.64898/2026.08.27.747603",
+    "title": "dnoise: Fast Native Data Reduction for Bruker timsTOF",
+    "authors": [
+      "Garrett, P. T.",
+      "Diedrich, J. K.",
+      "Yates, J. R."
+    ],
+    "abstract": "Bruker timsTOF acquisitions produce dense native .d files whose storage, transfer, and archival become substantial at high throughput. We present dnoise, an open-source Rust tool that removes points directly from timsTOF frames and writes a native-compatible .d directory. dnoise retains ions that form coherent streaks across the ion-mobility dimension and applies acquisition-aware gates to signal that cannot be selected for fragmentation. On a three-species benchmark spanning ddaPASEF and diaPASEF at 5- and 15-minute gradients, default MS1-only denoising reduced the frame binary by 35 to 53%. Label-free quantification accuracy was preserved in both modes. ddaPASEF peptide-spectrum-match, peptide, and protein-group counts were unchanged, as expected with the searched MS/MS spectra untouched, and diaPASEF precursor and protein-group counts changed only slightly. Every tested processing run completed in 69 seconds or less on the benchmark workstation. Optional MS/MS denoising produced greater reduction but sacrificed several percent of identifications. Thus, a substantial fraction of native timsTOF frame data can be removed with little analytical change.",
+    "published": "2026-09-01",
+    "version": "1",
+    "jats_url": "https://www.biorxiv.org/content/early/2026/09/01/2026.08.27.747603.source.xml",
+    "html_url": "https://www.biorxiv.org/content/10.64898/2026.08.27.747603v1.full",
+    "pdf_sha256": "7efb5268ad9632b340a4e883cffd24896074fd916145c4ab2ce757cf8be730ac",
+    "pdf_bytes": 3210972
+  }
+}
