@@ -17,7 +17,13 @@ import Notices from "../../components/Notices.astro";
 import ManuscriptStats from "../../components/ManuscriptStats.astro";
 import Provenance from "../../components/Provenance.astro";
 import Citation from "../../components/Citation.astro";
-import { corpus, VERDICT, STATUS, titleFromFilename } from "../../lib/corpus.js";
+import {
+  corpus,
+  legacyScore100,
+  VERDICT,
+  STATUS,
+  titleFromFilename,
+} from "../../lib/corpus.js";
 
 export async function getStaticPaths() {
   const reports = await getCollection("reports");
@@ -70,7 +76,7 @@ const bibKey = (extra = "") =>
 
 const scoreDescription = (b) => {
   if (b.readinessScore !== null) return `publication readiness ${b.readinessScore}/100`
-  if (b.meanScore !== null) return `legacy panel mean ${b.meanScore}/5`
+  if (b.meanScore !== null) return `legacy scaled score ${legacyScore100(b.meanScore)}/100`
   return ""
 }
 
@@ -208,7 +214,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
                         {b.readinessScore !== null
                           ? `${b.readinessScore}/100`
                           : b.meanScore !== null
-                            ? `${b.meanScore.toFixed(1)}/5 panel`
+                            ? `${legacyScore100(b.meanScore)}/100`
                             : "N/A"}
                       </td>
                       <td class="mono dim">{b.reviewedAt}</td>

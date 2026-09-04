@@ -21,6 +21,8 @@
  * held with low confidence is a weaker claim than the same score held firmly,
  * and folding them together would hide that.
  */
+import { legacyScore100 } from "../lib/corpus.js";
+
 const {
   panel = [],
   meanScore = null,
@@ -65,6 +67,8 @@ const low = scores.length ? Math.min(...scores) : null;
 const high = scores.length ? Math.max(...scores) : null;
 const spread = low !== null && high !== null ? +(high - low).toFixed(1) : null;
 const meanTier = tierFor(meanScore);
+const displayedMean = legacy ? legacyScore100(meanScore) : meanScore;
+const displayedScale = legacy ? 100 : SCALE;
 ---
 
 {
@@ -85,14 +89,18 @@ const meanTier = tierFor(meanScore);
         <div class="readout__aggregate">
           <div class={`readout__mean readout__mean--${meanTier}`}>
             <span class="readout__meanValue mono">
-              {meanScore !== null ? meanScore.toFixed(1) : "N/A"}
+              {displayedMean !== null
+                ? legacy ? displayedMean : displayedMean.toFixed(1)
+                : "N/A"}
             </span>
-            <span class="readout__meanScale mono">/ {SCALE}</span>
+            <span class="readout__meanScale mono">/ {displayedScale}</span>
           </div>
           <p class="label">
-            {naRows.length > 0
-              ? `${legacy ? "Legacy" : "Advisory"} mean over ${scores.length} of ${rows.length}`
-              : legacy ? "Legacy panel mean" : "Advisory specialist mean"}
+            {legacy
+              ? "Legacy scaled score"
+              : naRows.length > 0
+                ? `Advisory mean over ${scores.length} of ${rows.length}`
+                : "Advisory specialist mean"}
           </p>
 
           {spread !== null && (
@@ -165,6 +173,13 @@ const meanTier = tierFor(meanScore);
         own reading, recorded separately and never combined. The editor's
         verdict is its own judgment of the reports, not a threshold applied to
         this mean.
+        {legacy && (
+          <>
+            {" "}The legacy aggregate is the historical panel mean multiplied
+            by 20. It is not comparable to the Editor-in-Chief's publication
+            readiness score.
+          </>
+        )}
         {naRows.length > 0 && (
           <>
             {" "}

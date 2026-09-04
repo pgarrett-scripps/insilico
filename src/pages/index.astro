@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { corpus, STATUS, statistics } from "../lib/corpus.js"
+import { corpus, legacyScore100, STATUS, statistics } from "../lib/corpus.js"
 
 const stats = statistics();
 const papers = corpus().slice(0, 3);
@@ -48,16 +48,16 @@ const STAGES = [
         </div>
         <div class="readouts__item">
           <dt class="label">
-            {stats.meanReadiness !== null ? "Mean readiness" : "Legacy panel mean"}
+            {stats.meanReadiness !== null ? "Mean readiness" : "Legacy scaled score"}
           </dt>
           <dd class="mono">
             {stats.meanReadiness !== null
               ? stats.meanReadiness.toFixed(1)
               : stats.meanScore !== null
-                ? stats.meanScore.toFixed(2)
+                ? legacyScore100(stats.meanScore)
                 : "N/A"}
             <span class="readouts__scale">
-              {stats.meanReadiness !== null ? "/100" : "/5"}
+              /100
             </span>
           </dd>
         </div>
@@ -128,7 +128,7 @@ const STAGES = [
                       {display.readinessScore !== null
                         ? `${display.readinessScore}/100`
                         : display.meanScore !== null
-                          ? `${display.meanScore.toFixed(1)}/5`
+                          ? `${legacyScore100(display.meanScore)}/100`
                           : "N/A"}
                     </span>
                   </a>
