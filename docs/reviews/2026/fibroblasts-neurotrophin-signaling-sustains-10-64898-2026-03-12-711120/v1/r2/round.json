@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "job_id": "20260903-224607-fibroblasts-neurotrophin-signaling-sustains-pathol",
+  "manuscript_title": "Fibroblasts neurotrophin signaling sustains pathological vascular maturation in rheumatoid arthritis",
+  "manuscript_cache_key": "4f9283619e1dcf32e155ec3525d5ab234439f769f3191d97df845228a7ed0fab",
+  "decision": "major",
+  "weighted_score": 3.6667,
+  "readiness_score": 61,
+  "readiness_breakdown": {
+    "scientific_validity": 21,
+    "methods_and_evidence": 15,
+    "reproducibility_and_reporting": 11,
+    "clarity_and_completeness": 14
+  },
+  "contribution_profile": {
+    "novelty": "moderate",
+    "significance": "high",
+    "usefulness": "high"
+  },
+  "score_decision_rationale": "The core observation — that mural cell coverage and arterial/capillary vascular structures persist and apparently expand in RA synovium after six months of csDMARD or TNFi therapy, and that a NOTCH3→NGF→NGFR/TRK axis can drive fibroblasts toward mural-cell marker programs — is interesting, internally consistent across five methodologically independent approaches, and translationally actionable. The ethics and compliance record is clean. What lowers readiness is not the plausibility of the model but three specific places where the stated conclusions run ahead of the evidence presented, each of which requires reanalysis or an additional control rather than rewording alone: (i) the headline \"persistence despite treatment\" claim is expressed in normalized units whose denominator plausibly changes with treatment, and the absolute-count analysis that would settle it is not shown; (ii) the explant TRK-inhibitor result — the basis for the therapeutic framing — reports a ~50% reduction in PECAM1⁺ structures with no viability or apoptosis control, so tissue toxicity is not excluded; (iii) the word \"differentiation\" in the title and throughout describes marker convergence and modest contractility, not fate. Reproducibility is further limited by absent sample sizes, no data or code deposition, an undocumented bulk RNA-seq pipeline that underpins the 461-gene signature, and three concrete citation errors.\n\nNone of these is fatal. The denominator issue is answerable by reanalysing data the authors already hold; the viability control is a single short experiment on material and models they have running; the differentiation language can be scaled to the evidence or supported with a trajectory analysis of existing data. Because at least one required item (absolute-density reanalysis) has an outcome that could change a conclusion, and one (explant viability) requires new data, this is a major revision rather than a long minor one. I would expect a revised version to be a strong paper.",
+  "required_revisions": [
+    {
+      "id": "R1-01",
+      "text": "**Resolve the normalization question for Fig. 1G–H with a reanalysis of the existing Xenium data.** Report, for each vascular subtype, (a) absolute cell counts per unit tissue area (cells/mm²) with the segmented tissue area stated per biopsy, and (b) at least one denominator-independent metric — e.g. pericyte:capillary-EC and VSMC:arteriolar-EC ratios, or mural cell counts per vessel cross-section. State explicitly and separately what denominator each panel of Fig. 1G and Fig. 1H uses. Also report total cell counts and immune-lineage counts per biopsy pre- and post-treatment so readers can judge denominator drift directly. If absolute vascular counts do not increase post-treatment, the claim must be restated as \"vascular maturation is not reduced by treatment\" rather than \"increases.\"",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-02",
+      "text": "**Add a viability/cell-death control to the TRK-inhibitor explant experiments (Fig. 6).** Report cleaved caspase-3 (or TUNEL) and an independent viability readout (LDH release or ATP) in vehicle- versus larotrectinib- and entrectinib-treated explants at the concentrations used, alongside a non-vascular structural control (e.g. lining-layer integrity, total DAPI⁺ nuclei per section). Report PECAM1⁺ cell number separately from PECAM1⁺ area. If endothelial loss cannot be distinguished from de-maturation, the abstract and Discussion must not describe the effect as \"reversal of vascular maturation\" without that qualification.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-03",
+      "text": "**Scale the \"differentiation\" claim to the evidence, or supply fate evidence.** Either (a) revise the title, abstract, Fig. 7 model and Results text to state that neurotrophin signaling induces mural-cell marker and contractile programs in synovial fibroblasts, explicitly listing recruitment, proliferation of pre-existing mural cells, and EndMT as unexcluded alternatives for the in vivo mural expansion; or (b) provide fate evidence — e.g. a trajectory/RNA-velocity or fibroblast-marker co-expression analysis in the existing Xenium data showing intermediate fibroblast/mural states, or lineage labelling in explants. Note that aSMA alone (Fig. 4K, Fig. 6) does not distinguish VSMCs from activated fibroblasts; state this.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-04",
+      "text": "**Report sample sizes and design for every quantitative panel.** For each figure and supplementary figure: n per condition, whether n denotes independent donors/cultures or technical replicates, and for explant and tissue experiments whether the design is paired (same donor across arms) or unpaired. Overlay raw data points on all bar plots. Report effect sizes with 95% confidence intervals alongside p-values for the headline numbers (aSMA reduction, PECAM1 reduction, contraction assay, all fold-changes quoted in the text).",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-05",
+      "text": "**Apply and report multiple-comparison correction for the spatial comparisons.** Fig. 1G–H involves ~18 pairwise tests across six vascular subtypes and three groups. Report adjusted p-values (FDR or Bonferroni) and state the correction family. Report the significance threshold in Methods.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-06",
+      "text": "**Support or remove the remission-independence claim.** The statement that increased vascular density \"occurred in RA patients regardless of whether or not patients reached criteria for clinical remission (DAS28-ESR < 2.6)\" is currently unsupported by any panel. Provide the stratified analysis (with n per stratum, and acknowledgement that these strata are underpowered) or delete the claim.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-07",
+      "text": "**Constrain the NGFR–TRKA potentiation and NOTCH3-initiation claims to what was tested.** For NGFR: either add the knockdown counterpart — endogenous NGFR knockdown in DLL4-stimulated fibroblasts followed by pY-TRKA and RGS5/ABCC9 readout at ≤10 ng/mL NGF — or state in Results and Discussion that the potentiation mechanism is demonstrated only under CMV-driven overexpression and that endogenous NGFR has not been shown to be rate-limiting. For NOTCH3: report NGF mRNA and secreted protein in NOTCH3-KO versus wild-type fibroblasts *without* endothelial co-culture, so that \"NOTCH3 is the key initiator\" is distinguished from \"NOTCH3 is sufficient to induce NGF\"; alternatively temper to the latter and note that endothelial and other stromal NGF sources are not excluded.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-08",
+      "text": "**Document the bulk RNA-seq pipeline that generates the 461-gene NGF/NGFR signature.** State platform, library kit, read configuration, sequencing depth, number of replicates per arm, reference genome and build, alignment and quantification tools with versions, differential-expression tool, and the FDR/log-fold-change thresholds used to select the 461 genes. Provide the gene list as a supplementary table. Without these, Fig. 5J–M cannot be evaluated or reproduced.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-09",
+      "text": "**Deposit data and code with accessions.** Add a data-availability statement giving repository accessions for (a) Xenium raw and processed count matrices for all 46 samples, (b) the bulk RNA-seq, and (c) a persistent link (GitHub/Zenodo with DOI) to the analysis code, including the Seurat/Harmony/UCell scripts. Also specify the QC thresholds applied (minimum transcripts and features per cell), Louvain resolution and neighbour-graph parameters (resolution 0.3 is stated; the rest are not), and the composition of the custom Xenium add-on panels — Tables S1–S3 are referenced but were not supplied with the manuscript.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-10",
+      "text": "**Correct the three citation errors identified in the compliance audit.** (a) Reference 16 (Domenga et al., *Genes Dev* 2004) is cited in the Introduction as \"our previous study\" — correct the attribution and cite the appropriate work. (b) Reference 27 is listed only as \"Website\" with a DOI; supply full bibliographic details for a citation that supports the MYOCD/MYOCO claim in Fig. 5J. (c) Reference 13 (Veale & Fearon, psoriatic arthritis) is cited for RA synovial vascular remodeling; either replace with an RA-specific source or state the cross-disease inference explicitly.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-11",
+      "text": "**Validate the genetic perturbations.** Report NOTCH3 CRISPR knockout efficiency (sequencing of the edited locus, plus protein or transcript loss) for the cells used in Fig. 5E, and provide siRNA and gRNA target sequences (or complete vendor assay IDs sufficient for reordering, which are partly present) in a supplementary table. Report knockdown efficiency for each siRNA in the same experiments in which it is used, not only in Fig. S6.",
+      "source_reviewer": "",
+      "blocking": false
+    },
+    {
+      "id": "R1-12",
+      "text": "**Address overlapping prior work in the Discussion.** Neurotrophin involvement in vascular remodeling in inflammatory vasculopathy (e.g. giant cell arteritis) and BDNF-dependent pericyte homeostasis have been reported outside RA, and NOTCH3 control of pericyte phenotype has been described in other tissues. Cite and position the present contribution against this literature, stating clearly what is new here (the NOTCH3→neurotrophin coupling in synovium and the druggability in human RA tissue) versus what extends established vascular biology to a new context.",
+      "source_reviewer": "",
+      "blocking": false
+    }
+  ],
+  "minor_suggestions": [
+    "Report explant baseline characterization: whether vascular structure, mural markers and neurotrophin receptor expression drift during the initial 3-day culture period before treatment, and whether explants derive from the same cohort profiled in Fig. 1.",
+    "Add antibody dilutions, host species and clone/RRID for all primaries (α-SMA in particular has no vendor or catalogue number), secondary dilutions, and the identity of the NGF ELISA kit.",
+    "State vehicle identity and final vehicle concentration in medium for every small-molecule inhibitor and agonist, plus the vendor for polybrene.",
+    "Provide microscopy acquisition details (objective NA, detector, illumination and exposure/gain settings) for the EVOS M7000 and identify the confocal instrument used for Fig. S5A; state ImageJ and R versions, Cellpose model and diameter parameter, and the thresholding/ROI procedure used for \"integrated aSMA staining density.\"",
+    "Report mycoplasma testing for primary fibroblasts and HUVECs, and record passage number per experiment given known passage-dependent drift in fibroblast phenotype.",
+    "Add cohort demographics (age, sex, disease duration, seropositivity, inclusion/exclusion criteria) and an explicit informed-consent statement alongside the existing IRB numbers.",
+    "Cell segmentation and CRISPR guide design are delegated to a bioRxiv preprint (ref. 1) by the same group; summarise the essential parameters in this manuscript so it remains self-contained if that preprint changes.",
+    "Consider a positive-comparator arm in explants (e.g. PDGFR-β or angiopoietin/Tie blockade) to indicate whether TRK inhibition is distinctive rather than one of several routes to reduced mural coverage; this would substantially strengthen the necessity argument but is not required for this revision.",
+    "The Discussion proposes that low endothelial NOTCH ligand favours pericyte fate via NGF/TRKA while high ligand favours VSMC fate via TRKB/TRKC. This is an attractive model but is not tested; label it explicitly as a hypothesis.",
+    "Add a sentence on anticipated tolerability considerations for systemic TRK inhibition in patients already on immunosuppression, since the Discussion advocates repurposing.",
+    "Typographical fixes in figure text: \"POOXL\"/\"KOR\"/\"CO34\"/\"POGFRB\" in the Fig. 1 description appear to be OCR corruptions of PODXL, KDR, CD34 and PDGFRB; \"MYOCO\" is presumably MYOCD; \"vascualrization\" and \"vasculature\" misspellings; Fig. S1/S2 titles begin \"5ingle-cell\"."
+  ],
+  "reviewer_reports": [
+    {
+      "reviewer": "ethics",
+      "score": 5.0,
+      "confidence": 5.0,
+      "weaknesses": [],
+      "questions": []
+    },
+    {
+      "reviewer": "scientific_validity",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "In RA synovial explants treated with TRK inhibitors, is the reduction in aSMA staining accompanied by loss of mural cell coverage (assessed by pericyte and VSMC markers) or by dedifferentiation of existing mural cells, and does endothelial cell density or function change?",
+        "Do NOTCH3-activated fibroblasts express NTRK1 at levels sufficient to support TRKA signaling without NGFR co-receptor activity, and does NGFR knockdown in DLL4-stimulated fibroblasts impair RGS5 induction at physiologically relevant NGF doses (≤10 ng/ml)?",
+        "In an in vivo RA model, does systemic or local TRK inhibition reduce synovial vascular maturation and, if so, does it improve disease activity, joint damage, or functional outcomes compared to vehicle or standard DMARD therapy?"
+      ]
+    },
+    {
+      "reviewer": "reporting_reproducibility",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "For the persistence claim (Claim 1): Can the authors provide quantification of NGFR, NTRK1, NTRK2, and NTRK3 transcript counts per cell (or fluorescence intensity per cell from RNAscope) in paired pre- and post-treatment samples, stratified by mural cell type?",
+        "For the fibroblast differentiation claim (Claim 2): Do the spatial transcriptomics data include a fibroblast lineage marker (e.g., THY1, FSP1) that would allow the authors to track whether newly expanded mural cells co-express fibroblast markers, or can lineage tracing be performed on a subset of explants?",
+        "For the TRK inhibitor claim (Claim 3): What is the viability (e.g., LDH release, caspase activity) of explants treated with larotrectinib and entrectinib at the concentrations used (1–10 µM), and do the explants retain endothelial and fibroblast markers after 3 days of culture and drug treatment?",
+        "Where are the Xenium raw data and processed count matrices deposited, and what is the accession number or persistent URL?",
+        "What are the exact Seurat v5.0.0 parameters (Louvain resolution, distance metric, UMAP parameters) used for cell-type annotation, and is the code available in a repository?"
+      ]
+    },
+    {
+      "reviewer": "data_analysis",
+      "score": 3.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "In Fig. 1G–H, what is the denominator for the density calculation in each panel, and does it differ between the two figures?",
+        "For the in vitro experiments (Figs. 3–4), please provide n (number of biological replicates) for each condition in the figure legends, and overlay raw points on all bar plots.",
+        "For the explant experiments (Fig. 6), state n per condition, specify paired vs. unpaired design, and report whether explants from the same patient were treated with multiple drugs or only one.",
+        "What is the FDR threshold and replication number for the bulk RNA-seq used to define the NGF/NGFR gene signature in Fig. 5J?",
+        "Were the primary hypotheses (effect of NGF on RGS5, effect of BDNF on MYH11, effect of TRK inhibitors on aSMA) pre-registered before the experiments were conducted?"
+      ]
+    },
+    {
+      "reviewer": "contribution_context",
+      "score": 4.0,
+      "confidence": 4.0,
+      "weaknesses": [],
+      "questions": [
+        "Figure 5J (RNA-seq of NGFR-overexpressing fibroblasts) shows upregulation of mural cell genes; were these cells also tested for contractility or other functional mural cell properties to confirm they are not just expressing markers?",
+        "In the synovial explant experiments (Fig. 4K, Fig. 6C–G), were the fibroblasts and endothelial cells confirmed to remain viable and in their original spatial relationship after 3 days of culture, or could the observed changes reflect cell death or tissue degradation?",
+        "The manuscript states that NOTCH3 expression persists in post-treatment RA synovia (Fig. 2A); if NOTCH3 is the driver of neurotrophin signaling, why does immunosuppressive therapy not reduce NOTCH3 expression, and what maintains NOTCH3 signaling in treated patients?"
+      ]
+    }
+  ],
+  "manuscript_text_sha256": "302a602fc7bba99010021f3aea131dcabbf2ad5dc25f9ae7524353621b43f552",
+  "manuscript_file_sha256": "cb370b3a8a9f8a6230b910059dac836e42f1eb0c3bd29cf2a69e3d8b3246eedb",
+  "prior_job_id": "",
+  "desk_rejected": false
+}
