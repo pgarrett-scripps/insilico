@@ -1,6 +1,12 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { corpus, VERDICT, STATUS, statistics } from "../../lib/corpus.js";
+import {
+  corpus,
+  legacyScore100,
+  VERDICT,
+  STATUS,
+  statistics,
+} from "../../lib/corpus.js";
 
 const papers = corpus();
 const stats = statistics();
@@ -117,13 +123,13 @@ const years = [...new Set(papers.map((p) => p.year))].sort().reverse();
                             class="card__score mono"
                             title={paper.decisive.readinessScore !== null
                               ? `Publication readiness ${paper.decisive.readinessScore} out of 100`
-                              : `Legacy panel mean ${paper.decisive.meanScore.toFixed(1)} out of 5`}
+                              : `Legacy scaled score ${legacyScore100(paper.decisive.meanScore)} out of 100. Converted from a ${paper.decisive.meanScore.toFixed(1)} out of 5 panel mean.`}
                           >
                             {paper.decisive.readinessScore !== null
                               ? paper.decisive.readinessScore
-                              : paper.decisive.meanScore.toFixed(1)}
+                              : legacyScore100(paper.decisive.meanScore)}
                             <span class="card__scoreScale">
-                              {paper.decisive.readinessScore !== null ? "/100" : "/5"}
+                              /100
                             </span>
                           </span>
                         )}

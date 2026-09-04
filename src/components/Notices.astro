@@ -8,6 +8,8 @@
  * second read of the same draft, a review the authors asked for versus one
  * attached to their paper by a stranger.
  */
+import { legacyScore100 } from "../lib/corpus.js";
+
 const { provenance } = Astro.props;
 
 const VERDICT = {
@@ -55,9 +57,9 @@ if (revision.kind === "rerun") {
   ];
   if (revision.prior_decision) {
     body.push(
-      `Earlier review: ${VERDICT[revision.prior_decision] || revision.prior_decision}` +
+        `Earlier review: ${VERDICT[revision.prior_decision] || revision.prior_decision}` +
         (typeof revision.prior_mean_score === "number"
-          ? `, mean ${revision.prior_mean_score}.`
+          ? `, legacy scaled score ${legacyScore100(revision.prior_mean_score)}/100.`
           : "."),
     );
   }
