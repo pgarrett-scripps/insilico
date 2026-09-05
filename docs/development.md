@@ -99,18 +99,29 @@ and nothing checked the referees that was any better than the referees.
 
 ## Running a review locally
 
-`requirements.txt` deliberately does not pin the referee panel. The workflow pins
-it per run to an exact commit, so every review records the code that produced it.
-Install it separately:
+`requirements.txt` pins and hashes the complete production Python environment
+for Linux and Python 3.12, including the referee panel and PDF converter.
+Every new review records the installed package versions and lock hash.
 
 ```bash
-uv venv && source .venv/bin/activate
-uv pip install -r requirements.txt
-uv pip install "peerreviewagents[research] @ git+https://github.com/pgarrett-scripps/PeerReviewAgents.git"
+uv venv --python 3.12 && source .venv/bin/activate
+uv pip sync --require-hashes --only-binary=:all: requirements.txt
+python scripts/check_runtime.py
 
 export ANTHROPIC_API_KEY=...
 python scripts/run_review.py --url https://arxiv.org/abs/2401.12345
 ```
+
+To update dependencies, edit `requirements.in` and run the compile command in
+the header of `requirements.txt`. Review both files together. CI installs the
+lock and exercises the runtime without calling a model. PeerReviewAgents also
+tests newly resolved dependencies in its own CI matrix.
+
+The runner delegates command parsing to `review_commands.py`, version and
+attempt planning to `review_plan.py`, software records to `review_provenance.py`,
+artifact publication to `review_bundle.py`, and event collection to
+`review_telemetry.py`. The hermetic checks in `scripts/smoke_checks/` follow those
+responsibilities. `python scripts/smoke_test.py` remains the entry point.
 
 `v<N>` is the draft the archive served, not a count of our runs. `v3` is the
 authors' third draft. `r<M>` is our attempt number for that exact draft. A

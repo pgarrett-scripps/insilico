@@ -9,7 +9,6 @@ const {
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const site = Astro.site ? new URL(base + "/", Astro.site).href.replace(/\/$/, "") : base;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? "http://localhost").href;
 const fullTitle = title ? `${title}, In Silico` : "In Silico";
 

@@ -10,6 +10,7 @@
  * three copies of the logic that finds a bundle and its metadata.
  */
 import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import EditorialScore from "../../components/EditorialScore.astro";
 import PanelReadout from "../../components/PanelReadout.astro";
@@ -22,13 +23,24 @@ import {
   legacyScore100,
   VERDICT,
   STATUS,
-  titleFromFilename,
 } from "../../lib/corpus.js";
+
+type Paper = ReturnType<typeof corpus>[number]
+type Bundle = Paper["latest"]
+type Document = {file: string, label: string, slug: string, blurb?: string}
+interface Props {
+  kind: "paper" | "review" | "document"
+  paper: Paper
+  bundle?: Bundle
+  doc?: Document
+  entry?: CollectionEntry<"reports">
+  documents?: Document[]
+}
 
 export async function getStaticPaths() {
   const reports = await getCollection("reports");
   const byId = new Map(reports.map((entry) => [entry.id, entry]));
-  const paths = [];
+  const paths: {params: {slug: string}, props: Props}[] = [];
 
   for (const paper of corpus()) {
     paths.push({
@@ -67,14 +79,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const paperHref = `${base}/reviews/${paper.year}/${paper.slug}/`;
 const siteRoot = "https://pgarrett-scripps.github.io/insilico";
 
-const verdictOf = (b) =>
+const verdictOf = (b: Bundle) =>
   b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision;
-const verdictClass = (b) => (b.deskRejected ? "desk" : b.decision);
+const verdictClass = (b: Bundle) => (b.deskRejected ? "desk" : b.decision);
 
 const bibKey = (extra = "") =>
   `insilico-${paper.slug.replace(/[^A-Za-z0-9-]+/g, "-").toLowerCase()}${extra ? `-${extra}` : ""}`;
 
-const scoreDescription = (b) => {
+const scoreDescription = (b: Bundle) => {
   if (b.readinessScore !== null) return `publication readiness ${b.readinessScore}/100`
   if (b.meanScore !== null) return `legacy scaled score ${legacyScore100(b.meanScore)}/100`
   return ""
@@ -348,7 +360,7 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
               <ul class="docs__grid">
                 {bundle.documents.reviewers.map((d) => {
                   const scored = bundle.panel.find(
-                    (p) => String(p.reviewer).replace(/_/g, " ").toLowerCase() ===
+                    (p: {reviewer: string}) => String(p.reviewer).replace(/_/g, " ").toLowerCase() ===
                       d.label.toLowerCase(),
                   );
                   return (

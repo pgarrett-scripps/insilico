@@ -35,6 +35,20 @@
   ],
   "properties": {
     "schema_version": { "const": 2 },
+    "environment": {
+      "type": "object",
+      "required": ["python", "implementation", "system", "machine", "packages", "lock_sha256", "lock_applied"],
+      "properties": {
+        "python": { "type": "string" },
+        "implementation": { "type": "string" },
+        "system": { "type": "string" },
+        "machine": { "type": "string" },
+        "packages": { "type": "object", "additionalProperties": { "type": "string" } },
+        "lock_sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+        "lock_applied": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
     "generated_at": { "type": "string", "minLength": 1 },
     "pipeline": {
       "type": "object",

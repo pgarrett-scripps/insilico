@@ -23,7 +23,7 @@ const journalProfile = provenance.journal_profile || {}
 const review = provenance.review || {}
 const preprint = provenance.preprint || {};
 const fallback = provenance.model || "unspecified";
-const modelName = (value) =>
+const modelName = (value: string | {model?: string}) =>
   typeof value === "object" && value !== null && "model" in value
     ? value.model
     : value;

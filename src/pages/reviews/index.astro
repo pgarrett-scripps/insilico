@@ -15,8 +15,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 // Two different things, and the card shows both. `status` is what In Silico
 // did with the paper; `verdict` is what the editor recommended, which is finer
 // grained and is the thing the decision letter argues for.
-const verdictOf = (b) => (b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision);
-const verdictClassOf = (b) => (b.deskRejected ? "desk" : b.decision);
+type Bundle = ReturnType<typeof corpus>[number]["latest"]
+const verdictOf = (b: Bundle) => (b.deskRejected ? "Desk reject" : VERDICT[b.decision] || b.decision);
+const verdictClassOf = (b: Bundle) => (b.deskRejected ? "desk" : b.decision);
 
 // Filtering is by status rather than by verdict: a reader scanning the corpus
 // wants the journal's answer, and offering all four verdicts alongside it

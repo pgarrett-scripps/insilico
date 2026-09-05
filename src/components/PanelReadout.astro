@@ -23,18 +23,25 @@
  */
 import { legacyScore100 } from "../lib/corpus.js";
 
+interface Props {
+  panel?: {reviewer?: string, score?: number | null, confidence?: number | null,
+    not_applicable_reason?: string}[]
+  meanScore?: number | null
+  legacy?: boolean
+  decision?: string
+  deskRejected?: boolean
+}
+
 const {
   panel = [],
   meanScore = null,
-  decision = "",
-  deskRejected = false,
   legacy = false,
 } = Astro.props;
 
 const SCALE = 5;
 
 /** Which whole point on the 1–5 scale a score sits nearest. */
-function tierFor(score) {
+function tierFor(score: number | null | undefined) {
   if (score === null || score === undefined) return "none";
   return `s${Math.min(SCALE, Math.max(1, Math.round(score)))}`;
 }
