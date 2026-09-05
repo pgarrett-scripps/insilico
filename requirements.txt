@@ -1191,13 +1191,13 @@ rich==15.0.0 \
     # via
     #   peerreviewagents
     #   textual
-rustypaper==0.2.0 \
-    --hash=sha256:3f1c68c3bd6ad0b4bd05a420d1f6d31eb87ebb0636b0590177a424edadaa68a5 \
-    --hash=sha256:61587b794e919e7bd56ea6db0d50fb451865fe3a09daba9177758391f6c1497d \
-    --hash=sha256:77d1ba53ffd80847cf462e2d881e99eb1847e0495747fa2e1e9da8bde7e2f7cd \
-    --hash=sha256:b1be8dc81e673f0e2889717760e813cfc13c5f1fc198955f4bd233410c464db9 \
-    --hash=sha256:ee57ca167f61d7aa7e816c7d837b935fd75e7d6890836dfffd43c7a88b8e15fa \
-    --hash=sha256:f6285619177744bede73f7848e212ec48da28bfd5d009f771c76533367780816
+rustypaper==0.2.1 \
+    --hash=sha256:14b7d758641de995d5133d8df97c9241c07e9cf107e23f9199fd78d6751b256f \
+    --hash=sha256:18043c396704f6b7f4206b895213d64202f7b73c55298a0834f132260922395d \
+    --hash=sha256:30f991da6d289b8d64ee482a5e6b6c7f1e35296298a67372ee6c559d6d1d298a \
+    --hash=sha256:95fa74f259cb84a0cdffaf272ab1905d85002b73a0b6a36c76de2b4ca2db0b26 \
+    --hash=sha256:9bd63b430d3c6256c16e116708ac39eda3cbae0299a4f5ad52d37c28f39f74c4 \
+    --hash=sha256:ccd3dbf6fd10597e48a41cf1fd0e499ad1954c00cc8341878df26f1c6fe54699
     # via
     #   -r requirements.in
     #   peerreviewagents
