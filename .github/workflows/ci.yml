@@ -22,7 +22,8 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install --require-hashes --only-binary=:all: -r requirements.txt
+      - run: |
+          pip install --require-hashes --only-binary=:all: -r requirements.txt
       - run: pip check
       - run: python scripts/check_runtime.py
       - run: python scripts/smoke_test.py
