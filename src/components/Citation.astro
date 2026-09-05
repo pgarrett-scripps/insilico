@@ -34,7 +34,7 @@ const LATEX = {
   "~": "\\textasciitilde{}",
   "^": "\\textasciicircum{}",
 };
-const esc = (s) => String(s).split("").map((c) => LATEX[c] ?? c).join("");
+const esc = (s: unknown) => String(s).split("").map((c) => LATEX[c] ?? c).join("");
 
 // The pipeline's Zenodo *concept* DOI, which always resolves to its newest
 // release. Named in every review's citation because "machine-generated" is

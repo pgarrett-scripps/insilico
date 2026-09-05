@@ -31,12 +31,8 @@ env:
   # Model selection lives in ./peerreview.toml, including the per-role split.
   # Setting REVIEW_MODEL here would override that file and collapse every
   # stage back onto one model, so it is deliberately unset.
-  # PyPI release versions are immutable. Updating the panel therefore takes a
-  # reviewed change to this file instead of silently following upstream main.
-  PIPELINE_VERSION: "0.6.0"
-  # PDF converter used when official full text is unavailable. It is pinned so
-  # fallback behavior cannot change silently between rounds.
-  RUSTYPAPER_SPEC: "rustypaper==0.2.0"
+  # requirements.txt pins and hashes the complete Python environment.
+  INSILICO_LOCKED_ENVIRONMENT: "true"
   # The text as written. Compression was measured and reverted: under `light`
   # the clarity reviewer reported "grammatical errors that obscure the main
   # claims" three times on a paper where the uncompressed run reported none —
@@ -94,23 +90,9 @@ jobs:
           # matters most for the computational half of the corpus. It fails
           # quietly by design, which is exactly why it has to be installed
           # explicitly rather than assumed.
-          pip install --quiet "peerreviewagents[research]==${PIPELINE_VERSION}"
-          pip install --quiet pyyaml
-
-          installed="$(python -c 'from importlib.metadata import version; print(version("peerreviewagents"))')"
-          if [ "$installed" != "$PIPELINE_VERSION" ]; then
-            echo "::error::Expected PeerReviewAgents $PIPELINE_VERSION, got $installed."
-            exit 1
-          fi
-
-          # peerreviewagents depends on rustypaper. This explicit install pins
-          # the PDF fallback version and gives installation failures a clear
-          # message.
-          pip install --quiet "$RUSTYPAPER_SPEC" || {
-            echo "::error::rustypaper did not install, so there is no way to"\
-                 "read the manuscript. Nothing is published from this run."
-            exit 1
-          }
+          pip install --quiet --require-hashes --only-binary=:all: -r requirements.txt
+          pip check
+          python scripts/check_runtime.py
 
           # Confirm the optional vendor actually landed, rather than
           # discovering months later that every review skipped arXiv.
@@ -137,7 +119,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: runs/.checkpoints
-          key: pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-${{ github.run_id }}
+          key: pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
             pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-
 
@@ -210,7 +192,7 @@ jobs:
       # exactly the run whose checkpoints are worth keeping. The cache
       # action's built-in post-step skips saving on failure, hence the
       # separate save. Caches are immutable, so each attempt saves under a
-      # fresh run-id key and the restore above picks the newest by prefix.
+      # distinct key for each workflow attempt. Restore picks the newest by prefix.
       # The hashFiles guard skips the save when no agent checkpointed
       # (a bad command, an unreadable PDF) rather than warning about an
       # empty path.
@@ -219,7 +201,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: runs/.checkpoints
-          key: pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-${{ github.run_id }}
+          key: pra-checkpoints-${{ github.event.issue.number || github.event.inputs.submission_id || 'manual' }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Report a command nobody could act on
         if: steps.run.outputs.bad_command == 'true' && github.event_name == 'issue_comment'

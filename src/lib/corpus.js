@@ -136,6 +136,7 @@ function readDocuments(bundleDir) {
   })();
 
   const seen = new Set();
+  /** @type {{file: string, label: string, blurb: string, slug: string}[]} */
   const primary = [];
   for (const [file, label, blurb] of DOCUMENT_ORDER) {
     if (!files.includes(file)) continue;
@@ -283,11 +284,13 @@ function readPaper(year, slug) {
   };
 }
 
+/** @type {ReturnType<typeof readPaper>[] | null} */
 let cached = null;
 
 /** Every published paper, newest review first. Cached for the build. */
 export function corpus() {
   if (cached) return cached;
+  /** @type {ReturnType<typeof readPaper>[]} */
   const papers = [];
   for (const year of readDirs(REVIEWS_DIR).filter((d) => /^\d{4}$/.test(d))) {
     for (const slug of readDirs(path.join(REVIEWS_DIR, year))) {

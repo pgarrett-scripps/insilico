@@ -13,6 +13,20 @@ permissions:
   contents: read
 
 jobs:
+  runtime:
+    name: Locked review runtime
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install --require-hashes --only-binary=:all: -r requirements.txt
+      - run: pip check
+      - run: python scripts/check_runtime.py
+      - run: python scripts/smoke_test.py
+
   pipeline:
     name: Pipeline
     runs-on: ubuntu-latest
@@ -41,6 +55,9 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Site types are valid
+        run: npm run check
 
       - name: Published review provenance matches its schema
         run: npm run check:schema

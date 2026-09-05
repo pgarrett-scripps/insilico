@@ -24,11 +24,11 @@ const counts = stats.counts || {};
 const density = stats.density || null;
 const health = stats.health || {};
 
-const has = (v) => typeof v === "number" && Number.isFinite(v);
+const has = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 const show = Boolean(counts.words);
 
-const int = (n) => (has(n) ? n.toLocaleString("en-US") : "N/A");
-const pct = (n) => (has(n) ? `${Math.round(n * 100)}%` : "N/A");
+const int = (n: unknown) => (has(n) ? n.toLocaleString("en-US") : "N/A");
+const pct = (n: unknown) => (has(n) ? `${Math.round(n * 100)}%` : "N/A");
 
 // Size first: it is the number a reader is most likely to want and the one
 // least likely to be wrong.

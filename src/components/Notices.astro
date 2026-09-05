@@ -35,7 +35,7 @@ const reportCount = panelSize ? `${panelSize} reports` : "specialist reports";
 // bundle decides which account of itself it gets.
 const sawPriorRound = Boolean(revision.baseline);
 
-const notices = [];
+const notices: {tone: string, title: string, body: string[]}[] = [];
 
 if (provenance.desk_rejected) {
   notices.push({
