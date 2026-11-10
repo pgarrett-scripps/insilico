@@ -129,10 +129,21 @@ const sourceOfBytes = input.local_file === undefined
     ? "supplied locally"
     : "fetched from the identifier";
 
+// The engine's own rule for "the same model", from model_runtime.same_model:
+// the requested id, a dated release of it, or a bracketed variant of it. Those
+// are the forms the transport reports back for one request, so comparing the
+// strings exactly called `claude-sonnet-5-5-20260929` a substitution the engine
+// had already accepted. The banner then fired on every run the transport dated,
+// and on any record listing two observed ids whatever they were.
 const observed = Array.isArray(modelIds.observed) ? modelIds.observed : [];
-const modelDrift = observed.length && !(observed.length === 1 && observed[0] === modelIds.requested)
-  ? observed
-  : null;
+const sameModel = (served, requested) => {
+  if (!requested) return false;
+  return served === requested
+    || served.startsWith(`${requested}-`)
+    || served.startsWith(`${requested}[`);
+};
+const substituted = observed.filter((served) => !sameModel(String(served), String(modelIds.requested || "")));
+const modelDrift = substituted.length ? substituted : null;
 
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""

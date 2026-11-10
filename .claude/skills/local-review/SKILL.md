@@ -134,7 +134,6 @@ says yes.
   --decision <the user's answer> \
   --editor <the user's name or GitHub login> \
   --human-reviewed yes \
-  --model claude-sonnet-5-5 \
   --publish
 ```
 
@@ -147,6 +146,15 @@ because the attestation on the page is a claim about a person. Pass
 decision. Answering `no` writes a rehearsal bundle under `runs/rehearsal/`
 instead, which is also what happens whenever `--publish` is left off, and that
 bundle can never be published without a fresh run of this command.
+
+Do not pass `--model`. The published record names the model the run itself
+recorded in `protocol.json`, so an opus run says opus without being told. The
+flag exists only as a cross-check: pass it when you want publish to refuse if
+the run turns out to have used a model other than the one you expected.
+
+Publish also requires a run that finished. It reads `progress.json` and refuses
+anything whose status is not `complete`, so a run that stopped part way cannot
+become a bundle that looks whole.
 
 Add `--baseline-eligible` if the user said yes in step 4. When a submission
 issue named a submitter, add `--submitter <login>` and, if that issue stated

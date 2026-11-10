@@ -20,20 +20,31 @@ from smoke_checks.commands import (
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
 from smoke_checks.local import (
     check_a_bare_pdf_cannot_be_published,
+    check_a_dated_model_id_is_not_a_substitution,
+    check_a_destination_outside_its_tree_is_refused,
     check_a_minor_finding_is_never_a_required_revision,
+    check_a_missing_engine_fails_the_skill_check_in_ci,
+    check_a_published_record_names_no_local_path,
+    check_a_rehearsal_claims_no_reading,
     check_a_rehearsal_is_never_written_into_the_published_tree,
     check_a_run_of_one_paper_cannot_be_published_as_another,
+    check_a_run_with_no_manifest_paper_id_is_still_bound,
     check_a_subscription_login_is_not_a_paid_provider,
     check_a_substituted_model_is_visible,
     check_an_attestation_needs_a_named_editor,
     check_an_unclaimed_review_is_labelled_an_experiment,
+    check_an_unfinished_run_cannot_be_published,
     check_every_published_file_is_hashed,
     check_provenance_is_read_from_the_run,
+    check_publishing_needs_a_verified_login,
     check_severity_is_read_from_the_engine_not_guessed,
     check_the_attestation_says_what_it_has_to_say,
     check_the_decision_is_attributed_to_a_person,
+    check_the_locked_engine_release_contains_the_engine,
     check_the_method_paragraph_describes_the_run_that_happened,
+    check_the_model_comes_from_the_run_not_the_flag,
     check_the_skill_commands_match_the_engine_parser,
+    check_the_synthesis_record_is_read_where_the_engine_writes_it,
 )
 from smoke_checks.planning import (
     check_latest_editorial_attempt_is_the_revision_baseline,
@@ -158,6 +169,28 @@ def main() -> int:
     print("ok  the summary describes the run that was recorded")
     check_an_attestation_needs_a_named_editor()
     print("ok  a true attestation needs a named editor and an actual reading")
+    check_the_model_comes_from_the_run_not_the_flag()
+    print("ok  the published model is the one the run asked for")
+    check_a_run_with_no_manifest_paper_id_is_still_bound()
+    print("ok  a run that records its paper id outside the manifest is still bound")
+    check_an_unfinished_run_cannot_be_published()
+    print("ok  a run that did not finish cannot be published")
+    check_a_dated_model_id_is_not_a_substitution()
+    print("ok  model drift uses the engine's own rule for the same model")
+    check_a_published_record_names_no_local_path()
+    print("ok  a published record names no path on the operator's disk")
+    check_publishing_needs_a_verified_login()
+    print("ok  publishing needs a login that was actually checked")
+    check_the_synthesis_record_is_read_where_the_engine_writes_it()
+    print("ok  the synthesis policy and its budget are read from the stage folder")
+    check_a_rehearsal_claims_no_reading()
+    print("ok  a rehearsal's documents claim no reading that did not happen")
+    check_a_destination_outside_its_tree_is_refused()
+    print("ok  a bundle is written only inside the tree it belongs to")
+    check_a_missing_engine_fails_the_skill_check_in_ci()
+    print("ok  the skill command check fails in CI rather than skipping itself")
+    check_the_locked_engine_release_contains_the_engine()
+    print("ok  the locked release contains the engine the checks import")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

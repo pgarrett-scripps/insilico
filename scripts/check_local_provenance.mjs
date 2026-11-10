@@ -54,10 +54,12 @@ function localRecord(overrides = {}) {
         local_file: false,
       },
       run: {
+        directory: "runs/local/2026/fixture-paper",
         workflow: "ensemble",
         workflow_version: "ensemble-v3",
         reviewers: 2,
         synthesis_policy: "debate",
+        synthesis_tool_limit: 12,
         literature_cutoff: "2026-11-10",
         findings: 7,
         errors: [],
@@ -71,7 +73,13 @@ function localRecord(overrides = {}) {
           "This review was generated locally on a Claude Code subscription, with no paid API key in the path.",
       },
     },
-    review: { manuscript_version: 1, attempt: 1, lifecycle: "active", baseline_eligible: false },
+    review: {
+      id: "docs/reviews/2026/fixture-paper/v1/r1",
+      manuscript_version: 1,
+      attempt: 1,
+      lifecycle: "active",
+      baseline_eligible: false,
+    },
     provider: "claude-code",
     model: "claude-sonnet-5-5",
     models: {},
@@ -153,17 +161,59 @@ const unsourcedFingerprint = localRecord();
 delete unsourcedFingerprint.generator.engine_fingerprint.source;
 rejects(unsourcedFingerprint, "the fingerprint must say where it was measured");
 
+// A published record is read by people who do not have the machine that wrote
+// it. An absolute path names a home directory on one laptop, which tells a
+// reader nothing about the review and quite a lot about the author's disk.
+const absoluteRunDirectory = localRecord();
+absoluteRunDirectory.generator.run.directory = "/home/someone/Repos/insilico/runs/local/2026/fixture-paper";
+rejects(absoluteRunDirectory, "the run directory must be relative to the repository");
+
+const absoluteReviewId = localRecord();
+absoluteReviewId.review.id = "/home/someone/Repos/insilico/docs/reviews/2026/fixture-paper/v1/r1";
+rejects(absoluteReviewId, "the bundle identifier must not be an absolute path");
+
 // The hosted panel's records still have to validate exactly as before, and its
 // obligations must not have leaked onto the local shape.
 const published = [];
+const publishedFiles = [];
 function visit(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const target = path.join(directory, entry.name);
     if (entry.isDirectory()) visit(target);
-    else if (entry.name === "provenance.json") published.push(JSON.parse(fs.readFileSync(target, "utf8")));
+    else if (entry.name === "provenance.json") {
+      published.push(JSON.parse(fs.readFileSync(target, "utf8")));
+      publishedFiles.push(target);
+    }
   }
 }
 visit(path.resolve("docs/reviews"));
+
+// The schema can only police the two fields that have carried a path so far.
+// This is the standing rule underneath it, applied to every published record
+// whatever shape it is: nothing in the corpus names a path on anybody's
+// machine. It passes today and exists so that it stops being true loudly.
+function localPaths(value, trail = "") {
+  if (typeof value === "string") {
+    return value.startsWith("/") || value.startsWith("file://") ? [`${trail} = ${value}`] : [];
+  }
+  if (Array.isArray(value)) return value.flatMap((item, index) => localPaths(item, `${trail}[${index}]`));
+  if (value && typeof value === "object") {
+    return Object.entries(value).flatMap(([key, item]) => localPaths(item, trail ? `${trail}.${key}` : key));
+  }
+  return [];
+}
+for (const [index, record] of published.entries()) {
+  const leaks = localPaths(record);
+  assert.equal(
+    leaks.length,
+    0,
+    `${publishedFiles[index]} names a path on the machine that wrote it: ${leaks.join(", ")}`,
+  );
+}
+assert.ok(
+  localPaths(localRecord({ review: { id: "/home/someone/r1" } })).length === 1,
+  "the path scan should see an absolute value when there is one",
+);
 
 const versionTwo = published.filter((p) => p.schema_version === 2);
 assert.ok(versionTwo.length > 0, "there should still be published version 2 records to check");

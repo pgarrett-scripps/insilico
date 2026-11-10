@@ -231,7 +231,52 @@ def transport_record(*, probe: bool = True) -> dict:
         }
     runtime = importlib.import_module(f"{ENGINE_PACKAGE}.model_runtime")
     return {**transport_from_status(runtime.auth_status(provider=TRANSPORT_PROVIDER)),
-            "login_verified": True}
+            "login_verified": True,
+            "verified_by": "publish_time_probe"}
+
+
+def transport_from_run(run_dir: Path) -> dict | None:
+    """The account the engine checked when the run started, from the run.
+
+    The engine's prepare step copies `billing_confirmation.json` into the run
+    folder, and that file records the login that actually paid for the review.
+    Probing `claude auth status` at publish time instead measures whoever is
+    logged in on the machine writing the bundle, which is a different claim and
+    can be a different account. So the run's own confirmation wins when it
+    exists, and the probe is the fallback.
+
+    Returns None when the run wrote no confirmation, so the caller can fall
+    back. An unusable confirmation is a refusal rather than a fallback, because
+    a run whose recorded login was not a subscription login is exactly the case
+    this guard exists for.
+    """
+    record = maybe_json(Path(run_dir) / "billing_confirmation.json")
+    if not record:
+        return None
+    accepted, policy = subscription_policy()
+    method = str(record.get("auth_method") or "")
+    if method not in accepted:
+        raise CommandError(
+            f"The run records auth method {method or 'none'}, which is not a "
+            f"subscription login. The engine accepts {', '.join(accepted)}. "
+            "This run was not billed the way a local review has to be."
+        )
+    transport = {
+        "provider": TRANSPORT_PROVIDER,
+        "executable": "claude",
+        "version": None,
+        "billing_policy": str(record.get("policy") or policy),
+        "auth_method": method,
+        "subscription_type": record.get("subscription_type"),
+        "api_provider": "firstParty",
+        "login_verified": True,
+        "verified_by": "run_billing_confirmation",
+        "paid_api_key_used": False,
+    }
+    checked = record.get("checked_at")
+    if checked:
+        transport["verified_at"] = str(checked)
+    return transport
 
 
 def jsonl_rows(path: Path) -> list[dict]:
@@ -289,6 +334,60 @@ def _walk(value: object):
             yield from _walk(child)
 
 
+def model_matches(observed: str, requested: str) -> bool:
+    """Is a served model id the model that was asked for, by the engine's rule.
+
+    `model_runtime.same_model` accepts the requested id, a dated release of it
+    and a bracketed variant of it, because those are the forms the transport
+    reports back for one request. Comparing the strings exactly instead called
+    `claude-sonnet-5-5-20260929` a substitution the engine had already
+    accepted, so the drift banner fired on every run whose transport dated the
+    id it served. The fallback is the engine's rule written out, so this stays
+    testable without an engine installed and cannot quietly get looser.
+    """
+    observed = str(observed)
+    requested = str(requested)
+    try:
+        runtime = importlib.import_module(f"{ENGINE_PACKAGE}.model_runtime")
+    except ImportError:
+        runtime = None
+    same = getattr(runtime, "same_model", None)
+    if callable(same):
+        return bool(same(observed, requested))
+    return observed == requested or observed.startswith((f"{requested}-", f"{requested}["))
+
+
+def substituted_models(observed: list[str], requested: str) -> list[str]:
+    """The served ids that are not the requested model, by the engine's rule."""
+    return [name for name in observed if not model_matches(name, requested)]
+
+
+def resolve_requested_model(run: dict, flag: str | None) -> str:
+    """The model this run asked the transport for, taken from the run.
+
+    It used to come from `--model`, whose default was sonnet. The skill lets the
+    operator run opus, so an opus run published a record saying sonnet, and the
+    summary went on to say every pass used that model. The run records what it
+    asked for in protocol.json, so that is the only source here. `--model` is
+    kept as an optional cross-check and a disagreement is a refusal, because one
+    of the two is wrong and the script cannot tell which.
+    """
+    recorded = str(run.get("model") or "")
+    if not recorded:
+        raise CommandError(
+            "This run records no model in protocol.json, so the record cannot "
+            "say which model wrote the review. Point --run at the engine's "
+            "review output folder."
+        )
+    if flag and not model_matches(recorded, str(flag)) and recorded != str(flag):
+        raise CommandError(
+            f"--model says {flag} but the run asked for {recorded}. The run is "
+            "the one that happened. Drop --model, or point --run at the run you "
+            "meant."
+        )
+    return recorded
+
+
 def editor_package(run_dir: Path) -> dict:
     """The engine's final review, from wherever this workflow saved it."""
     run_dir = Path(run_dir)
@@ -315,6 +414,35 @@ def maybe_json(path: Path) -> dict:
     except (OSError, json.JSONDecodeError):
         return {}
     return value if isinstance(value, dict) else {}
+
+
+def _first(*values: object) -> object:
+    """The first value that was actually recorded.
+
+    An `or` chain would skip a recorded zero, and a tool limit of zero is a
+    budget the synthesis call ran under rather than a missing value.
+    """
+    for value in values:
+        if value not in (None, "", [], {}):
+            return value
+    return None
+
+
+def stage_manifests(run_dir: Path) -> list[dict]:
+    """The per-stage manifests an ensemble run writes beside its reviewers.
+
+    An ensemble run has a folder per stage, `debate/` or `ordinary-synthesis/`
+    for the synthesis and one per discovery reviewer, and each holds its own
+    manifest. That is where the synthesis policy and its tool budget live. The
+    run's top level manifest holds the paper id, the engine source and the
+    plan, so looking there for either found nothing.
+    """
+    found = []
+    for path in sorted(Path(run_dir).glob("*/manifest.json")):
+        payload = maybe_json(path)
+        if payload:
+            found.append(payload)
+    return found
 
 
 def fingerprint_from_manifest(manifest: dict, source: str) -> dict:
@@ -364,24 +492,58 @@ def read_run(run_dir: Path) -> dict:
     except CommandError:
         package = {}
 
-    record: dict = {"directory": str(run_dir)}
+    record: dict = {}
+    # A published record is read by strangers, and an absolute path in it
+    # describes the machine that wrote it rather than the review. The path is
+    # recorded when it is inside this repository and left out otherwise.
+    if run_dir.resolve().is_relative_to(REPO):
+        record["directory"] = run_dir.resolve().relative_to(REPO).as_posix()
 
     def put(key: str, value: object) -> None:
         if value not in (None, "", [], {}):
             record[key] = value
 
+    plan = manifest.get("plan")
+    plan = plan if isinstance(plan, dict) else {}
+    nested = manifest.get("protocol")
+    nested = nested if isinstance(nested, dict) else {}
+    stages = stage_manifests(run_dir)
+    synthesis = package.get("synthesis_provenance")
+    synthesis = synthesis if isinstance(synthesis, dict) else {}
+
     put("workflow", protocol.get("mode") or artifact.get("workflow"))
     put("workflow_version", package.get("workflow_version") or protocol.get("version"))
-    put("model", protocol.get("model") or artifact.get("model_requested"))
-    put("provider", protocol.get("provider"))
-    put("effort", protocol.get("effort"))
+    put("model", protocol.get("model") or nested.get("model") or artifact.get("model_requested"))
+    put("provider", protocol.get("provider") or nested.get("provider"))
+    put("effort", protocol.get("effort") or nested.get("effort"))
     reviewers = package.get("reviewer_count")
     if not isinstance(reviewers, int):
         reviewers = protocol.get("reviewers")
     put("reviewers", reviewers if isinstance(reviewers, int) else None)
-    put("synthesis_policy", manifest.get("synthesis_policy") or package.get("synthesis_policy"))
-    put("synthesis_tool_limit", manifest.get("synthesis_tool_limit"))
-    put("paper_id", manifest.get("paper_id"))
+    # The synthesis call records its policy and its tool budget in the stage
+    # folder it ran in, not in the run's top level manifest, which carries the
+    # paper id, the engine source and the plan. Reading only the top level
+    # found neither on any real run.
+    put("synthesis_policy", _first(
+        manifest.get("synthesis_policy"),
+        plan.get("synthesis_policy"),
+        package.get("synthesis_policy"),
+        *(stage.get("synthesis_policy") for stage in stages),
+    ))
+    put("synthesis_tool_limit", _first(
+        manifest.get("synthesis_tool_limit"),
+        synthesis.get("tool_limit"),
+        *(stage.get("synthesis_tool_limit") for stage in stages),
+    ))
+    # Only an ensemble manifest carries the paper id at the top level. The
+    # independent and panel modes put it in protocol.json and nest the protocol
+    # inside the manifest, so a run in either mode recorded no paper id here
+    # and the binding check below it was skipped rather than enforced.
+    put("paper_id", _first(
+        manifest.get("paper_id"),
+        protocol.get("paper_id"),
+        nested.get("paper_id"),
+    ))
     put("engine_source", manifest.get("code"))
     put("status", progress.get("status"))
     put("usage", progress.get("usage"))
@@ -414,9 +576,12 @@ def run_errors(run_dir: Path, progress: dict) -> list[str]:
     quarantined = sorted(Path(run_dir).rglob("*-quarantined.json"))
     if quarantined:
         errors.append(f"{len(quarantined)} quarantined reviewer response(s) in this run.")
-    validation = maybe_json(Path(run_dir) / "synthesis-validation.json")
-    for problem in validation.get("problems") or []:
-        errors.append(str(problem))
+    # The engine writes this inside the stage folder the synthesis ran in, so
+    # looking for it at the top of the run found nothing and every validation
+    # problem the synthesis recorded was dropped from the published record.
+    for path in sorted(Path(run_dir).rglob("synthesis-validation.json")):
+        for problem in maybe_json(path).get("problems") or []:
+            errors.append(str(problem))
     return errors
 
 
@@ -454,7 +619,24 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
         )
     workspace_paper_id = str(paper.get("id") or "")
     run_paper_id = str(run.get("paper_id") or "")
-    if run_paper_id and workspace_paper_id and run_paper_id != workspace_paper_id:
+    # Skipping the comparison when either side is missing is what made this
+    # guard optional. A run in independent or panel mode records its paper id
+    # in protocol.json rather than the manifest, and the manifest was the only
+    # place this used to look, so the check passed by having nothing to check.
+    if not workspace_paper_id:
+        raise CommandError(
+            f"The paper.json in {workspace} records no paper id, so this run "
+            "cannot be tied to the manuscript that was imported. Import the "
+            "paper again with the engine's import command."
+        )
+    if not run_paper_id:
+        raise CommandError(
+            "The run records no paper id, so there is nothing to compare "
+            "against the workspace and no way to tell which paper it reviewed. "
+            "The engine writes it to protocol.json or manifest.json when the "
+            "call starts."
+        )
+    if run_paper_id != workspace_paper_id:
         raise CommandError(
             f"The run reviewed paper {run_paper_id} but --workspace holds paper "
             f"{workspace_paper_id}. Point --run and --workspace at the same review."
@@ -536,6 +718,28 @@ def method_paragraph(run: dict, model: str) -> str:
     )
 
 
+def attestation_paragraph(attestation: dict) -> str:
+    """Who stands behind the decision, which depends on whether anyone read it.
+
+    This sentence used to be unconditional, so a rehearsal written with
+    `--human-reviewed no` claimed in its own summary that a named human editor
+    had read the run. The record alongside it said the opposite.
+    """
+    editor = str(attestation.get("editor") or "the editor")
+    if attestation.get("human_reviewed_before_merge"):
+        return (
+            f"The decision above was chosen by {editor}, a human editor, after "
+            "reading the run. The engine grades findings and does not recommend "
+            "a verdict."
+        )
+    return (
+        f"{editor} typed the decision above without attesting to having read "
+        "the run, so it stands on nothing and this bundle is a rehearsal that "
+        "must not be published. The engine grades findings and does not "
+        "recommend a verdict."
+    )
+
+
 def render_summary(preprint: Preprint, package: dict, provenance: dict, findings: list[dict]) -> str:
     counts = severity_counts(findings)
     generator = provenance["generator"]
@@ -553,9 +757,7 @@ def render_summary(preprint: Preprint, package: dict, provenance: dict, findings
         "",
         method_paragraph(generator["run"], generator["model_ids"]["requested"]),
         "",
-        f"The decision above was chosen by {generator['attestation']['editor']}, a "
-        "human editor, after reading the run. The engine grades findings and "
-        "does not recommend a verdict.",
+        attestation_paragraph(generator["attestation"]),
         "",
     ]
     summary = str(package.get("summary") or "").strip()
@@ -579,15 +781,27 @@ def render_summary(preprint: Preprint, package: dict, provenance: dict, findings
 def render_decision_letter(preprint: Preprint, package: dict, provenance: dict, findings: list[dict]) -> str:
     required = [f for f in findings if str(f.get("severity")) in REQUIRED_SEVERITIES]
     optional = [f for f in findings if str(f.get("severity")) == "minor"]
+    attestation = provenance["generator"]["attestation"]
+    # Same defect as the summary's. The claim that the decision was taken after
+    # reading the run was printed whether or not anybody said they had read it.
+    if attestation.get("human_reviewed_before_merge"):
+        standing = (
+            "This letter reports one locally generated review. The decision is "
+            "the editor's, taken after reading the run in full."
+        )
+    else:
+        standing = (
+            "This letter reports one locally generated review as a rehearsal. "
+            "Nobody has attested to reading the run, so the decision above "
+            "stands on nothing and this letter must not be published."
+        )
     lines = [
         f"# Decision Letter: {preprint.title or 'Untitled submission'}",
         "",
         f"**Decision:** {provenance['decision'].title()}",
         "",
-        "This letter reports one locally generated review. The decision is the "
-        "editor's, taken after reading the run in full. Everything below it is "
-        "the reviewer's, quoted or paraphrased from the saved output rather than "
-        "rewritten.",
+        f"{standing} Everything below it is the reviewer's, quoted or "
+        "paraphrased from the saved output rather than rewritten.",
         "",
     ]
     summary = str(package.get("summary") or "").strip()
@@ -726,7 +940,7 @@ def build_provenance(
     ingest: dict,
     observed: list[str],
     requested_model: str,
-    probe: bool,
+    transport: dict,
     review_id: str,
 ) -> dict:
     """The published record of what produced this review.
@@ -759,7 +973,7 @@ def build_provenance(
         "kind": GENERATOR_KIND,
         "engine": engine_record(),
         "engine_fingerprint": fingerprint,
-        "transport": transport_record(probe=probe),
+        "transport": transport,
         "model_ids": {"requested": requested_model, "observed": observed},
         "input": prepared["input"],
         "run": run_record,
@@ -774,7 +988,9 @@ def build_provenance(
     # A model the operator asked for and a model the transport served are two
     # different claims. Saying which is which costs nothing and settles an
     # argument that would otherwise need the run directory.
-    if observed and requested_model not in observed:
+    # An exact comparison here flagged a dated release of the requested model
+    # as a substitution, which the engine itself accepts as the same model.
+    if substituted_models(observed, requested_model):
         generator["model_ids"]["substituted"] = True
     return {
         "schema_version": PROVENANCE_SCHEMA,
@@ -943,6 +1159,26 @@ def cmd_prepare(args: argparse.Namespace) -> int:
     return 0
 
 
+def absolute_path_fields(value: object, trail: str = "") -> list[str]:
+    """Where a record carries a path that only exists on the machine that wrote it.
+
+    A published provenance record is read by people with no access to this
+    disk, so an absolute path in it identifies the operator's filesystem rather
+    than the review. Two fields leaked one: the run directory always, and the
+    review id whenever the destination sat outside the repository.
+    """
+    found: list[str] = []
+    if isinstance(value, dict):
+        for key, child in value.items():
+            found += absolute_path_fields(child, f"{trail}.{key}" if trail else str(key))
+    elif isinstance(value, list):
+        for index, child in enumerate(value):
+            found += absolute_path_fields(child, f"{trail}[{index}]")
+    elif isinstance(value, str) and (value.startswith("/") or value.startswith("file://")):
+        found.append(trail or "(root)")
+    return found
+
+
 def publish_destination(prepared: dict, *, publishing: bool) -> Path:
     """Where this bundle is written, which depends on whether it is published.
 
@@ -953,18 +1189,73 @@ def publish_destination(prepared: dict, *, publishing: bool) -> Path:
     said. A rehearsal therefore produced a complete, renderable bundle inside
     the directory the site builds from, and the only thing keeping it off the
     site was that nobody had committed it yet.
+
+    Both destinations are resolved and then required to be inside the tree they
+    belong to. Trusting the recorded destination on the publish path meant any
+    string in prepared.json was written to, and building the rehearsal path out
+    of unresolved parts let `..` segments through, which is why the refusal
+    below it could never fire.
     """
-    dest = Path(prepared["destination"])
+    dest = Path(prepared["destination"]).expanduser().resolve()
     if publishing:
+        if not dest.is_relative_to(REVIEWS.resolve()):
+            raise CommandError(
+                f"A published bundle has to be written inside {REVIEWS}, and "
+                f"prepared.json points at {dest}. Prepare the paper again."
+            )
         return dest
+    rehearsal_root = (RUNS / "rehearsal").resolve()
     slug = dest.parent.parent.name or "unnamed"
-    rehearsal = RUNS / "rehearsal" / slug / dest.parent.name / dest.name
-    if rehearsal.is_relative_to(REVIEWS):
+    rehearsal = (rehearsal_root / slug / dest.parent.name / dest.name).resolve()
+    if not rehearsal.is_relative_to(rehearsal_root):
         raise CommandError(
-            f"A rehearsal bundle would be written inside the published tree at "
+            f"A rehearsal bundle would be written outside {rehearsal_root}, at "
             f"{rehearsal}. Refusing. Pass --publish to publish deliberately."
         )
     return rehearsal
+
+
+def bundle_identifier(dest: Path) -> str:
+    """How a record names its own bundle, without naming the operator's disk.
+
+    The repository relative path when there is one. A rehearsal written outside
+    the repository keeps the last three segments, which is the slug and the
+    route, because that identifies the bundle and nothing else about the
+    machine it was written on.
+    """
+    dest = Path(dest).resolve()
+    repo = REPO.resolve()
+    if dest.is_relative_to(repo):
+        return dest.relative_to(repo).as_posix()
+    return "/".join(dest.parts[-3:])
+
+
+def require_complete_run(run_dir: Path, run: dict) -> None:
+    """A published review has to come from a run that finished.
+
+    Publishing checked neither. A directory holding only an editor package, with
+    no protocol.json and no progress.json, published with an empty error list,
+    and so did a run whose progress.json said `blocked`. Both produced a record
+    that read like a clean review.
+    """
+    if not (Path(run_dir) / "protocol.json").is_file():
+        raise CommandError(
+            f"{run_dir} has no protocol.json, so there is no record of what was "
+            "asked of the engine. Point --run at the engine's review output "
+            "folder."
+        )
+    status = str(run.get("status") or "")
+    if not status:
+        raise CommandError(
+            f"{run_dir} has no progress.json, so the run never recorded whether "
+            "it finished. A review cannot be published from it."
+        )
+    if status != "complete":
+        raise CommandError(
+            f"This run finished in state {status} rather than complete, so it "
+            "is not a review. Re-run the engine, or drop --publish to keep the "
+            "bundle as a rehearsal."
+        )
 
 
 def cmd_publish(args: argparse.Namespace) -> int:
@@ -985,10 +1276,22 @@ def cmd_publish(args: argparse.Namespace) -> int:
             "A review cannot be published unless the editor has read the run. "
             "Read it, then pass --human-reviewed yes."
         )
+    # Publishing with the probe skipped wrote `login_verified: false` and no
+    # auth fields at all, and the record validated. A published record has to
+    # name the account the review was billed to.
+    if args.publish and args.offline:
+        raise CommandError(
+            "--offline skips the login check, so the record would say the "
+            "subscription login was never verified. Drop --offline to publish, "
+            "or drop --publish to rehearse."
+        )
 
     run_dir = Path(args.run).resolve()
     package = editor_package(run_dir)
     run = read_run(run_dir)
+    requested_model = resolve_requested_model(run, args.model)
+    if args.publish:
+        require_complete_run(run_dir, run)
     workspace = Path(args.workspace).resolve()
     preprint_data = prepared.get("preprint")
     if preprint_data is None:
@@ -1022,7 +1325,8 @@ def cmd_publish(args: argparse.Namespace) -> int:
 
     dest = publish_destination(prepared, publishing=args.publish)
     route = f"v{prepared['draft']}/r{prepared['attempt']}"
-    review_id = str(dest.relative_to(REPO)) if dest.is_relative_to(REPO) else str(dest)
+    review_id = bundle_identifier(dest)
+    transport = transport_from_run(run_dir) or transport_record(probe=not args.offline)
     provenance = build_provenance(
         preprint=preprint,
         prepared=prepared,
@@ -1040,10 +1344,19 @@ def cmd_publish(args: argparse.Namespace) -> int:
         baseline_eligible=args.baseline_eligible,
         ingest=ingest,
         observed=observed_models(run_dir),
-        requested_model=args.model,
-        probe=not args.offline,
+        requested_model=requested_model,
+        transport=transport,
         review_id=review_id,
     )
+
+    if args.publish:
+        leaked = absolute_path_fields(provenance)
+        if leaked:
+            raise CommandError(
+                "This record would publish absolute local paths at "
+                f"{', '.join(leaked)}. A published record may not name the "
+                "operator's filesystem."
+            )
 
     findings = sorted_findings(package)
     if dest.exists() and any(dest.iterdir()):
@@ -1071,7 +1384,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
     print(f"findings {len(findings)}")
     print(f"baseline {'eligible' if provenance['review']['baseline_eligible'] else 'experimental only'}")
     observed = provenance["generator"]["model_ids"]["observed"]
-    print(f"model    requested {args.model}, observed {', '.join(observed) or 'not reported'}")
+    print(f"model    requested {requested_model}, observed {', '.join(observed) or 'not reported'}")
     if provenance["generator"]["model_ids"].get("substituted"):
         print("warning  the transport served a model other than the one requested")
     if not args.publish:
@@ -1120,7 +1433,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Has the named editor read this run in full. There is no default. "
         "Answering no writes a rehearsal bundle that cannot be published",
     )
-    p.add_argument("--model", default=DEFAULT_MODEL, help="The model id requested for the run")
+    p.add_argument(
+        "--model",
+        default="",
+        help="Optional cross-check. The model is read from the run, and a "
+        "value here that disagrees with it is a refusal rather than an override",
+    )
     p.add_argument("--submitter", default="", help="GitHub login of the submitter, when there is one")
     p.add_argument(
         "--submitter-is-author",

@@ -71,6 +71,11 @@
             "subscription_type": { "type": ["string", "null"] },
             "api_provider": { "type": ["string", "null"] },
             "login_verified": { "type": "boolean" },
+            "verified_by": {
+              "$comment": "Where the login was read. The run's own billing confirmation is the stronger source, because it names the account that paid rather than the one logged in when the bundle was written.",
+              "enum": ["run_billing_confirmation", "publish_time_probe"]
+            },
+            "verified_at": { "type": "string" },
             "paid_api_key_used": { "const": false }
           }
         },
@@ -101,7 +106,11 @@
           "$comment":"Read from what the run itself wrote, never from the prepare step's intentions or the publish flags. Every property is optional because a run that did not record one must leave it out rather than carry a default that looks measured.",
           "type": "object",
           "properties": {
-            "directory": { "type": "string" },
+            "directory": {
+              "$comment": "Relative to the repository root. An absolute path identifies the machine that wrote the record rather than the review, and this record is published.",
+              "type": "string",
+              "pattern": "^[^/]"
+            },
             "workflow": { "type": "string" },
             "workflow_version": { "type": "string" },
             "model": { "type": "string" },
@@ -173,7 +182,16 @@
       }
     },
     "journal_profile": { "type": "object" },
-    "review": { "type": "object" },
+    "review": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$comment": "The bundle's path inside this repository, or its slug and route when it was written elsewhere. Never an absolute path, for the same reason as generator.run.directory.",
+          "type": "string",
+          "pattern": "^[^/]"
+        }
+      }
+    },
     "provider": { "type": "string", "minLength": 1 },
     "model": { "type": "string" },
     "models": { "type": "object" },

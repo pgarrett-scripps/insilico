@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import os
 import re
 import shlex
 import sys
@@ -29,6 +30,14 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 SKILL = REPO / ".claude" / "skills" / "local-review" / "SKILL.md"
 MODULE = "peerreviewagents.engine"
+
+# Where the engine has to be present for this check to mean anything. On a
+# laptop the engine is optional, so a missing one is reported and skipped. In
+# CI it is installed from the lock file, so a missing one is the lock file
+# being wrong, and skipping it is how the guard came to be worth nothing: the
+# pin named a release with no engine package in it and the job stayed green.
+REQUIRE_ENGINE = "INSILICO_REQUIRE_ENGINE"
+FALSE_VALUES = {"", "0", "false", "no", "off"}
 
 # The skill writes paths and values the editor fills in. A placeholder's text is
 # documentation, so it is replaced by something argparse will accept rather than
@@ -62,6 +71,26 @@ def engine_arguments(command: str) -> list[str] | None:
     return words[index + 1 :]
 
 
+def engine_required() -> bool:
+    """Whether a missing engine is a failure rather than a skip.
+
+    `INSILICO_REQUIRE_ENGINE` decides it outright, either way, so an editor can
+    demand the real answer locally and a job can waive it. With nothing set,
+    any CI run requires the engine.
+    """
+    setting = os.environ.get(REQUIRE_ENGINE)
+    if setting is not None:
+        return setting.strip().lower() not in FALSE_VALUES
+    return os.environ.get("CI", "").strip().lower() not in FALSE_VALUES
+
+
+def load_parser():
+    """The engine's own parser builder. Raises when there is no engine."""
+    from peerreviewagents.engine.__main__ import build_parser
+
+    return build_parser
+
+
 def main() -> int:
     if not SKILL.is_file():
         print(f"no skill at {SKILL}", file=sys.stderr)
@@ -83,11 +112,21 @@ def main() -> int:
         return 1
 
     try:
-        from peerreviewagents.engine.__main__ import build_parser
+        build_parser = load_parser()
     except Exception as error:  # pragma: no cover - depends on the environment
+        if engine_required():
+            print(
+                f"{MODULE} is not importable here ({error}), so this check proved "
+                "nothing about the skill's commands. The installed release has to "
+                "contain the engine package. Set "
+                f"{REQUIRE_ENGINE}=0 only to waive the check deliberately.",
+                file=sys.stderr,
+            )
+            return 1
         print(
             f"skipped: {MODULE} is not importable in this interpreter ({error}). "
-            "Run this check with the interpreter that runs the reviews.",
+            "Run this check with the interpreter that runs the reviews, or set "
+            f"{REQUIRE_ENGINE}=1 to make a missing engine a failure.",
         )
         return 0
 
