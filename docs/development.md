@@ -172,15 +172,36 @@ $PY scripts/local_review.py publish \
     --run runs/example/run \
     --workspace runs/example/workspace \
     --decision major \
+    --editor your-name \
+    --human-reviewed yes \
     --publish
 ```
 
 `publish` writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`,
 `editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. It
-refuses to overwrite an existing bundle. Without `--publish` the bundle lands in
-`runs/`, which is git-ignored: a run made to see what a prompt change did is a
-question about the pipeline, and answering it should not add a review to
-someone's paper.
+refuses to overwrite an existing bundle. Without `--publish` the bundle lands
+under `runs/rehearsal/`, which is git-ignored: a run made to see what a prompt
+change did is a question about the pipeline, and answering it should not add a
+review to someone's paper.
+
+`--workspace` is what ties the three steps together. `prepare` hashes the PDF it
+fetched, the engine's importer hashes the bytes it was handed, and the run
+records the paper id it reviewed. `publish` compares all three and refuses when
+they disagree, so a run of one paper cannot be published as a review of another.
+
+`--editor` and `--human-reviewed` have no defaults. The published record carries
+an attestation that a named person read the run before it was merged, and that
+claim is the operator's to make rather than the script's. Answering
+`--human-reviewed no` writes a rehearsal that records the absence instead, and
+refuses `--publish`.
+
+Everything in the record about the run itself comes from what the run wrote:
+`protocol.json` for the model and the mode, `manifest.json` for the paper id and
+the engine's own source fingerprint taken when the call started,
+`editor-package.json` for the reviewer count and the synthesis policy,
+`progress.json` and the usage receipts for the status and the model ids the
+transport actually served. A value the run did not record is left out of the
+record rather than filled in from a flag.
 
 Nothing in `publish` writes prose. Every document is rendered from the engine's
 saved output, and the reviewer's own words are quoted rather than rewritten.
@@ -337,8 +358,10 @@ was 15 model calls, and a desk rejection ended the run before the other 14.
 ## First-time setup
 
 - [ ] Sign in to the `claude` CLI on a subscription, then run
-      `python scripts/local_review.py fingerprint` and check it reports no paid
-      API provider
+      `python scripts/local_review.py fingerprint` and check it reports a
+      subscription login and no paid API key. A Claude subscription reports its
+      API provider as `firstParty`, which is the subscription route and not a
+      paid key
 - [ ] Install an interpreter with `peerreviewagents` 0.7 or newer importable
 - [ ] Settings, Pages, Source: **GitHub Actions**
 - [ ] Settings, Actions, Workflow permissions: **Read and write**, and allow PR

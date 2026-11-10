@@ -118,6 +118,17 @@ const attestation = generator?.attestation || {};
 
 // What the transport reported back, when it disagreed with what was asked for.
 // Equal lists are the ordinary case and say nothing worth a row.
+// Where the reviewed bytes came from. With a local file the hash is still the
+// hash of what the engine read, but a reader cannot fetch the identifier and
+// reproduce it, because the operator supplied the PDF from their own disk. That
+// is a weaker claim than a fetched preprint and has to look like one.
+const localFile = input.local_file === true;
+const sourceOfBytes = input.local_file === undefined
+  ? "source unrecorded"
+  : localFile
+    ? "supplied locally"
+    : "fetched from the identifier";
+
 const observed = Array.isArray(modelIds.observed) ? modelIds.observed : [];
 const modelDrift = observed.length && !(observed.length === 1 && observed[0] === modelIds.requested)
   ? observed
@@ -189,6 +200,7 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
             sha256 {String(input.sha256).slice(0, 24)}…
           </p>
         )}
+        <p class="prov__hash">{sourceOfBytes}</p>
       </div>
     )}
 
@@ -288,11 +300,26 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     <p class="prov__warn prov__warn--block">
       <strong>The decision on this review is a person's, not a model's.</strong>{" "}
       The engine grades findings and recommends no verdict, so the decision above
-      was chosen by a human editor after reading the run, and publishing it
-      required that editor to merge it.
+      was chosen by{" "}
+      {attestation.editor
+        ? <span class="mono">{attestation.editor}</span>
+        : "a human editor"}
+      {" "}after reading the run, and publishing it required that editor to merge
+      it.
       {attestation.statement && (
         <span class="prov__attest">{attestation.statement}</span>
       )}
+    </p>
+  )}
+
+  {generator && localFile && (
+    <p class="prov__warn prov__warn--block">
+      <strong>The manuscript file was supplied by the operator, not fetched.</strong>{" "}
+      The hash above is of the exact bytes the engine read, but those bytes came
+      from the editor's own disk rather than from{" "}
+      <span class="mono">{input.identifier || "the identifier"}</span>. A reader
+      cannot download the identifier and reproduce the hash, so take it as a
+      record of what was reviewed and not as proof of which revision it was.
     </p>
   )}
 

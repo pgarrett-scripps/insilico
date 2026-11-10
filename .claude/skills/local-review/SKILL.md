@@ -78,12 +78,19 @@ $PY -m peerreviewagents.engine import \
   runs/prepared-<slug>/<fetched>.pdf runs/<work>/workspace \
   --source-url <the archive URL>
 
-$PY -m peerreviewagents.engine --provider claude-code --model claude-sonnet-5-5 \
-  review runs/<work>/workspace runs/<work>/run \
+$PY -m peerreviewagents.engine review \
+  runs/<work>/workspace runs/<work>/run \
+  --provider claude-code --model claude-sonnet-5-5 \
   --billing-confirmation runs/<work>/billing.json \
   --literature-cutoff <today, YYYY-MM-DD> \
   --mode ensemble --reviewers 2
 ```
+
+`--provider` and `--model` belong after `review`, not before it. The engine
+defines them on each subcommand's parser rather than at the top level, so a
+command that puts them first is rejected before anything runs.
+`scripts/check_skill_commands.py` parses every engine command on this page
+against the engine's real parser, without executing any of them.
 
 The third command is the only one that spends anything. Tell the user it is
 starting and roughly how long it will take. Do not run it twice on the same
@@ -125,9 +132,21 @@ says yes.
   --run runs/<work>/run \
   --workspace runs/<work>/workspace \
   --decision <the user's answer> \
+  --editor <the user's name or GitHub login> \
+  --human-reviewed yes \
   --model claude-sonnet-5-5 \
   --publish
 ```
+
+`--workspace`, `--editor` and `--human-reviewed` are all required and have no
+defaults. `--workspace` is what ties the run to the paper that was prepared:
+publish compares the hash prepare took of the PDF against the hash the importer
+recorded, and refuses when they differ. `--editor` names whoever read the run,
+because the attestation on the page is a claim about a person. Pass
+`--human-reviewed yes` only after the user has read step 4's review and given a
+decision. Answering `no` writes a rehearsal bundle under `runs/rehearsal/`
+instead, which is also what happens whenever `--publish` is left off, and that
+bundle can never be published without a fresh run of this command.
 
 Add `--baseline-eligible` if the user said yes in step 4. When a submission
 issue named a submitter, add `--submitter <login>` and, if that issue stated

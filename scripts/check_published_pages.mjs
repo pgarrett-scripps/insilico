@@ -11,7 +11,7 @@
  * Run it after `npm run build`.
  */
 
-import { existsSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,6 +27,38 @@ if (!existsSync(distDir)) {
 }
 
 const failures = [];
+
+/**
+ * The loader itself, read as source.
+ *
+ * The route used to also throw on a file the collection held that the allowlist
+ * did not name. It could never fire: the loader is handed the allowlist as its
+ * glob, so an unlisted file never reaches the route in the first place. The real
+ * risk is someone widening that glob back to a pattern, which would publish the
+ * working notes again. A pattern cannot be caught by reading dist alone, since
+ * the first build after the change is the one that leaks, so assert against the
+ * config source that the pattern is still the list.
+ */
+const configSource = readFileSync(join(root, "src/content.config.ts"), "utf8");
+const pagesAt = configSource.indexOf("const pages =");
+const pagesCollection = pagesAt < 0 ? "" : configSource.slice(pagesAt);
+
+if (!pagesCollection) {
+  failures.push("src/content.config.ts no longer defines a pages collection.");
+} else {
+  if (!pagesCollection.includes("EDITORIAL_PATTERNS")) {
+    failures.push(
+      "the pages collection in src/content.config.ts no longer globs EDITORIAL_PATTERNS, "
+        + "so src/lib/pages.js is not what decides which docs/ files are published.",
+    );
+  }
+  if (/pattern:\s*\[?\s*["'`][^"'`]*\*/.test(pagesCollection)) {
+    failures.push(
+      "the pages collection in src/content.config.ts globs a literal wildcard pattern. "
+        + "docs/ holds working notes, and a pattern cannot tell them from an editorial page.",
+    );
+  }
+}
 
 /** Every root-level Markdown file in docs/, by slug. */
 const docSlugs = readdirSync(docsDir)

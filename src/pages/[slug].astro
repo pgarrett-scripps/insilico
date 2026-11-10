@@ -13,22 +13,16 @@ import Base from "../layouts/Base.astro";
 import { EDITORIAL_SLUGS, editorialPage } from "../lib/pages.js";
 
 /**
- * Only the pages named in src/lib/pages.js are built. The collection is
- * already restricted to those files, so this route refuses anything else
- * rather than falling back to a bare slug and an untitled page. A build that
- * would publish a working note from `docs/` fails here instead.
+ * Only the pages named in src/lib/pages.js are built. The collection loader is
+ * given that same list as its glob, so it cannot hand this route an unlisted
+ * file: the check that matters is the other direction, a listed page whose file
+ * is gone, which would otherwise drop a linked page from the site silently.
+ * That the loader really is restricted is asserted against the source in
+ * scripts/check_published_pages.mjs, which also reads the built output.
  */
 export async function getStaticPaths() {
   const pages = await getCollection("pages");
   const found = pages.map((entry) => entry.id).sort();
-
-  const unlisted = found.filter((id) => !EDITORIAL_SLUGS.includes(id));
-  if (unlisted.length) {
-    throw new Error(
-      `docs/ holds Markdown that is not an editorial page: ${unlisted.join(", ")}. `
-        + "Add it to EDITORIAL_PAGES in src/lib/pages.js to publish it, or leave it unlisted.",
-    );
-  }
 
   const missing = EDITORIAL_SLUGS.filter((slug) => !found.includes(slug));
   if (missing.length) {

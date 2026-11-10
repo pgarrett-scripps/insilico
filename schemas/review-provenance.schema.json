@@ -47,12 +47,15 @@
           }
         },
         "engine_fingerprint": {
+          "$comment":"source names where the hashed manifest came from. run_manifest is the engine's own record of its source tree from the moment the run started, which is the only one that describes the code that wrote the review. installed_engine is a re-hash of whatever is installed on the publishing machine, which is a different claim. matches_installed_engine is present when both could be compared.",
           "type": "object",
-          "required": ["algorithm", "file_count", "sha256"],
+          "required": ["algorithm", "file_count", "sha256", "source"],
           "properties": {
             "algorithm": { "const": "sha256" },
             "file_count": { "type": "integer", "minimum": 1 },
-            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "source": { "enum": ["run_manifest", "installed_engine"] },
+            "matches_installed_engine": { "type": "boolean" }
           }
         },
         "transport": {
@@ -66,6 +69,8 @@
             "billing_policy": { "type": "string", "minLength": 1 },
             "auth_method": { "type": ["string", "null"] },
             "subscription_type": { "type": ["string", "null"] },
+            "api_provider": { "type": ["string", "null"] },
+            "login_verified": { "type": "boolean" },
             "paid_api_key_used": { "const": false }
           }
         },
@@ -75,29 +80,43 @@
           "required": ["requested", "observed"],
           "properties": {
             "requested": { "type": "string", "minLength": 1 },
-            "observed": { "type": "array", "items": { "type": "string" } }
+            "observed": { "type": "array", "items": { "type": "string" } },
+            "substituted": { "const": true }
           }
         },
         "input": {
-          "$comment":"The exact bytes the engine read, hashed before the run. A reader who disputes a quotation can fetch the same identifier and compare.",
+          "$comment":"The exact bytes the engine read, hashed before the run. A reader who disputes a quotation can fetch the same identifier and compare. local_file says whether those bytes were fetched from the identifier or handed over from the operator's disk, which a reader cannot otherwise tell and which decides whether the hash can be reproduced.",
           "type": "object",
-          "required": ["kind", "identifier", "sha256", "bytes"],
+          "required": ["kind", "identifier", "sha256", "bytes", "local_file"],
           "properties": {
             "kind": { "enum": ["arxiv", "doi", "url", "pdf"] },
             "identifier": { "type": "string", "minLength": 1 },
             "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
             "bytes": { "type": "integer", "minimum": 1 },
+            "local_file": { "type": "boolean" },
             "workspace_manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
           }
         },
         "run": {
+          "$comment":"Read from what the run itself wrote, never from the prepare step's intentions or the publish flags. Every property is optional because a run that did not record one must leave it out rather than carry a default that looks measured.",
           "type": "object",
           "properties": {
+            "directory": { "type": "string" },
             "workflow": { "type": "string" },
+            "workflow_version": { "type": "string" },
+            "model": { "type": "string" },
+            "provider": { "type": "string" },
+            "effort": { "type": "string" },
             "reviewers": { "type": "integer", "minimum": 1 },
+            "synthesis_policy": { "type": "string" },
+            "synthesis_tool_limit": { "type": "integer", "minimum": 0 },
+            "paper_id": { "type": "string" },
+            "status": { "type": "string" },
+            "usage": { "type": "object" },
             "literature_cutoff": { "type": "string" },
             "artifact_version": { "type": "string" },
-            "findings": { "type": "integer", "minimum": 0 }
+            "findings": { "type": "integer", "minimum": 0 },
+            "errors": { "type": "array", "items": { "type": "string" } }
           }
         },
         "decision_source": {
@@ -105,11 +124,13 @@
           "const": "human_editor"
         },
         "attestation": {
+          "$comment":"human_reviewed_before_merge stays a const rather than a boolean: this file validates published records, and a record that has to say false is a rehearsal that was never meant to reach the site. editor is required because the generator used to write the attestation as a constant, before any person had acted. An attestation with nobody behind it attests to nothing, so the name of whoever read the run is part of the claim.",
           "type": "object",
-          "required": ["locally_generated", "human_reviewed_before_merge", "statement"],
+          "required": ["locally_generated", "human_reviewed_before_merge", "editor", "statement"],
           "properties": {
             "locally_generated": { "const": true },
             "human_reviewed_before_merge": { "const": true },
+            "editor": { "type": "string", "minLength": 1 },
             "statement": { "type": "string", "minLength": 40 }
           }
         }

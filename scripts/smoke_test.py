@@ -21,11 +21,19 @@ from smoke_checks.environment import check_environment_is_portable_and_secret_fr
 from smoke_checks.local import (
     check_a_bare_pdf_cannot_be_published,
     check_a_minor_finding_is_never_a_required_revision,
+    check_a_rehearsal_is_never_written_into_the_published_tree,
+    check_a_run_of_one_paper_cannot_be_published_as_another,
+    check_a_subscription_login_is_not_a_paid_provider,
+    check_a_substituted_model_is_visible,
+    check_an_attestation_needs_a_named_editor,
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_every_published_file_is_hashed,
+    check_provenance_is_read_from_the_run,
     check_severity_is_read_from_the_engine_not_guessed,
     check_the_attestation_says_what_it_has_to_say,
     check_the_decision_is_attributed_to_a_person,
+    check_the_method_paragraph_describes_the_run_that_happened,
+    check_the_skill_commands_match_the_engine_parser,
 )
 from smoke_checks.planning import (
     check_latest_editorial_attempt_is_the_revision_baseline,
@@ -134,6 +142,22 @@ def main() -> int:
     print("ok  a review of an unidentified PDF cannot be published")
     check_the_attestation_says_what_it_has_to_say()
     print("ok  the published attestation names the transport and the editor")
+    check_a_subscription_login_is_not_a_paid_provider()
+    print("ok  a subscription login passes the preflight and a paid one does not")
+    check_the_skill_commands_match_the_engine_parser()
+    print("ok  every engine command in the skill is one the engine's parser accepts")
+    check_provenance_is_read_from_the_run()
+    print("ok  the provenance record is read from what the run wrote")
+    check_a_run_of_one_paper_cannot_be_published_as_another()
+    print("ok  a run is bound to the paper that was prepared")
+    check_a_rehearsal_is_never_written_into_the_published_tree()
+    print("ok  a run without --publish stays out of docs/reviews")
+    check_a_substituted_model_is_visible()
+    print("ok  a model the transport substituted is read from the usage receipts")
+    check_the_method_paragraph_describes_the_run_that_happened()
+    print("ok  the summary describes the run that was recorded")
+    check_an_attestation_needs_a_named_editor()
+    print("ok  a true attestation needs a named editor and an actual reading")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

@@ -28,6 +28,12 @@ jobs:
       - run: python scripts/check_runtime.py
       - run: python scripts/smoke_test.py
 
+      # The skill drives the engine's CLI by hand, and an engine command with
+      # its options in the wrong place is only caught by running it, which
+      # costs a review. Argparse answers for free.
+      - name: Engine commands in the local-review skill parse
+        run: python scripts/check_skill_commands.py
+
   pipeline:
     name: Pipeline
     runs-on: ubuntu-latest

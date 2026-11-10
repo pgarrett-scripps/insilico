@@ -27,7 +27,13 @@ function localRecord(overrides = {}) {
     generator: {
       kind: "local-claude-code",
       engine: { name: "peerreviewagents.engine", version: "0.7.0" },
-      engine_fingerprint: { algorithm: "sha256", file_count: 42, sha256: HASH },
+      engine_fingerprint: {
+        algorithm: "sha256",
+        file_count: 42,
+        sha256: HASH,
+        source: "run_manifest",
+        matches_installed_engine: true,
+      },
       transport: {
         provider: "claude-code",
         executable: "claude",
@@ -35,15 +41,32 @@ function localRecord(overrides = {}) {
         billing_policy: "claude-subscription-v1",
         auth_method: "claude.ai",
         subscription_type: "max",
+        api_provider: "firstParty",
+        login_verified: true,
         paid_api_key_used: false,
       },
       model_ids: { requested: "claude-sonnet-5-5", observed: ["claude-sonnet-5-5"] },
-      input: { kind: "doi", identifier: "10.1101/2026.03.12.711120", sha256: HASH, bytes: 1024 },
-      run: { workflow: "ensemble", reviewers: 2, literature_cutoff: "2026-11-10", findings: 7 },
+      input: {
+        kind: "doi",
+        identifier: "10.1101/2026.03.12.711120",
+        sha256: HASH,
+        bytes: 1024,
+        local_file: false,
+      },
+      run: {
+        workflow: "ensemble",
+        workflow_version: "ensemble-v3",
+        reviewers: 2,
+        synthesis_policy: "debate",
+        literature_cutoff: "2026-11-10",
+        findings: 7,
+        errors: [],
+      },
       decision_source: "human_editor",
       attestation: {
         locally_generated: true,
         human_reviewed_before_merge: true,
+        editor: "fixture-editor",
         statement:
           "This review was generated locally on a Claude Code subscription, with no paid API key in the path.",
       },
@@ -101,6 +124,34 @@ rejects(zeroCost, "a subscription run records no dollar figure");
 const shortHash = localRecord();
 shortHash.generator.engine_fingerprint.sha256 = "abc";
 rejects(shortHash, "the engine fingerprint must be a full sha256");
+
+// An attestation is a claim about a person. Without the person it is a constant
+// the generator wrote before anyone had read anything, which is what it used to
+// be.
+const anonymous = localRecord();
+delete anonymous.generator.attestation.editor;
+rejects(anonymous, "an attestation must name the editor who read the run");
+
+const emptyEditor = localRecord();
+emptyEditor.generator.attestation.editor = "";
+rejects(emptyEditor, "an empty editor name is not an editor");
+
+// A rehearsal says false here. It is not a publishable record.
+const unread = localRecord();
+unread.generator.attestation.human_reviewed_before_merge = false;
+rejects(unread, "a run no editor has read must not validate as published");
+
+// Whether the reviewed bytes were fetched from the identifier or handed over
+// from a local disk decides whether the hash means anything to a reader.
+const noProvenanceOfBytes = localRecord();
+delete noProvenanceOfBytes.generator.input.local_file;
+rejects(noProvenanceOfBytes, "the record must say whether the PDF came from the identifier");
+
+// A fingerprint of the publishing machine's installed engine is a different
+// claim from a fingerprint of the code that ran, so the record has to say which.
+const unsourcedFingerprint = localRecord();
+delete unsourcedFingerprint.generator.engine_fingerprint.source;
+rejects(unsourcedFingerprint, "the fingerprint must say where it was measured");
 
 // The hosted panel's records still have to validate exactly as before, and its
 // obligations must not have leaked onto the local shape.
