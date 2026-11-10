@@ -92,7 +92,9 @@ def provenance_fixture() -> dict:
     }
 
 
-def _run_directory(root: Path, *, stage: dict | None = None, **overrides) -> Path:
+def _run_directory(
+    root: Path, *, stage: dict | None = None, started_at: float | None = None, **overrides
+) -> Path:
     """A run directory holding the files the engine's CLI really writes.
 
     The layout matters, and this fixture used to get it wrong in a way that hid
@@ -106,6 +108,13 @@ def _run_directory(root: Path, *, stage: dict | None = None, **overrides) -> Pat
     `core-artifact.json` is deliberately absent. Only
     peerreviewagents.engine.api.run_review writes one, and the skill drives the
     CLI, so anything that reads provenance out of it reads nothing.
+
+    The stage's `execution/usage.jsonl` holds one row per model call, each
+    stamped with `started_at`. That is the run's own clock, and it is what the
+    billing confirmation is judged fresh against, so the fixture has to carry
+    it. While the fixture wrote no usage rows at all, the generator was reading
+    the launch instant off `protocol.json`'s modification time, which a copy of
+    the folder moves to now.
     """
     run = Path(root)
     run.mkdir(parents=True, exist_ok=True)
@@ -147,6 +156,15 @@ def _run_directory(root: Path, *, stage: dict | None = None, **overrides) -> Pat
     workspace_config.mkdir(parents=True, exist_ok=True)
     (workspace_config / "tool-config.json").write_text(
         json.dumps({"literature_cutoff": "2026-11-01"}), encoding="utf-8"
+    )
+
+    launched = time.time() - 120 if started_at is None else float(started_at)
+    rows = [
+        {"call": index, "started_at": launched + index * 30, "models_observed": []}
+        for index in range(2)
+    ]
+    (stage_dir / "execution" / "usage.jsonl").write_text(
+        "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
     )
     return run
 
@@ -210,11 +228,14 @@ def _billing(run: Path, **overrides) -> Path:
     peerreviewagents.engine.billing writes and what its own verify reads. This
     fixture used an ISO string, which the engine's numeric check refuses, so the
     generator was being proved against a record no engine has ever written.
+
+    It is dated before the run's first model call, because that is the order the
+    engine does it in: the launch guard checks the login, then the review runs.
     """
     record = {
         "policy": "claude-subscription-v1",
         "provider": "claude-code",
-        "checked_at": time.time() - 60,
+        "checked_at": time.time() - 300,
         "auth_method": "claude.ai",
         "subscription_type": "max",
         "extra_usage_disabled": True,
@@ -1229,67 +1250,113 @@ def check_the_locked_engine_release_contains_the_engine() -> None:
 
 
 def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
-    """The scan covered provenance.json and nothing else in the bundle.
+    """What gets scrubbed is a list of fields, and what gets scanned is a string.
 
     editor-package.json is copied out of the run as it stands, and an ensemble
     run writes `reviewer_provenance[].source_review_path` as the absolute path
-    of each reviewer's package on the machine that ran it. So the one file the
-    guard did not read was the file the engine put the operator's home
-    directory in, and the manifest then hashed it into the published bundle.
+    of each reviewer's package on the machine that ran it, `memo_path` beside
+    each evidence memo, and `synthesis_provenance.shared_images` keyed by the
+    absolute path of every figure. Those are the leaks.
+
+    Deciding by value rather than by field made the cure worse: a finding whose
+    comment began with a slash was deleted from the published package, and one
+    that merely mentioned a path aborted the publish. Meanwhile the scan read
+    only JSON values beginning with a slash, so it saw neither a path keyed by
+    itself, nor `~/`, nor a Windows path, nor any of the Markdown rendered from
+    the same package.
     """
+    home = str(Path.home().resolve())
     leaky = {
         "workflow_version": "ensemble-v3",
         "summary": "One reading.",
         "reviewer_provenance": [
-            {"reviewer": 1, "source_review_path": "/home/someone/runs/out/reviewer-1/editor-package.json"},
-            {"reviewer": 2, "source_review_path": "/home/someone/runs/out/reviewer-2/editor-package.json"},
+            {"reviewer": 1, "source_review_path": f"{home}/runs/out/reviewer-1/editor-package.json"},
+            {"reviewer": 2, "source_review_path": f"{home}/runs/out/reviewer-2/editor-package.json"},
+        ],
+        "focused_evidence_provenance": [{"memo_sha256": "a" * 64, "memo_path": f"{home}/memo.md"}],
+        "synthesis_provenance": {"shared_images": {f"{home}/runs/fig1.png": "b" * 64}},
+        "findings": [
+            {"severity": "major", "comment": "/ 2 is the wrong denominator here."},
+            {"severity": "minor", "comment": "See /dev/null for the logs they cite."},
         ],
         "reference": "https://www.biorxiv.org/content/10.1101/2026.03.12.711120v1",
         "notes": "Section 3 of the manuscript",
     }
-    assert local_review.absolute_path_fields(leaky) == [
-        "reviewer_provenance[0].source_review_path",
-        "reviewer_provenance[1].source_review_path",
-    ], "the engine's own reviewer provenance is the leak this has to catch"
 
     scrubbed = local_review.without_local_paths(leaky)
-    assert local_review.absolute_path_fields(scrubbed) == [], f"a path survived the scrub: {scrubbed}"
-    assert len(scrubbed["reviewer_provenance"]) == 2, (
-        f"the reviewers themselves must survive: {scrubbed['reviewer_provenance']}"
+
+    # The review's own words, first. Scrubbing by value rather than by field
+    # deleted a finding whose comment opened with a slash, and aborted the
+    # publish on the one that only mentioned a path.
+    assert scrubbed["findings"] == leaky["findings"], (
+        f"a reviewer's own comments were rewritten: {scrubbed['findings']}"
     )
-    assert scrubbed["reviewer_provenance"][0]["reviewer"] == 1, "a sibling field was dropped"
     assert scrubbed["summary"] == leaky["summary"], "the review's own words were altered"
     assert scrubbed["reference"] == leaky["reference"], "a URL is not a local path"
     assert scrubbed["notes"] == leaky["notes"], "ordinary prose was altered"
 
+    # Then the fields the engine really fills with a path, including the one
+    # where the path is the dictionary key.
+    flat = json.dumps(scrubbed)
+    assert home not in flat, f"a local path survived the scrub: {flat}"
+    assert len(scrubbed["reviewer_provenance"]) == 2, (
+        f"the reviewers themselves must survive: {scrubbed['reviewer_provenance']}"
+    )
+    assert scrubbed["reviewer_provenance"][0]["reviewer"] == 1, "a sibling field was dropped"
+    assert scrubbed["focused_evidence_provenance"][0]["memo_sha256"] == "a" * 64, (
+        "the hash that tied the memo to its bytes was dropped with the path"
+    )
+    assert scrubbed["synthesis_provenance"]["shared_images"] == {}, (
+        "a figure keyed by its absolute path published that path as a key: "
+        f"{scrubbed['synthesis_provenance']['shared_images']}"
+    )
+
     # A path inside this repository is still a path, but it names something a
     # reader has, so it is rewritten rather than dropped.
-    inside = local_review.without_local_paths({"where": str(local_review.REPO / "runs" / "local")})
-    assert inside == {"where": "runs/local"}, f"a repository path should be made relative: {inside}"
+    inside = local_review.without_local_paths(
+        {"source_review_path": str(local_review.REPO / "runs" / "local")}
+    )
+    assert inside == {"source_review_path": "runs/local"}, (
+        f"a repository path should be made relative: {inside}"
+    )
 
-    # And the bundle is scanned as a bundle, after everything is written and
-    # before the manifest hashes any of it.
+    # And the bundle is scanned as a bundle, in every text file, for the two
+    # strings that reach a published review only by mistake.
+    needles = local_review.local_path_needles()
+    assert str(local_review.REPO.resolve()) in needles, "the checkout has to be one of the needles"
+    assert home in needles, "the operator's home directory has to be one of the needles"
+
     with tempfile.TemporaryDirectory() as tmp:
         dest = Path(tmp)
         (dest / "provenance.json").write_text(json.dumps({"review": {"id": "p/v1/r1"}}), encoding="utf-8")
-        (dest / "summary.md").write_text("# Review Summary\n", encoding="utf-8")
-        assert local_review.bundle_absolute_paths(dest) == [], (
+        (dest / "summary.md").write_text("# Review Summary\n\nSee /dev/null.\n", encoding="utf-8")
+        assert local_review.bundle_local_path_leaks(dest) == [], (
             "a clean bundle must not be reported as leaking"
         )
 
-        (dest / "editor-package.json").write_text(json.dumps(leaky), encoding="utf-8")
+        # The forms the old scan could not see: a path inside a sentence in the
+        # Markdown, a path used as a key, and a path in a nested receipt file.
+        (dest / "decision_letter.md").write_text(
+            f"The reviewer read {home}/runs/out/reviewer-1.\n", encoding="utf-8"
+        )
+        (dest / "editor-package.json").write_text(
+            json.dumps({"shared_images": {f"{home}/fig1.png": "b" * 64}}), encoding="utf-8"
+        )
         nested = dest / "attachments"
         nested.mkdir()
-        (nested / "reviewer-1.json").write_text(
-            json.dumps({"source_review_path": "/home/someone/runs/out/reviewer-1"}), encoding="utf-8"
+        (nested / "usage.jsonl").write_text(
+            json.dumps({"cwd": f"{home}/Repos"}) + "\n", encoding="utf-8"
         )
-        found = local_review.bundle_absolute_paths(dest)
-        assert len(found) == 3, f"every JSON file in the bundle has to be read: {found}"
-        assert any(trail.startswith("editor-package.json:") for trail in found), (
-            f"the copied engine package was not scanned: {found}"
+        found = local_review.bundle_local_path_leaks(dest)
+        assert len(found) == 3, f"every text file in the bundle has to be read: {found}"
+        assert any(line.startswith("decision_letter.md") for line in found), (
+            f"the rendered Markdown was not scanned: {found}"
         )
-        assert any(trail.startswith("reviewer-1.json:") for trail in found), (
-            f"a nested file was not scanned: {found}"
+        assert any(line.startswith("editor-package.json") for line in found), (
+            f"a path used as a key was not seen: {found}"
+        )
+        assert any(line.startswith("attachments/usage.jsonl") for line in found), (
+            f"a nested receipt was not scanned: {found}"
         )
 
 
@@ -1342,16 +1409,58 @@ def check_a_billing_confirmation_the_engine_would_refuse_is_refused() -> None:
         # The instant the check is run against is the one the engine ran its
         # own check at, which is when the run started. Publish time would
         # refuse every review published the next morning.
+        #
+        # That instant is the start of the run's first model call, read from
+        # the usage receipts. protocol.json's modification time is not it: a
+        # `cp -r` of the run folder, or a touch, moves it to now, and the
+        # honest confirmation beside it was then refused as stale.
         launched = local_review.run_launched_at(run)
-        assert abs(launched - time.time()) < 300, (
-            f"the run's launch instant was not read from its own files: {launched}"
+        rows = local_review.jsonl_rows(run / "debate" / "execution" / "usage.jsonl")
+        first = min(row["started_at"] for row in rows)
+        assert abs(launched - first) < 1, (
+            f"the launch instant has to be the run's first model call: {launched} not {first}"
         )
-        old = _run_directory(Path(tmp) / "old-run")
-        stale = time.time() - 400 * 86400
-        os.utime(old / "protocol.json", (stale, stale))
-        assert abs(local_review.run_launched_at(old) - stale) < 1, (
-            "the launch instant has to come from the run, not from the clock"
+
+        # An honest run from three days ago, copied today, still publishes.
+        old = _run_directory(Path(tmp) / "old-run", started_at=time.time() - 3 * 86400)
+        copied = time.time()
+        os.utime(old / "protocol.json", (copied, copied))
+        assert local_review.run_launched_at(old) < copied - 2 * 86400, (
+            "a copied run folder must not be dated by the copy"
         )
+        _billing(old, checked_at=local_review.run_launched_at(old) - 300)
+        assert local_review.transport_from_run(old)["login_verified"] is True, (
+            "a three day old run whose confirmation was fresh when it started must publish"
+        )
+
+        # And back-dating protocol.json cannot make a stale one fresh.
+        forged = _run_directory(Path(tmp) / "forged")
+        year_ago = time.time() - 400 * 86400
+        os.utime(forged / "protocol.json", (year_ago, year_ago))
+        _billing(forged, checked_at=year_ago - 300)
+        try:
+            transport = local_review.transport_from_run(forged)
+        except local_review.CommandError as error:
+            assert "first model call" in str(error), (
+                f"the refusal has to say what was compared: {error}"
+            )
+        else:
+            raise AssertionError(
+                "a year old confirmation published as login_verified "
+                f"{transport.get('login_verified')!r} because protocol.json was back-dated"
+            )
+
+        # A run that made no model call has no clock of its own, and guessing
+        # one is how this went wrong in the first place.
+        bare = _run_directory(Path(tmp) / "bare")
+        (bare / "debate" / "execution" / "usage.jsonl").write_text("", encoding="utf-8")
+        _billing(bare)
+        try:
+            local_review.transport_from_run(bare)
+        except local_review.CommandError as error:
+            assert "no model call" in str(error), f"the refusal has to say why: {error}"
+        else:
+            raise AssertionError("a run with no usage receipts was judged against a guess")
 
 
 def check_an_empty_protocol_file_is_not_a_record_of_the_run() -> None:
@@ -1453,4 +1562,127 @@ def check_a_rehearsal_cannot_be_copied_into_place_as_a_review() -> None:
             f"a rehearsal cannot carry a reading: {rehearsed}"
         )
     finally:
+        local_review.engine_record = engine_record
+
+
+def check_a_written_bundle_carries_no_local_path() -> None:
+    """Publish a run whose package is full of paths, then read the bundle back.
+
+    Every earlier version of this guard tested a function. The leak was in the
+    wiring: the documents were rendered from the unscrubbed package, so a path
+    dropped from editor-package.json was printed in decision_letter.md, where
+    nothing was looking. This publishes for real, with the field names engine
+    0.7.0 writes, and reads every file of the finished bundle.
+
+    It also checks what a refusal leaves behind. The guards used to run after
+    six files were already in docs/reviews, so a refused publish left most of a
+    bundle there, unmanifested and with nothing to say it had been rejected.
+    """
+    home = str(Path.home().resolve())
+    package = {
+        "workflow_version": "ensemble-v3",
+        "reviewer_count": 2,
+        "summary": "One careful reading of the manuscript.",
+        "findings": [
+            {
+                "severity": "major",
+                "title": "The denominator is wrong",
+                "comment": "/ 2 is the wrong denominator in equation 4.",
+                "block_id": "b2",
+            },
+            {
+                "severity": "minor",
+                "title": "A typo",
+                "comment": "Fix the spelling.",
+                "block_id": "b7",
+            },
+        ],
+        "reviewer_provenance": [
+            {
+                "reviewer": 1,
+                "sha256": "a" * 64,
+                "source_review_path": f"{home}/runs/out/reviewer-1/editor-package.json",
+            },
+            {
+                "reviewer": 2,
+                "sha256": "b" * 64,
+                "source_review_path": f"{home}/runs/out/reviewer-2/editor-package.json",
+            },
+        ],
+        "candidate_origins": {
+            "issue-1": {"reviewer": 1, "source_review_path": f"{home}/runs/out/reviewer-1/x.json"}
+        },
+        "focused_evidence_provenance": [{"memo_sha256": "c" * 64, "memo_path": f"{home}/memo.md"}],
+        "synthesis_provenance": {"shared_images": {f"{home}/runs/fig1.png": "d" * 64}},
+    }
+
+    engine_record = local_review.engine_record
+    local_review.engine_record = lambda: {
+        "name": local_review.ENGINE_PACKAGE,
+        "version": "0.7.0",
+        "api_version": "3",
+    }
+    reviews = local_review.REVIEWS
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            local_review.REVIEWS = Path(tmp) / "reviews"
+            run = _run_directory(Path(tmp) / "run", **{"editor-package.json": package})
+            _billing(run)
+            destination = local_review.REVIEWS / "2026" / "fixture-paper" / "v1" / "r1"
+            prepared = _prepared(Path(tmp) / "prepared", destination)
+            workspace = _workspace(Path(tmp) / "workspace")
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(prepared, run, workspace, "--publish")
+            assert code == 0, f"this bundle should publish, got exit {code}: {out.getvalue()}"
+
+            written = sorted(path.name for path in destination.iterdir())
+            assert "manifest.json" in written, f"the bundle was not finished: {written}"
+            for path in sorted(destination.rglob("*")):
+                if path.is_file():
+                    text = path.read_text(encoding="utf-8", errors="replace")
+                    assert home not in text, f"{path.name} names the machine that wrote it"
+            assert local_review.bundle_local_path_leaks(destination) == [], (
+                "the bundle's own scan disagrees with reading it back"
+            )
+
+            # The review's own words survived, in the JSON and in the documents
+            # rendered from it.
+            published = json.loads((destination / "editor-package.json").read_text())
+            assert [f["comment"] for f in published["findings"]] == [
+                f["comment"] for f in package["findings"]
+            ], f"a finding was rewritten or dropped on the way out: {published['findings']}"
+            letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
+            assert "/ 2 is the wrong denominator" in letter, (
+                "the reviewer's own comment did not reach the decision letter"
+            )
+            round_record = json.loads((destination / local_review.ROUND_RECORD).read_text())
+            assert round_record["required_revisions"][0]["text"].startswith("/ 2"), (
+                f"the round record lost the finding: {round_record['required_revisions']}"
+            )
+
+            # And a path in a field nothing here knows about refuses, leaving
+            # the published tree as it found it.
+            unknown = local_review.REVIEWS / "2026" / "fixture-paper" / "v1" / "r2"
+            second_run = _run_directory(
+                Path(tmp) / "run-2",
+                **{"editor-package.json": {**package, "working_directory": f"{home}/runs"}},
+            )
+            _billing(second_run)
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                second = _publish(
+                    _prepared(Path(tmp) / "prepared-2", unknown, attempt=2),
+                    second_run,
+                    workspace,
+                    "--publish",
+                )
+            assert second == 2, f"a path in an unknown field should refuse, got exit {second}"
+            assert not unknown.exists(), f"a refused publish left a bundle at {unknown}"
+            assert "Nothing was written" in stderr.getvalue(), (
+                f"the refusal has to say the tree was left alone: {stderr.getvalue()!r}"
+            )
+    finally:
+        local_review.REVIEWS = reviews
         local_review.engine_record = engine_record

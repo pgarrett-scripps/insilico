@@ -34,6 +34,7 @@ import importlib.metadata
 import json
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -238,18 +239,32 @@ def transport_record(*, probe: bool = True) -> dict:
 def run_launched_at(run_dir: Path) -> float:
     """When the engine started this run, as a unix timestamp.
 
-    The engine writes `protocol.json` and copies the billing confirmation in
-    the same breath, so the protocol file's own timestamp is when the launch
-    guard ran. This is what the confirmation has to be fresh against. Checking
-    it against the clock at publish time would refuse every review published
-    the next morning, and checking it against nothing at all is what let a 400
-    day old confirmation through.
+    This is the instant the confirmation has to be fresh against. Checking it
+    against the clock at publish time would refuse every review published the
+    next morning, and checking it against nothing at all is what let a 400 day
+    old confirmation through.
+
+    It is read from the usage receipts, where the engine stamps `started_at` on
+    each model call it makes, at model_runtime.py:716. The first version read
+    `protocol.json`'s own modification time, which is not the run's clock at
+    all: a `cp -r` of the run folder, or a `touch`, moved it to now and the
+    honest confirmation sitting beside it was then refused as stale, while
+    back-dating the same file published a year old confirmation as verified.
+    The usage rows are content, so copying the folder does not change them.
     """
-    for name in ("protocol.json", "billing_confirmation.json"):
-        path = Path(run_dir) / name
-        if path.is_file():
-            return path.stat().st_mtime
-    return Path(run_dir).stat().st_mtime
+    started: list[float] = []
+    for path in sorted(Path(run_dir).rglob("usage.jsonl")):
+        for row in jsonl_rows(path):
+            value = row.get("started_at")
+            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                started.append(float(value))
+    if not started:
+        raise CommandError(
+            f"{run_dir} records no model call, so there is no instant to judge "
+            "the billing confirmation against. The engine stamps started_at on "
+            "every call it makes, in execution/usage.jsonl under each stage."
+        )
+    return min(started)
 
 
 def verify_billing_record(record: dict, launched_at: float) -> None:
@@ -262,6 +277,11 @@ def verify_billing_record(record: dict, launched_at: float) -> None:
     before it will start a review, which means a run carrying one did not come
     from the engine's guarded path.
     """
+    compared = (
+        "The confirmation was recorded at "
+        f"{iso_timestamp(record.get('checked_at')) or 'no readable time'} and "
+        f"the run's first model call was at {iso_timestamp(launched_at)}."
+    )
     try:
         billing = importlib.import_module(f"{ENGINE_PACKAGE}.billing")
     except ImportError:
@@ -272,7 +292,7 @@ def verify_billing_record(record: dict, launched_at: float) -> None:
         except Exception as error:
             raise CommandError(
                 f"The run's billing confirmation is not one the engine would "
-                f"have accepted when it started: {error}"
+                f"have accepted when it started: {error} {compared}"
             ) from error
         return
 
@@ -296,7 +316,7 @@ def verify_billing_record(record: dict, launched_at: float) -> None:
     if problem:
         raise CommandError(
             f"The run's billing confirmation is not one the engine would have "
-            f"accepted when it started: {problem}."
+            f"accepted when it started: {problem}. {compared}"
         )
 
 
@@ -311,7 +331,14 @@ def iso_timestamp(value: object) -> str | None:
     if isinstance(value, bool) or value is None:
         return None
     if isinstance(value, (int, float)):
-        return dt.datetime.fromtimestamp(float(value), dt.timezone.utc).isoformat()
+        # A NaN, an infinity or a year outside the platform's range is a thing
+        # the engine refuses. It reaches here anyway, because the refusal names
+        # the two instants it compared, and raising from the message rather
+        # than from the check turned a refusal into a traceback.
+        try:
+            return dt.datetime.fromtimestamp(float(value), dt.timezone.utc).isoformat()
+        except (ValueError, OverflowError, OSError):
+            return None
     text = str(value).strip()
     return text or None
 
@@ -1276,58 +1303,121 @@ def absolute_path_fields(value: object, trail: str = "") -> list[str]:
 
 _DROPPED = object()
 
+# The fields engine 0.7.0 fills with a path on the machine that ran the review.
+# `source_review_path` is written once per reviewer at ensemble.py:364 and
+# again inside every entry of `candidate_origins`, which carries those same
+# provenance dicts, so naming the leaf covers both. `memo_path` rides along
+# with each focused evidence memo at ensemble.py:296.
+#
+# This is a list of field names rather than a test on the value because the
+# first version tested the value: any string beginning with a slash was taken
+# for a path. A reviewer writing "/ 2 is the wrong denominator" had the comment
+# silently deleted from the published package, and a path written inside a
+# sentence was missed regardless. Review content is never rewritten now. What
+# catches a path the engine starts recording in a field nothing here knows
+# about is the leak scan over the written bundle, below.
+PATH_FIELDS = frozenset({"source_review_path", "memo_path", "source_packet", "run_directory"})
 
-def without_local_paths(value: object) -> object:
-    """The same JSON with absolute paths made repo relative or removed.
 
-    The provenance record was scrubbed, but `editor-package.json` is the
-    engine's own output copied into the bundle verbatim, and the engine records
-    `source_review_path` for each reviewer as the absolute path of the file it
-    read. That published one home directory per reviewer. A path inside this
-    repository is rewritten relative to it, because it still points at
-    something a reader can find. A path outside it names nothing a reader has,
-    so the field goes rather than being published as noise. The hash beside it
-    is what tied the reviewer's package to its bytes, and that is kept.
+def readable_path(text: str) -> object:
+    """A path value as a reader can use it, or _DROPPED if they cannot.
+
+    A path inside this repository is rewritten relative to it, because it still
+    points at something a reader has. A path outside it names a directory on one
+    machine, so the field goes rather than being published as noise. The hash
+    beside it is what tied the file to its bytes, and that is kept.
+    """
+    raw = text[len("file://") :] if text.startswith("file://") else text
+    raw = raw.strip()
+    if raw.startswith("~"):
+        return _DROPPED
+    try:
+        path = Path(raw)
+        if not path.is_absolute():
+            return text
+        path = path.resolve()
+    except (OSError, ValueError, RuntimeError):
+        return _DROPPED
+    if path.is_relative_to(REPO.resolve()):
+        return path.relative_to(REPO.resolve()).as_posix()
+    return _DROPPED
+
+
+def without_local_paths(value: object, *, field: str = "") -> object:
+    """The same JSON with the engine's path fields made repo relative or dropped.
+
+    `editor-package.json` is the engine's own output copied into the bundle, and
+    the engine records the absolute path of every reviewer package it read. That
+    published one home directory per reviewer. Only the fields in `PATH_FIELDS`
+    and dictionary keys that are themselves absolute paths are touched, so the
+    review's own words reach the reader as the reviewer wrote them.
     """
     if isinstance(value, dict):
         scrubbed = {}
         for key, child in value.items():
-            cleaned = without_local_paths(child)
+            # `synthesis_provenance.shared_images` maps each attached figure's
+            # absolute path to its hash, at api.py:229 by way of `_hash_files`,
+            # so there the leak is the key. A key that is an absolute path is
+            # never something a reviewer wrote.
+            name = key
+            if isinstance(key, str) and (key.startswith("/") or key.startswith("file://")):
+                relative = readable_path(key)
+                if relative is _DROPPED:
+                    continue
+                name = relative
+            cleaned = without_local_paths(child, field=key if isinstance(key, str) else "")
             if cleaned is not _DROPPED:
-                scrubbed[key] = cleaned
+                scrubbed[name] = cleaned
         return scrubbed
     if isinstance(value, list):
         return [
             cleaned
-            for cleaned in (without_local_paths(child) for child in value)
+            for cleaned in (without_local_paths(child, field=field) for child in value)
             if cleaned is not _DROPPED
         ]
-    if isinstance(value, str) and (value.startswith("/") or value.startswith("file://")):
-        text = value[len("file://") :] if value.startswith("file://") else value
-        try:
-            path = Path(text).resolve()
-        except (OSError, ValueError):
-            return _DROPPED
-        if path.is_relative_to(REPO.resolve()):
-            return path.relative_to(REPO.resolve()).as_posix()
-        return _DROPPED
+    if isinstance(value, str) and field in PATH_FIELDS:
+        return readable_path(value)
     return value
 
 
-def bundle_absolute_paths(dest: Path) -> list[str]:
-    """Every absolute path published by a JSON file in a written bundle.
+def local_path_needles() -> list[str]:
+    """The strings that reach a published file only by mistake.
 
-    The guard read the provenance record alone, so every other JSON file in the
-    bundle was published unexamined. This is the one that has to hold, because
-    it reads what is actually on disk rather than what the code meant to write.
+    The first version of this scan looked for a leading slash in a JSON value,
+    which both missed and over-matched: it read none of the Markdown, nothing
+    keyed by a path, no `~/` or Windows form, and no path written inside a
+    sentence, while flagging a reviewer's own arithmetic. These two strings are
+    the operator's home directory and this checkout, in whatever shape they
+    take on the machine doing the publishing. No review has a reason to contain
+    either, and prose does not contain them by accident.
     """
+    needles = {str(REPO.resolve())}
+    try:
+        needles.add(str(Path.home().resolve()))
+    except (OSError, RuntimeError):
+        pass
+    return sorted(needle for needle in needles if needle not in ("", "/"))
+
+
+def bundle_local_path_leaks(dest: Path) -> list[str]:
+    """Every file in a written bundle that names the machine that wrote it.
+
+    This reads what is on disk rather than what the code meant to write, which
+    is the point: it is the guard that catches a path the engine started
+    recording in a field nothing here knows about, in any file of the bundle.
+    """
+    needles = local_path_needles()
     found: list[str] = []
-    for path in sorted(Path(dest).rglob("*.json")):
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+    for path in sorted(Path(dest).rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in (".json", ".jsonl", ".md", ".txt"):
             continue
-        found += [f"{path.name}:{trail}" for trail in absolute_path_fields(payload)]
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for needle in needles:
+            if needle in text:
+                found.append(f"{path.relative_to(dest).as_posix()} names {needle}")
     return found
 
 
@@ -1536,9 +1626,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
     published_package = without_local_paths(package) if args.publish else package
 
     if args.publish:
-        leaked = absolute_path_fields(provenance) + [
-            f"editor-package.json:{trail}" for trail in absolute_path_fields(published_package)
-        ]
+        leaked = absolute_path_fields(provenance)
         if leaked:
             raise CommandError(
                 "This record would publish absolute local paths at "
@@ -1546,38 +1634,52 @@ def cmd_publish(args: argparse.Namespace) -> int:
                 "operator's filesystem."
             )
 
-    findings = sorted_findings(package)
+    # Every document is rendered from the scrubbed package. Rendering from the
+    # unscrubbed one put the paths back: a reviewer's `source_review_path` was
+    # dropped from the JSON and then printed in decision_letter.md, where no
+    # scan was looking for it.
+    findings = sorted_findings(published_package)
     if dest.exists() and any(dest.iterdir()):
         raise CommandError(f"Refusing to overwrite an existing review bundle: {dest}")
-    dest.mkdir(parents=True, exist_ok=True)
 
-    (dest / "summary.md").write_text(
-        render_summary(preprint, package, provenance, findings), encoding="utf-8"
-    )
-    (dest / "decision_letter.md").write_text(
-        render_decision_letter(preprint, package, provenance, findings), encoding="utf-8"
-    )
-    (dest / "manuscript_stats.md").write_text(
-        render_stats(preprint, ingest, provenance["generator"]), encoding="utf-8"
-    )
-    write_json(dest / "provenance.json", provenance)
-    write_round_record(dest, preprint, provenance, findings)
-    # Kept beside the documents so a reader can check a quotation against the
-    # structured record the reviewer actually produced.
-    write_json(dest / "editor-package.json", published_package)
+    # The bundle is built outside the published tree and moved in once every
+    # guard has passed. The guards used to run after six files had already been
+    # written into docs/reviews, so a refusal left most of a bundle behind, with
+    # no manifest and nothing saying it was rejected.
+    with tempfile.TemporaryDirectory(prefix="local-review-bundle-") as staging:
+        stage = Path(staging)
 
-    # Read back what is actually on disk before the manifest fixes it. The
-    # in memory check above is the one that normally refuses; this is the one
-    # that cannot be fooled by a file nobody thought to scrub.
-    if args.publish:
-        leaked = bundle_absolute_paths(dest)
-        if leaked:
-            raise CommandError(
-                f"{dest} holds absolute local paths at {', '.join(leaked)}. "
-                "The bundle is incomplete and has no manifest. Delete that "
-                "directory before trying again."
-            )
-    write_manifest(dest)
+        (stage / "summary.md").write_text(
+            render_summary(preprint, published_package, provenance, findings), encoding="utf-8"
+        )
+        (stage / "decision_letter.md").write_text(
+            render_decision_letter(preprint, published_package, provenance, findings),
+            encoding="utf-8",
+        )
+        (stage / "manuscript_stats.md").write_text(
+            render_stats(preprint, ingest, provenance["generator"]), encoding="utf-8"
+        )
+        write_json(stage / "provenance.json", provenance)
+        write_round_record(stage, preprint, provenance, findings)
+        # Kept beside the documents so a reader can check a quotation against
+        # the structured record the reviewer actually produced.
+        write_json(stage / "editor-package.json", published_package)
+
+        # Read back what is actually on disk before the manifest fixes it. This
+        # is the check that cannot be fooled by a file nobody thought to scrub,
+        # or by a field no version of this script knows the engine writes.
+        if args.publish:
+            leaked = bundle_local_path_leaks(stage)
+            if leaked:
+                raise CommandError(
+                    "This bundle names the machine that produced it: "
+                    f"{', '.join(leaked)}. Nothing was written to {dest}."
+                )
+        write_manifest(stage)
+
+        dest.mkdir(parents=True, exist_ok=True)
+        for path in sorted(stage.iterdir()):
+            shutil.move(str(path), str(dest / path.name))
 
     print(f"bundle   {dest}")
     print(f"decision {provenance['decision']} (chosen by {args.editor})")

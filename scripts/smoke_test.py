@@ -33,6 +33,7 @@ from smoke_checks.local import (
     check_a_run_with_no_manifest_paper_id_is_still_bound,
     check_a_subscription_login_is_not_a_paid_provider,
     check_a_substituted_model_is_visible,
+    check_a_written_bundle_carries_no_local_path,
     check_an_attestation_needs_a_named_editor,
     check_an_empty_protocol_file_is_not_a_record_of_the_run,
     check_an_unclaimed_review_is_labelled_an_experiment,
@@ -196,13 +197,15 @@ def main() -> int:
     check_the_locked_engine_release_contains_the_engine()
     print("ok  the locked release contains the engine the checks import")
     check_no_published_file_in_a_bundle_names_a_local_path()
-    print("ok  every JSON file in a published bundle is scanned for local paths")
+    print("ok  the engine's path fields are scrubbed and every bundle file is scanned")
     check_a_billing_confirmation_the_engine_would_refuse_is_refused()
     print("ok  a billing confirmation the engine would refuse does not publish")
     check_an_empty_protocol_file_is_not_a_record_of_the_run()
     print("ok  an empty protocol.json is not a record of what the engine was asked")
     check_a_rehearsal_cannot_be_copied_into_place_as_a_review()
     print("ok  a rehearsal cannot be copied into place as a published review")
+    check_a_written_bundle_carries_no_local_path()
+    print("ok  a published bundle, read back off disk, names no local path")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"
