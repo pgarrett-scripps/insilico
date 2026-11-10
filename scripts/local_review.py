@@ -235,6 +235,87 @@ def transport_record(*, probe: bool = True) -> dict:
             "verified_by": "publish_time_probe"}
 
 
+def run_launched_at(run_dir: Path) -> float:
+    """When the engine started this run, as a unix timestamp.
+
+    The engine writes `protocol.json` and copies the billing confirmation in
+    the same breath, so the protocol file's own timestamp is when the launch
+    guard ran. This is what the confirmation has to be fresh against. Checking
+    it against the clock at publish time would refuse every review published
+    the next morning, and checking it against nothing at all is what let a 400
+    day old confirmation through.
+    """
+    for name in ("protocol.json", "billing_confirmation.json"):
+        path = Path(run_dir) / name
+        if path.is_file():
+            return path.stat().st_mtime
+    return Path(run_dir).stat().st_mtime
+
+
+def verify_billing_record(record: dict, launched_at: float) -> None:
+    """The engine's own launch guard, re-run against the run's own clock.
+
+    Publish checked the auth method and nothing else, so a confirmation naming
+    a different provider, authorising purchases, carrying a foreign policy or
+    recorded over a year before the run all published as a verified
+    subscription login. Each of those is something the engine itself refuses
+    before it will start a review, which means a run carrying one did not come
+    from the engine's guarded path.
+    """
+    try:
+        billing = importlib.import_module(f"{ENGINE_PACKAGE}.billing")
+    except ImportError:
+        billing = None
+    if billing is not None and callable(getattr(billing, "verify_billing", None)):
+        try:
+            billing.verify_billing(record, now=launched_at, provider=TRANSPORT_PROVIDER)
+        except Exception as error:
+            raise CommandError(
+                f"The run's billing confirmation is not one the engine would "
+                f"have accepted when it started: {error}"
+            ) from error
+        return
+
+    # The same rules written out, so the guard holds on a machine with no
+    # engine installed. These are the engine's constants, not looser ones.
+    accepted, policy = subscription_policy()
+    checked = record.get("checked_at")
+    problem = None
+    if record.get("policy") != policy or record.get("provider") != TRANSPORT_PROVIDER:
+        problem = f"it is not a {policy} record written by {TRANSPORT_PROVIDER}"
+    elif isinstance(checked, bool) or not isinstance(checked, (int, float)):
+        problem = "its timestamp is not a number"
+    elif not 0 <= launched_at - float(checked) < 86400:
+        problem = "it was not recorded within the day before the run started"
+    elif record.get("auth_method") not in accepted:
+        problem = "it does not come from a subscription login"
+    elif record.get("extra_usage_disabled") is not True:
+        problem = "it does not confirm that paid extra usage is disabled"
+    elif record.get("purchases_authorized") is not False:
+        problem = "it authorises purchases"
+    if problem:
+        raise CommandError(
+            f"The run's billing confirmation is not one the engine would have "
+            f"accepted when it started: {problem}."
+        )
+
+
+def iso_timestamp(value: object) -> str | None:
+    """A recorded instant as an ISO 8601 string, whatever shape it arrived in.
+
+    The engine records `checked_at` as a float epoch, because that is what its
+    own comparison needs. A published record is read by people, so it carries
+    the same instant written out. The fixture used to hold an ISO string here
+    and so never exercised the conversion.
+    """
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return dt.datetime.fromtimestamp(float(value), dt.timezone.utc).isoformat()
+    text = str(value).strip()
+    return text or None
+
+
 def transport_from_run(run_dir: Path) -> dict | None:
     """The account the engine checked when the run started, from the run.
 
@@ -250,9 +331,17 @@ def transport_from_run(run_dir: Path) -> dict | None:
     a run whose recorded login was not a subscription login is exactly the case
     this guard exists for.
     """
-    record = maybe_json(Path(run_dir) / "billing_confirmation.json")
-    if not record:
+    path = Path(run_dir) / "billing_confirmation.json"
+    if not path.is_file():
         return None
+    record = maybe_json(path)
+    if not record:
+        raise CommandError(
+            f"{path} is empty or is not a JSON object, so the run records no "
+            "readable billing confirmation. A file the engine wrote is a "
+            "record; a file that cannot be read is not, and falling back to a "
+            "probe here would answer a different question."
+        )
     accepted, policy = subscription_policy()
     method = str(record.get("auth_method") or "")
     if method not in accepted:
@@ -261,6 +350,7 @@ def transport_from_run(run_dir: Path) -> dict | None:
             f"subscription login. The engine accepts {', '.join(accepted)}. "
             "This run was not billed the way a local review has to be."
         )
+    verify_billing_record(record, run_launched_at(run_dir))
     transport = {
         "provider": TRANSPORT_PROVIDER,
         "executable": "claude",
@@ -273,9 +363,9 @@ def transport_from_run(run_dir: Path) -> dict | None:
         "verified_by": "run_billing_confirmation",
         "paid_api_key_used": False,
     }
-    checked = record.get("checked_at")
+    checked = iso_timestamp(record.get("checked_at"))
     if checked:
-        transport["verified_at"] = str(checked)
+        transport["verified_at"] = checked
     return transport
 
 
@@ -942,6 +1032,7 @@ def build_provenance(
     requested_model: str,
     transport: dict,
     review_id: str,
+    publishing: bool,
 ) -> dict:
     """The published record of what produced this review.
 
@@ -981,6 +1072,10 @@ def build_provenance(
         "attestation": {
             "locally_generated": True,
             "human_reviewed_before_merge": human_reviewed,
+            # Said outright, because the only thing that used to distinguish a
+            # rehearsal from a published review was which folder it sat in, and
+            # a folder can be copied. The schema requires false here.
+            "rehearsal": not publishing,
             "editor": editor,
             "statement": ATTESTATION if human_reviewed else UNREAD_STATEMENT,
         },
@@ -1179,6 +1274,63 @@ def absolute_path_fields(value: object, trail: str = "") -> list[str]:
     return found
 
 
+_DROPPED = object()
+
+
+def without_local_paths(value: object) -> object:
+    """The same JSON with absolute paths made repo relative or removed.
+
+    The provenance record was scrubbed, but `editor-package.json` is the
+    engine's own output copied into the bundle verbatim, and the engine records
+    `source_review_path` for each reviewer as the absolute path of the file it
+    read. That published one home directory per reviewer. A path inside this
+    repository is rewritten relative to it, because it still points at
+    something a reader can find. A path outside it names nothing a reader has,
+    so the field goes rather than being published as noise. The hash beside it
+    is what tied the reviewer's package to its bytes, and that is kept.
+    """
+    if isinstance(value, dict):
+        scrubbed = {}
+        for key, child in value.items():
+            cleaned = without_local_paths(child)
+            if cleaned is not _DROPPED:
+                scrubbed[key] = cleaned
+        return scrubbed
+    if isinstance(value, list):
+        return [
+            cleaned
+            for cleaned in (without_local_paths(child) for child in value)
+            if cleaned is not _DROPPED
+        ]
+    if isinstance(value, str) and (value.startswith("/") or value.startswith("file://")):
+        text = value[len("file://") :] if value.startswith("file://") else value
+        try:
+            path = Path(text).resolve()
+        except (OSError, ValueError):
+            return _DROPPED
+        if path.is_relative_to(REPO.resolve()):
+            return path.relative_to(REPO.resolve()).as_posix()
+        return _DROPPED
+    return value
+
+
+def bundle_absolute_paths(dest: Path) -> list[str]:
+    """Every absolute path published by a JSON file in a written bundle.
+
+    The guard read the provenance record alone, so every other JSON file in the
+    bundle was published unexamined. This is the one that has to hold, because
+    it reads what is actually on disk rather than what the code meant to write.
+    """
+    found: list[str] = []
+    for path in sorted(Path(dest).rglob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        found += [f"{path.name}:{trail}" for trail in absolute_path_fields(payload)]
+    return found
+
+
 def publish_destination(prepared: dict, *, publishing: bool) -> Path:
     """Where this bundle is written, which depends on whether it is published.
 
@@ -1238,11 +1390,28 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
     and so did a run whose progress.json said `blocked`. Both produced a record
     that read like a clean review.
     """
-    if not (Path(run_dir) / "protocol.json").is_file():
+    protocol_path = Path(run_dir) / "protocol.json"
+    if not protocol_path.is_file():
         raise CommandError(
             f"{run_dir} has no protocol.json, so there is no record of what was "
             "asked of the engine. Point --run at the engine's review output "
             "folder."
+        )
+    # Only the file's existence was checked, so a zero byte protocol.json
+    # satisfied the guard while answering none of the questions it was added to
+    # ask. The run has to say what was asked of the engine, not merely have a
+    # file where that would be written.
+    if not maybe_json(protocol_path):
+        raise CommandError(
+            f"{protocol_path} is empty or is not a JSON object, so the run "
+            "records nothing about what was asked of the engine."
+        )
+    missing = [field for field in ("workflow", "model", "provider") if not run.get(field)]
+    if missing:
+        raise CommandError(
+            f"{protocol_path} records no {', '.join(missing)}, so the published "
+            "record could not say how the review was produced. Point --run at "
+            "the engine's review output folder."
         )
     status = str(run.get("status") or "")
     if not status:
@@ -1275,6 +1444,17 @@ def cmd_publish(args: argparse.Namespace) -> int:
         raise CommandError(
             "A review cannot be published unless the editor has read the run. "
             "Read it, then pass --human-reviewed yes."
+        )
+    # A rehearsal that carried a true attestation was a published record in
+    # every respect except where it sat, so copying its folder into
+    # docs/reviews by hand produced a review that passed every check. An
+    # attestation is a claim attached to a publication, and a rehearsal makes
+    # no publication, so the two cannot be asked for together.
+    if human_reviewed and not args.publish:
+        raise CommandError(
+            "--human-reviewed yes is an attestation, which only a published "
+            "review can carry. Add --publish to publish this run, or pass "
+            "--human-reviewed no to rehearse the bundle."
         )
     # Publishing with the probe skipped wrote `login_verified: false` and no
     # auth fields at all, and the record validated. A published record has to
@@ -1347,10 +1527,18 @@ def cmd_publish(args: argparse.Namespace) -> int:
         requested_model=requested_model,
         transport=transport,
         review_id=review_id,
+        publishing=args.publish,
     )
 
+    # The engine's own output is copied into the bundle, and it records the
+    # absolute path of each reviewer package it read. Scrubbing happens before
+    # anything is written, so the manifest hashes the file a reader will get.
+    published_package = without_local_paths(package) if args.publish else package
+
     if args.publish:
-        leaked = absolute_path_fields(provenance)
+        leaked = absolute_path_fields(provenance) + [
+            f"editor-package.json:{trail}" for trail in absolute_path_fields(published_package)
+        ]
         if leaked:
             raise CommandError(
                 "This record would publish absolute local paths at "
@@ -1376,7 +1564,19 @@ def cmd_publish(args: argparse.Namespace) -> int:
     write_round_record(dest, preprint, provenance, findings)
     # Kept beside the documents so a reader can check a quotation against the
     # structured record the reviewer actually produced.
-    write_json(dest / "editor-package.json", package)
+    write_json(dest / "editor-package.json", published_package)
+
+    # Read back what is actually on disk before the manifest fixes it. The
+    # in memory check above is the one that normally refuses; this is the one
+    # that cannot be fooled by a file nobody thought to scrub.
+    if args.publish:
+        leaked = bundle_absolute_paths(dest)
+        if leaked:
+            raise CommandError(
+                f"{dest} holds absolute local paths at {', '.join(leaked)}. "
+                "The bundle is incomplete and has no manifest. Delete that "
+                "directory before trying again."
+            )
     write_manifest(dest)
 
     print(f"bundle   {dest}")

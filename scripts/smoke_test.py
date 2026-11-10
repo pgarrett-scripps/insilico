@@ -20,11 +20,13 @@ from smoke_checks.commands import (
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
 from smoke_checks.local import (
     check_a_bare_pdf_cannot_be_published,
+    check_a_billing_confirmation_the_engine_would_refuse_is_refused,
     check_a_dated_model_id_is_not_a_substitution,
     check_a_destination_outside_its_tree_is_refused,
     check_a_minor_finding_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
     check_a_published_record_names_no_local_path,
+    check_a_rehearsal_cannot_be_copied_into_place_as_a_review,
     check_a_rehearsal_claims_no_reading,
     check_a_rehearsal_is_never_written_into_the_published_tree,
     check_a_run_of_one_paper_cannot_be_published_as_another,
@@ -32,9 +34,11 @@ from smoke_checks.local import (
     check_a_subscription_login_is_not_a_paid_provider,
     check_a_substituted_model_is_visible,
     check_an_attestation_needs_a_named_editor,
+    check_an_empty_protocol_file_is_not_a_record_of_the_run,
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_an_unfinished_run_cannot_be_published,
     check_every_published_file_is_hashed,
+    check_no_published_file_in_a_bundle_names_a_local_path,
     check_provenance_is_read_from_the_run,
     check_publishing_needs_a_verified_login,
     check_severity_is_read_from_the_engine_not_guessed,
@@ -191,6 +195,14 @@ def main() -> int:
     print("ok  the skill command check fails in CI rather than skipping itself")
     check_the_locked_engine_release_contains_the_engine()
     print("ok  the locked release contains the engine the checks import")
+    check_no_published_file_in_a_bundle_names_a_local_path()
+    print("ok  every JSON file in a published bundle is scanned for local paths")
+    check_a_billing_confirmation_the_engine_would_refuse_is_refused()
+    print("ok  a billing confirmation the engine would refuse does not publish")
+    check_an_empty_protocol_file_is_not_a_record_of_the_run()
+    print("ok  an empty protocol.json is not a record of what the engine was asked")
+    check_a_rehearsal_cannot_be_copied_into_place_as_a_review()
+    print("ok  a rehearsal cannot be copied into place as a published review")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

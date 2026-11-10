@@ -61,7 +61,7 @@
         "transport": {
           "$comment":"paid_api_key_used is a const rather than a boolean. A record that needs to say true is not a local subscription run and does not belong in this shape.",
           "type": "object",
-          "required": ["provider", "executable", "billing_policy", "paid_api_key_used"],
+          "required": ["provider", "executable", "billing_policy", "login_verified", "paid_api_key_used"],
           "properties": {
             "provider": { "enum": ["claude-code", "codex"] },
             "executable": { "type": "string", "minLength": 1 },
@@ -70,7 +70,10 @@
             "auth_method": { "type": ["string", "null"] },
             "subscription_type": { "type": ["string", "null"] },
             "api_provider": { "type": ["string", "null"] },
-            "login_verified": { "type": "boolean" },
+            "login_verified": {
+              "$comment": "A const rather than a boolean, for the same reason as paid_api_key_used. A rehearsal written with the login check skipped says false here, and a rehearsal is not a published review however it reached this folder.",
+              "const": true
+            },
             "verified_by": {
               "$comment": "Where the login was read. The run's own billing confirmation is the stronger source, because it names the account that paid rather than the one logged in when the bundle was written.",
               "enum": ["run_billing_confirmation", "publish_time_probe"]
@@ -103,8 +106,9 @@
           }
         },
         "run": {
-          "$comment":"Read from what the run itself wrote, never from the prepare step's intentions or the publish flags. Every property is optional because a run that did not record one must leave it out rather than carry a default that looks measured.",
+          "$comment":"Read from what the run itself wrote, never from the prepare step's intentions or the publish flags. Only the status is required, because a run that did not record a value must leave it out rather than carry a default that looks measured, but a published review has to come from a run that finished.",
           "type": "object",
+          "required": ["status"],
           "properties": {
             "directory": {
               "$comment": "Relative to the repository root. An absolute path identifies the machine that wrote the record rather than the review, and this record is published.",
@@ -120,7 +124,10 @@
             "synthesis_policy": { "type": "string" },
             "synthesis_tool_limit": { "type": "integer", "minimum": 0 },
             "paper_id": { "type": "string" },
-            "status": { "type": "string" },
+            "status": {
+              "$comment": "The engine writes running, blocked or complete. Only a complete run is a review, so a bundle written from one that stopped part way cannot validate even if its folder is moved into place by hand.",
+              "const": "complete"
+            },
             "usage": { "type": "object" },
             "literature_cutoff": { "type": "string" },
             "artifact_version": { "type": "string" },
@@ -135,10 +142,14 @@
         "attestation": {
           "$comment":"human_reviewed_before_merge stays a const rather than a boolean: this file validates published records, and a record that has to say false is a rehearsal that was never meant to reach the site. editor is required because the generator used to write the attestation as a constant, before any person had acted. An attestation with nobody behind it attests to nothing, so the name of whoever read the run is part of the claim.",
           "type": "object",
-          "required": ["locally_generated", "human_reviewed_before_merge", "editor", "statement"],
+          "required": ["locally_generated", "human_reviewed_before_merge", "rehearsal", "editor", "statement"],
           "properties": {
             "locally_generated": { "const": true },
             "human_reviewed_before_merge": { "const": true },
+            "rehearsal": {
+              "$comment": "Whether the generator was asked to publish this bundle. Until the record said so, the only difference between a rehearsal and a published review was which folder it sat in, and a folder can be copied.",
+              "const": false
+            },
             "editor": { "type": "string", "minLength": 1 },
             "statement": { "type": "string", "minLength": 40 }
           }

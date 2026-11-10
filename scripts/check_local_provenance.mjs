@@ -55,6 +55,7 @@ function localRecord(overrides = {}) {
       },
       run: {
         directory: "runs/local/2026/fixture-paper",
+        status: "complete",
         workflow: "ensemble",
         workflow_version: "ensemble-v3",
         reviewers: 2,
@@ -68,6 +69,7 @@ function localRecord(overrides = {}) {
       attestation: {
         locally_generated: true,
         human_reviewed_before_merge: true,
+        rehearsal: false,
         editor: "fixture-editor",
         statement:
           "This review was generated locally on a Claude Code subscription, with no paid API key in the path.",
@@ -148,6 +150,35 @@ rejects(emptyEditor, "an empty editor name is not an editor");
 const unread = localRecord();
 unread.generator.attestation.human_reviewed_before_merge = false;
 rejects(unread, "a run no editor has read must not validate as published");
+
+// A rehearsal is a rehearsal wherever its folder ends up. Until the record said
+// so, the only thing that distinguished one from a published review was which
+// directory it sat in, and a directory can be copied.
+const rehearsed = localRecord();
+rehearsed.generator.attestation.rehearsal = true;
+rejects(rehearsed, "a rehearsal must not validate as a published review");
+
+const silentAboutRehearsal = localRecord();
+delete silentAboutRehearsal.generator.attestation.rehearsal;
+rejects(silentAboutRehearsal, "a record must say whether it was a rehearsal");
+
+// The three facts a hand-copied rehearsal gets wrong. Each one is refused on its
+// own, so no single omission lets such a bundle through.
+const unverifiedLogin = localRecord();
+unverifiedLogin.generator.transport.login_verified = false;
+rejects(unverifiedLogin, "an unverified login must not validate as published");
+
+const silentAboutLogin = localRecord();
+delete silentAboutLogin.generator.transport.login_verified;
+rejects(silentAboutLogin, "a record must say whether the login was verified");
+
+const blockedRun = localRecord();
+blockedRun.generator.run.status = "blocked";
+rejects(blockedRun, "a run that stopped part way is not a review");
+
+const silentAboutStatus = localRecord();
+delete silentAboutStatus.generator.run.status;
+rejects(silentAboutStatus, "a record must say that the run finished");
 
 // Whether the reviewed bytes were fetched from the identifier or handed over
 // from a local disk decides whether the hash means anything to a reader.

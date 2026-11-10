@@ -7,11 +7,15 @@ scripts/check_local_provenance.mjs, which needs Node rather than Python.
 """
 from __future__ import annotations
 
+import contextlib
+import datetime as dt
+import io
 import json
 import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -197,6 +201,29 @@ def _publish(prepared: Path, run: Path, workspace: Path, *extra: str) -> int:
             *extra,
         ]
     )
+
+
+def _billing(run: Path, **overrides) -> Path:
+    """The confirmation the engine writes before it starts a subscription run.
+
+    `checked_at` is a float epoch, because that is what
+    peerreviewagents.engine.billing writes and what its own verify reads. This
+    fixture used an ISO string, which the engine's numeric check refuses, so the
+    generator was being proved against a record no engine has ever written.
+    """
+    record = {
+        "policy": "claude-subscription-v1",
+        "provider": "claude-code",
+        "checked_at": time.time() - 60,
+        "auth_method": "claude.ai",
+        "subscription_type": "max",
+        "extra_usage_disabled": True,
+        "purchases_authorized": False,
+    }
+    record.update(overrides)
+    path = Path(run) / "billing_confirmation.json"
+    path.write_text(json.dumps(record), encoding="utf-8")
+    return path
 
 
 def check_severity_is_read_from_the_engine_not_guessed() -> None:
@@ -680,6 +707,7 @@ def check_an_attestation_needs_a_named_editor() -> None:
         requested_model="claude-sonnet-5-5",
         transport={"provider": "claude-code", "paid_api_key_used": False},
         review_id="docs/reviews/2026/fixture/v1/r1",
+        publishing=True,
     )
     try:
         try:
@@ -894,6 +922,7 @@ def check_a_dated_model_id_is_not_a_substitution() -> None:
             requested_model=requested,
             transport={"provider": "claude-code", "paid_api_key_used": False},
             review_id="docs/reviews/2026/fixture/v1/r1",
+            publishing=True,
         )
         dated = local_review.build_provenance(observed=[f"{requested}-20260929"], **arguments)
         assert "substituted" not in dated["generator"]["model_ids"], (
@@ -979,24 +1008,15 @@ def check_publishing_needs_a_verified_login() -> None:
         # caller falls back to the probe rather than inventing one.
         assert local_review.transport_from_run(run) is None, "an absent confirmation is not a record"
 
-        (run / "billing_confirmation.json").write_text(
-            json.dumps(
-                {
-                    "policy": "claude-subscription-v1",
-                    "provider": "claude-code",
-                    "checked_at": "2026-11-09T12:00:00+00:00",
-                    "auth_method": "claude.ai",
-                    "subscription_type": "max",
-                    "extra_usage_disabled": True,
-                }
-            ),
-            encoding="utf-8",
-        )
+        _billing(run)
         transport = local_review.transport_from_run(run)
         assert transport["login_verified"] is True, f"a checked login is verified: {transport}"
         assert transport["auth_method"] == "claude.ai", f"auth method lost: {transport}"
         assert transport["subscription_type"] == "max", f"subscription type lost: {transport}"
-        assert transport["verified_at"].startswith("2026-11-09"), (
+        written = json.loads((run / "billing_confirmation.json").read_text())["checked_at"]
+        stamped = dt.datetime.fromisoformat(transport["verified_at"])
+        assert stamped.tzinfo is not None, f"the instant must carry its zone: {transport}"
+        assert abs(stamped.timestamp() - written) < 1, (
             f"the record must say when the login was checked: {transport}"
         )
         assert transport["paid_api_key_used"] is False, "a subscription login is not a paid key"
@@ -1206,3 +1226,231 @@ def check_the_locked_engine_release_contains_the_engine() -> None:
         f"the lock pins peerreviewagents {pins[0]}, which ships no peerreviewagents.engine "
         "package, so every engine check in CI has nothing to import"
     )
+
+
+def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
+    """The scan covered provenance.json and nothing else in the bundle.
+
+    editor-package.json is copied out of the run as it stands, and an ensemble
+    run writes `reviewer_provenance[].source_review_path` as the absolute path
+    of each reviewer's package on the machine that ran it. So the one file the
+    guard did not read was the file the engine put the operator's home
+    directory in, and the manifest then hashed it into the published bundle.
+    """
+    leaky = {
+        "workflow_version": "ensemble-v3",
+        "summary": "One reading.",
+        "reviewer_provenance": [
+            {"reviewer": 1, "source_review_path": "/home/someone/runs/out/reviewer-1/editor-package.json"},
+            {"reviewer": 2, "source_review_path": "/home/someone/runs/out/reviewer-2/editor-package.json"},
+        ],
+        "reference": "https://www.biorxiv.org/content/10.1101/2026.03.12.711120v1",
+        "notes": "Section 3 of the manuscript",
+    }
+    assert local_review.absolute_path_fields(leaky) == [
+        "reviewer_provenance[0].source_review_path",
+        "reviewer_provenance[1].source_review_path",
+    ], "the engine's own reviewer provenance is the leak this has to catch"
+
+    scrubbed = local_review.without_local_paths(leaky)
+    assert local_review.absolute_path_fields(scrubbed) == [], f"a path survived the scrub: {scrubbed}"
+    assert len(scrubbed["reviewer_provenance"]) == 2, (
+        f"the reviewers themselves must survive: {scrubbed['reviewer_provenance']}"
+    )
+    assert scrubbed["reviewer_provenance"][0]["reviewer"] == 1, "a sibling field was dropped"
+    assert scrubbed["summary"] == leaky["summary"], "the review's own words were altered"
+    assert scrubbed["reference"] == leaky["reference"], "a URL is not a local path"
+    assert scrubbed["notes"] == leaky["notes"], "ordinary prose was altered"
+
+    # A path inside this repository is still a path, but it names something a
+    # reader has, so it is rewritten rather than dropped.
+    inside = local_review.without_local_paths({"where": str(local_review.REPO / "runs" / "local")})
+    assert inside == {"where": "runs/local"}, f"a repository path should be made relative: {inside}"
+
+    # And the bundle is scanned as a bundle, after everything is written and
+    # before the manifest hashes any of it.
+    with tempfile.TemporaryDirectory() as tmp:
+        dest = Path(tmp)
+        (dest / "provenance.json").write_text(json.dumps({"review": {"id": "p/v1/r1"}}), encoding="utf-8")
+        (dest / "summary.md").write_text("# Review Summary\n", encoding="utf-8")
+        assert local_review.bundle_absolute_paths(dest) == [], (
+            "a clean bundle must not be reported as leaking"
+        )
+
+        (dest / "editor-package.json").write_text(json.dumps(leaky), encoding="utf-8")
+        nested = dest / "attachments"
+        nested.mkdir()
+        (nested / "reviewer-1.json").write_text(
+            json.dumps({"source_review_path": "/home/someone/runs/out/reviewer-1"}), encoding="utf-8"
+        )
+        found = local_review.bundle_absolute_paths(dest)
+        assert len(found) == 3, f"every JSON file in the bundle has to be read: {found}"
+        assert any(trail.startswith("editor-package.json:") for trail in found), (
+            f"the copied engine package was not scanned: {found}"
+        )
+        assert any(trail.startswith("reviewer-1.json:") for trail in found), (
+            f"a nested file was not scanned: {found}"
+        )
+
+
+def check_a_billing_confirmation_the_engine_would_refuse_is_refused() -> None:
+    """Only `auth_method` was read, so the engine's own guard was skipped.
+
+    A confirmation four hundred days old, one written for codex, and one that
+    authorises purchases all published as `login_verified: true`, while the
+    engine's own verify refuses each of them and would never have started the
+    run. The check is re-run here against the instant the run started, because
+    publish time would refuse every review published the next morning and no
+    check at all is the defect.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run = _run_directory(Path(tmp) / "run")
+        _billing(run)
+        accepted = local_review.transport_from_run(run)
+        assert accepted["login_verified"] is True, f"a sound confirmation must pass: {accepted}"
+
+        refused = {
+            "four hundred days old": {"checked_at": time.time() - 400 * 86400},
+            "dated after the run started": {"checked_at": time.time() + 7200},
+            "written for another provider": {"provider": "codex"},
+            "under another policy": {"policy": "included-allowance-v1"},
+            "authorising purchases": {"purchases_authorized": True},
+            "with extra usage left on": {"extra_usage_disabled": False},
+            "timestamped with a string": {"checked_at": "2026-11-09T12:00:00+00:00"},
+        }
+        for why, override in refused.items():
+            _billing(run, **override)
+            try:
+                transport = local_review.transport_from_run(run)
+            except local_review.CommandError:
+                continue
+            raise AssertionError(
+                f"a confirmation {why} published as login_verified "
+                f"{transport.get('login_verified')!r}"
+            )
+
+        # An unreadable file is not a record, and falling back to a probe here
+        # would answer a different question from the one the docstring asks.
+        for content in ("", "   ", "[]", "not json"):
+            (run / "billing_confirmation.json").write_text(content, encoding="utf-8")
+            try:
+                local_review.transport_from_run(run)
+            except local_review.CommandError:
+                continue
+            raise AssertionError(f"a billing file holding {content!r} was not refused")
+
+        # The instant the check is run against is the one the engine ran its
+        # own check at, which is when the run started. Publish time would
+        # refuse every review published the next morning.
+        launched = local_review.run_launched_at(run)
+        assert abs(launched - time.time()) < 300, (
+            f"the run's launch instant was not read from its own files: {launched}"
+        )
+        old = _run_directory(Path(tmp) / "old-run")
+        stale = time.time() - 400 * 86400
+        os.utime(old / "protocol.json", (stale, stale))
+        assert abs(local_review.run_launched_at(old) - stale) < 1, (
+            "the launch instant has to come from the run, not from the clock"
+        )
+
+
+def check_an_empty_protocol_file_is_not_a_record_of_the_run() -> None:
+    """Only `is_file()` was checked, so a zero byte protocol.json passed.
+
+    The guard exists to make publishing require a record of what was asked of
+    the engine. A file that parses to nothing answers none of the questions it
+    was added to ask, and the fields read out of it then published as empty.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        sound = _run_directory(Path(tmp) / "sound")
+        local_review.require_complete_run(sound, local_review.read_run(sound))
+
+        broken = {
+            "a zero byte file": "",
+            "whitespace": "\n  \n",
+            "a JSON list": "[]",
+            "a JSON null": "null",
+            "truncated JSON": '{"provider": "claude-code"',
+            "a file with no workflow, model or provider": "{}",
+            "a file naming no model": '{"provider": "claude-code", "mode": "ensemble"}',
+        }
+        for why, content in broken.items():
+            run = _run_directory(Path(tmp) / why.replace(" ", "-"))
+            (run / "protocol.json").write_text(content, encoding="utf-8")
+            try:
+                local_review.require_complete_run(run, local_review.read_run(run))
+            except local_review.CommandError:
+                continue
+            raise AssertionError(f"a run whose protocol.json is {why} was published")
+
+
+def check_a_rehearsal_cannot_be_copied_into_place_as_a_review() -> None:
+    """A rehearsal bundle moved by hand into docs/reviews passed every check.
+
+    `--human-reviewed yes --offline` without `--publish` wrote a bundle with a
+    true attestation, `login_verified: false` and whatever run status it had,
+    and once that folder sat in the published tree the schema, the local
+    provenance check, the manifests and the attempt ledger all passed it. So the
+    only thing keeping a rehearsal out of the record was which directory it had
+    been written to, and a directory can be copied.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run = _run_directory(Path(tmp) / "run")
+        _billing(run)
+        destination = local_review.REVIEWS / "2026" / "smoke-rehearsal-fixture" / "v1" / "r1"
+        prepared = _prepared(Path(tmp) / "prepared", destination)
+        workspace = _workspace(Path(tmp) / "workspace")
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            code = _publish(prepared, run, workspace, "--offline")
+        message = stderr.getvalue()
+        assert code == 2, f"an attestation on a rehearsal should be refused, got exit {code}"
+        assert "--human-reviewed" in message and "--publish" in message, (
+            f"the refusal has to name the pair that cannot be asked for together: {message!r}"
+        )
+        assert not destination.exists(), f"a bundle was written to {destination}"
+
+    # And the record says so outright, because the schema refuses a true value
+    # here. Said in the record rather than implied by the folder, the claim
+    # survives the folder being moved.
+    engine_record = local_review.engine_record
+    local_review.engine_record = lambda: {"name": "engine", "version": "0.7.0"}
+    arguments = dict(
+        preprint=PAPER,
+        prepared={
+            "input": {"kind": "doi", "identifier": PAPER.doi, "sha256": "b" * 64, "bytes": 1, "local_file": False},
+            "plan_kind": "first review",
+        },
+        package=PACKAGE,
+        run={"workflow": "ensemble", "reviewers": 2, "errors": []},
+        fingerprint={"algorithm": "sha256", "file_count": 2, "sha256": "a" * 64, "source": "run_manifest"},
+        decision="major",
+        editor="fixture-editor",
+        route="v1/r1",
+        draft=1,
+        attempt=1,
+        submitter="",
+        submitter_is_author="",
+        baseline_eligible=False,
+        ingest={},
+        observed=[local_review.DEFAULT_MODEL],
+        requested_model=local_review.DEFAULT_MODEL,
+        transport={"provider": "claude-code", "paid_api_key_used": False},
+        review_id="docs/reviews/2026/fixture/v1/r1",
+    )
+    try:
+        published = local_review.build_provenance(
+            human_reviewed=True, publishing=True, **arguments
+        )["generator"]["attestation"]
+        assert published["rehearsal"] is False, f"a published review is not a rehearsal: {published}"
+
+        rehearsed = local_review.build_provenance(
+            human_reviewed=False, publishing=False, **arguments
+        )["generator"]["attestation"]
+        assert rehearsed["rehearsal"] is True, f"a rehearsal has to say so: {rehearsed}"
+        assert rehearsed["human_reviewed_before_merge"] is False, (
+            f"a rehearsal cannot carry a reading: {rehearsed}"
+        )
+    finally:
+        local_review.engine_record = engine_record
