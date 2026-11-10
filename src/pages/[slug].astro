@@ -1,17 +1,42 @@
 ---
 /**
- * The hand-written editorial pages: submit, criteria, policy.
+ * The hand-written editorial pages, which are the ones named in
+ * src/lib/pages.js and no others.
  *
  * These are prose, so they get the reading column and nothing else. There is no
- * instrument chrome, no data panels. The lede is lifted out of the first
- * paragraph so the page opens with a proper title block rather than dropping
+ * instrument chrome, no data panels. The title and lede come from the
+ * allowlist, so the page opens with a proper title block rather than dropping
  * the reader straight into body text.
  */
 import { getCollection, render } from "astro:content";
 import Base from "../layouts/Base.astro";
+import { EDITORIAL_SLUGS, editorialPage } from "../lib/pages.js";
 
+/**
+ * Only the pages named in src/lib/pages.js are built. The collection is
+ * already restricted to those files, so this route refuses anything else
+ * rather than falling back to a bare slug and an untitled page. A build that
+ * would publish a working note from `docs/` fails here instead.
+ */
 export async function getStaticPaths() {
   const pages = await getCollection("pages");
+  const found = pages.map((entry) => entry.id).sort();
+
+  const unlisted = found.filter((id) => !EDITORIAL_SLUGS.includes(id));
+  if (unlisted.length) {
+    throw new Error(
+      `docs/ holds Markdown that is not an editorial page: ${unlisted.join(", ")}. `
+        + "Add it to EDITORIAL_PAGES in src/lib/pages.js to publish it, or leave it unlisted.",
+    );
+  }
+
+  const missing = EDITORIAL_SLUGS.filter((slug) => !found.includes(slug));
+  if (missing.length) {
+    throw new Error(
+      `EDITORIAL_PAGES names pages with no file in docs/: ${missing.join(", ")}.`,
+    );
+  }
+
   return pages.map((entry) => ({
     params: { slug: entry.id },
     props: { entry },
@@ -21,34 +46,17 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content } = await render(entry);
 
-/**
- * Every markdown file in `docs/` becomes a page, so a file added without an
- * entry here publishes under its bare slug. Keep both maps covering the whole
- * directory.
- */
-const TITLES = {
-  submit: "Submit a preprint",
-  criteria: "What the panel looks for",
-  policy: "Editorial policy",
-  development: "Running it yourself",
-};
-
-const LEDES = {
-  submit: "A preprint URL is all you need to request a review.",
-  criteria: "The panel's rubric and review method.",
-  policy: "Editorial scope, authority, publication, removal, data, and governance.",
-  development: "Building the site, running the panel on your own machine, and reviewing a paper before you submit it anywhere.",
-};
-
-const title = TITLES[entry.id] || entry.id;
+const page = editorialPage(entry.id);
+const title = page.title;
+const lede = page.lede;
 ---
 
-<Base title={title} description={LEDES[entry.id] || ""}>
+<Base title={title} description={lede || ""}>
   <div class="shell shell--column doc">
     <header class="doc__head">
       <p class="label doc__eyebrow">In Silico</p>
       <h1 class="doc__title">{title}</h1>
-      {LEDES[entry.id] && <p class="doc__lede">{LEDES[entry.id]}</p>}
+      {lede && <p class="doc__lede">{lede}</p>}
     </header>
 
     <div class="prose">

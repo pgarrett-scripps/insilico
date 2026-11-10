@@ -75,6 +75,9 @@ jobs:
       - name: Site builds
         run: npm run build
 
+      - name: Only the editorial pages are published from docs/
+        run: npm run check:pages
+
       - name: Project prose contains no forbidden punctuation
         run: npm run check:punctuation
 
