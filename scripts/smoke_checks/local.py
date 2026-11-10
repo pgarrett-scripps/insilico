@@ -468,7 +468,24 @@ def check_the_skill_commands_match_the_engine_parser() -> None:
             f"rejects: {' '.join(argv)}"
         )
     assert any("review" in argv for argv in found), "the skill no longer runs a review"
-    assert checker.main() == 0, "the skill's engine commands do not parse"
+
+    # The checker fails closed when it cannot import the engine and `CI` is
+    # set, which is right for the CI step that exists to run it and wrong here:
+    # this suite runs in a job with no engine by design, so an ambient `CI`
+    # would make the outcome depend on where the suite happens to be running.
+    # The environment is named rather than inherited. Fail-closed behaviour has
+    # its own check, which names its environment too.
+    waived = dict(os.environ)
+    for name in ("CI", "INSILICO_REQUIRE_ENGINE"):
+        waived.pop(name, None)
+    restore = dict(os.environ)
+    os.environ.clear()
+    os.environ.update(waived)
+    try:
+        assert checker.main() == 0, "the skill's engine commands do not parse"
+    finally:
+        os.environ.clear()
+        os.environ.update(restore)
 
 
 def check_provenance_is_read_from_the_run() -> None:
