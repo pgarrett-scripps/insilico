@@ -18,6 +18,15 @@ from smoke_checks.commands import (
     check_rerun_does_not_inherit_the_prior_round,
 )
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
+from smoke_checks.local import (
+    check_a_bare_pdf_cannot_be_published,
+    check_a_minor_finding_is_never_a_required_revision,
+    check_an_unclaimed_review_is_labelled_an_experiment,
+    check_every_published_file_is_hashed,
+    check_severity_is_read_from_the_engine_not_guessed,
+    check_the_attestation_says_what_it_has_to_say,
+    check_the_decision_is_attributed_to_a_person,
+)
 from smoke_checks.planning import (
     check_latest_editorial_attempt_is_the_revision_baseline,
     check_rerun_refuses_a_moved_draft,
@@ -110,6 +119,21 @@ def main() -> int:
     print("ok  a rerun refuses a draft that moved")
     check_rerun_does_not_inherit_the_prior_round()
     print("ok  a rerun does not inherit the round it tests")
+
+    check_severity_is_read_from_the_engine_not_guessed()
+    print("ok  an unrecognised severity stays visible and out of the counts")
+    check_the_decision_is_attributed_to_a_person()
+    print("ok  a local review attributes its decision to a human editor")
+    check_a_minor_finding_is_never_a_required_revision()
+    print("ok  severity alone decides what a revision round must fix")
+    check_an_unclaimed_review_is_labelled_an_experiment()
+    print("ok  an unclaimed local review is published as an experiment")
+    check_every_published_file_is_hashed()
+    print("ok  the local bundle manifest hashes every file but itself")
+    check_a_bare_pdf_cannot_be_published()
+    print("ok  a review of an unidentified PDF cannot be published")
+    check_the_attestation_says_what_it_has_to_say()
+    print("ok  the published attestation names the transport and the editor")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

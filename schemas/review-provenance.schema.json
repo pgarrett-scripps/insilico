@@ -3,38 +3,118 @@
   "$id": "https://insilico.science/schemas/review-provenance.schema.json",
   "title": "In Silico review provenance",
   "type": "object",
+  "$comment":"Two record shapes share this file. Version 2 is the hosted panel: five referees, two audits, a debate, and a dollar cost. Version 3 is a review generated locally on a subscription, where most of those numbers do not exist and inventing zeros for them would read as measurements. Fields common to both are required here; each version's own obligations are in allOf below. Records written before versioning carry no schema_version and are not validated at all, so nothing already published has to be rewritten.",
   "required": [
     "schema_version",
     "generated_at",
     "pipeline",
     "insilico",
-    "configuration",
-    "journal_profile",
     "review",
     "provider",
     "models",
-    "agent_models",
-    "debate_rounds",
     "decision",
     "desk_rejected",
     "round",
-    "revision",
-    "submitter",
-    "submitter_is_author",
     "ingest",
-    "screens",
     "panel",
-    "mean_score",
-    "scored_count",
-    "panel_size",
-    "total_cost_usd",
-    "cost_by_node",
-    "research_by_node",
     "errors",
     "preprint"
   ],
   "properties": {
-    "schema_version": { "const": 2 },
+    "schema_version": { "enum": [2, 3] },
+    "generator": {
+      "$comment":"Required on a version 3 record. It answers who ran this review, on what code, through which billing route, and whether a person read it before it was published. The engine fingerprint is over the engine source tree, so two reviews claiming the same engine version can be shown to have run the same bytes.",
+      "type": "object",
+      "required": [
+        "kind",
+        "engine",
+        "engine_fingerprint",
+        "transport",
+        "model_ids",
+        "input",
+        "decision_source",
+        "attestation"
+      ],
+      "properties": {
+        "kind": { "const": "local-claude-code" },
+        "engine": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 },
+            "api_version": { "type": "string" }
+          }
+        },
+        "engine_fingerprint": {
+          "type": "object",
+          "required": ["algorithm", "file_count", "sha256"],
+          "properties": {
+            "algorithm": { "const": "sha256" },
+            "file_count": { "type": "integer", "minimum": 1 },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "transport": {
+          "$comment":"paid_api_key_used is a const rather than a boolean. A record that needs to say true is not a local subscription run and does not belong in this shape.",
+          "type": "object",
+          "required": ["provider", "executable", "billing_policy", "paid_api_key_used"],
+          "properties": {
+            "provider": { "enum": ["claude-code", "codex"] },
+            "executable": { "type": "string", "minLength": 1 },
+            "version": { "type": ["string", "null"] },
+            "billing_policy": { "type": "string", "minLength": 1 },
+            "auth_method": { "type": ["string", "null"] },
+            "subscription_type": { "type": ["string", "null"] },
+            "paid_api_key_used": { "const": false }
+          }
+        },
+        "model_ids": {
+          "$comment":"requested is what the operator asked for. observed is what the transport reported back per call, which is the one that can disagree.",
+          "type": "object",
+          "required": ["requested", "observed"],
+          "properties": {
+            "requested": { "type": "string", "minLength": 1 },
+            "observed": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "input": {
+          "$comment":"The exact bytes the engine read, hashed before the run. A reader who disputes a quotation can fetch the same identifier and compare.",
+          "type": "object",
+          "required": ["kind", "identifier", "sha256", "bytes"],
+          "properties": {
+            "kind": { "enum": ["arxiv", "doi", "url", "pdf"] },
+            "identifier": { "type": "string", "minLength": 1 },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "bytes": { "type": "integer", "minimum": 1 },
+            "workspace_manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "run": {
+          "type": "object",
+          "properties": {
+            "workflow": { "type": "string" },
+            "reviewers": { "type": "integer", "minimum": 1 },
+            "literature_cutoff": { "type": "string" },
+            "artifact_version": { "type": "string" },
+            "findings": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "decision_source": {
+          "$comment":"The engine grades findings, not manuscripts. It produces no accept or reject verdict, so the decision on a version 3 record was typed by the editor after reading the run. Recording the engine as its author would be a false attribution.",
+          "const": "human_editor"
+        },
+        "attestation": {
+          "type": "object",
+          "required": ["locally_generated", "human_reviewed_before_merge", "statement"],
+          "properties": {
+            "locally_generated": { "const": true },
+            "human_reviewed_before_merge": { "const": true },
+            "statement": { "type": "string", "minLength": 40 }
+          }
+        }
+      }
+    },
     "environment": {
       "type": "object",
       "required": ["python", "implementation", "system", "machine", "packages", "lock_sha256", "lock_applied"],
@@ -126,6 +206,66 @@
     }
   },
   "allOf": [
+    {
+      "$comment":"The hosted panel's obligations, unchanged. Every record already published as version 2 still has to satisfy exactly this list.",
+      "if": {
+        "required": ["schema_version"],
+        "properties": { "schema_version": { "const": 2 } }
+      },
+      "then": {
+        "required": [
+          "configuration",
+          "journal_profile",
+          "agent_models",
+          "debate_rounds",
+          "revision",
+          "submitter",
+          "submitter_is_author",
+          "screens",
+          "mean_score",
+          "scored_count",
+          "panel_size",
+          "total_cost_usd",
+          "cost_by_node",
+          "research_by_node"
+        ],
+        "$comment": "Ajv strict mode asks that a required name also appear in this subschema's own properties. The real constraints for each one live in the top-level properties block, so these are deliberately empty.",
+        "properties": {
+          "configuration": {},
+          "journal_profile": {},
+          "agent_models": {},
+          "debate_rounds": {},
+          "revision": {},
+          "submitter": {},
+          "submitter_is_author": {},
+          "screens": {},
+          "mean_score": {},
+          "scored_count": {},
+          "panel_size": {},
+          "total_cost_usd": {},
+          "cost_by_node": {},
+          "research_by_node": {}
+        }
+      }
+    },
+    {
+      "$comment":"A local run has no per-stage model split, no panel of five, and no dollar cost, so it is not asked for them. What it must carry instead is the generator block: the code, the transport and the human attestation that stand in for the hosted pipeline's accounting.",
+      "if": {
+        "required": ["schema_version"],
+        "properties": { "schema_version": { "const": 3 } }
+      },
+      "then": {
+        "required": ["generator", "model"],
+        "properties": {
+          "generator": {},
+          "model": { "type": "string", "minLength": 1 },
+          "total_cost_usd": {
+            "$comment":"A subscription run has no per-review dollar figure. Null says so; a zero would read as a measured free run.",
+            "type": "null"
+          }
+        }
+      }
+    },
     {
       "if": {
         "required": ["readiness_score"],

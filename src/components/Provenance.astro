@@ -101,6 +101,28 @@ const health = (ingest.prose || {}).health || {};
 const conversion = health.verdict && health.verdict !== "clean"
   ? { verdict: health.verdict, notes: health.notes || [] }
   : null;
+// A review generated on the editor's own machine, on a subscription, and
+// uploaded as a pull request. The hosted panel's accounting does not exist for
+// one of these: there is no five-reviewer split and no dollar figure. What
+// replaces it is this block, and the two facts a reader most needs from it are
+// that the engine source is pinned by hash and that the verdict was a person's
+// rather than the model's. Absent on every version 2 record, and silent there.
+const generator = provenance.generator || null;
+const engine = generator?.engine || {};
+const engineHash = generator?.engine_fingerprint || {};
+const transport = generator?.transport || {};
+const modelIds = generator?.model_ids || {};
+const input = generator?.input || {};
+const runRecord = generator?.run || {};
+const attestation = generator?.attestation || {};
+
+// What the transport reported back, when it disagreed with what was asked for.
+// Equal lists are the ordinary case and say nothing worth a row.
+const observed = Array.isArray(modelIds.observed) ? modelIds.observed : [];
+const modelDrift = observed.length && !(observed.length === 1 && observed[0] === modelIds.requested)
+  ? observed
+  : null;
+
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""
 const configSha = configuration.sha256 ? String(configuration.sha256).slice(0, 12) : ""
@@ -128,6 +150,64 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </div>
     )}
 
+    {generator && (
+      <div class="prov__cell">
+        <p class="label">Generated</p>
+        <p class="prov__value mono">locally, on a subscription</p>
+        <p class="prov__hash">
+          {transport.provider || "unknown transport"} via
+          {" "}<span class="mono">{transport.executable || "unknown"}</span>
+          {transport.version ? ` ${transport.version}` : ""}
+          . No paid API key was used.
+        </p>
+      </div>
+    )}
+
+    {generator && (
+      <div class="prov__cell">
+        <p class="label">Review engine</p>
+        <p class="prov__value mono">
+          {engine.name || "unknown"} {engine.version || ""}
+        </p>
+        {engineHash.sha256 && (
+          <p class="prov__hash mono" title={engineHash.sha256}>
+            {engineHash.file_count} files, sha256 {String(engineHash.sha256).slice(0, 16)}…
+          </p>
+        )}
+      </div>
+    )}
+
+    {generator && (
+      <div class="prov__cell">
+        <p class="label">Input reviewed</p>
+        <p class="prov__value mono">
+          {input.kind || "unrecorded"}
+          {input.bytes ? ` · ${(input.bytes / 1024).toFixed(0)} KiB` : ""}
+        </p>
+        {input.sha256 && (
+          <p class="prov__hash mono" title={input.sha256}>
+            sha256 {String(input.sha256).slice(0, 24)}…
+          </p>
+        )}
+      </div>
+    )}
+
+    {generator && runRecord.workflow && (
+      <div class="prov__cell">
+        <p class="label">Run</p>
+        <p class="prov__value mono">
+          {runRecord.workflow}
+          {runRecord.reviewers ? ` · ${runRecord.reviewers} reviewer${runRecord.reviewers === 1 ? "" : "s"}` : ""}
+        </p>
+        <p class="prov__hash">
+          {typeof runRecord.findings === "number"
+            ? `${runRecord.findings} finding${runRecord.findings === 1 ? "" : "s"}`
+            : "finding count unrecorded"}
+          {runRecord.literature_cutoff ? `, literature to ${runRecord.literature_cutoff}` : ""}
+        </p>
+      </div>
+    )}
+
     <div class="prov__cell">
       <p class="label">Reviewed file</p>
       <p class="prov__value mono">
@@ -141,10 +221,15 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       )}
     </div>
 
-    <div class="prov__cell">
-      <p class="label">Debate rounds</p>
-      <p class="prov__value mono">{provenance.debate_rounds ?? "N/A"}</p>
-    </div>
+    {/* A local run records no debate round count. Showing "N/A" for a number
+        the hosted panel measured and this path never had would read as a
+        missing measurement rather than an absent stage. */}
+    {(provenance.debate_rounds != null || !generator) && (
+      <div class="prov__cell">
+        <p class="label">Debate rounds</p>
+        <p class="prov__value mono">{provenance.debate_rounds ?? "N/A"}</p>
+      </div>
+    )}
 
     {total !== null && (
       <div class="prov__cell">
@@ -198,6 +283,27 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </div>
     )}
   </div>
+
+  {generator && (
+    <p class="prov__warn prov__warn--block">
+      <strong>The decision on this review is a person's, not a model's.</strong>{" "}
+      The engine grades findings and recommends no verdict, so the decision above
+      was chosen by a human editor after reading the run, and publishing it
+      required that editor to merge it.
+      {attestation.statement && (
+        <span class="prov__attest">{attestation.statement}</span>
+      )}
+    </p>
+  )}
+
+  {modelDrift && (
+    <p class="prov__warn prov__warn--block">
+      <strong>The transport served a different model than was asked for.</strong>{" "}
+      The run requested <span class="mono">{modelIds.requested}</span> and the
+      calls reported <span class="mono">{modelDrift.join(", ")}</span>.
+      Read the review as the work of what answered, not of what was requested.
+    </p>
+  )}
 
   {singleModel && (
     <p class="prov__warn prov__warn--block">
@@ -343,6 +449,14 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     border-left: 2px solid var(--accent);
     font-size: var(--t--2);
     color: var(--ink-dim);
+  }
+
+  /* The attestation sentence sits under the claim it backs rather than beside
+     it, because it is the longer half and reads as a separate statement. */
+  .prov__attest {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--muted);
   }
 
   /* The same rule, promoted out of a grid cell to span the panel. A

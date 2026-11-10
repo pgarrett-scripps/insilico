@@ -123,6 +123,24 @@ if (claim === "no") {
     title: "Requested by the authors' side",
     body: ["Submitted by someone who states they are an author of this paper, or affiliated with it. We do not verify that claim."],
   });
+} else if (provenance.generator) {
+  // A locally generated review is new, so it cannot predate anything. Either
+  // somebody submitted the paper and said nothing about their connection to
+  // it, or an editor picked the paper up unprompted. Those are different
+  // claims and the page makes neither of them on the other's behalf.
+  notices.push(
+    provenance.submitter
+      ? {
+          tone: "note",
+          title: "Solicitation unrecorded",
+          body: ["Someone submitted this paper. Whether they are connected to it was not recorded."],
+        }
+      : {
+          tone: "note",
+          title: "Not solicited",
+          body: ["Nobody submitted this paper. An editor chose it and ran the review."],
+        },
+  );
 } else {
   notices.push({
     tone: "note",
