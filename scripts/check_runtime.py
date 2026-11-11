@@ -15,16 +15,18 @@ def main() -> None:
         if actual != expected:
             raise RuntimeError(f"{name}: expected {expected}, installed {actual}")
 
-    import arxiv
     import rustypaper
-    from peerreviewagents.default_config import get_config
-    from peerreviewagents.graph.review_graph import PeerReviewGraph
-    from peerreviewagents.ingest.loader import load_manuscript_record
 
-    assert callable(PeerReviewGraph) and callable(load_manuscript_record)
-    assert callable(arxiv.Client) and callable(rustypaper.convert)
-    config = get_config(config_path=str(root / "peerreview.toml"))
-    assert config["models"], "the production panel must retain its role-specific models"
+    # The engine is the whole pipeline now, so this imports what the reviews
+    # actually run through. It used to import the LangGraph panel and assert the
+    # role-specific models in peerreview.toml, both of which engine 0.8.0
+    # deletes, and a lock naming a release with no engine package in it is
+    # exactly what this check exists to catch.
+    from peerreviewagents.engine.__main__ import build_parser
+    from peerreviewagents.engine.bundle import plan_review
+
+    assert callable(build_parser) and callable(plan_review)
+    assert callable(rustypaper.convert)
     print(f"Verified {len(locked)} locked packages and the review runtime imports")
 
 

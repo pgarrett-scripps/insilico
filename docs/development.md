@@ -32,10 +32,10 @@ scripts/
 ├── fetch_preprint.py     # URL to PDF and metadata
 ├── preview_submission.py # issue metadata and editor command preview
 ├── local_review.py       # the current route: prepare, then publish a local run
-├── run_review.py         # the retired hosted panel, kept so old runs stay readable
+├── review_plan.py        # where a review of a given draft belongs
+├── review_bundle.py      # writes a bundle the site can render
 ├── check_updates.py      # find reviews whose preprint has changed since
-├── smoke_test.py         # the pipeline/site data contract, offline
-└── _pinned_review.py     # test helper: review a named version, not the latest
+└── smoke_test.py         # the pipeline/site data contract, offline
 
 .claude/skills/
 └── local-review/SKILL.md # how a review is generated, start to finish
@@ -86,13 +86,22 @@ name its own decision, and `provenance.generator.decision_source` is pinned to
 Reviews published before this route ran on a GitHub runner against a paid API
 key, as a desk screen, a five-reviewer panel, two audits and a debate. That path
 is retired. `.github/workflows/review.yml` is now a manual-only stub that fails
-with a pointer here, `scripts/run_review.py` and `peerreview.toml` remain only
-so those runs stay reproducible and their pages keep rendering, and the
-`ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY` repository secrets are no longer
-read by anything.
+with a pointer here, and the `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY`
+repository secrets are no longer read by anything.
+
+Its driver is gone too. `scripts/run_review.py`, `scripts/_pinned_review.py`,
+`scripts/review_telemetry.py` and `peerreview.toml` were kept so those runs
+stayed re-runnable, and every one of them imported a module that
+peerreviewagents 0.8.0 deletes: the LangGraph panel, its default config, its
+ingest loader, its report writers and its observability hooks. A driver that
+cannot import anything is not reproducibility, so the four files were removed
+rather than carried as a shim. The fourteen bundles those runs wrote are
+untouched, and their pages still render from what is in them.
 
 The sections below marked *retired* describe that path, because fourteen
 published reviews came out of it and their records cannot be read without it.
+They are history now rather than instructions: nothing in this repository can
+run that path any more.
 
 ## Submission previews
 
@@ -138,7 +147,7 @@ replaced or edited.
 ## Running a review
 
 ```bash
-# Any interpreter with peerreviewagents 0.7 or newer importable.
+# Any interpreter with peerreviewagents 0.8 or newer importable.
 PY=/path/to/.venv/bin/python
 
 $PY scripts/local_review.py fingerprint
@@ -163,8 +172,10 @@ either. `--pdf` supplies exact bytes for that identity. A `--pdf` with no
 does not.
 
 Then the engine itself, which is the only part that spends anything, and which
-the skill walks through: `confirm-billing`, `import`, `review`, `report`. Read
-`REVIEW.md` from the run, decide, and write the bundle:
+the skill walks through: `import`, `review`, `report`. The provider is
+`claude-code` and the policy is `agentic-v1`, both named in the command rather
+than left to the default. Read `REVIEW.md` from the run, decide, and write the
+bundle:
 
 ```bash
 $PY scripts/local_review.py publish \
@@ -274,11 +285,12 @@ published bundle had to be rewritten for any of this.
 
 ### Retired: configuration of the hosted panel
 
-Model selection for the panel lived in [`peerreview.toml`](../peerreview.toml),
-and the panel was held to In Silico's own profile in
-[`journals/insilico.toml`](../journals/insilico.toml). Both files remain so that
-the fourteen reviews published that way stay reproducible. Nothing on the
-current path reads either of them.
+Model selection for the panel lived in `peerreview.toml`, and the panel was
+held to In Silico's own profile in
+[`journals/insilico.toml`](../journals/insilico.toml). `peerreview.toml` is gone
+with the driver that read it, since the engine release that read its `[models]`
+and `[agent_models]` tables no longer exists. The journal profile remains and
+nothing on the current path reads it.
 
 That path could also route every agent through one named model on OpenRouter.
 It needed `OPENROUTER_API_KEY`, which is no longer read. Naming a model cleared
@@ -362,7 +374,7 @@ was 15 model calls, and a desk rejection ended the run before the other 14.
       subscription login and no paid API key. A Claude subscription reports its
       API provider as `firstParty`, which is the subscription route and not a
       paid key
-- [ ] Install an interpreter with `peerreviewagents` 0.7 or newer importable
+- [ ] Install an interpreter with `peerreviewagents` 0.8 or newer importable
 - [ ] Settings, Pages, Source: **GitHub Actions**
 - [ ] Settings, Actions, Workflow permissions: **Read and write**, and allow PR
       creation

@@ -13,12 +13,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 REPO = Path(__file__).resolve().parents[2]
 
 from fetch_preprint import Preprint  # noqa: E402
-from run_review import (  # noqa: E402
-    BUNDLE_FILES,
-    configuration_record,
-    slugify,
-    write_bundle,
-)
+from review_bundle import BUNDLE_FILES, write_bundle  # noqa: E402
+from review_plan import slugify  # noqa: E402
+from review_provenance import configuration_record  # noqa: E402
 
 from .support import build_fixture, provenance_of  # noqa: E402
 

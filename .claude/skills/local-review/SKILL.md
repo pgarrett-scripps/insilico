@@ -12,8 +12,11 @@ the review. Nothing here publishes anything.
 
 No paid API key is involved at any point. The engine runs through its
 `claude-code` transport, which shells out to the `claude` CLI on the signed-in
-subscription. If the CLI turns out to be authenticated against a paid API
-provider, step 1 stops and says so.
+subscription. That is the engine's default provider and the only one this
+repository uses. The engine also has a `codex` transport, reachable only by
+passing `--provider codex`: never pass it, and never run a review on it.
+If the CLI turns out to be authenticated against a paid API provider, step 1
+stops and says so.
 
 ## What you need from the user
 
@@ -40,7 +43,7 @@ Run from the repository root:
 .venv/bin/python scripts/local_review.py fingerprint
 ```
 
-Use whichever interpreter has `peerreviewagents` 0.7.0 or newer importable. On
+Use whichever interpreter has `peerreviewagents` 0.8.0 or newer importable. On
 this machine that is normally `/home/ty/Repos/paper-workbench/.venv/bin/python`.
 
 Read the output. It prints the engine version, the engine source fingerprint,
@@ -65,15 +68,12 @@ and decides where a review of it belongs. It calls no model. Read the printed
 plan back to the user: the destination path, the draft number, the attempt
 number, and whether this is a first look, a revision round or a re-review.
 
-## Step 3. Confirm billing, import, review
+## Step 3. Import, then review
 
-Three engine commands, in order. Set `PY` to the interpreter from step 1 and
+Two engine commands, in order. Set `PY` to the interpreter from step 1 and
 `WORK` to a fresh working folder under `runs/`.
 
 ```bash
-$PY -m peerreviewagents.engine confirm-billing \
-  runs/<work>/billing.json --provider claude-code --extra-usage-disabled
-
 $PY -m peerreviewagents.engine import \
   runs/prepared-<slug>/<fetched>.pdf runs/<work>/workspace \
   --source-url <the archive URL>
@@ -81,18 +81,29 @@ $PY -m peerreviewagents.engine import \
 $PY -m peerreviewagents.engine review \
   runs/<work>/workspace runs/<work>/run \
   --provider claude-code --model claude-sonnet-5-5 \
-  --billing-confirmation runs/<work>/billing.json \
+  --policy agentic-v1 \
   --literature-cutoff <today, YYYY-MM-DD> \
   --mode ensemble --reviewers 2
 ```
 
-`--provider` and `--model` belong after `review`, not before it. The engine
-defines them on each subcommand's parser rather than at the top level, so a
-command that puts them first is rejected before anything runs.
+There is no billing step. The engine asked for a confirmation file before it
+would start a subscription run, and 0.8.0 removes that file, the flag that
+named it and every usage gate around it.
+
+`--provider`, `--model` and `--policy` belong after `review`, not before it.
+The engine defines them on each subcommand's parser rather than at the top
+level, so a command that puts them first is rejected before anything runs.
 `scripts/check_skill_commands.py` parses every engine command on this page
 against the engine's real parser, without executing any of them.
 
-The third command is the only one that spends anything. Tell the user it is
+Pass `--policy agentic-v1` by name even though it is the engine's default:
+high effort, thirty tool calls per reviewer and no cap on findings. Naming it
+puts the allowance a published review ran under in the command, where it can
+be read back. The alternative is `standard-v1`, the bounded study budget of at
+most five findings in about 900 words at medium effort, which is not what a
+review published here should run under.
+
+The second command is the only one that spends anything. Tell the user it is
 starting and roughly how long it will take. Do not run it twice on the same
 output folder: the engine refuses an existing run directory on purpose, so a
 retry needs a new one.
@@ -111,7 +122,8 @@ $PY -m peerreviewagents.engine report runs/<work>/run
 
 Read `runs/<work>/run/REVIEW.md` yourself. Summarise for the user: the
 reviewer's overall assessment, how many findings there are at each severity,
-and anything in it that looks wrong or unsupported.
+and anything in it that looks wrong or unsupported. A report with no findings
+is a real outcome, not a failed run. Say so plainly and go on to the decision.
 
 Then ask the user for the decision. It is one of `accept`, `minor`, `major`,
 `reject`. You may say which one the findings point toward and why, but the
@@ -152,9 +164,19 @@ recorded in `protocol.json`, so an opus run says opus without being told. The
 flag exists only as a cross-check: pass it when you want publish to refuse if
 the run turns out to have used a model other than the one you expected.
 
-Publish also requires a run that finished. It reads `progress.json` and refuses
-anything whose status is not `complete`, so a run that stopped part way cannot
-become a bundle that looks whole.
+Publish also requires a run that finished. It reads `progress.json` and accepts
+only the engine's two finished states, `complete` and
+`complete-without-findings`, so a run that stopped part way cannot become a
+bundle that looks whole. A `blocked` run is refused and the refusal repeats the
+cause the run recorded.
+
+`complete-without-findings` is a review. Two reviewers can read a manuscript
+end to end and raise nothing, and that result publishes with an empty findings
+list, which is the honest record of what happened. Do not re-run a review to
+try for findings. The one case publish still refuses is a run whose findings
+were every one of them quarantined by the engine's evidence guards: that is a
+review endorsing none of its own work, not a manuscript found sound, and the
+refusal says which it is.
 
 Add `--baseline-eligible` if the user said yes in step 4. When a submission
 issue named a submitter, add `--submitter <login>` and, if that issue stated

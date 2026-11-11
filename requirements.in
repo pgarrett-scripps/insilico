@@ -1,5 +1,11 @@
 # Production review environment on Linux with Python 3.12.
 # Regenerate requirements.txt with the command recorded in its header.
-peerreviewagents[research]==0.7.0
+#
+# The `research` extra is gone from peerreviewagents 0.8.0 along with the
+# LangGraph panel it existed for, so the plain package is the whole dependency.
+# requirements.txt still locks 0.7.0 and its panel transitives: the compile
+# needs 0.8.0 on an index with hashes, and it is not published yet. Regenerate
+# the lock as the first step after it lands.
+peerreviewagents==0.8.0
 rustypaper==0.2.2
 pyyaml>=6.0

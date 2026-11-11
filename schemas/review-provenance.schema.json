@@ -75,8 +75,8 @@
               "const": true
             },
             "verified_by": {
-              "$comment": "Where the login was read. The run's own billing confirmation is the stronger source, because it names the account that paid rather than the one logged in when the bundle was written.",
-              "enum": ["run_billing_confirmation", "publish_time_probe"]
+              "$comment": "Where the login was read. The run's own billing confirmation used to be accepted here, and was the stronger source because it named the account that paid rather than the one logged in when the bundle was written. Engine 0.8.0 writes no such file, so the publish-time probe is the only source a record can honestly name, and leaving the stronger value selectable would let a bundle claim a check that nothing performed. No published bundle carries this field, so narrowing it rewrote nothing.",
+              "enum": ["publish_time_probe"]
             },
             "verified_at": { "type": "string" },
             "paid_api_key_used": { "const": false }

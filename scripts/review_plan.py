@@ -142,43 +142,10 @@ def _rerun_provenance(bundle: str) -> dict | None:
     return prov
 
 
-def _same_draft(manuscript: Path, prior: dict, config: dict) -> bool:
-    """Whether the manuscript just fetched is the one the prior round read.
-
-    A rerun exists to hold the manuscript fixed and vary the pipeline, so this
-    guard is the whole feature: without it a comparison silently measures a
-    manuscript change and a pipeline change at once, and produces a bundle
-    that looks exactly like evidence about the pipeline.
-
-    It compares the *converted text*, not the PDF. Those are different
-    questions and the file hash answers the wrong one. Measured on this very
-    paper: three downloads of the same pinned bioRxiv URL over ten hours gave
-    three different file checksums at an identical 1,689,095 bytes, the
-    server stamps something fixed-width into the container, while the
-    converted text came back byte-identical all three times. Checking the file
-    hash refuses every bioRxiv rerun, including the correct ones.
-
-    Older bundles predate the text fingerprint. Those fall back to the
-    character count, which is weak but real, and say so, refusing to rerun
-    the oldest reviews would defeat the purpose, since they are the ones most
-    likely to predate a pipeline worth re-running.
-    """
-    from peerreviewagents.ingest.loader import load_manuscript_record
-
-    ok, message = draft_matches(
-        prior.get("ingest") or {}, load_manuscript_record(str(manuscript), config).ingest
-    )
-    print(message if ok else f"{message}\n{_REVISE_HINT}", file=sys.stderr)
-    return ok
-
-
-_REVISE_HINT = (
-    "A rerun holds the manuscript fixed and varies the pipeline, so a "
-    "comparison here would measure both at once. If the authors posted a new "
-    "version, that is a revision. Use --revise."
-)
-
-
+# The wrapper that fetched a manuscript, converted it through the old ingest
+# loader and compared it to the prior round lived here. Engine 0.8.0 deletes
+# `peerreviewagents.ingest`, and the local lane reads its own ingest record off
+# the engine run, so the comparison below is the whole surviving contract.
 def draft_matches(prior: dict, current: dict) -> tuple[bool, str]:
     """Compare two ingest records. Pure, so it can be tested without a PDF.
 

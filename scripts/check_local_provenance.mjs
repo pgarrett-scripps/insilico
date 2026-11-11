@@ -22,11 +22,11 @@ function localRecord(overrides = {}) {
   return {
     schema_version: 3,
     generated_at: "2026-11-10T00:00:00+00:00",
-    pipeline: { version: "0.7.0", sha: "" },
+    pipeline: { version: "0.8.0", sha: "" },
     insilico: { sha: "0".repeat(40) },
     generator: {
       kind: "local-claude-code",
-      engine: { name: "peerreviewagents.engine", version: "0.7.0" },
+      engine: { name: "peerreviewagents.engine", version: "0.8.0" },
       engine_fingerprint: {
         algorithm: "sha256",
         file_count: 42,
@@ -118,6 +118,18 @@ rejects(noGenerator, "a version 3 record must carry a generator block");
 const paid = localRecord();
 paid.generator.transport.paid_api_key_used = true;
 rejects(paid, "a paid API key must not validate as a local review");
+
+// Where the login came from. The probe is the only source left: engine 0.8.0
+// writes no billing confirmation, so a record naming one is claiming a check
+// against a file that does not exist.
+const probed = localRecord();
+probed.generator.transport.verified_by = "publish_time_probe";
+probed.generator.transport.verified_at = "2026-11-11T12:00:00+00:00";
+assertValidProvenance(probed, "fixture");
+
+const confirmed = localRecord();
+confirmed.generator.transport.verified_by = "run_billing_confirmation";
+rejects(confirmed, "a login read from a file the engine no longer writes is not a source");
 
 // The engine recommends no verdict, so nothing else may be named as the author
 // of the decision.
