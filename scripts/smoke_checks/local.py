@@ -966,8 +966,13 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
         )
 
         # It publishes, documents and all, rather than refusing at the last step.
+        # The engine and the login are both stubbed, the way every other
+        # publishing check here stubs them, because CI runs this file with no
+        # engine installed and no CLI to read a login from.
         transport_record = local_review.transport_record
         local_review.transport_record = lambda **_: _probed_transport()
+        engine_record = local_review.engine_record
+        local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
         reviews = local_review.REVIEWS
         try:
             local_review.REVIEWS = Path(tmp) / "reviews"
@@ -987,6 +992,7 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
         finally:
             local_review.REVIEWS = reviews
             local_review.transport_record = transport_record
+            local_review.engine_record = engine_record
 
         # Every finding quarantined is a different claim, and says so.
         quarantined = _run_directory(
