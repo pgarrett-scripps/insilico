@@ -192,6 +192,44 @@ const silentAboutStatus = localRecord();
 delete silentAboutStatus.generator.run.status;
 rejects(silentAboutStatus, "a record must say that the run finished");
 
+// A review that read the manuscript end to end and raised nothing is a result,
+// and the record of it is `complete` with `review_guard_status: clean` and no
+// findings. It has to validate, or the corpus can never hold a sound paper.
+const foundNothing = localRecord();
+foundNothing.generator.run.review_guard_status = "clean";
+foundNothing.generator.run.findings = 0;
+assertValidProvenance(foundNothing, "fixture");
+
+const someLost = localRecord();
+someLost.generator.run.review_guard_status = "partially-quarantined";
+assertValidProvenance(someLost, "fixture");
+
+// The engine's other finished state is not that. It writes
+// `complete-without-findings` in one case only, when every finding the
+// reviewers raised failed the evidence guards, and such a review endorses none
+// of its own work. Published as a clean result it would tell the authors the
+// reviewer recorded nothing, which is false.
+const everythingQuarantined = localRecord();
+everythingQuarantined.generator.run.status = "complete-without-findings";
+rejects(everythingQuarantined, "the quarantined outcome is not a review of a sound paper");
+
+const quarantinedGuard = localRecord();
+quarantinedGuard.generator.run.review_guard_status = "all-findings-quarantined";
+rejects(quarantinedGuard, "a run that endorses none of its own findings must not publish");
+
+// The allowance the reviewers ran under. Optional, because the published
+// records predate the field, but a record that states it has to state one of
+// the engine's policy names rather than an empty string.
+for (const policy of ["agentic-v1", "standard-v1"]) {
+  const named = localRecord();
+  named.generator.run.review_policy = policy;
+  assertValidProvenance(named, "fixture");
+}
+
+const emptyPolicy = localRecord();
+emptyPolicy.generator.run.review_policy = "";
+rejects(emptyPolicy, "an empty policy name is not a policy");
+
 // Whether the reviewed bytes were fetched from the identifier or handed over
 // from a local disk decides whether the hash means anything to a reader.
 const noProvenanceOfBytes = localRecord();

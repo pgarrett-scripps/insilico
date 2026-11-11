@@ -164,19 +164,26 @@ recorded in `protocol.json`, so an opus run says opus without being told. The
 flag exists only as a cross-check: pass it when you want publish to refuse if
 the run turns out to have used a model other than the one you expected.
 
-Publish also requires a run that finished. It reads `progress.json` and accepts
-only the engine's two finished states, `complete` and
-`complete-without-findings`, so a run that stopped part way cannot become a
-bundle that looks whole. A `blocked` run is refused and the refusal repeats the
-cause the run recorded.
+Publish also requires a run that finished, which means `progress.json` says
+`status: complete`. A run that stopped part way cannot become a bundle that
+looks whole, and a `blocked` run is refused with the cause the run recorded.
 
-`complete-without-findings` is a review. Two reviewers can read a manuscript
-end to end and raise nothing, and that result publishes with an empty findings
-list, which is the honest record of what happened. Do not re-run a review to
-try for findings. The one case publish still refuses is a run whose findings
-were every one of them quarantined by the engine's evidence guards: that is a
-review endorsing none of its own work, not a manuscript found sound, and the
-refusal says which it is.
+A review that raised nothing is one of those complete runs. Two reviewers can
+read a manuscript end to end and find nothing worth reporting, and the engine
+records that as `complete` with `review_guard_status: clean` and no findings.
+It publishes with an empty findings list, which is the honest record of what
+happened. Do not re-run a review to try for findings.
+
+The engine's other finished state, `complete-without-findings`, is not that.
+The engine writes it in exactly one case: every finding the reviewers raised
+failed the evidence guards and was quarantined. Publish refuses it, because
+such a review endorses none of its own work, which is a different claim from a
+manuscript found sound, and the letter would tell the authors the wrong one.
+Read the quarantine reasons in the run before deciding what to do next.
+
+Publish records Claude Code runs only, and refuses a run whose `protocol.json`
+names another transport. Every claim a published bundle makes about how the
+review was paid for is a claim about a Claude subscription.
 
 Add `--baseline-eligible` if the user said yes in step 4. When a submission
 issue named a submitter, add `--submitter <login>` and, if that issue stated

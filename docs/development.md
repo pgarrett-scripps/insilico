@@ -87,7 +87,9 @@ Reviews published before this route ran on a GitHub runner against a paid API
 key, as a desk screen, a five-reviewer panel, two audits and a debate. That path
 is retired. `.github/workflows/review.yml` is now a manual-only stub that fails
 with a pointer here, and the `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY`
-repository secrets are no longer read by anything.
+repository secrets are no longer read by anything. `.env.example` is gone with
+them. It told a contributor to paste an Anthropic key into `.env`, which no
+code here reads any more and which the local route forbids outright.
 
 Its driver is gone too. `scripts/run_review.py`, `scripts/_pinned_review.py`,
 `scripts/review_telemetry.py` and `peerreview.toml` were kept so those runs

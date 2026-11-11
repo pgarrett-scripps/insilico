@@ -82,15 +82,37 @@ BUNDLE_DOCUMENTS = ("summary.md", "decision_letter.md", "manuscript_stats.md")
 SEVERITY_ORDER = {"major": 0, "moderate": 1, "minor": 2}
 REQUIRED_SEVERITIES = ("major", "moderate")
 
-# The two states in which the engine spent its calls and produced a review.
-# `bundle.FINISHED_STATUSES` is the same pair. A run can finish every stage and
-# endorse nothing, either because the reviewers found nothing or because the
-# source guards quarantined every finding, and the engine records that as
-# `complete-without-findings` with a report beside it. Treating anything but
-# `complete` as a failure refused those runs, which is a published corpus that
-# silently drops every review that found a manuscript sound.
-FINISHED_STATUSES = ("complete", "complete-without-findings")
+# The one state a review may be published from. `bundle.FINISHED_STATUSES`
+# carries a second, `complete-without-findings`, and that is not a review here.
+# The engine writes it in exactly one case: every finding the reviewers raised
+# failed the evidence guards and was quarantined. See ensemble.py around the
+# final progress write, reviewer.py's guard branch and api.py's
+# manuscript_only_progress, all three of which set it only when
+# review_guard_status is all-findings-quarantined.
+#
+# A run that read the manuscript end to end and genuinely raised nothing is
+# `complete` with the guard status `clean`, and that publishes with an empty
+# findings list, which is the honest record of a manuscript found sound. The
+# quarantined case is the opposite claim, a review endorsing none of its own
+# work, and publishing it under the same words would tell authors their paper
+# drew no findings when every finding was thrown away.
+FINISHED_STATUSES = ("complete",)
 ALL_FINDINGS_QUARANTINED = "all-findings-quarantined"
+WITHOUT_FINDINGS_STATUS = "complete-without-findings"
+
+# insilico publishes Claude Code runs only. The engine still supports Codex
+# behind `--provider codex`, and nothing here is written for it: the attestation
+# names a Claude subscription, the login probe reads the Claude CLI and the
+# billing policy below describes that account. A Codex run published through
+# this path would carry all three claims about a transport it never used.
+PUBLISHABLE_PROVIDERS = ("claude-code",)
+
+# What the engine calls its bounded study budget, spelled out rather than
+# imported: this module has to read a run with no engine installed, which is how
+# CI runs the smoke suite. It is `review_policy.STUDY_POLICY_NAME`, and the
+# policy that adds no protocol keys, so a run whose protocol names no policy ran
+# under this one.
+STUDY_POLICY_NAME = "standard-v1"
 
 
 def digest(data: bytes) -> str:
@@ -173,8 +195,12 @@ SUBSCRIPTION_API_PROVIDERS = (None, "", "firstParty")
 BILLING_POLICY = "claude-subscription-v1"
 
 
-def transport_from_status(status: dict) -> dict:
+def transport_from_status(status: dict, *, provider: str) -> dict:
     """Turn one `claude auth status` reading into the transport record.
+
+    `provider` is the transport the run itself recorded, passed in rather than
+    taken from a constant here, so the record cannot name one provider while the
+    run asked another.
 
     Pure, so the refusals can be tested without a CLI. Three things have to hold
     before a review may run: somebody is logged in, the login is a subscription
@@ -204,7 +230,7 @@ def transport_from_status(status: dict) -> dict:
             "choose the subscription account before generating a review."
         )
     return {
-        "provider": TRANSPORT_PROVIDER,
+        "provider": provider,
         "executable": "claude",
         "version": None,
         "billing_policy": BILLING_POLICY,
@@ -215,8 +241,14 @@ def transport_from_status(status: dict) -> dict:
     }
 
 
-def transport_record(*, probe: bool = True) -> dict:
+def transport_record(*, provider: str, probe: bool = True) -> dict:
     """Which CLI ran the models, and on whose account.
+
+    `provider` is the transport the run recorded, or, in the preflight where
+    there is no run yet, the one this path publishes. Anything outside
+    `PUBLISHABLE_PROVIDERS` is refused before the probe, so no second provider's
+    CLI is ever executed from here and no bundle is written describing a
+    transport this code knows nothing about.
 
     ``paid_api_key_used`` is a constant here and a constant in the schema. This
     path cannot reach a paid key, so the field is a statement about the design
@@ -233,9 +265,16 @@ def transport_record(*, probe: bool = True) -> dict:
     the narrower one this makes: who the Claude CLI was signed in as when the
     bundle was written.
     """
+    provider = str(provider or "")
+    if provider not in PUBLISHABLE_PROVIDERS:
+        raise CommandError(
+            f"This run used the {provider or 'unrecorded'} transport, and this "
+            f"path records {', '.join(PUBLISHABLE_PROVIDERS)} runs only. Review "
+            "the paper again on Claude Code, or publish it by another route."
+        )
     if not probe:
         return {
-            "provider": TRANSPORT_PROVIDER,
+            "provider": provider,
             "executable": "claude",
             "version": None,
             "billing_policy": BILLING_POLICY,
@@ -243,7 +282,7 @@ def transport_record(*, probe: bool = True) -> dict:
             "paid_api_key_used": False,
         }
     runtime = importlib.import_module(f"{ENGINE_PACKAGE}.model_runtime")
-    return {**transport_from_status(runtime.auth_status(provider=TRANSPORT_PROVIDER)),
+    return {**transport_from_status(runtime.auth_status(provider=provider), provider=provider),
             "login_verified": True,
             "verified_by": "publish_time_probe"}
 
@@ -513,8 +552,27 @@ def read_run(run_dir: Path) -> dict:
         protocol.get("paper_id"),
         nested.get("paper_id"),
     ))
+    # What the reviewers were allowed to spend. The ensemble manifest names it
+    # in its plan, and every policy but the study one also writes itself into
+    # protocol.json: review_policy.protocol_overlay adds no keys for
+    # `standard-v1` so that a run made under the engine's original limits keeps
+    # a byte-identical protocol and stays resumable. So an absent key on a run
+    # that recorded a protocol means the study policy, which is the engine's own
+    # reading of it, and without this a five-finding standard-v1 review and a
+    # thirty-call agentic-v1 review published indistinguishable records.
+    put("review_policy", _first(
+        plan.get("review_policy"),
+        protocol.get("review_policy"),
+        nested.get("review_policy"),
+        STUDY_POLICY_NAME if protocol else None,
+    ))
     put("engine_source", manifest.get("code"))
     put("status", progress.get("status"))
+    # Kept because the status alone no longer distinguishes the two outcomes a
+    # reader cares about: a manuscript nobody found fault with is `clean` with
+    # no findings, and a review whose every finding was thrown away is
+    # `all-findings-quarantined`.
+    put("review_guard_status", progress.get("review_guard_status"))
     put("usage", progress.get("usage"))
     put("artifact_version", artifact.get("artifact_version"))
 
@@ -536,9 +594,12 @@ def run_errors(run_dir: Path, progress: dict) -> list[str]:
     counted here: a reader deciding how much to trust a review should see that
     three of its findings were thrown away.
 
-    Finishing with no findings is not one of these. It is a finished run with a
-    report, recorded as `complete-without-findings`, and listing it as an error
-    told a reader that a review of a sound manuscript had gone wrong.
+    Finishing with no findings is not one of these. A run that read the
+    manuscript and raised nothing is `complete` with the guard status `clean`,
+    and listing that as an error told a reader a review of a sound manuscript
+    had gone wrong. Every finding quarantined is a different outcome and is
+    listed, because the engine records it as `complete-without-findings` and the
+    two read nothing alike.
     """
     errors = []
     if progress.get("error"):
@@ -951,6 +1012,22 @@ def build_provenance(
     # two disagree the run is the one that is true.
     run_record = {key: value for key, value in run.items() if key != "engine_source"}
     run_record["findings"] = len(findings)
+    # The provider is the run's too. It used to be a constant at the top level
+    # and another constant inside the transport, so a record could say
+    # claude-code twice over a run that had asked the engine for Codex, and
+    # nothing in the file compared the two.
+    provider = str(run.get("provider") or "")
+    if not provider:
+        raise CommandError(
+            "This run records no provider, so the record cannot say which "
+            "transport produced the review."
+        )
+    if str(transport.get("provider") or "") != provider:
+        raise CommandError(
+            f"The run used the {provider} transport and the login was read from "
+            f"{transport.get('provider')}. A record that names two transports "
+            "describes neither run."
+        )
     generator = {
         "kind": GENERATOR_KIND,
         "engine": engine_record(),
@@ -993,7 +1070,7 @@ def build_provenance(
             "baseline_eligible": baseline_eligible,
             "route": route,
         },
-        "provider": TRANSPORT_PROVIDER,
+        "provider": provider,
         # One model wrote every word of this review. `models` is the per-stage
         # split, and claiming one here would describe a panel that did not run,
         # so it stays empty and `model` carries the single id. The site reads
@@ -1062,7 +1139,9 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
     record = {
         "engine": engine_record(),
         "engine_fingerprint": engine_fingerprint(),
-        "transport": transport_record(probe=not args.offline),
+        # No run exists yet, so the preflight asks about the one transport this
+        # path can publish. A review on anything else is refused later anyway.
+        "transport": transport_record(provider=TRANSPORT_PROVIDER, probe=not args.offline),
     }
     print(json.dumps(record, indent=2))
     return 0
@@ -1344,12 +1423,23 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
     and so did a run whose progress.json said `blocked`. Both produced a record
     that read like a clean review.
 
-    Finished means either of the engine's two finished states. A run that
-    endorsed no finding spent its calls and wrote its report, so it is a review
-    and publishes as one, with the empty findings list the reader should see.
-    A blocked run is refused, and the refusal repeats the cause the run itself
-    recorded rather than only the state name, because the state name alone sent
-    the operator back to a log to find out there was no Claude login.
+    Finished means `complete`, and nothing else. A run that read the manuscript
+    and raised no finding is `complete` with the guard status `clean`, and it
+    publishes as a review with the empty findings list the reader should see.
+    The engine's other finished state, `complete-without-findings`, is written
+    only when every finding was quarantined, so it is refused here by name
+    before the status check: that bundle's letter would tell the authors their
+    paper drew no findings, when the truth is that the review endorses none of
+    the findings it wrote.
+
+    A blocked run is refused too, and the refusal repeats the cause the run
+    itself recorded rather than only the state name, because the state name
+    alone sent the operator back to a log to find out there was no Claude login.
+
+    The transport is checked here as well. This path records Claude Code runs
+    only, and the engine will run Codex for anyone who asks it to, so a Codex
+    run reaching publish would otherwise be written up with a Claude
+    subscription attestation it has no claim to.
     """
     protocol_path = Path(run_dir) / "protocol.json"
     if not protocol_path.is_file():
@@ -1374,11 +1464,32 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
             "record could not say how the review was produced. Point --run at "
             "the engine's review output folder."
         )
+    provider = str(run.get("provider") or "")
+    if provider not in PUBLISHABLE_PROVIDERS:
+        raise CommandError(
+            f"This run recorded the {provider} transport, and this path "
+            f"publishes {', '.join(PUBLISHABLE_PROVIDERS)} runs only. Every "
+            "claim a published bundle makes about how the review was paid for "
+            "is a claim about a Claude subscription, so a run on another "
+            "transport cannot be published through it."
+        )
     status = str(run.get("status") or "")
     if not status:
         raise CommandError(
             f"{run_dir} has no progress.json, so the run never recorded whether "
             "it finished. A review cannot be published from it."
+        )
+    # Named before the status, because this is the case the status describes
+    # and the operator needs to be told which of the two it is.
+    if run.get("review_guard_status") == ALL_FINDINGS_QUARANTINED or status == WITHOUT_FINDINGS_STATUS:
+        raise CommandError(
+            f"This run ended as {status} with guard status "
+            f"{run.get('review_guard_status') or 'unrecorded'}, which the engine "
+            "writes when every finding it produced was quarantined by the "
+            "evidence guards. A review that endorses none of its own findings is "
+            "not a manuscript found sound, and publishing it would say so to the "
+            "authors. Read the quarantine reasons in the run, and re-run the "
+            "engine or publish nothing."
         )
     if status not in FINISHED_STATUSES:
         cause = next((str(problem) for problem in run.get("errors") or [] if problem), "")
@@ -1470,7 +1581,10 @@ def cmd_publish(args: argparse.Namespace) -> int:
     dest = publish_destination(prepared, publishing=args.publish)
     route = f"v{prepared['draft']}/r{prepared['attempt']}"
     review_id = bundle_identifier(dest)
-    transport = transport_record(probe=not args.offline)
+    # The run's transport, so the login that is probed is the login the review
+    # ran on, and a run on anything this path cannot publish is refused here
+    # even when the bundle is only a rehearsal.
+    transport = transport_record(provider=str(run.get("provider") or ""), probe=not args.offline)
     provenance = build_provenance(
         preprint=preprint,
         prepared=prepared,

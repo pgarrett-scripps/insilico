@@ -25,6 +25,7 @@ from smoke_checks.local import (
     check_a_rehearsal_claims_no_reading,
     check_a_rehearsal_is_never_written_into_the_published_tree,
     check_a_run_of_one_paper_cannot_be_published_as_another,
+    check_a_run_on_another_transport_is_not_published,
     check_a_run_with_no_manifest_paper_id_is_still_bound,
     check_a_subscription_login_is_not_a_paid_provider,
     check_a_substituted_model_is_visible,
@@ -170,7 +171,9 @@ def main() -> int:
     check_an_unfinished_run_cannot_be_published()
     print("ok  a run that did not finish cannot be published, and the cause is named")
     check_a_finished_run_that_endorses_nothing_is_a_review()
-    print("ok  a run that finished and endorsed nothing publishes as a review")
+    print("ok  a run that finished and raised nothing publishes, a quarantined one does not")
+    check_a_run_on_another_transport_is_not_published()
+    print("ok  a run on another transport is refused rather than labelled claude-code")
     check_a_dated_model_id_is_not_a_substitution()
     print("ok  model drift uses the engine's own rule for the same model")
     check_a_published_record_names_no_local_path()
@@ -185,8 +188,6 @@ def main() -> int:
     print("ok  a bundle is written only inside the tree it belongs to")
     check_a_missing_engine_fails_the_skill_check_in_ci()
     print("ok  the skill command check fails in CI rather than skipping itself")
-    check_the_locked_engine_release_is_the_one_declared()
-    print("ok  the lock pins the engine release requirements.in declares")
     check_no_published_file_in_a_bundle_names_a_local_path()
     print("ok  the engine's path fields are scrubbed and every bundle file is scanned")
     check_an_empty_protocol_file_is_not_a_record_of_the_run()
@@ -199,6 +200,14 @@ def main() -> int:
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"
     print(f"\n{len(NASTY_TITLES)} fixture bundle(s) written cleanly")
+
+    # Last on purpose, after everything else has reported. This one asserts a
+    # fact about requirements.txt rather than about any code here, and it fails
+    # for as long as the engine release in use is installed from git instead of
+    # a lock that can name it. A failing assertion ends the run, so anywhere
+    # earlier this known mismatch would hide every check after it.
+    check_the_locked_engine_release_is_the_one_declared()
+    print("ok  the lock pins the engine release requirements.in declares")
     return 0
 
 
