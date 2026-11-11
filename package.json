@@ -21,6 +21,8 @@
     "check:attempts": "node scripts/check_review_attempts.mjs",
     "check:markdown": "node scripts/check_markdown_security.mjs",
     "check:schema": "node scripts/check_review_schema.mjs",
+    "check:local": "node scripts/check_local_provenance.mjs",
+    "check:pages": "node scripts/check_published_pages.mjs",
     "check:punctuation": "python3 scripts/check_project_punctuation.py dist"
   },
   "dependencies": {

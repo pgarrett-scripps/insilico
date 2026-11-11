@@ -3,38 +3,159 @@
   "$id": "https://insilico.science/schemas/review-provenance.schema.json",
   "title": "In Silico review provenance",
   "type": "object",
+  "$comment":"Two record shapes share this file. Version 2 is the hosted panel: five referees, two audits, a debate, and a dollar cost. Version 3 is a review generated locally on a subscription, where most of those numbers do not exist and inventing zeros for them would read as measurements. Fields common to both are required here; each version's own obligations are in allOf below. Records written before versioning carry no schema_version and are not validated at all, so nothing already published has to be rewritten.",
   "required": [
     "schema_version",
     "generated_at",
     "pipeline",
     "insilico",
-    "configuration",
-    "journal_profile",
     "review",
     "provider",
     "models",
-    "agent_models",
-    "debate_rounds",
     "decision",
     "desk_rejected",
     "round",
-    "revision",
-    "submitter",
-    "submitter_is_author",
     "ingest",
-    "screens",
     "panel",
-    "mean_score",
-    "scored_count",
-    "panel_size",
-    "total_cost_usd",
-    "cost_by_node",
-    "research_by_node",
     "errors",
     "preprint"
   ],
   "properties": {
-    "schema_version": { "const": 2 },
+    "schema_version": { "enum": [2, 3] },
+    "generator": {
+      "$comment":"Required on a version 3 record. It answers who ran this review, on what code, through which billing route, and whether a person read it before it was published. The engine fingerprint is over the engine source tree, so two reviews claiming the same engine version can be shown to have run the same bytes.",
+      "type": "object",
+      "required": [
+        "kind",
+        "engine",
+        "engine_fingerprint",
+        "transport",
+        "model_ids",
+        "input",
+        "decision_source",
+        "attestation"
+      ],
+      "properties": {
+        "kind": { "const": "local-claude-code" },
+        "engine": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 },
+            "api_version": { "type": "string" }
+          }
+        },
+        "engine_fingerprint": {
+          "$comment":"source names where the hashed manifest came from. run_manifest is the engine's own record of its source tree from the moment the run started, which is the only one that describes the code that wrote the review. installed_engine is a re-hash of whatever is installed on the publishing machine, which is a different claim. matches_installed_engine is present when both could be compared.",
+          "type": "object",
+          "required": ["algorithm", "file_count", "sha256", "source"],
+          "properties": {
+            "algorithm": { "const": "sha256" },
+            "file_count": { "type": "integer", "minimum": 1 },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "source": { "enum": ["run_manifest", "installed_engine"] },
+            "matches_installed_engine": { "type": "boolean" }
+          }
+        },
+        "transport": {
+          "$comment":"paid_api_key_used is a const rather than a boolean. A record that needs to say true is not a local subscription run and does not belong in this shape.",
+          "type": "object",
+          "required": ["provider", "executable", "billing_policy", "login_verified", "paid_api_key_used"],
+          "properties": {
+            "provider": { "enum": ["claude-code", "codex"] },
+            "executable": { "type": "string", "minLength": 1 },
+            "version": { "type": ["string", "null"] },
+            "billing_policy": { "type": "string", "minLength": 1 },
+            "auth_method": { "type": ["string", "null"] },
+            "subscription_type": { "type": ["string", "null"] },
+            "api_provider": { "type": ["string", "null"] },
+            "login_verified": {
+              "$comment": "A const rather than a boolean, for the same reason as paid_api_key_used. A rehearsal written with the login check skipped says false here, and a rehearsal is not a published review however it reached this folder.",
+              "const": true
+            },
+            "verified_by": {
+              "$comment": "Where the login was read. The run's own billing confirmation is the stronger source, because it names the account that paid rather than the one logged in when the bundle was written.",
+              "enum": ["run_billing_confirmation", "publish_time_probe"]
+            },
+            "verified_at": { "type": "string" },
+            "paid_api_key_used": { "const": false }
+          }
+        },
+        "model_ids": {
+          "$comment":"requested is what the operator asked for. observed is what the transport reported back per call, which is the one that can disagree.",
+          "type": "object",
+          "required": ["requested", "observed"],
+          "properties": {
+            "requested": { "type": "string", "minLength": 1 },
+            "observed": { "type": "array", "items": { "type": "string" } },
+            "substituted": { "const": true }
+          }
+        },
+        "input": {
+          "$comment":"The exact bytes the engine read, hashed before the run. A reader who disputes a quotation can fetch the same identifier and compare. local_file says whether those bytes were fetched from the identifier or handed over from the operator's disk, which a reader cannot otherwise tell and which decides whether the hash can be reproduced.",
+          "type": "object",
+          "required": ["kind", "identifier", "sha256", "bytes", "local_file"],
+          "properties": {
+            "kind": { "enum": ["arxiv", "doi", "url", "pdf"] },
+            "identifier": { "type": "string", "minLength": 1 },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "bytes": { "type": "integer", "minimum": 1 },
+            "local_file": { "type": "boolean" },
+            "workspace_manifest_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "run": {
+          "$comment":"Read from what the run itself wrote, never from the prepare step's intentions or the publish flags. Only the status is required, because a run that did not record a value must leave it out rather than carry a default that looks measured, but a published review has to come from a run that finished.",
+          "type": "object",
+          "required": ["status"],
+          "properties": {
+            "directory": {
+              "$comment": "Relative to the repository root. An absolute path identifies the machine that wrote the record rather than the review, and this record is published.",
+              "type": "string",
+              "pattern": "^[^/]"
+            },
+            "workflow": { "type": "string" },
+            "workflow_version": { "type": "string" },
+            "model": { "type": "string" },
+            "provider": { "type": "string" },
+            "effort": { "type": "string" },
+            "reviewers": { "type": "integer", "minimum": 1 },
+            "synthesis_policy": { "type": "string" },
+            "synthesis_tool_limit": { "type": "integer", "minimum": 0 },
+            "paper_id": { "type": "string" },
+            "status": {
+              "$comment": "The engine writes running, blocked or complete. Only a complete run is a review, so a bundle written from one that stopped part way cannot validate even if its folder is moved into place by hand.",
+              "const": "complete"
+            },
+            "usage": { "type": "object" },
+            "literature_cutoff": { "type": "string" },
+            "artifact_version": { "type": "string" },
+            "findings": { "type": "integer", "minimum": 0 },
+            "errors": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "decision_source": {
+          "$comment":"The engine grades findings, not manuscripts. It produces no accept or reject verdict, so the decision on a version 3 record was typed by the editor after reading the run. Recording the engine as its author would be a false attribution.",
+          "const": "human_editor"
+        },
+        "attestation": {
+          "$comment":"human_reviewed_before_merge stays a const rather than a boolean: this file validates published records, and a record that has to say false is a rehearsal that was never meant to reach the site. editor is required because the generator used to write the attestation as a constant, before any person had acted. An attestation with nobody behind it attests to nothing, so the name of whoever read the run is part of the claim.",
+          "type": "object",
+          "required": ["locally_generated", "human_reviewed_before_merge", "rehearsal", "editor", "statement"],
+          "properties": {
+            "locally_generated": { "const": true },
+            "human_reviewed_before_merge": { "const": true },
+            "rehearsal": {
+              "$comment": "Whether the generator was asked to publish this bundle. Until the record said so, the only difference between a rehearsal and a published review was which folder it sat in, and a folder can be copied.",
+              "const": false
+            },
+            "editor": { "type": "string", "minLength": 1 },
+            "statement": { "type": "string", "minLength": 40 }
+          }
+        }
+      }
+    },
     "environment": {
       "type": "object",
       "required": ["python", "implementation", "system", "machine", "packages", "lock_sha256", "lock_applied"],
@@ -72,7 +193,16 @@
       }
     },
     "journal_profile": { "type": "object" },
-    "review": { "type": "object" },
+    "review": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$comment": "The bundle's path inside this repository, or its slug and route when it was written elsewhere. Never an absolute path, for the same reason as generator.run.directory.",
+          "type": "string",
+          "pattern": "^[^/]"
+        }
+      }
+    },
     "provider": { "type": "string", "minLength": 1 },
     "model": { "type": "string" },
     "models": { "type": "object" },
@@ -126,6 +256,66 @@
     }
   },
   "allOf": [
+    {
+      "$comment":"The hosted panel's obligations, unchanged. Every record already published as version 2 still has to satisfy exactly this list.",
+      "if": {
+        "required": ["schema_version"],
+        "properties": { "schema_version": { "const": 2 } }
+      },
+      "then": {
+        "required": [
+          "configuration",
+          "journal_profile",
+          "agent_models",
+          "debate_rounds",
+          "revision",
+          "submitter",
+          "submitter_is_author",
+          "screens",
+          "mean_score",
+          "scored_count",
+          "panel_size",
+          "total_cost_usd",
+          "cost_by_node",
+          "research_by_node"
+        ],
+        "$comment": "Ajv strict mode asks that a required name also appear in this subschema's own properties. The real constraints for each one live in the top-level properties block, so these are deliberately empty.",
+        "properties": {
+          "configuration": {},
+          "journal_profile": {},
+          "agent_models": {},
+          "debate_rounds": {},
+          "revision": {},
+          "submitter": {},
+          "submitter_is_author": {},
+          "screens": {},
+          "mean_score": {},
+          "scored_count": {},
+          "panel_size": {},
+          "total_cost_usd": {},
+          "cost_by_node": {},
+          "research_by_node": {}
+        }
+      }
+    },
+    {
+      "$comment":"A local run has no per-stage model split, no panel of five, and no dollar cost, so it is not asked for them. What it must carry instead is the generator block: the code, the transport and the human attestation that stand in for the hosted pipeline's accounting.",
+      "if": {
+        "required": ["schema_version"],
+        "properties": { "schema_version": { "const": 3 } }
+      },
+      "then": {
+        "required": ["generator", "model"],
+        "properties": {
+          "generator": {},
+          "model": { "type": "string", "minLength": 1 },
+          "total_cost_usd": {
+            "$comment":"A subscription run has no per-review dollar figure. Null says so; a zero would read as a measured free run.",
+            "type": "null"
+          }
+        }
+      }
+    },
     {
       "if": {
         "required": ["readiness_score"],

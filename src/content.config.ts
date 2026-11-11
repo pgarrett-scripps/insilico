@@ -1,6 +1,8 @@
 import { defineCollection } from "astro:content";
 import { glob } from "astro/loaders";
 
+import { EDITORIAL_PATTERNS } from "./lib/pages.js";
+
 /**
  * Content is read in place from `docs/`, which the Python pipeline owns and
  * writes. Nothing is copied into `src/`: a review bundle is the published
@@ -18,9 +20,11 @@ const reports = defineCollection({
   }),
 });
 
-// The hand-written editorial pages.
+// The hand-written editorial pages, named one by one rather than globbed.
+// `docs/` also holds working notes that are not part of the site, and a
+// pattern cannot tell the difference. See src/lib/pages.js.
 const pages = defineCollection({
-  loader: glob({ pattern: ["*.md", "!index.md"], base: "./docs" }),
+  loader: glob({ pattern: EDITORIAL_PATTERNS, base: "./docs" }),
 });
 
 export const collections = { reports, pages };

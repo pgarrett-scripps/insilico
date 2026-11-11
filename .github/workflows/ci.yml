@@ -28,6 +28,12 @@ jobs:
       - run: python scripts/check_runtime.py
       - run: python scripts/smoke_test.py
 
+      # The skill drives the engine's CLI by hand, and an engine command with
+      # its options in the wrong place is only caught by running it, which
+      # costs a review. Argparse answers for free.
+      - name: Engine commands in the local-review skill parse
+        run: python scripts/check_skill_commands.py
+
   pipeline:
     name: Pipeline
     runs-on: ubuntu-latest
@@ -63,6 +69,9 @@ jobs:
       - name: Published review provenance matches its schema
         run: npm run check:schema
 
+      - name: A locally generated review validates and a paid one does not
+        run: npm run check:local
+
       - name: Generated Markdown is inert
         run: npm run check:markdown
 
@@ -71,6 +80,9 @@ jobs:
 
       - name: Site builds
         run: npm run build
+
+      - name: Only the editorial pages are published from docs/
+        run: npm run check:pages
 
       - name: Project prose contains no forbidden punctuation
         run: npm run check:punctuation
