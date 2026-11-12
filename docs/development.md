@@ -236,8 +236,18 @@ files by hand: the arm and the workflow the run was asked for, the paper id and
 the hash of each plugin and workflow file taken when the call started, the
 reviewer count, one row per agent with the model the transport actually served
 it, which stages reported and which were retried, the guards' verdict and how
-many findings they held back, and the status the run ended in. A value the run
-did not record is left out of the record rather than filled in from a flag.
+many findings they held back, and the status the run ended in. One field is read
+out of the run folder by hand, because the reading does not carry it: the moment
+the starter wrote `startup.json`, which the record publishes as when the
+transport evidence was gathered. A value the run did not record is left out of
+the record rather than filled in from a flag.
+
+Whether a run can be published is the engine's answer too. `read_run` sets a
+`publishable` flag and lists its reasons beside it, and publish gates on the
+flag and prints those reasons. No status word is special-cased, which is what
+lets a review that raised nothing publish while a review the guards emptied of
+every finding does not, although the engine finishes both as
+`complete-without-findings`.
 
 Nothing in `publish` writes prose. Every document is rendered from the engine's
 saved output, and the reviewer's own words are quoted rather than rewritten.

@@ -183,27 +183,30 @@ workspace is what ties the run to the paper that was prepared: publish compares
 the hash prepare took of the PDF against the hash the importer recorded, and
 refuses when they differ.
 
-Publish requires a run that finished, which means `progress.json` says
-`status: complete`. A run that stopped part way cannot become a bundle that
-looks whole, and a `blocked` run is refused with the cause the run recorded. It
-also requires every stage the arm asked for to have reported: a specialist that
-never answered is refused by name, because a bundle saying six specialist
-readers over such a run describes a reader that did not report.
+Publish requires a run the engine itself reads as publishable, which is the
+flag `read_run` sets and the reasons it lists beside it. A run that stopped part
+way cannot become a bundle that looks whole, and a `blocked` run is refused with
+the cause the run recorded. Nothing here reads the status word to decide, so a
+refusal prints the engine's own reasons rather than a second copy of its rules.
+Publish also requires every stage the arm asked for to have reported: a
+specialist that never answered is refused by name, because a bundle saying six
+specialist readers over such a run describes a reader that did not report.
 
-A review that raised nothing is one of those complete runs. Three reviewers and
-six specialists can read a manuscript end to end and find nothing worth
-reporting, and the engine records that as `complete` with
-`review_guard_status: clean` and no findings. It publishes with an empty
-findings list, which is the honest record of what happened. Do not re-run a
-review to try for findings.
+A review that raised nothing publishes. Three reviewers and six specialists can
+read a manuscript end to end and find nothing that has to be fixed before the
+paper stands, and the engine finishes that run as
+`complete-without-findings` with `review_guard_status: clean` and nothing
+quarantined. The bundle says so in plain words, in the letter, the summary and
+on the page. Do not re-run a review to try for findings.
 
-The engine's other finished state, `complete-without-findings`, is not that.
-The engine writes it in exactly one case: every finding the reviewers raised
-failed the evidence guards and was quarantined. Publish refuses it, because
-such a review endorses none of its own work, which is a different claim from a
-manuscript found sound, and the letter would tell the authors the wrong one.
-Read the quarantined findings in `editor-package.json` before deciding what to
-do next.
+The same status covers the opposite outcome, and the held-back count is what
+tells them apart. A review the evidence guards emptied, where every finding the
+reviewers raised failed its guard and was quarantined, is held back by the
+engine with a reason naming how many it took, and publish prints that reason
+and writes nothing. Such a review endorses none of its own work, which is a
+different claim from a manuscript found sound, and the letter would tell the
+authors the wrong one. Read the quarantined findings in `editor-package.json`
+before deciding what to do next.
 
 Add `--baseline-eligible` if the user said yes in step 4. When a submission
 issue named a submitter, add `--submitter <login>` and, if that issue stated
