@@ -21,6 +21,12 @@ const insilico = provenance.insilico || {}
 const configuration = provenance.configuration || {}
 const journalProfile = provenance.journal_profile || {}
 const review = provenance.review || {}
+// Text the publishing editor read in a refusal and allowed onto the page. The
+// leak scan refuses a path or an address by default, and an editor can overrule
+// it for a string that is the review's own words. That overruling is a judgement
+// a reader is entitled to see, so it is printed here rather than being recorded
+// only in the JSON.
+const allowedText = Array.isArray(review.allowed_text) ? review.allowed_text : [];
 const preprint = provenance.preprint || {};
 const fallback = provenance.model || "unspecified";
 const modelName = (value: string | {model?: string}) =>
@@ -393,6 +399,13 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </div>
     )}
   </div>
+
+  {allowedText.length > 0 && (
+    <p class="prov__warn prov__warn--block">
+      <strong>The editor allowed text the leak scan had refused:</strong>{" "}
+      <span class="mono">{allowedText.join("  ")}</span>
+    </p>
+  )}
 
   {generator && (
     <p class="prov__warn prov__warn--block">

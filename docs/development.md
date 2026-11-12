@@ -221,25 +221,41 @@ review to someone's paper.
 A review is generated on an editor's own machine, so `publish` scans everything
 it is about to write, both the Markdown it renders and every artifact it copies
 out of the run, for text that names the machine rather than the review. The scan
-has two tiers, and they are not the same kind of claim.
+has two tiers. What decides the tier is not where the text sits but how specific
+the thing it names is.
 
-**Tier 1 is a machine fact.** The home directory, this checkout's path, the run
-folder, the working directory, the temporary directory, the host name and the
-user name are looked up at publish time rather than recognised by shape. A hit
-on one of them is the real leak, so it is always refused. No flag waives it, and
-finding the same text in the manuscript does not excuse it either: a paper that
-happens to contain the operator's home directory is not permission to publish
-it. Because these are exact, they are matched with word boundaries, so
-`/data/sets/x` is a hit when the working directory is `/data` while "the
-training/data/test split" is not, and a user named `pi` does not make `$2\pi$` a
-leak.
+**Tier 1 is a specific machine fact.** Looked up at publish time, not recognised
+by shape: any detected path of two or more segments, which is the home
+directory, this checkout, the run folder, and the working or temporary directory
+when either is deeper than one level, plus a host name that carries a digit, a
+hyphen or a dot. Each one is matched as a plain case-insensitive substring, in
+every string and every JSON field name at any depth, after the text is
+normalised and percent-decoded and after look-alike slashes such as U+2215 and
+U+FF0F are read as slashes. There is no left or right boundary on the match, no
+vocabulary that is exempt and no prose-only mode, because a string like
+`/home/ty` or `ty-ms-7c80` cannot turn up in a review of a paper or in this
+repository's own vocabulary. Nothing waives one. No flag reaches it, an
+allowance that merely contains one is itself refused before the scan runs, and
+finding the same text in the manuscript does not excuse it either, because a
+paper that happens to contain the operator's home directory is not permission to
+publish it.
 
-**Tier 2 is a shape.** A path, a drive letter, a `~` reference, a UNC share, an
-`$HOME` expansion and an email address are refused on pattern alone, because
-most of the time a string shaped like a path is a path. Shapes misjudge, though:
-"R:/G/B channel order" is a reviewer writing about channels, not a drive. So a
-tier 2 refusal is a default, not a verdict. The refusal prints the exact flag to
-copy, and the editor who has read it publishes the text deliberately:
+**Tier 2 is a shape.** A word is not a leak, so the generic facts belong here
+rather than in tier 1: a detected directory that is one segment long such as
+`/tmp`, `/data` or `/root`, a host name that is only letters such as `media`,
+`core` or `editor`, and the bare account name. None of those is refused on its
+own. They are caught only in the shapes where a bare word can be nothing but a
+machine, which are a path written under such a root, a host after `@` or `//` or
+`\\` or before `:/`, and the user name after a home root. The same tier holds
+the shapes that need no detection at all: a path, a drive letter, a `~`
+reference, a UNC share, an `$HOME` expansion and an email address, refused on
+pattern alone because most of the time a string shaped like a path is a path.
+
+Shapes misjudge. "R:/G/B channel order" is a reviewer writing about channels and
+not a drive, and a machine called `editor` has to be able to publish its own
+provenance record. So a tier 2 refusal is a default rather than a verdict. The
+refusal prints the exact flag to copy, and the editor who has read it publishes
+the text deliberately:
 
 ```bash
 $PY scripts/local_review.py publish \
@@ -248,22 +264,31 @@ $PY scripts/local_review.py publish \
     --decision major \
     --editor your-name \
     --human-reviewed yes \
-    --allow-text 'R:/G/B' \
+    --allow-text='R:/G/B' \
     --publish
 ```
 
-`--allow-text` is repeatable, matches the text exactly, and is recorded in the
-bundle as `provenance.review.allowed_text`, so every waiver is visible to a
-reader of the record rather than invisible in a shell history. It never applies
-to tier 1. With that valve in place tier 2 only has to be sensible: a shape that
-occasionally over-refuses costs an editor one flag, while a shape that
-under-refuses publishes a path.
+`--allow-text` is repeatable and matches the text exactly. It is printed in the
+`=` form so that a hit starting with a hyphen can be copied straight back. Each
+allowance is recorded in the bundle as `provenance.review.allowed_text` and
+shown on the rendered review page beside the provenance block, so a reader sees
+that a waiver was used rather than having to take the record's word for it. With
+that valve in place tier 2 only has to be sensible: a shape that over-refuses
+costs an editor one flag, while a shape that under-refuses publishes a path.
 
-One case is neither scrubbed nor refused by value: a path used as a JSON *field
-name* in the engine's own output, such as the figure map keyed by each figure's
-absolute path. Dropping the key would publish an artifact missing an entry the
-engine wrote, and keeping it would publish the path, so `publish` refuses and
-names the key. Nothing silently alters a published artifact.
+Two things are rewritten rather than refused, and both are reported. A value in
+one of the engine's own path fields, which are `pdf`, `plugin_dir`,
+`plugin_root`, `run_directory`, `source_review_path`, `workspace` and
+`memo_path`, is made relative to this checkout when it lies inside it and
+dropped when it does not. That happens only when the value is actually shaped
+like a path, so a reviewer's `/ 2 is the wrong denominator` in such a field is
+published as written. Every publish prints one line naming what was projected,
+or saying that nothing was, so the edit is never silent. A path used as a JSON
+*field name* is refused outright, inside this checkout or outside it. Engine
+0.9 writes no mapping keyed by a path, so a rewrite there would be faithful to
+nothing, and dropping the key would publish an artifact missing an entry the
+engine wrote. `publish` names the key and the flag that publishes it as it
+stands.
 
 The imported manuscript is what ties the steps together. `prepare` hashes the
 PDF it fetched, the engine's importer hashes the bytes it was handed into
