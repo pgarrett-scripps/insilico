@@ -21,12 +21,15 @@ command from the skill's fenced bash blocks, fills in the angle-bracket
 placeholders, and hands the result to the parser the engine itself builds for
 that subcommand. Parsing touches no files, spends nothing, and calls no model.
 
-Only three engine names are imported, all of them public and all of them
-present in 0.9.0 as it ships: `cli.main.COMMANDS`, `cli.main.report_parser` and
-`plugin.starter.build_parser`. Running a review from Python goes through
-`review`, or through `review_main` and `report_main`, which the engine exports
-and which each take their own `prog`, so a wrapper's usage line names the
-wrapper. Nothing here imports the plugin server or the starter's internals.
+Only three engine names are imported, and all three come off
+`peerreviewagents.__all__`: `CLI_COMMANDS`, `review_parser` and
+`report_parser`, each parser taking its own `prog` so a usage line names
+whatever invoked it. Nothing here reaches into `peerreviewagents.cli` or
+`peerreviewagents.plugin`: those are the engine's internals, free to move
+between releases, and a check that imported one would break on an upgrade
+rather than on a change to the surface the engine supports. Running a review
+from Python goes through `review`, or through `review_main` and `report_main`,
+which the engine exports as well.
 """
 
 from __future__ import annotations
@@ -105,10 +108,9 @@ def engine_required() -> bool:
 
 def load_parsers():
     """The engine's own parsers, one per subcommand. Raises with no engine."""
-    from peerreviewagents.cli.main import COMMANDS, report_parser
-    from peerreviewagents.plugin.starter import build_parser as review_parser
+    from peerreviewagents import CLI_COMMANDS, report_parser, review_parser
 
-    return COMMANDS, {"review": review_parser, "report": report_parser}
+    return CLI_COMMANDS, {"review": review_parser, "report": report_parser}
 
 
 def main() -> int:
@@ -163,7 +165,9 @@ def main() -> int:
                 )
             )
             continue
-        parser = parsers[subcommand]()
+        # Both parsers take their own `prog`, and naming it here makes a
+        # rejection read as the command the skill tells an editor to type.
+        parser = parsers[subcommand](prog=f"{ENGINE_COMMAND} {subcommand}")
         stderr = io.StringIO()
         try:
             with contextlib.redirect_stderr(stderr):

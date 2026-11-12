@@ -31,11 +31,13 @@ def main() -> None:
     # And the two commands the local-review skill tells an editor to run have to
     # be the two the installed console script offers. check_skill_commands.py
     # parses every command on that page against these same parsers. This only
-    # asserts that the locked release has them.
-    from peerreviewagents.cli.main import COMMANDS, report_parser
-    from peerreviewagents.plugin.starter import build_parser as review_parser
+    # asserts that the locked release has them, and it asks for them by their
+    # public names: 0.9 exports both parsers and the command list, so nothing
+    # here imports `peerreviewagents.cli` or `peerreviewagents.plugin`, which
+    # are the engine's own internals and free to move between releases.
+    from peerreviewagents import CLI_COMMANDS, report_parser, review_parser
 
-    assert COMMANDS == ("review", "report"), f"unexpected engine commands: {COMMANDS}"
+    assert CLI_COMMANDS == ("review", "report"), f"unexpected engine commands: {CLI_COMMANDS}"
     assert callable(review_parser) and callable(report_parser)
     assert callable(rustypaper.convert)
     print(f"Verified {len(locked)} locked packages and the review runtime imports")

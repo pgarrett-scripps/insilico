@@ -53,7 +53,6 @@ from review_plan import (  # noqa: E402
 from review_provenance import insilico_version, pipeline_version  # noqa: E402
 
 ENGINE_PACKAGE = "peerreviewagents"
-STARTER_MODULE = "peerreviewagents.plugin.starter"
 PROVENANCE_SCHEMA = 4
 GENERATOR_KIND = "local-claude-code-plugin"
 TRANSPORT_PROVIDER = "claude-code"
@@ -100,27 +99,28 @@ UNREAD_STATEMENT = (
 SEVERITY_ORDER = {"major": 0, "moderate": 1, "minor": 2}
 REQUIRED_SEVERITIES = ("major", "moderate")
 
-# The one state a review may be published from. The engine carries a second
-# finished state, `complete-without-findings`, which it writes when the editor
-# delivered nothing: every finding the reviewers raised failed the evidence
-# guards, or there was never a finding to deliver. Either way there is no
-# review to publish, and the engine says which case it was in its own words
-# rather than this file guessing between them.
-#
-# A run that read the manuscript end to end and genuinely raised nothing is
-# `complete` with the guard status `clean`, and that publishes with an empty
-# findings list, which is the honest record of a manuscript found sound.
-FINISHED_STATUSES = ("complete",)
+# The two states a run can finish in, which are the engine's own
+# `COMPLETE_STATUSES`. `complete` is a review with findings in it, and
+# `complete-without-findings` is a review written with none. Neither is a
+# failure, so neither is listed as an error on the page. Whether a finished run
+# may be published is not read off the status here: the engine answers that in
+# `publishable`, because the same status covers a manuscript the reviewers
+# raised nothing about and a review the guards emptied, and only the engine
+# knows which of the two it wrote.
+FINISHED_STATUSES = ("complete", "complete-without-findings")
 # The two guard verdicts the engine writes, and the only two a record may
 # carry. `clean` is a run the guards took nothing from, and `quarantined` is one
 # they took something from, however much: the guards throwing out a finding they
 # could not anchor is the guards working, so such a run still publishes and the
-# bundle says how many were held back. A run they took everything from is not
-# marked on the guard at all. It is `complete-without-findings`, and the status
-# is what refuses it.
+# bundle says how many were held back.
 CLEAN_GUARD = "clean"
 QUARANTINED_GUARD = "quarantined"
 GUARD_VERDICTS = (CLEAN_GUARD, QUARANTINED_GUARD)
+# The finished state for a review written with no findings in it. Named so the
+# documents can say plainly that the reviewers raised nothing make-or-break,
+# which is a result rather than a failed run. It is not a gate: a run of this
+# status whose guards quarantined findings is held back by the engine, and the
+# reason it gives names the count.
 WITHOUT_FINDINGS_STATUS = "complete-without-findings"
 
 # insilico publishes Claude Code runs only. Every claim a bundle makes about how
@@ -194,6 +194,43 @@ def _list(value: object) -> list:
     return value if isinstance(value, list) else []
 
 
+def engine_module(why: str):
+    """The engine package, imported late, or a refusal naming what is missing.
+
+    Late because most of the checks in this repository never read a run and
+    have to pass with no engine installed at all, and in one place so that
+    every refusal for a missing engine says the same thing.
+    """
+    try:
+        return importlib.import_module(ENGINE_PACKAGE)
+    except ImportError as exc:
+        raise CommandError(
+            f"{ENGINE_PACKAGE} is not importable, so {why}. Install "
+            "PeerReviewAgents 0.9.0 or newer, or run this with the virtual "
+            "environment the review ran in."
+        ) from exc
+
+
+def engine_public(name: str, why: str):
+    """One name from `peerreviewagents.__all__`, or a refusal naming the gap.
+
+    Everything this file needs from the engine is in that list. Nothing here
+    reaches into `peerreviewagents.plugin` or `peerreviewagents.cli`: those are
+    the engine's own internals, free to move between releases, and a publish
+    path that imported one broke on an upgrade rather than on a change to the
+    surface the engine supports.
+    """
+    engine = engine_module(why)
+    try:
+        return getattr(engine, name)
+    except AttributeError as exc:
+        raise CommandError(
+            f"{ENGINE_PACKAGE}.{name} is not importable, so {why}. Install "
+            "PeerReviewAgents 0.9.0 or newer, or run this with the virtual "
+            "environment the review ran in."
+        ) from exc
+
+
 def engine_record() -> dict:
     """Which release of the engine is installed here.
 
@@ -221,28 +258,28 @@ def installed_code_manifest() -> dict:
     package, so a run's recorded bytes and the installed bytes can be compared.
     A mismatch is not an error: a run made from a checkout of the plugin is a
     real run, and the record says which it was.
+
+    The plugin tree is where `peerreviewagents.plugin_directory()` says it is,
+    which is the engine's own answer and the one the starter passes the
+    session. The two Python trees are read beside the installed package, under
+    the names the server writes them under, so the three keys here and the three
+    keys in a run's manifest mean the same files.
     """
-    try:
-        starter = importlib.import_module(STARTER_MODULE)
-    except ImportError as exc:
-        raise CommandError(
-            f"{STARTER_MODULE} is not importable, so the installed plugin "
-            "cannot be fingerprinted. Install PeerReviewAgents 0.9.0 or newer."
-        ) from exc
-    here = Path(starter.__file__).resolve().parent
-    plugin_root = Path(starter.plugin_dir()).resolve()
+    why = "the installed plugin cannot be fingerprinted"
+    root = Path(engine_module(why).__file__).resolve().parent
+    plugin_root = Path(engine_public("plugin_directory", why)()).resolve()
     files: dict[str, str] = {}
     for path in sorted(plugin_root.rglob("*")):
         if path.is_file() and "__pycache__" not in path.parts:
             files[PLUGIN_PREFIX + path.relative_to(plugin_root).as_posix()] = digest(
                 path.read_bytes()
             )
-    for path in sorted((here.parent / "engine").glob("*.py")):
+    for path in sorted((root / "engine").glob("*.py")):
         files["engine/" + path.name] = digest(path.read_bytes())
-    for path in sorted(here.glob("*.py")):
+    for path in sorted((root / "plugin").glob("*.py")):
         files["plugin-python/" + path.name] = digest(path.read_bytes())
     if not files:
-        raise CommandError(f"The engine at {here} has no source files to fingerprint")
+        raise CommandError(f"The engine at {root} has no source files to fingerprint")
     return files
 
 
@@ -301,12 +338,18 @@ def plugin_record(code: dict, run: dict) -> dict:
     }
 
 
-def transport_record(*, provider: str, runtime: dict, startup: dict) -> dict:
+def transport_record(
+    *, provider: str, runtime: dict, startup: dict, verified_at: str | None = None
+) -> dict:
     """Which harness ran the agents, taken from the run rather than probed.
 
     `provider` is the transport the run itself recorded, so the record cannot
     name one transport while the run used another. Anything outside
     `PUBLISHABLE_PROVIDERS` is refused here, before any record is written.
+
+    `startup` is the engine's reading of the probe, which is `probe` and
+    `problems`, and `verified_at` is when the probe ran. They are separate
+    arguments because the reading carries the first two and not the third.
 
     The claim this makes is narrow on purpose. It is not that an account of a
     particular kind paid for the run: the engine reads no authentication status
@@ -327,12 +370,6 @@ def transport_record(*, provider: str, runtime: dict, startup: dict) -> dict:
             "the paper again on Claude Code, or publish it by another route."
         )
     startup = _dict(startup)
-    if not startup:
-        raise CommandError(
-            "This run recorded no startup.json, so there is no evidence a Claude "
-            "Code session ever started. The engine writes it before it spends "
-            "anything. Point --run at the folder `peerreview review` wrote."
-        )
     problems = [str(p) for p in _list(startup.get("problems")) if str(p).strip()]
     if problems:
         raise CommandError(
@@ -340,6 +377,17 @@ def transport_record(*, provider: str, runtime: dict, startup: dict) -> dict:
             f"{len(problems)} problem(s): {'. '.join(p.rstrip('.') for p in problems)}. "
             "A run that could not load the plugin cannot be published as a "
             "review the plugin produced."
+        )
+    # A run with no startup.json, and a run whose startup.json holds something
+    # other than a probe, both read back as a null probe. Either way there is no
+    # evidence a Claude Code session ever started, and the engine writes that
+    # evidence before it spends anything.
+    if startup.get("probe") is None:
+        raise CommandError(
+            "This run recorded no start-up probe, so there is no evidence a "
+            "Claude Code session ever started. The engine writes one to "
+            "startup.json before it spends anything. Point --run at the folder "
+            "`peerreview review` wrote."
         )
     probe = _dict(startup.get("probe"))
     connected = [
@@ -361,7 +409,7 @@ def transport_record(*, provider: str, runtime: dict, startup: dict) -> dict:
         "billing_policy": BILLING_POLICY,
         "login_verified": True,
         "verified_by": VERIFIED_BY,
-        "verified_at": str(startup.get("at") or "") or None,
+        "verified_at": str(verified_at or "") or None,
         # A constant here and a constant in the schema. This path cannot reach a
         # paid key, so the field is a statement about the design rather than a
         # measurement, and a record needing it to be true is not a local review
@@ -408,15 +456,18 @@ def agent_rows(reading: dict) -> list[dict]:
 
     `read_run` merges the protocol's slots with what the harness observed and
     gives each one a `slot`, `role`, `track`, `model`, `attempt`, `tool_calls`,
-    `session_calls`, `tokens` and `state`. Two facts the published record wants
-    are not in those rows and are counted here: how many findings a slot
-    delivered, which the findings themselves say, and whether it reported
+    `session_calls`, `tokens`, `state` and `labels`. Two facts the published
+    record wants are not in those rows and are counted here: how many findings a
+    slot delivered, which the findings themselves say, and whether it reported
     nothing, which the stage ledger says.
 
-    The harness emits a placeholder row for an agent it has not named yet, with
-    a label and nothing else. Those are skipped: an `agent-3` with no model, no
-    state and no usage is not an agent that ran, and publishing five of them
-    would overstate the panel.
+    One agent is one row in 0.9, and nothing is filtered out here. The engine
+    merges the tasks one agent ran into that agent's own row, with `labels`
+    saying which they were, and it leaves out the harness's placeholder rows for
+    agents it never ran. An earlier version of this function dropped rows that
+    carried nothing but a label, to keep five empty reviewers off a published
+    panel. Doing that now would drop a real slot the arm asked for and the run
+    never filled, which is the row most worth seeing.
     """
     delivered: dict[str, int] = {}
     for finding in _list(reading.get("findings")):
@@ -429,11 +480,6 @@ def agent_rows(reading: dict) -> list[dict]:
         observed = _dict(observed)
         slot = str(observed.get("slot") or "")
         if not slot:
-            continue
-        # A row with nothing but a label is a slot the harness reserved and
-        # never filled. Treating it as an agent that ran would put five empty
-        # reviewers on the published panel.
-        if not any(observed.get(key) for key in ("role", "model", "state", "tokens")):
             continue
         row = {
             "slot": slot,
@@ -524,15 +570,7 @@ def engine_reading(run_dir: Path) -> dict:
     not a run at all, and a run file that is a symlink, which is some other
     file's contents offered as this run's result. Both become refusals here.
     """
-    try:
-        engine = importlib.import_module(ENGINE_PACKAGE)
-        reader = engine.read_run
-    except (ImportError, AttributeError) as exc:
-        raise CommandError(
-            f"{ENGINE_PACKAGE}.read_run is not importable, so a run folder "
-            "cannot be read. Install PeerReviewAgents 0.9.0 or newer, or run "
-            "this with the virtual environment the review ran in."
-        ) from exc
+    reader = engine_public("read_run", "a run folder cannot be read")
     try:
         reading = reader(str(Path(run_dir)))
     except ValueError as exc:
@@ -545,24 +583,20 @@ def engine_reading(run_dir: Path) -> dict:
     return reading
 
 
-def run_files(reading: dict) -> dict:
-    """The three fields the engine's public surface does not expose.
+def startup_stamp(reading: dict) -> str | None:
+    """When the start-up probe ran, the one field `read_run` does not carry.
 
-    `read_run` answers everything about what a run did and found. It does not
-    say what code the run loaded, which transport ran it, or what the start-up
-    probe saw, and a published bundle here turns on all three: it pins the
-    plugin and the workflow by hash, and it claims a Claude Code subscription
-    paid for the review. Those three fields are read here, in one place, from
-    the review folder the engine resolved. The engine's own integration notes
-    call a field reachable only this way a gap in the supported list, and this
-    is the gap, reported upstream rather than worked around everywhere.
+    0.9 exposes the probe itself and the problems it reported, as
+    `startup['probe']` and `startup['problems']`, and the code map and the
+    transport as `identity['code_hashes']` and `identity['provider']`. All four
+    used to be read out of the run folder here and are now taken from the
+    reading, which leaves this: the moment the starter wrote `startup.json`,
+    which the published record carries as `verified_at` because it is when the
+    evidence for the transport claim was gathered. It is read from the file
+    rather than invented, and a run without it publishes with a null.
     """
     review_dir = Path(str(reading.get("review") or ""))
-    return {
-        "code": _dict(maybe_json(review_dir / "manifest.json").get("code")),
-        "provider": str(maybe_json(review_dir / "protocol.json").get("provider") or ""),
-        "startup": maybe_json(review_dir / "startup.json"),
-    }
+    return str(maybe_json(review_dir / "startup.json").get("at") or "") or None
 
 
 def review_package(reading: dict) -> dict:
@@ -595,15 +629,17 @@ def read_run(run_dir: Path) -> dict:
 def run_record(reading: dict) -> dict:
     """What the run recorded, kept for the published record.
 
-    Every value here comes from the engine's reading except the three in
-    `run_files`, and a value the run did not record is left out rather than
-    defaulted, so a caller that needs one has to say so rather than silently
-    inherit it from the prepare step or a publish flag.
+    Every value here comes from the engine's reading, and a value the run did
+    not record is left out rather than defaulted, so a caller that needs one has
+    to say so rather than silently inherit it from the prepare step or a publish
+    flag. The transport and the code map are part of that reading in 0.9, as
+    `identity['provider']` and `identity['code_hashes']`, and a run file damaged
+    enough that the engine could not read either of them is named in `problems`
+    and carried into the record there.
     """
     identity = _dict(reading.get("identity"))
     counts = _dict(reading.get("counts"))
     runtime = _dict(reading.get("runtime"))
-    extra = run_files(reading)
     review_dir = Path(str(reading.get("review") or ""))
 
     record: dict = {}
@@ -620,7 +656,7 @@ def run_record(reading: dict) -> dict:
     put("arm", identity.get("arm"))
     put("workflow_version", identity.get("workflow_version"))
     put("finding_schema_version", identity.get("finding_schema_version"))
-    put("provider", extra["provider"])
+    put("provider", str(identity.get("provider") or ""))
     if isinstance(identity.get("reviewers"), int):
         record["reviewers"] = identity["reviewers"]
     put("specialist_tracks", [str(t) for t in _list(identity.get("specialists"))])
@@ -628,7 +664,7 @@ def run_record(reading: dict) -> dict:
     put("literature_cutoff", identity.get("literature_cutoff"))
     put("claude_code_version", identity.get("claude_code_version")
         or runtime.get("claude_code_version"))
-    put("engine_source", extra["code"])
+    put("engine_source", _dict(identity.get("code_hashes")))
     put("status", reading.get("status"))
     # The engine's own answer to the only question the publish gate asks, kept
     # in the record so a reader of the bundle sees the same flag the gate did.
@@ -669,15 +705,16 @@ def run_errors(reading: dict) -> list[str]:
 
     `read_run` already decides why a run that is not complete stopped, so the
     cause is taken from it rather than re-derived. What this adds is the harm a
-    finished run can still carry: a review that endorses none of its own work,
-    a reader that never reported, an editor that did not accept the pool, and a
-    file the engine could not read in full.
+    finished run can still carry: a reader that never reported, an editor that
+    did not accept the pool, a file the engine could not read in full, and
+    whatever the engine itself holds the run back for.
 
-    Finishing with no findings is not one of these. A run that read the
-    manuscript and raised nothing is `complete` with the guard status `clean`,
-    and listing that as an error told a reader a review of a sound manuscript
-    had gone wrong. A reviewer that reported no findings on its track is the
-    same, which is why `none_found` is recorded and not listed here.
+    Finishing with no findings is not one of these. A run whose reviewers read
+    the manuscript and raised nothing make-or-break is a review, which the
+    engine finishes as `complete-without-findings` with the guard status
+    `clean`, and listing that as an error told a reader a review of a sound
+    manuscript had gone wrong. A reviewer that reported no findings on its track
+    is the same, which is why `none_found` is recorded and not listed here.
 
     Nor is a finding the guards quarantined. The guard exists to throw out a
     finding whose quote it could not match to the manuscript, and doing so is
@@ -685,6 +722,11 @@ def run_errors(reading: dict) -> list[str]:
     publishes such a run. The count is carried in the record and shown on the
     page as what was held back, so a reader sees it without it being filed
     under what went wrong.
+
+    The one place a guard verdict becomes an error is a review the guards
+    emptied, and that is not decided here either: the engine refuses such a run
+    in `not_publishable_reasons`, naming how many it held, and those sentences
+    are copied in whenever the engine holds a run back for any reason at all.
     """
     errors: list[str] = []
     for value in (reading.get("cause"), reading.get("note")):
@@ -693,20 +735,16 @@ def run_errors(reading: dict) -> list[str]:
     status = str(reading.get("status") or "")
     if status and status not in FINISHED_STATUSES:
         errors.append(f"The run finished in state {status}.")
-    # A run the editor delivered nothing from is the opposite reading from a
-    # manuscript found sound, and the engine's own sentence for it says which
-    # of the two it was. Printing that sentence rather than a guess here keeps
-    # this file from asserting that everything was quarantined when the engine
-    # means there was nothing to quarantine.
-    if status == WITHOUT_FINDINGS_STATUS:
-        errors += [
-            str(reason).strip()
-            for reason in _list(reading.get("not_publishable_reasons"))
-            if str(reason).strip()
-        ] or [
-            "The editor delivered no finding from this run, so the review "
-            "endorses none of its own work."
-        ]
+    # The engine's own sentences for a run it will not call publishable, in its
+    # words rather than a second copy of its rules here. This is how a review
+    # the guards emptied gets named as the harm it is while a review that
+    # raised nothing does not: the engine tells the two apart, and this file
+    # does not have to.
+    if not reading.get("publishable"):
+        for reason in _list(reading.get("not_publishable_reasons")):
+            text = str(reason).strip()
+            if text and text not in errors:
+                errors.append(text)
     stages = _dict(reading.get("stages"))
     missing = [str(s) for s in _list(stages.get("missing"))]
     if missing:
@@ -948,6 +986,38 @@ def verdict_section(verdict: dict) -> list[str]:
     return lines
 
 
+def no_findings_note(run: dict) -> str:
+    """What a review with no findings in it says for itself, in plain words.
+
+    An empty findings list reads like a run that broke, and most of the time it
+    is the opposite: every reader the arm asked for reported and none of them
+    raised anything that has to be fixed before the paper stands. The engine
+    finishes such a run as `complete-without-findings`, publishes it like any
+    other review, and this is the sentence that says so on the page rather than
+    leaving a reader to infer it from a zero.
+
+    A review the evidence guards emptied is the other way to reach that status
+    and means the opposite, so it gets its own sentence. Publish refuses one, so
+    it is only ever read here in a rehearsal bundle.
+    """
+    held = run.get("quarantined_findings_count")
+    held = held if isinstance(held, int) else 0
+    if held:
+        return (
+            f"No finding reached this letter, and the evidence guards held {held} "
+            "back, so what the reviewers raised is not in this review. That is "
+            "not a manuscript the panel found sound, and it is why publishing "
+            "refuses a run in this state."
+        )
+    return (
+        "The reviewers raised no make-or-break findings against this "
+        "manuscript. Every core reviewer and specialist reader the arm asked "
+        "for reported, the editor agent wrote the package, and nothing came "
+        "back that has to be fixed before the paper stands. An empty findings "
+        "list here is that result, not a run that went wrong."
+    )
+
+
 def render_summary(
     preprint: Preprint, package: dict, provenance: dict, findings: list[dict]
 ) -> str:
@@ -988,6 +1058,8 @@ def render_summary(
     if summary:
         lines += ["## The editor agent's summary of the review", "", summary, ""]
     lines += verdict_section(package.get("verdict"))
+    if not findings and not appendix:
+        lines += ["## What the review found", "", no_findings_note(run), ""]
     if findings:
         lines += ["## Findings in the letter", ""]
         for number, finding in enumerate(findings, 1):
@@ -1057,7 +1129,7 @@ def render_decision_letter(
         lines += [
             "## Findings",
             "",
-            "The reviewers recorded no findings against this manuscript.",
+            no_findings_note(provenance["generator"]["run"]),
             "",
         ]
     if appendix:
@@ -1428,18 +1500,22 @@ def write_round_record(
 def claude_version() -> str | None:
     """What `claude --version` prints, through the engine's own resolver.
 
-    Reported rather than required, and never a review: the preflight is allowed
+    `peerreviewagents.claude_code_version()` is that resolver, and in 0.9 it
+    answers `None` rather than raising when Claude Code is not on PATH. The
+    guards here are for the engine being absent altogether, because this is
+    reported rather than required and never a review: the preflight is allowed
     to say the harness is missing, which is more useful than refusing to print
     the fingerprint the operator asked for.
     """
     try:
-        starter = importlib.import_module(STARTER_MODULE)
-    except ImportError:
+        resolver = engine_public("claude_code_version", "the harness cannot be named")
+    except CommandError:
         return None
     try:
-        return starter.claude_version()
+        version = resolver()
     except Exception:  # noqa: BLE001 - a preflight must not fail on a missing CLI
         return None
+    return str(version) if version else None
 
 
 def cmd_fingerprint(args: argparse.Namespace) -> int:
@@ -1804,19 +1880,20 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
     said `blocked`. Both produced a record that read like a clean review.
 
     The engine answers the question now. `read_run` sets `publishable` only
-    when the status is `complete`, the findings came from a readable
+    when the run finished, the findings came from a readable
     `editor-package.json` rather than the ledger, a guard verdict was recorded,
-    and every run file could be read in full. That is the gate, and it is the
-    engine's own rule rather than a second copy of it here, down to the words
-    the refusal prints, which are the engine's `not_publishable_reasons`.
+    the guards did not empty the review, and every run file could be read in
+    full. That is the whole gate, and it is the engine's own rule rather than a
+    second copy of it here, down to the words the refusal prints, which are the
+    engine's `not_publishable_reasons`.
 
-    A finding the guards quarantined is not one of those reasons. The guard
-    exists to throw out a finding whose quote it could not match, and a review
-    that lost one still endorses the rest, so a run whose guard verdict is
-    `quarantined` publishes and the bundle says how many were held back. A run
-    the editor delivered nothing from is `complete-without-findings`, and that
-    is refused on the status: a review that endorses none of its own work is not
-    a manuscript found sound.
+    No status is special-cased beside the flag. `complete-without-findings` is
+    the finished state for a review written with no findings in it, and the two
+    runs that end there are told apart by the engine rather than here: reviewers
+    who read the manuscript and raised nothing make-or-break wrote a review and
+    it publishes, while a review the guards emptied is held back with a reason
+    naming how many they took. Reading the status here instead would refuse the
+    first of those, which is a real review of a manuscript found sound.
 
     What this adds to the flag is the three things it does not cover. The
     transport has to be one this path can publish, because every claim a bundle
@@ -1848,13 +1925,7 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             "is a claim about a Claude subscription, so a run on another "
             "transport cannot be published through it."
         )
-    # `complete-without-findings` is refused on the status, beside the flag. It
-    # is a finished run the editor delivered nothing from, which the engine
-    # writes both when every finding failed the guards and when there was no
-    # finding to deliver. Which of the two it was is the engine's to say, so the
-    # refusal prints its sentence instead of asserting that everything was
-    # quarantined.
-    if not reading.get("publishable") or status == WITHOUT_FINDINGS_STATUS:
+    if not reading.get("publishable"):
         # The engine names its own reasons, one sentence each, and that list is
         # never empty while the flag is false. Printing its words rather than a
         # second copy of its rules is the only way the refusal here and the
@@ -1875,11 +1946,6 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             detail.append("The engine holds it back because:")
             detail += [f"({n}) {reason}." for n, reason in enumerate(reasons, start=1)]
         else:
-            if status == WITHOUT_FINDINGS_STATUS:
-                detail.append(
-                    "The editor delivered no finding from it, so there is no "
-                    "review to publish."
-                )
             if source != "editor-package":
                 detail.append(
                     f"Its findings came from {source}, which is not the editor's "
@@ -2008,7 +2074,8 @@ def cmd_publish(args: argparse.Namespace) -> int:
     transport = transport_record(
         provider=str(run.get("provider") or ""),
         runtime=_dict(reading.get("runtime")),
-        startup=run_files(reading)["startup"],
+        startup=_dict(reading.get("startup")),
+        verified_at=startup_stamp(reading),
     )
 
     dest = publish_destination(prepared, publishing=args.publish)
