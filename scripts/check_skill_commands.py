@@ -24,9 +24,9 @@ that subcommand. Parsing touches no files, spends nothing, and calls no model.
 Only three engine names are imported, all of them public and all of them
 present in 0.9.0 as it ships: `cli.main.COMMANDS`, `cli.main.report_parser` and
 `plugin.starter.build_parser`. Running a review from Python goes through
-`review` or, once the engine's public surface lands, `review_main` and
-`report_main`. Nothing here imports the plugin server or the starter's
-internals.
+`review`, or through `review_main` and `report_main`, which the engine exports
+and which each take their own `prog`, so a wrapper's usage line names the
+wrapper. Nothing here imports the plugin server or the starter's internals.
 """
 
 from __future__ import annotations

@@ -77,22 +77,36 @@ this", and to say which they mean.
 
 | Stage | Agents | Produces |
 |---|---|---|
-| Review | Scientific validity, Quantitative evidence, Contribution and prior work, Reporting and reproducibility, Ethics | 5 scored reports |
-| Audit | Citation integrity, Methods completeness | 2 checklists, straight to the editor |
-| Debate | Advocate and Skeptic, in parallel rounds | A transcript, published in full |
-| Synthesis | Debate synthesizer | The condensed account of the debate the editor reads |
+| Review | Three core reviewers, each reading the whole manuscript in isolation | 3 reports, one per reviewer |
+| Specialists | Statistics, Figures and tables, Methods and reporting, Citations, Internal consistency, Field context | 6 track reports, straight to the editor |
+| Guards | The evidence guards, over every finding | A quote check per finding, and a count of what they held back |
+| Editor | Editor | The decision letter, and the findings it kept |
 
-The Contribution and Prior-Work reviewer queries arXiv, Semantic Scholar,
-PubMed and bioRxiv live, so claims about prior work rest on search results
-rather than recall. The audits bypass the debate deliberately: a missing
-methods detail is a fact, and facts
-should not be argued into or out of existence.
+The Field Context specialist queries arXiv, Semantic Scholar, PubMed and
+bioRxiv live, so claims about prior work rest on search results rather than
+recall. No agent argues with another. A core reviewer cannot see another core
+reviewer's report, and a specialist reads for one thing only, so a concern two
+of them raise is two independent reads rather than one read amplified by
+agreement. The editor reads every report itself and decides what the review
+says.
+
+Each finding carries the track that raised it and the basis it rests on. The
+guards check that a finding's quoted evidence really is in the manuscript, and
+a finding whose quote cannot be matched is held back rather than published. A
+review that lost a finding that way still publishes, and its page says how many
+were held back.
+
+Reviews published before November 2026 came from an earlier panel, which had a
+desk screen, five named specialists and a recorded argument between an advocate
+and a skeptic. A published bundle is never edited, so those reviews still carry
+those documents and their pages name them as they are.
 
 ## Revision rounds
 
-**The referees are blind to the round.** Round 3 asks the five specialists
-exactly what round 1 asked: read this manuscript. None of them is told that a
-previous round exists, sees its own earlier report, or is shown what changed.
+**The referees are blind to the round.** Round 3 asks every reviewer and
+specialist exactly what round 1 asked: read this manuscript. None of them is
+told that a previous round exists, sees its own earlier report, or is shown what
+changed.
 They still never see each other's reports either. Rounds are capped at three.
 
 That is a correction, not an economy. Referees used to be handed their prior

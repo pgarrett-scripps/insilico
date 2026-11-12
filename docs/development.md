@@ -18,8 +18,10 @@ docs/                     # the record, written by the pipeline
     ├── manifest.json     # SHA-256 for every published artifact
     ├── round.json        # machine-readable record a later round rules on
     ├── summary.md  decision_letter.md  manuscript_stats.md
-    └── (hosted panel only) desk_screen.md  debate_transcript.md
-        journal_recommendations.md  review_*.md  audit_*.md
+    ├── review_*.md       # one per core reviewer
+    ├── audit_*.md        # one per specialist track
+    └── (retired panel)   desk_screen.md  debate_transcript.md
+        debate_synthesis.md  journal_recommendations.md
 
 src/                      # the site
 ├── lib/corpus.js         # walks docs/reviews/ into what pages render
@@ -68,12 +70,14 @@ belongs, and `publish` turns a finished run into a bundle the site can render.
 Two things about this route are deliberate and show up on every page it
 produces.
 
-One model writes the whole review. There is no desk screen, no five-reviewer
-panel and no debate round, so nothing checks the reviewer that is any better
-than the reviewer. A local review is therefore published as an experiment by
-default: public, citable, and unable to set the paper's editorial status or
-become the baseline for the next draft. `--baseline-eligible` opts one in, and
-that is a decision taken per review.
+Every agent in the run reads the same manuscript through the same transport, and
+the only thing that distinguishes one reader from another is the prompt it was
+given. Three core reviewers in isolation and six specialist tracks are six
+questions asked once each, not an independent replication of the review, so a
+local review is published as an experiment by default: public, citable, and
+unable to set the paper's editorial status or become the baseline for the next
+draft. `--baseline-eligible` opts one in, and that is a decision taken per
+review.
 
 The decision is a person's. The engine grades findings by severity and
 deliberately recommends no verdict, so `--decision` is an operator input that the
@@ -208,13 +212,14 @@ claim is the operator's to make rather than the script's. Answering
 `--human-reviewed no` writes a rehearsal that records the absence instead, and
 refuses `--publish`.
 
-Everything in the record about the run itself comes from what the run wrote:
-`protocol.json` for the model and the mode, `manifest.json` for the paper id and
-the engine's own source fingerprint taken when the call started,
-`editor-package.json` for the reviewer count and the synthesis policy,
-`progress.json` and the usage receipts for the status and the model ids the
-transport actually served. A value the run did not record is left out of the
-record rather than filled in from a flag.
+Everything in the record about the run itself comes from what the run wrote, and
+it is read back through the engine's own `read_run` rather than parsed out of the
+files by hand: the arm and the workflow the run was asked for, the paper id and
+the hash of each plugin and workflow file taken when the call started, the
+reviewer count, one row per agent with the model the transport actually served
+it, which stages reported and which were retried, the guards' verdict and how
+many findings they held back, and the status the run ended in. A value the run
+did not record is left out of the record rather than filled in from a flag.
 
 Nothing in `publish` writes prose. Every document is rendered from the engine's
 saved output, and the reviewer's own words are quoted rather than rewritten.
@@ -267,23 +272,24 @@ alongside a build that fails if a published bundle goes unrendered.
 ## Configuration
 
 A local run has very little to configure, which is the point. The transport is
-`claude-code`, the model is `claude-sonnet-5-5` or `claude-opus-5-5`, and the
-workflow is the engine's own ensemble mode with a reviewer count. Everything
-else that used to be a setting is now a property of the engine release, and the
-release is identified in the record rather than described.
+`claude-code`, the arm names which readers run, and `--reviewers` says how many
+core reviewers to send in. There is no model setting: the plugin pins a model per
+agent file, and the record reports the model each agent actually ran on.
+Everything else that used to be a setting is now a property of the engine
+release, and the release is identified in the record rather than described.
 
-Each review records the engine package name and version, a SHA-256 over the
-engine's source tree, the In Silico commit, the transport and its
-authentication method, the model requested, the model ids observed in the run,
-and a hash of the exact PDF bytes reviewed. The
+Each review records the engine package name and version, the hash of every
+plugin and workflow file that did the work, the In Silico commit, the transport
+and its authentication method, one row per agent with its model, and a hash of
+the exact PDF bytes reviewed. The
 [DOI](https://doi.org/10.5281/zenodo.21781895) identifies the software and the
 hashes identify the run.
 
-`schemas/review-provenance.schema.json` is the contract. A locally generated
-record is `schema_version: 3` and carries a `generator` block. The retired
-panel's records are `schema_version: 2`, and records written before versioning
-existed are read as they are. All three keep rendering, which is why no
-published bundle had to be rewritten for any of this.
+`schemas/review-provenance.schema.json` is the contract. A record from a plugin
+run is `schema_version: 4` and carries a `generator` block. The retired panel's
+records are `schema_version: 2`, and records written before versioning existed
+are read as they are. All of them keep rendering, which is why no published
+bundle had to be rewritten for any of this.
 
 ### Retired: configuration of the hosted panel
 
@@ -347,11 +353,11 @@ path the workflow exited 3, posted a note on the issue, and opened no pull
 request. On the current path the engine command fails, and there is nothing to
 hand over.
 
-`PEERREVIEW_CAVEMAN` controls telegraphic compression and defaults to `off`. It
-saves under a cent a review and it is not free. Under `light`, the old
-eight-role panel's clarity reviewer reported grammatical errors three times on
-a paper where the uncompressed run reported none, having read the compressor's
-work as the authors' writing.
+The prompt compression the hosted panel could switch on is gone from the engine.
+It saved under a cent a review and it was not free: with compression on, that
+panel's clarity reviewer reported grammatical errors three times on a paper
+where the uncompressed run reported none, having read the compressor's work as
+the authors' writing.
 
 ## Cost
 
@@ -361,9 +367,10 @@ and the editor's own time rather than a dollar figure. A local record therefore
 reports no cost at all. `total_cost_usd` is `null`, and the schema requires it to
 be `null` rather than zero, because a zero would read as a measured free run.
 
-The real limit is the subscription's rate and usage limits. Two reviewers in
-ensemble mode is the default for that reason. The engine refuses an existing run
-directory, so a retry needs a new folder and never silently doubles a run.
+The real limit is the subscription's rate and usage limits. Three core reviewers
+is the default for that reason, and `--reviewers` is the knob that costs
+capacity. The engine refuses an existing run directory, so a retry needs a new
+folder and never silently doubles a run.
 
 Reviews published on the retired hosted path do carry a per-agent dollar
 breakdown in their `provenance.json`, measured at the time. A full round there
