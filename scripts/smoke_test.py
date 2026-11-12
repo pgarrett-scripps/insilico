@@ -15,11 +15,11 @@ from smoke_checks.commands import check_command_parsing_is_strict
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
 from smoke_checks.local import (
     check_a_bare_pdf_cannot_be_published,
-    check_a_dated_model_id_is_not_a_substitution,
     check_a_destination_outside_its_tree_is_refused,
     check_a_finished_run_that_endorses_nothing_is_a_review,
     check_a_minor_finding_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
+    check_a_placeholder_agent_row_is_not_a_reviewer,
     check_a_published_record_names_no_local_path,
     check_a_rehearsal_cannot_be_copied_into_place_as_a_review,
     check_a_rehearsal_claims_no_reading,
@@ -27,25 +27,25 @@ from smoke_checks.local import (
     check_a_run_of_one_paper_cannot_be_published_as_another,
     check_a_run_on_another_transport_is_not_published,
     check_a_run_with_no_manifest_paper_id_is_still_bound,
-    check_a_subscription_login_is_not_a_paid_provider,
-    check_a_substituted_model_is_visible,
+    check_a_stage_that_never_reported_is_not_a_whole_review,
     check_a_written_bundle_carries_no_local_path,
     check_an_attestation_needs_a_named_editor,
     check_an_empty_protocol_file_is_not_a_record_of_the_run,
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_an_unfinished_run_cannot_be_published,
     check_every_published_file_is_hashed,
+    check_every_specialist_report_reaches_the_bundle,
     check_no_published_file_in_a_bundle_names_a_local_path,
     check_provenance_is_read_from_the_run,
-    check_publishing_needs_a_verified_login,
     check_severity_is_read_from_the_engine_not_guessed,
+    check_the_advisory_verdict_is_labelled_advisory,
     check_the_attestation_says_what_it_has_to_say,
     check_the_decision_is_attributed_to_a_person,
     check_the_locked_engine_release_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
-    check_the_model_comes_from_the_run_not_the_flag,
+    check_the_run_folder_is_found_whichever_path_is_typed,
     check_the_skill_commands_match_the_engine_parser,
-    check_the_synthesis_record_is_read_where_the_engine_writes_it,
+    check_the_transport_claim_rests_on_the_runs_own_probe,
 )
 from smoke_checks.planning import (
     check_latest_editorial_attempt_is_the_revision_baseline,
@@ -148,8 +148,6 @@ def main() -> int:
     print("ok  a review of an unidentified PDF cannot be published")
     check_the_attestation_says_what_it_has_to_say()
     print("ok  the published attestation names the transport and the editor")
-    check_a_subscription_login_is_not_a_paid_provider()
-    print("ok  a subscription login passes the preflight and a paid one does not")
     check_the_skill_commands_match_the_engine_parser()
     print("ok  every engine command in the skill is one the engine's parser accepts")
     check_provenance_is_read_from_the_run()
@@ -158,14 +156,10 @@ def main() -> int:
     print("ok  a run is bound to the paper that was prepared")
     check_a_rehearsal_is_never_written_into_the_published_tree()
     print("ok  a run without --publish stays out of docs/reviews")
-    check_a_substituted_model_is_visible()
-    print("ok  a model the transport substituted is read from the usage receipts")
     check_the_method_paragraph_describes_the_run_that_happened()
     print("ok  the summary describes the run that was recorded")
     check_an_attestation_needs_a_named_editor()
     print("ok  a true attestation needs a named editor and an actual reading")
-    check_the_model_comes_from_the_run_not_the_flag()
-    print("ok  the published model is the one the run asked for")
     check_a_run_with_no_manifest_paper_id_is_still_bound()
     print("ok  a run that records its paper id outside the manifest is still bound")
     check_an_unfinished_run_cannot_be_published()
@@ -174,14 +168,8 @@ def main() -> int:
     print("ok  a run that finished and raised nothing publishes, a quarantined one does not")
     check_a_run_on_another_transport_is_not_published()
     print("ok  a run on another transport is refused rather than labelled claude-code")
-    check_a_dated_model_id_is_not_a_substitution()
-    print("ok  model drift uses the engine's own rule for the same model")
     check_a_published_record_names_no_local_path()
     print("ok  a published record names no path on the operator's disk")
-    check_publishing_needs_a_verified_login()
-    print("ok  publishing needs a login that was actually checked")
-    check_the_synthesis_record_is_read_where_the_engine_writes_it()
-    print("ok  the synthesis policy and its budget are read from the stage folder")
     check_a_rehearsal_claims_no_reading()
     print("ok  a rehearsal's documents claim no reading that did not happen")
     check_a_destination_outside_its_tree_is_refused()
@@ -196,6 +184,18 @@ def main() -> int:
     print("ok  a rehearsal cannot be copied into place as a published review")
     check_a_written_bundle_carries_no_local_path()
     print("ok  a published bundle, read back off disk, names no local path")
+    check_the_transport_claim_rests_on_the_runs_own_probe()
+    print("ok  the transport claim is read from the run's own start-up probe")
+    check_a_placeholder_agent_row_is_not_a_reviewer()
+    print("ok  the harness's placeholder agent rows are not published as reviewers")
+    check_a_stage_that_never_reported_is_not_a_whole_review()
+    print("ok  a specialist that never reported is refused, not rounded up")
+    check_every_specialist_report_reaches_the_bundle()
+    print("ok  every specialist track report is copied into the bundle")
+    check_the_run_folder_is_found_whichever_path_is_typed()
+    print("ok  the run folder is found from the out directory or from review/")
+    check_the_advisory_verdict_is_labelled_advisory()
+    print("ok  the engine's verdict is published and labelled advisory")
 
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"

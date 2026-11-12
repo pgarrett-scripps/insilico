@@ -3,7 +3,7 @@
   "$id": "https://insilico.science/schemas/review-provenance.schema.json",
   "title": "In Silico review provenance",
   "type": "object",
-  "$comment":"Two record shapes share this file. Version 2 is the hosted panel: five referees, two audits, a debate, and a dollar cost. Version 3 is a review generated locally on a subscription, where most of those numbers do not exist and inventing zeros for them would read as measurements. Fields common to both are required here; each version's own obligations are in allOf below. Records written before versioning carry no schema_version and are not validated at all, so nothing already published has to be rewritten.",
+  "$comment":"Two record shapes share this file. Version 2 is the hosted panel: five referees, two audits, a debate, and a dollar cost. Version 4 is a review generated locally by the plugin that ships inside peerreviewagents 0.9, which runs every agent inside one Claude Code session on a subscription, where most of the panel's numbers do not exist and inventing zeros for them would read as measurements. Version 3 was the shape the engine's own Python orchestration wrote on the same subscription. That orchestration is deleted in 0.9 with no shim, and no version 3 record was ever published, so its shape is gone from this file rather than left selectable: a schema that still accepted it would let a record claim a single requested model and a publish-time login probe that nothing in the repository can now produce. Fields common to both shapes are required here, and each version's own obligations are in allOf below. Records written before versioning carry no schema_version and are not validated at all, so nothing already published has to be rewritten.",
   "required": [
     "schema_version",
     "generated_at",
@@ -21,33 +21,36 @@
     "preprint"
   ],
   "properties": {
-    "schema_version": { "enum": [2, 3] },
+    "schema_version": { "enum": [2, 4] },
     "generator": {
-      "$comment":"Required on a version 3 record. It answers who ran this review, on what code, through which billing route, and whether a person read it before it was published. The engine fingerprint is over the engine source tree, so two reviews claiming the same engine version can be shown to have run the same bytes.",
+      "$comment":"Required on a version 4 record, and present on no other shape. It answers who ran this review, on what code, through which billing route, with which agents, and whether a person read it before it was published. The engine and plugin fingerprints are over the source trees the run itself recorded, so two reviews claiming the same release can be shown to have run the same bytes.",
       "type": "object",
       "required": [
         "kind",
         "engine",
         "engine_fingerprint",
+        "plugin",
         "transport",
-        "model_ids",
+        "agents",
         "input",
+        "run",
+        "advisory_verdict",
         "decision_source",
         "attestation"
       ],
       "properties": {
-        "kind": { "const": "local-claude-code" },
+        "kind": { "const": "local-claude-code-plugin" },
         "engine": {
+          "$comment":"The installed distribution. 0.9 exposes no module version and no API version of its own, so there is one source for this and a record that cannot name it is refused rather than written with an empty string.",
           "type": "object",
           "required": ["name", "version"],
           "properties": {
             "name": { "type": "string", "minLength": 1 },
-            "version": { "type": "string", "minLength": 1 },
-            "api_version": { "type": "string" }
+            "version": { "type": "string", "minLength": 1 }
           }
         },
         "engine_fingerprint": {
-          "$comment":"source names where the hashed manifest came from. run_manifest is the engine's own record of its source tree from the moment the run started, which is the only one that describes the code that wrote the review. installed_engine is a re-hash of whatever is installed on the publishing machine, which is a different claim. matches_installed_engine is present when both could be compared.",
+          "$comment":"source names where the hashed manifest came from. run_manifest is the engine's own record of every file it loaded at the moment the run started, which is the only one that describes the code that wrote the review. installed_engine is a re-hash of whatever is installed on the publishing machine, which is a different claim. matches_installed_engine is present when both could be compared.",
           "type": "object",
           "required": ["algorithm", "file_count", "sha256", "source"],
           "properties": {
@@ -58,38 +61,88 @@
             "matches_installed_engine": { "type": "boolean" }
           }
         },
-        "transport": {
-          "$comment":"paid_api_key_used is a const rather than a boolean. A record that needs to say true is not a local subscription run and does not belong in this shape.",
+        "plugin": {
+          "$comment":"The plugin is what reviews the paper in 0.9, so the record names it by its bytes rather than by its version. Two runs can both say plugin-two-track-v1 over different agent prompts, and the fingerprint settles which ran. workflow_sha256 is the hash of the one file that decides which agents run in what order. matches_installed_plugin is present when the plugin installed on the publishing machine could be hashed and compared.",
           "type": "object",
-          "required": ["provider", "executable", "billing_policy", "login_verified", "paid_api_key_used"],
+          "required": ["fingerprint", "workflow_sha256", "workflow_version"],
           "properties": {
-            "provider": { "enum": ["claude-code", "codex"] },
+            "fingerprint": {
+              "type": "object",
+              "required": ["algorithm", "file_count", "sha256", "source"],
+              "properties": {
+                "algorithm": { "const": "sha256" },
+                "file_count": { "type": "integer", "minimum": 1 },
+                "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+                "source": { "enum": ["run_manifest", "installed_engine"] }
+              }
+            },
+            "workflow_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "workflow_version": { "type": "string", "minLength": 1 },
+            "finding_schema_version": { "type": "string" },
+            "matches_installed_plugin": { "type": "boolean" }
+          }
+        },
+        "transport": {
+          "$comment":"paid_api_key_used is a const rather than a boolean. A record that needs to say true is not a local subscription run and does not belong in this shape. The claim the block makes is deliberately narrow: not that an account of a particular kind paid, since 0.9 reads no authentication status and this schema will not hold a guess, but that a real Claude Code session started, loaded the engine's plugin and connected its MCP server, and ran with no API key in its environment.",
+          "type": "object",
+          "required": [
+            "provider",
+            "executable",
+            "version",
+            "billing_policy",
+            "login_verified",
+            "verified_by",
+            "verified_at",
+            "paid_api_key_used"
+          ],
+          "properties": {
+            "provider": {
+              "$comment": "In Silico publishes Claude Code runs only. The run records its own transport, and the two are compared before a record is written, so a bundle cannot name one transport over a run that used another. The Codex provider is gone from the engine in 0.9 and gone from here with it.",
+              "const": "claude-code"
+            },
             "executable": { "type": "string", "minLength": 1 },
-            "version": { "type": ["string", "null"] },
+            "version": {
+              "$comment": "The Claude Code version the run observed, from runtime.json. Required, because a record that cannot name it did not come from a session that ran.",
+              "type": "string",
+              "minLength": 1
+            },
             "billing_policy": { "type": "string", "minLength": 1 },
-            "auth_method": { "type": ["string", "null"] },
-            "subscription_type": { "type": ["string", "null"] },
-            "api_provider": { "type": ["string", "null"] },
             "login_verified": {
-              "$comment": "A const rather than a boolean, for the same reason as paid_api_key_used. A rehearsal written with the login check skipped says false here, and a rehearsal is not a published review however it reached this folder.",
+              "$comment": "A const rather than a boolean, for the same reason as paid_api_key_used. A rehearsal written with the check skipped says false here, and a rehearsal is not a published review however it reached this folder.",
               "const": true
             },
             "verified_by": {
-              "$comment": "Where the login was read. The run's own billing confirmation used to be accepted here, and was the stronger source because it named the account that paid rather than the one logged in when the bundle was written. Engine 0.8.0 writes no such file, so the publish-time probe is the only source a record can honestly name, and leaving the stronger value selectable would let a bundle claim a check that nothing performed. No published bundle carries this field, so narrowing it rewrote nothing.",
-              "enum": ["publish_time_probe"]
+              "$comment": "Where the claim about the transport was read. The run's own start-up probe is the only source: engine 0.9 proves a Claude Code session started, loaded the plugin and connected the peerreview MCP server before it spends anything, and writes that proof into startup.json. The publish-time probe that version 3 used asked the installed CLI who was logged in at the moment the bundle was written, which is a fact about the publishing machine rather than about the review, and 0.9 exposes no authentication status to ask. Nothing published carries either value, so narrowing this rewrote no record.",
+              "const": "run_startup_probe"
             },
-            "verified_at": { "type": "string" },
+            "verified_at": {
+              "$comment": "When the run's probe ran, from startup.json. The run's clock, not the publishing machine's.",
+              "type": "string",
+              "minLength": 1
+            },
             "paid_api_key_used": { "const": false }
           }
         },
-        "model_ids": {
-          "$comment":"requested is what the operator asked for. observed is what the transport reported back per call, which is the one that can disagree.",
-          "type": "object",
-          "required": ["requested", "observed"],
-          "properties": {
-            "requested": { "type": "string", "minLength": 1 },
-            "observed": { "type": "array", "items": { "type": "string" } },
-            "substituted": { "const": true }
+        "agents": {
+          "$comment":"One row per agent that actually ran. The plugin pins a model inside each agent file, so the panel is a list of slots with their own models rather than one requested id repeated down a column, which is what version 3 recorded. A slot the harness reserved and never filled is left out: an agent with no model, no state and no usage reviewed nothing, and five of those would overstate the panel.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["slot"],
+            "properties": {
+              "slot": { "type": "string", "minLength": 1 },
+              "role": { "type": "string" },
+              "track": { "type": "string" },
+              "attempt": { "type": "integer", "minimum": 1 },
+              "tool_calls": { "type": "integer", "minimum": 0 },
+              "model": { "type": "string", "minLength": 1 },
+              "agent_type": { "type": "string" },
+              "state": { "type": "string" },
+              "tokens": { "type": "integer", "minimum": 0 },
+              "findings": { "type": "integer", "minimum": 0 },
+              "none_found": { "type": "boolean" }
+            }
           }
         },
         "input": {
@@ -106,29 +159,40 @@
           }
         },
         "run": {
-          "$comment":"Read from what the run itself wrote, never from the prepare step's intentions or the publish flags. Only the status is required, because a run that did not record a value must leave it out rather than carry a default that looks measured, but a published review has to come from a run that finished.",
+          "$comment":"Read from the five files the run wrote, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured.",
           "type": "object",
-          "required": ["status"],
+          "required": [
+            "arm",
+            "provider",
+            "workflow_version",
+            "status",
+            "reviewers",
+            "completeness"
+          ],
           "properties": {
             "directory": {
               "$comment": "Relative to the repository root. An absolute path identifies the machine that wrote the record rather than the review, and this record is published.",
               "type": "string",
               "pattern": "^[^/]"
             },
-            "workflow": { "type": "string" },
-            "workflow_version": { "type": "string" },
-            "model": { "type": "string" },
-            "provider": { "type": "string" },
-            "effort": { "type": "string" },
-            "reviewers": { "type": "integer", "minimum": 1 },
-            "synthesis_policy": { "type": "string" },
-            "synthesis_tool_limit": { "type": "integer", "minimum": 0 },
-            "review_policy": {
-              "$comment": "The allowance the reviewers ran under, as the engine named it: agentic-v1 is high effort with thirty tool calls and no finding cap, standard-v1 is the bounded study budget of at most five findings in about 900 words. Optional, because the fourteen published records predate the field and because a run that recorded no policy must leave it out rather than claim one.",
+            "arm": {
+              "$comment": "The arm replaces 0.8's mode and review policy, and it is the single name for what the run was asked to do. 0.9 defines full-two-track, reviewers-only, single, single-revision, manuscript-only and draft-check. Left as a string rather than an enum because the engine owns that list, and a record has to be able to name the arm the run actually used rather than one of the arms this repository knew about when it was written.",
               "type": "string",
               "minLength": 1
             },
+            "provider": { "const": "claude-code" },
+            "workflow_version": { "type": "string", "minLength": 1 },
+            "finding_schema_version": { "type": "string" },
+            "reviewers": { "type": "integer", "minimum": 1 },
+            "specialist_tracks": {
+              "$comment": "The audit tracks the arm asked for, as the run's own plan recorded them. The six in 0.9 are stats, figures-tables, methods-reporting, citations, consistency and field. A track listed here with no audit report in the bundle is a gap a reader can see.",
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "synthesis_policy": { "type": "string" },
+            "body_finding_limit": { "type": "integer", "minimum": 1 },
             "paper_id": { "type": "string" },
+            "literature_cutoff": { "type": "string" },
             "status": {
               "$comment": "The engine writes running, blocked, complete or complete-without-findings. Only complete is a review here, so a bundle written from a run that stopped part way cannot validate even if its folder is moved into place by hand, and neither can one written from the quarantined outcome, which the engine spells complete-without-findings.",
               "const": "complete"
@@ -137,15 +201,50 @@
               "$comment": "The engine's verdict on its own findings. clean and partially-quarantined are publishable: a review that raised nothing is clean with no findings, and one that lost some findings to the guards still endorses the rest. all-findings-quarantined is not, because such a review endorses none of its own work, which is a different claim from a manuscript found sound and must not be published as one.",
               "enum": ["clean", "partially-quarantined"]
             },
-            "usage": { "type": "object" },
-            "literature_cutoff": { "type": "string" },
-            "artifact_version": { "type": "string" },
+            "completeness": {
+              "$comment": "The stage ledger, which is the only thing that says whether the review is whole. The server records the stages the arm requires and the ones that reported, and a run can reach complete with a stage that never reported when the editor agent accepted the pool without it. Publishing refuses a run with anything in missing, so a published record carries an empty list there; the ledger is still written out, because a reader should be able to see it rather than read the absence of a complaint as proof. none_found is the stages that reported nothing to report, which is an answer and not a gap, and retried names the slots that needed more than one attempt.",
+              "type": "object",
+              "required": ["required", "reported", "missing", "none_found", "editor_accepted"],
+              "properties": {
+                "required": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+                "reported": { "type": "array", "items": { "type": "string" } },
+                "missing": { "type": "array", "items": { "type": "string" }, "maxItems": 0 },
+                "none_found": { "type": "array", "items": { "type": "string" } },
+                "editor_accepted": { "type": "boolean" },
+                "attempts": {
+                  "type": "object",
+                  "additionalProperties": { "type": "integer", "minimum": 1 }
+                },
+                "retried": { "type": "array", "items": { "type": "string" } }
+              }
+            },
             "findings": { "type": "integer", "minimum": 0 },
+            "appendix_findings": { "type": "integer", "minimum": 0 },
+            "escalated_in_bundle": { "type": "integer", "minimum": 0 },
+            "findings_delivered": { "type": "integer", "minimum": 0 },
+            "findings_submitted": { "type": "integer", "minimum": 0 },
+            "quarantined_findings_count": {
+              "$comment": "Findings the server refused to accept because they failed the evidence guards. They are counted rather than published, and the count is what tells a reader how much of the review was thrown away before the editor agent saw it.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "escalated_count": { "type": "integer", "minimum": 0 },
+            "findings_by_track": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 0 }
+            },
+            "tool_calls_total": { "type": "integer", "minimum": 0 },
+            "wall_seconds": { "type": "number", "minimum": 0 },
+            "tokens_total": { "type": "integer", "minimum": 0 },
             "errors": { "type": "array", "items": { "type": "string" } }
           }
         },
+        "advisory_verdict": {
+          "$comment":"The editor agent's judgement of the manuscript, as it wrote it. 0.9 publishes it rather than discarding it, and it sits here, under the generator and beside decision_source, for a reason: it is the engine's opinion, it is labelled advisory wherever it is shown, and the decision on the record is still a person's. A reader who disagrees with the engine can see its judgement and the editor's decision side by side. An empty object is allowed, because an arm that runs no editor produces no judgement and inventing one would be worse than recording none.",
+          "type": "object"
+        },
         "decision_source": {
-          "$comment":"The engine grades findings, not manuscripts. It produces no accept or reject verdict, so the decision on a version 3 record was typed by the editor after reading the run. Recording the engine as its author would be a false attribution.",
+          "$comment":"The engine grades findings and offers an advisory judgement. It recommends no accept or reject, so the decision on this record was typed by the editor after reading the run. Recording the engine as its author would be a false attribution.",
           "const": "human_editor"
         },
         "attestation": {
@@ -308,16 +407,30 @@
       }
     },
     {
-      "$comment":"A local run has no per-stage model split, no panel of five, and no dollar cost, so it is not asked for them. What it must carry instead is the generator block: the code, the transport and the human attestation that stand in for the hosted pipeline's accounting.",
+      "$comment":"A plugin run has no per-stage model split, no panel of five, no debate and no dollar cost, so it is not asked for them. What it must carry instead is the generator block: the code, the plugin, the agents, the transport and the human attestation that stand in for the hosted pipeline's accounting.",
       "if": {
         "required": ["schema_version"],
-        "properties": { "schema_version": { "const": 3 } }
+        "properties": { "schema_version": { "const": 4 } }
       },
       "then": {
-        "required": ["generator", "model"],
+        "required": ["generator", "models"],
         "properties": {
+          "model": {
+            "$comment":"Refused outright rather than merely left out of the required list. Every version 2 record carries a single model id, and a reader of this file should not have to infer that a plugin run must not: the plugin pins a model per agent file, so one id at the top would describe a panel that did not sit. An empty not matches nothing, so a record carrying this key cannot validate.",
+            "not": {}
+          },
           "generator": {},
-          "model": { "type": "string", "minLength": 1 },
+          "models": {
+            "$comment":"The model each agent slot ran on, keyed by slot. At least one entry, because a record naming no model does not say what wrote the review, and the site reads exactly this field when it says what produced each report.",
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "type": "string", "minLength": 1 }
+          },
+          "panel": {
+            "$comment":"Empty on a plugin run. The hosted panel's rows carried per-referee scores and dollar costs that this route does not produce. The equivalent record is generator.agents, which says what each slot was and what it delivered.",
+            "type": "array",
+            "maxItems": 0
+          },
           "total_cost_usd": {
             "$comment":"A subscription run has no per-review dollar figure. Null says so; a zero would read as a measured free run.",
             "type": "null"

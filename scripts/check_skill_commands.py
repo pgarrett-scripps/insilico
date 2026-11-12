@@ -1,20 +1,32 @@
 #!/usr/bin/env python3
 """Parse every engine command in the local-review skill without running one.
 
-The skill told the agent to run
+An earlier version of the skill told the agent to run
 
     python -m peerreviewagents.engine --provider claude-code --model X review ...
 
-and the engine rejected it. `--provider` and `--model` are defined on each
+and the engine rejected it. `--provider` and `--model` were defined on each
 subcommand's parser, not at the top level, so argparse refused the command
 before any work started. Nothing caught it, because the only thing that would
 have is running the review, which costs a review.
 
-Argparse can answer the question for free. This extracts each
-`-m peerreviewagents.engine ...` command from the skill's fenced bash blocks,
-fills in the angle-bracket placeholders, and hands the result to the engine's
-own parser with `parse_args`. Parsing touches no files, spends nothing, and
-calls no model.
+Engine 0.9 has one console command, `peerreview`, with two subcommands, and
+each one parses its own arguments: `peerreview --help` lists `review` and
+`report` and carries no options of its own. That makes the same class of
+mistake easy to repeat in the other direction, by writing an option before the
+subcommand where there is nothing to accept it.
+
+Argparse can answer the question for free. This extracts each `peerreview ...`
+command from the skill's fenced bash blocks, fills in the angle-bracket
+placeholders, and hands the result to the parser the engine itself builds for
+that subcommand. Parsing touches no files, spends nothing, and calls no model.
+
+Only three engine names are imported, all of them public and all of them
+present in 0.9.0 as it ships: `cli.main.COMMANDS`, `cli.main.report_parser` and
+`plugin.starter.build_parser`. Running a review from Python goes through
+`review` or, once the engine's public surface lands, `review_main` and
+`report_main`. Nothing here imports the plugin server or the starter's
+internals.
 """
 
 from __future__ import annotations
@@ -25,11 +37,12 @@ import os
 import re
 import shlex
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 REPO = Path(__file__).resolve().parent.parent
 SKILL = REPO / ".claude" / "skills" / "local-review" / "SKILL.md"
-MODULE = "peerreviewagents.engine"
+PACKAGE = "peerreviewagents"
+ENGINE_COMMAND = "peerreview"
 
 # Where the engine has to be present for this check to mean anything. On a
 # laptop the engine is optional, so a missing one is reported and skipped. In
@@ -57,18 +70,24 @@ def commands(block: str) -> list[str]:
 
 
 def engine_arguments(command: str) -> list[str] | None:
-    """The argv the engine would see, or None when this is another program."""
+    """The argv the engine would see, or None when this is another program.
+
+    The command is found by its name rather than by position, so a line that
+    runs it out of a virtual environment or through a runner is read the same
+    way as a bare `peerreview`.
+    """
     filled = PLACEHOLDER.sub("placeholder", command)
     try:
         words = shlex.split(filled)
     except ValueError as error:
         raise SystemExit(f"{SKILL.name}: cannot read this command: {command}\n  {error}")
-    if MODULE not in words:
-        return None
-    index = words.index(MODULE)
-    if index == 0 or words[index - 1] != "-m":
-        return None
-    return words[index + 1 :]
+    for index, word in enumerate(words):
+        if PurePosixPath(word).name != ENGINE_COMMAND:
+            continue
+        if index and words[index - 1] == "-m":
+            return None
+        return words[index + 1 :]
+    return None
 
 
 def engine_required() -> bool:
@@ -84,11 +103,12 @@ def engine_required() -> bool:
     return os.environ.get("CI", "").strip().lower() not in FALSE_VALUES
 
 
-def load_parser():
-    """The engine's own parser builder. Raises when there is no engine."""
-    from peerreviewagents.engine.__main__ import build_parser
+def load_parsers():
+    """The engine's own parsers, one per subcommand. Raises with no engine."""
+    from peerreviewagents.cli.main import COMMANDS, report_parser
+    from peerreviewagents.plugin.starter import build_parser as review_parser
 
-    return build_parser
+    return COMMANDS, {"review": review_parser, "report": report_parser}
 
 
 def main() -> int:
@@ -106,17 +126,18 @@ def main() -> int:
 
     if not found:
         print(
-            f"{SKILL.name} contains no {MODULE} commands, so this check proved nothing.",
+            f"{SKILL.name} contains no {ENGINE_COMMAND} commands, so this check "
+            "proved nothing.",
             file=sys.stderr,
         )
         return 1
 
     try:
-        build_parser = load_parser()
+        known, parsers = load_parsers()
     except Exception as error:  # pragma: no cover - depends on the environment
         if engine_required():
             print(
-                f"{MODULE} is not importable here ({error}), so this check proved "
+                f"{PACKAGE} is not importable here ({error}), so this check proved "
                 "nothing about the skill's commands. The installed release has to "
                 "contain the engine package. Set "
                 f"{REQUIRE_ENGINE}=0 only to waive the check deliberately.",
@@ -124,7 +145,7 @@ def main() -> int:
             )
             return 1
         print(
-            f"skipped: {MODULE} is not importable in this interpreter ({error}). "
+            f"skipped: {PACKAGE} is not importable in this interpreter ({error}). "
             "Run this check with the interpreter that runs the reviews, or set "
             f"{REQUIRE_ENGINE}=1 to make a missing engine a failure.",
         )
@@ -132,11 +153,21 @@ def main() -> int:
 
     failures = []
     for command, argv in found:
-        parser = build_parser(prog=f"python -m {MODULE}")
+        subcommand = argv[0] if argv else ""
+        if subcommand not in known:
+            failures.append(
+                (
+                    command,
+                    f"{subcommand!r} is not one of the engine's commands "
+                    f"({', '.join(known)})",
+                )
+            )
+            continue
+        parser = parsers[subcommand]()
         stderr = io.StringIO()
         try:
             with contextlib.redirect_stderr(stderr):
-                parser.parse_args(argv)
+                parser.parse_args(argv[1:])
         except SystemExit:
             reason = stderr.getvalue().strip().splitlines()
             failures.append((command, reason[-1] if reason else "rejected by the parser"))

@@ -1,7 +1,7 @@
 """Turn a local PeerReviewAgents run into a publishable review bundle.
 
 The hosted panel is gone. A review is now produced on the editor's own machine,
-on a Claude Code subscription, and arrives here as a pull request. No paid API
+inside one Claude Code session, and arrives here as a pull request. No paid API
 key exists anywhere in that path, and nothing in this file can create one.
 
 The work splits in two, deliberately:
@@ -13,15 +13,16 @@ spends nothing and talks to no model.
 ``publish`` reads a finished engine run and writes the bundle: the documents, the
 provenance record, and the manifest. It spends nothing either.
 
-Between the two, the skill runs the engine itself. That is the only step that
+Between the two, the skill runs ``peerreview review``, which starts a Claude Code
+session on the plugin that ships inside the engine. That is the only step that
 costs anything, and keeping it outside this file means no command here can start
 a review by accident.
 
-One thing this module will not do is invent a verdict. The engine grades
-findings, with a severity and a disposition each. It produces no accept or
-reject, because deciding whether a paper should be published is not a thing it
-was built to do. So ``--decision`` is the editor's, typed after reading the run,
-and the provenance record says so in as many words.
+One thing this module will not do is adopt a verdict. The engine's editor agent
+records an advisory judgement, a reading of significance and of how strong the
+evidence is, and it recommends no accept or reject. So ``--decision`` is the
+editor's, typed after reading the run, and the provenance record says so in as
+many words.
 """
 
 from __future__ import annotations
@@ -50,19 +51,39 @@ from review_plan import (  # noqa: E402
 )
 from review_provenance import insilico_version, pipeline_version  # noqa: E402
 
-ENGINE_PACKAGE = "peerreviewagents.engine"
-PROVENANCE_SCHEMA = 3
-GENERATOR_KIND = "local-claude-code"
+ENGINE_PACKAGE = "peerreviewagents"
+STARTER_MODULE = "peerreviewagents.plugin.starter"
+PROVENANCE_SCHEMA = 4
+GENERATOR_KIND = "local-claude-code-plugin"
 TRANSPORT_PROVIDER = "claude-code"
-DEFAULT_MODEL = "claude-sonnet-5-5"
 DECISIONS = ("accept", "minor", "major", "reject")
 
-# Carried in every version 3 record. It is the one claim in the file that no
+# Where the engine puts things under the folder passed to `peerreview review`.
+# The run lands in `review/` and the imported manuscript in `manuscript/`, so
+# `--run` may name either the output folder or the review folder inside it, and
+# `--workspace` has a sibling to default to.
+REVIEW_DIRECTORY = "review"
+MANUSCRIPT_DIRECTORY = "manuscript"
+
+# The six specialist tracks the plugin ships, each writing one `audit_<track>.md`
+# report into the run. Named here so a bundle can say which reports are missing
+# rather than quietly publishing fewer.
+SPECIALIST_TRACKS = (
+    "stats",
+    "figures-tables",
+    "methods-reporting",
+    "citations",
+    "consistency",
+    "field",
+)
+
+# Carried in every version 4 record. It is the one claim in the file that no
 # hash can back, so it is stated plainly rather than implied by a flag.
 ATTESTATION = (
-    "This review was generated locally on a Claude Code subscription, with no "
-    "paid API key in the path. The named editor read the run and chose the "
-    "decision before the review was merged, and merging is what publishes it."
+    "This review was generated locally in a Claude Code session on a "
+    "subscription, with no paid API key in the path. The named editor read the "
+    "run and chose the decision before the review was merged, and merging is "
+    "what publishes it."
 )
 
 # Written instead when the operator says nobody has read the run yet. Such a
@@ -70,25 +91,18 @@ ATTESTATION = (
 # exists so that a rehearsal bundle on disk cannot be mistaken for a reviewed
 # one if somebody copies it by hand.
 UNREAD_STATEMENT = (
-    "This review was generated locally on a Claude Code subscription. No editor "
-    "has attested to reading the run, so it is a rehearsal and must not be "
-    "published."
+    "This review was generated locally in a Claude Code session on a "
+    "subscription. No editor has attested to reading the run, so it is a "
+    "rehearsal and must not be published."
 )
 
-# Documents a local bundle writes. Shorter than the hosted panel's list by
-# design: there was no desk screen, no five-reviewer panel and no debate, so
-# those files are absent rather than present and empty.
-BUNDLE_DOCUMENTS = ("summary.md", "decision_letter.md", "manuscript_stats.md")
 SEVERITY_ORDER = {"major": 0, "moderate": 1, "minor": 2}
 REQUIRED_SEVERITIES = ("major", "moderate")
 
-# The one state a review may be published from. `bundle.FINISHED_STATUSES`
-# carries a second, `complete-without-findings`, and that is not a review here.
-# The engine writes it in exactly one case: every finding the reviewers raised
-# failed the evidence guards and was quarantined. See ensemble.py around the
-# final progress write, reviewer.py's guard branch and api.py's
-# manuscript_only_progress, all three of which set it only when
-# review_guard_status is all-findings-quarantined.
+# The one state a review may be published from. The engine carries a second
+# finished state, `complete-without-findings`, and that is not a review here.
+# The server writes it in exactly one case: every finding the reviewers raised
+# failed the evidence guards and was quarantined.
 #
 # A run that read the manuscript end to end and genuinely raised nothing is
 # `complete` with the guard status `clean`, and that publishes with an empty
@@ -100,19 +114,32 @@ FINISHED_STATUSES = ("complete",)
 ALL_FINDINGS_QUARANTINED = "all-findings-quarantined"
 WITHOUT_FINDINGS_STATUS = "complete-without-findings"
 
-# insilico publishes Claude Code runs only. The engine still supports Codex
-# behind `--provider codex`, and nothing here is written for it: the attestation
-# names a Claude subscription, the login probe reads the Claude CLI and the
-# billing policy below describes that account. A Codex run published through
-# this path would carry all three claims about a transport it never used.
+# insilico publishes Claude Code runs only. Every claim a bundle makes about how
+# the review was paid for is a claim about a Claude subscription, and the only
+# transport this path can describe is the one the plugin runs on.
 PUBLISHABLE_PROVIDERS = ("claude-code",)
 
-# What the engine calls its bounded study budget, spelled out rather than
-# imported: this module has to read a run with no engine installed, which is how
-# CI runs the smoke suite. It is `review_policy.STUDY_POLICY_NAME`, and the
-# policy that adds no protocol keys, so a run whose protocol names no policy ran
-# under this one.
-STUDY_POLICY_NAME = "standard-v1"
+# The route this pipeline bills on, named in every published record. The engine
+# has no billing policy of its own: it runs inside whatever subscription the
+# Claude CLI is signed in to, and spends nothing else.
+BILLING_POLICY = "claude-subscription-v1"
+
+# How a published record says the transport claim was checked. There is no
+# publish-time probe any more, because the engine exposes no authentication
+# reading in 0.9. What backs the claim is the run's own start-up probe: the
+# engine refuses to spend a run until a Claude Code session has started, loaded
+# the plugin and connected the `peerreview` MCP server, and it records what that
+# probe saw. A session that started had a login, and the starter removes
+# ANTHROPIC_API_KEY and ANTHROPIC_AUTH_TOKEN from the environment it hands the
+# session, so no key in the operator's shell can have paid for it.
+VERIFIED_BY = "run_startup_probe"
+MCP_SERVER_NAME = "peerreview"
+
+# The manifest key holding the workflow the plugin ran. Hashed on its own as
+# well as inside the plugin fingerprint, because it is the one file that decides
+# which agents ran in what order.
+WORKFLOW_FILE = "plugin/workflows/review.js"
+PLUGIN_PREFIX = "plugin/"
 
 
 def digest(data: bytes) -> str:
@@ -131,288 +158,6 @@ def write_json(path: Path, value: object) -> None:
     Path(path).write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def engine():
-    """Import the engine, or explain how to get one."""
-    try:
-        return importlib.import_module(ENGINE_PACKAGE)
-    except ImportError as exc:
-        raise CommandError(
-            "PeerReviewAgents 0.8.0 or newer is not importable. Install it, or "
-            "run this with the paper-workbench virtual environment on PATH."
-        ) from exc
-
-
-def engine_fingerprint() -> dict:
-    """Hash the engine source tree, not just its version number.
-
-    Two reviews can both claim engine 0.8.0 and have run different bytes, one
-    from a release and one from a working tree. The file count and the hash of
-    the whole manifest settle which.
-    """
-    module = engine()
-    runtime = importlib.import_module(f"{ENGINE_PACKAGE}.model_runtime")
-    root = Path(module.__file__).resolve().parent
-    manifest = runtime.source_manifest(root)
-    if not manifest:
-        raise CommandError(f"The engine at {root} has no source files to fingerprint")
-    return {
-        "algorithm": "sha256",
-        "file_count": len(manifest),
-        "sha256": digest(canonical(manifest)),
-    }
-
-
-def engine_record() -> dict:
-    module = engine()
-    api = importlib.import_module(f"{ENGINE_PACKAGE}.api")
-    version = getattr(module, "__version__", "") or importlib.metadata.version("peerreviewagents")
-    return {
-        "name": ENGINE_PACKAGE,
-        "version": str(version),
-        "api_version": str(getattr(api, "API_VERSION", "")),
-    }
-
-
-# What a Claude subscription login looks like to `claude auth status`. The
-# engine accepts exactly these, in model_runtime.require_subscription, and this
-# path has to accept the same set or it refuses accounts the engine would
-# happily run on. `firstParty` is Anthropic's own name for the subscription
-# route, so a truthy apiProvider is not by itself a paid key.
-#
-# Written out rather than imported. The engine spells the pair inline inside
-# require_subscription and exports no constant, and the module that used to
-# hold one is gone along with every billing gate, so there is nothing to read
-# it from. The pair is asserted against the engine's own source in the smoke
-# suite instead, which is where a drift would be caught.
-SUBSCRIPTION_AUTH_METHODS = ("claude.ai", "oauth")
-SUBSCRIPTION_API_PROVIDERS = (None, "", "firstParty")
-
-# The route this pipeline bills on, named in every published record. The engine
-# has no billing policy of its own any more: it runs on whatever subscription
-# the Claude CLI is signed in to, and spends nothing else. So this is a
-# statement about how the review was paid for, which the login probe below
-# confirms, and not a value copied out of the engine.
-BILLING_POLICY = "claude-subscription-v1"
-
-
-def transport_from_status(status: dict, *, provider: str) -> dict:
-    """Turn one `claude auth status` reading into the transport record.
-
-    `provider` is the transport the run itself recorded, passed in rather than
-    taken from a constant here, so the record cannot name one provider while the
-    run asked another.
-
-    Pure, so the refusals can be tested without a CLI. Three things have to hold
-    before a review may run: somebody is logged in, the login is a subscription
-    login rather than a key, and the account behind it is Anthropic's own rather
-    than a cloud reseller. Each failure gets its own message, because the fix
-    differs.
-    """
-    accepted = SUBSCRIPTION_AUTH_METHODS
-    error = status.get("error")
-    if error:
-        raise CommandError(f"The Claude CLI could not report its login: {error}")
-    if not status.get("loggedIn"):
-        raise CommandError(
-            "No Claude Code login. Run `claude /login` and sign in with the "
-            "Claude subscription account before generating a review."
-        )
-    if status.get("authMethod") not in accepted:
-        raise CommandError(
-            f"The Claude CLI reports authMethod {status.get('authMethod')!r}, "
-            f"which is not a subscription login. The engine accepts "
-            f"{', '.join(accepted)}. Sign in again with the subscription account."
-        )
-    if status.get("apiProvider") not in SUBSCRIPTION_API_PROVIDERS:
-        raise CommandError(
-            f"The Claude CLI is authenticated against the {status.get('apiProvider')} "
-            "API rather than an Anthropic subscription. Run `claude /login` and "
-            "choose the subscription account before generating a review."
-        )
-    return {
-        "provider": provider,
-        "executable": "claude",
-        "version": None,
-        "billing_policy": BILLING_POLICY,
-        "auth_method": str(status.get("authMethod")),
-        "subscription_type": status.get("subscriptionType"),
-        "api_provider": status.get("apiProvider") or "firstParty",
-        "paid_api_key_used": False,
-    }
-
-
-def transport_record(*, provider: str, probe: bool = True) -> dict:
-    """Which CLI ran the models, and on whose account.
-
-    `provider` is the transport the run recorded, or, in the preflight where
-    there is no run yet, the one this path publishes. Anything outside
-    `PUBLISHABLE_PROVIDERS` is refused before the probe, so no second provider's
-    CLI is ever executed from here and no bundle is written describing a
-    transport this code knows nothing about.
-
-    ``paid_api_key_used`` is a constant here and a constant in the schema. This
-    path cannot reach a paid key, so the field is a statement about the design
-    rather than a measurement, and a record needing it to be true is not a local
-    review and has no business in this shape.
-
-    Without a probe the login fields are absent rather than null, because an
-    unprobed login is unknown and a null would read as a measured absence.
-
-    The probe is the only source of the login now. The engine used to copy a
-    billing confirmation into the run folder, naming the account that paid, and
-    that record was preferred over this probe because it answered the stronger
-    question. The engine writes no such file any more, so the honest claim is
-    the narrower one this makes: who the Claude CLI was signed in as when the
-    bundle was written.
-    """
-    provider = str(provider or "")
-    if provider not in PUBLISHABLE_PROVIDERS:
-        raise CommandError(
-            f"This run used the {provider or 'unrecorded'} transport, and this "
-            f"path records {', '.join(PUBLISHABLE_PROVIDERS)} runs only. Review "
-            "the paper again on Claude Code, or publish it by another route."
-        )
-    if not probe:
-        return {
-            "provider": provider,
-            "executable": "claude",
-            "version": None,
-            "billing_policy": BILLING_POLICY,
-            "login_verified": False,
-            "paid_api_key_used": False,
-        }
-    runtime = importlib.import_module(f"{ENGINE_PACKAGE}.model_runtime")
-    return {**transport_from_status(runtime.auth_status(provider=provider), provider=provider),
-            "login_verified": True,
-            "verified_by": "publish_time_probe"}
-
-
-def jsonl_rows(path: Path) -> list[dict]:
-    rows = []
-    try:
-        text = Path(path).read_text(encoding="utf-8")
-    except OSError:
-        return rows
-    for line in text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(row, dict):
-            rows.append(row)
-    return rows
-
-
-def observed_models(run_dir: Path) -> list[str]:
-    """Model ids the transport actually reported, as opposed to the one asked for.
-
-    The engine writes this as `models_observed`, a list, into every usage
-    receipt: see model_runtime.assess_claude_stream, which fills it from the
-    per-model usage Claude Code reports back. Looking for a scalar `model` key
-    instead finds the requested id in protocol.json and calls it observed, which
-    is how a substituted model would have gone unnoticed.
-    """
-    found: set[str] = set()
-    for path in sorted(Path(run_dir).rglob("usage.jsonl")):
-        for row in jsonl_rows(path):
-            for name in row.get("models_observed") or []:
-                if isinstance(name, str) and name:
-                    found.add(name)
-    for path in sorted(Path(run_dir).rglob("*.json")):
-        try:
-            payload = read_json(path)
-        except (OSError, json.JSONDecodeError):
-            continue
-        for key, value in _walk(payload):
-            if key == "models_observed" and isinstance(value, list):
-                found.update(name for name in value if isinstance(name, str) and name)
-    return sorted(found)
-
-
-def _walk(value: object):
-    if isinstance(value, dict):
-        for key, child in value.items():
-            yield key, child
-            yield from _walk(child)
-    elif isinstance(value, list):
-        for child in value:
-            yield from _walk(child)
-
-
-def model_matches(observed: str, requested: str) -> bool:
-    """Is a served model id the model that was asked for, by the engine's rule.
-
-    `model_runtime.same_model` accepts the requested id, a dated release of it
-    and a bracketed variant of it, because those are the forms the transport
-    reports back for one request. Comparing the strings exactly instead called
-    `claude-sonnet-5-5-20260929` a substitution the engine had already
-    accepted, so the drift banner fired on every run whose transport dated the
-    id it served. The fallback is the engine's rule written out, so this stays
-    testable without an engine installed and cannot quietly get looser.
-    """
-    observed = str(observed)
-    requested = str(requested)
-    try:
-        runtime = importlib.import_module(f"{ENGINE_PACKAGE}.model_runtime")
-    except ImportError:
-        runtime = None
-    same = getattr(runtime, "same_model", None)
-    if callable(same):
-        return bool(same(observed, requested))
-    return observed == requested or observed.startswith((f"{requested}-", f"{requested}["))
-
-
-def substituted_models(observed: list[str], requested: str) -> list[str]:
-    """The served ids that are not the requested model, by the engine's rule."""
-    return [name for name in observed if not model_matches(name, requested)]
-
-
-def resolve_requested_model(run: dict, flag: str | None) -> str:
-    """The model this run asked the transport for, taken from the run.
-
-    It used to come from `--model`, whose default was sonnet. The skill lets the
-    operator run opus, so an opus run published a record saying sonnet, and the
-    summary went on to say every pass used that model. The run records what it
-    asked for in protocol.json, so that is the only source here. `--model` is
-    kept as an optional cross-check and a disagreement is a refusal, because one
-    of the two is wrong and the script cannot tell which.
-    """
-    recorded = str(run.get("model") or "")
-    if not recorded:
-        raise CommandError(
-            "This run records no model in protocol.json, so the record cannot "
-            "say which model wrote the review. Point --run at the engine's "
-            "review output folder."
-        )
-    if flag and not model_matches(recorded, str(flag)) and recorded != str(flag):
-        raise CommandError(
-            f"--model says {flag} but the run asked for {recorded}. The run is "
-            "the one that happened. Drop --model, or point --run at the run you "
-            "meant."
-        )
-    return recorded
-
-
-def editor_package(run_dir: Path) -> dict:
-    """The engine's final review, from wherever this workflow saved it."""
-    run_dir = Path(run_dir)
-    for candidate in (run_dir / "editor-package.json", run_dir / "core-run" / "editor-package.json"):
-        if candidate.is_file():
-            return read_json(candidate)
-    artifact = run_dir / "core-artifact.json"
-    if artifact.is_file():
-        package = read_json(artifact).get("editor_package")
-        if isinstance(package, dict):
-            return package
-    raise CommandError(
-        f"No editor-package.json under {run_dir}. Point --run at the engine's "
-        "review output folder."
-    )
-
-
 def maybe_json(path: Path) -> dict:
     path = Path(path)
     if not path.is_file():
@@ -424,74 +169,361 @@ def maybe_json(path: Path) -> dict:
     return value if isinstance(value, dict) else {}
 
 
-def _first(*values: object) -> object:
-    """The first value that was actually recorded.
+def _dict(value: object) -> dict:
+    return value if isinstance(value, dict) else {}
 
-    An `or` chain would skip a recorded zero, and a tool limit of zero is a
-    budget the synthesis call ran under rather than a missing value.
+
+def _list(value: object) -> list:
+    return value if isinstance(value, list) else []
+
+
+def engine_record() -> dict:
+    """Which release of the engine is installed here.
+
+    The version comes from the installed distribution. The engine exposes no
+    `__version__` and no API version of its own in 0.9, so there is one source
+    and a missing one is a refusal rather than an empty string.
     """
-    for value in values:
-        if value not in (None, "", [], {}):
-            return value
-    return None
+    try:
+        version = importlib.metadata.version(ENGINE_PACKAGE)
+    except importlib.metadata.PackageNotFoundError as exc:
+        raise CommandError(
+            "PeerReviewAgents is not installed here, so the record cannot name "
+            "the engine that produced the review. Install it, or run this with "
+            "the virtual environment the review ran in."
+        ) from exc
+    return {"name": ENGINE_PACKAGE, "version": str(version)}
 
 
-def stage_manifests(run_dir: Path) -> list[dict]:
-    """The per-stage manifests an ensemble run writes beside its reviewers.
+def installed_code_manifest() -> dict:
+    """Hash the installed plugin and engine the way a run records them.
 
-    An ensemble run has a folder per stage, `debate/` or `ordinary-synthesis/`
-    for the synthesis and one per discovery reviewer, and each holds its own
-    manifest. That is where the synthesis policy and its tool budget live. The
-    run's top level manifest holds the paper id, the engine source and the
-    plan, so looking there for either found nothing.
+    The plugin server writes `{relative path: sha256}` over three trees when a
+    run starts: the plugin it loaded, the engine's Python modules, and the
+    plugin server's own modules. This reproduces that mapping from the installed
+    package, so a run's recorded bytes and the installed bytes can be compared.
+    A mismatch is not an error: a run made from a checkout of the plugin is a
+    real run, and the record says which it was.
     """
-    found = []
-    for path in sorted(Path(run_dir).glob("*/manifest.json")):
-        payload = maybe_json(path)
-        if payload:
-            found.append(payload)
-    return found
+    try:
+        starter = importlib.import_module(STARTER_MODULE)
+    except ImportError as exc:
+        raise CommandError(
+            f"{STARTER_MODULE} is not importable, so the installed plugin "
+            "cannot be fingerprinted. Install PeerReviewAgents 0.9.0 or newer."
+        ) from exc
+    here = Path(starter.__file__).resolve().parent
+    plugin_root = Path(starter.plugin_dir()).resolve()
+    files: dict[str, str] = {}
+    for path in sorted(plugin_root.rglob("*")):
+        if path.is_file() and "__pycache__" not in path.parts:
+            files[PLUGIN_PREFIX + path.relative_to(plugin_root).as_posix()] = digest(
+                path.read_bytes()
+            )
+    for path in sorted((here.parent / "engine").glob("*.py")):
+        files["engine/" + path.name] = digest(path.read_bytes())
+    for path in sorted(here.glob("*.py")):
+        files["plugin-python/" + path.name] = digest(path.read_bytes())
+    if not files:
+        raise CommandError(f"The engine at {here} has no source files to fingerprint")
+    return files
 
 
-def fingerprint_from_manifest(manifest: dict, source: str) -> dict:
-    """Hash a recorded engine source manifest the same way everywhere.
+def code_fingerprint(code: dict, source: str, *, prefix: str = "") -> dict:
+    """Hash a recorded source manifest, or one prefixed subset of it.
 
-    The engine writes `{relative path: sha256}` over its own source tree, both
-    when a run starts and when this script asks for it directly. Hashing the
-    canonical form of that mapping gives one comparable number, so a run's
-    recorded bytes and the installed bytes can be checked against each other.
+    Hashing the canonical form of the mapping gives one comparable number, so a
+    run's recorded bytes and the installed bytes can be checked against each
+    other without publishing a file list per review.
     """
-    if not manifest:
-        raise CommandError("An engine source manifest was recorded with no files in it")
+    subset = {
+        key: value
+        for key, value in sorted(_dict(code).items())
+        if not prefix or str(key).startswith(prefix)
+    }
+    if not subset:
+        raise CommandError(
+            "A source manifest was recorded with no files in it"
+            + (f" under {prefix}" if prefix else "")
+        )
     return {
         "algorithm": "sha256",
-        "file_count": len(manifest),
-        "sha256": digest(canonical(manifest)),
+        "file_count": len(subset),
+        "sha256": digest(canonical(subset)),
         "source": source,
     }
+
+
+def plugin_record(code: dict, run: dict) -> dict:
+    """The plugin that ran, identified by its own bytes rather than its name.
+
+    Two runs can both say `plugin-two-track-v1` and have run different agent
+    files. The plugin fingerprint settles which, and the workflow hash settles
+    which agents ran in what order, since `workflows/review.js` is the file that
+    decides that.
+    """
+    fingerprint = code_fingerprint(code, "run_manifest", prefix=PLUGIN_PREFIX)
+    workflow = str(_dict(code).get(WORKFLOW_FILE) or "")
+    if not workflow:
+        raise CommandError(
+            f"The run manifest records no {WORKFLOW_FILE}, so the record cannot "
+            "say which workflow produced the review. The plugin server writes "
+            "the hash of every plugin file it loaded into manifest.json."
+        )
+    workflow_version = str(run.get("workflow_version") or "")
+    if not workflow_version:
+        raise CommandError(
+            "The run records no workflow version, so the record cannot say "
+            "which workflow produced the review."
+        )
+    return {
+        "fingerprint": fingerprint,
+        "workflow_sha256": workflow,
+        "workflow_version": workflow_version,
+        "finding_schema_version": str(run.get("finding_schema_version") or ""),
+    }
+
+
+def transport_record(*, provider: str, runtime: dict, startup: dict) -> dict:
+    """Which harness ran the agents, taken from the run rather than probed.
+
+    `provider` is the transport the run itself recorded, so the record cannot
+    name one transport while the run used another. Anything outside
+    `PUBLISHABLE_PROVIDERS` is refused here, before any record is written.
+
+    The claim this makes is narrow on purpose. It is not that an account of a
+    particular kind paid for the run: the engine reads no authentication status
+    in 0.9 and this file will not guess one. It is that a real Claude Code
+    session started, loaded the engine's plugin and connected its MCP server,
+    which the engine proves before it spends anything and records in
+    `startup.json`, and that the session ran with no API key in its environment,
+    which the starter guarantees by removing ANTHROPIC_API_KEY and
+    ANTHROPIC_AUTH_TOKEN from the environment it hands the session.
+
+    Pure, so the refusals can be tested without a CLI and without a model.
+    """
+    provider = str(provider or "")
+    if provider not in PUBLISHABLE_PROVIDERS:
+        raise CommandError(
+            f"This run used the {provider or 'unrecorded'} transport, and this "
+            f"path records {', '.join(PUBLISHABLE_PROVIDERS)} runs only. Review "
+            "the paper again on Claude Code, or publish it by another route."
+        )
+    startup = _dict(startup)
+    if not startup:
+        raise CommandError(
+            "This run recorded no startup.json, so there is no evidence a Claude "
+            "Code session ever started. The engine writes it before it spends "
+            "anything. Point --run at the folder `peerreview review` wrote."
+        )
+    problems = [str(p) for p in _list(startup.get("problems")) if str(p).strip()]
+    if problems:
+        raise CommandError(
+            "The run's start-up probe reported "
+            f"{'; '.join(problems)}. A run that could not load the plugin "
+            "cannot be published as a review the plugin produced."
+        )
+    probe = _dict(startup.get("probe"))
+    connected = [
+        server
+        for server in _list(probe.get("mcp_servers"))
+        if MCP_SERVER_NAME in str(_dict(server).get("name") or "")
+        and str(_dict(server).get("status") or "") == "connected"
+    ]
+    if not connected:
+        raise CommandError(
+            f"The run's start-up probe saw no connected {MCP_SERVER_NAME} MCP "
+            "server, so nothing proves the agents had the engine's tools. Re-run "
+            "the review and publish that run."
+        )
+    return {
+        "provider": provider,
+        "executable": "claude",
+        "version": str(_dict(runtime).get("claude_code_version") or "") or None,
+        "billing_policy": BILLING_POLICY,
+        "login_verified": True,
+        "verified_by": VERIFIED_BY,
+        "verified_at": str(startup.get("at") or "") or None,
+        # A constant here and a constant in the schema. This path cannot reach a
+        # paid key, so the field is a statement about the design rather than a
+        # measurement, and a record needing it to be true is not a local review
+        # and has no business in this shape.
+        "paid_api_key_used": False,
+    }
+
+
+def resolve_review_dir(run: Path) -> Path:
+    """The folder holding protocol.json, whichever of the two was passed.
+
+    `peerreview review <pdf> <out>` writes the review into `<out>/review` and
+    the imported manuscript into `<out>/manuscript`. Both paths are useful to
+    type, so both are accepted and resolved here rather than at four call sites.
+    """
+    run = Path(run).resolve()
+    if (run / REVIEW_DIRECTORY / "protocol.json").is_file():
+        return run / REVIEW_DIRECTORY
+    return run
+
+
+def resolve_workspace(review_dir: Path, flag: str) -> Path:
+    """The imported manuscript workspace, named or found beside the run.
+
+    The engine writes it as a sibling of the review folder, so the default is
+    the one the run actually used. It stays overridable because the guard it
+    feeds, `bind_run_to_input`, is the only thing tying a run to the paper that
+    was prepared.
+    """
+    if flag:
+        return Path(flag).resolve()
+    sibling = Path(review_dir).resolve().parent / MANUSCRIPT_DIRECTORY
+    if (sibling / "paper.json").is_file():
+        return sibling
+    raise CommandError(
+        f"No manuscript workspace at {sibling}, so this run cannot be tied to "
+        "the paper that was prepared. Pass --workspace with the folder holding "
+        "paper.json."
+    )
+
+
+def agent_rows(protocol: dict, package: dict, runtime: dict) -> list[dict]:
+    """One row per agent that ran, from the three files that each know part of it.
+
+    `protocol.json` holds the role, the track and the tool allowance each slot
+    was given. `editor-package.json` holds what each reviewer delivered.
+    `runtime.json` holds what the harness observed, including the model the slot
+    actually ran on.
+
+    The harness emits a placeholder row for an agent it has not named yet, with
+    a label and nothing else. Those are skipped: an `agent-3` with no model, no
+    state and no usage is not an agent that ran, and publishing five of them
+    would overstate the panel.
+    """
+    rows: dict[str, dict] = {}
+    for slot, agent in sorted(_dict(protocol.get("agents")).items()):
+        agent = _dict(agent)
+        rows[str(slot)] = {
+            "slot": str(slot),
+            "role": str(agent.get("role") or "") or None,
+            "track": str(agent.get("track") or "") or None,
+            "attempt": agent.get("attempt"),
+            "tool_calls": agent.get("tool_calls"),
+            "model": str(agent.get("model") or "") or None,
+        }
+    for entry in _list(package.get("reviewer_provenance")):
+        entry = _dict(entry)
+        slot = str(entry.get("slot") or "")
+        if not slot:
+            continue
+        row = rows.setdefault(slot, {"slot": slot})
+        for key in ("role", "track", "attempt", "tool_calls", "model"):
+            if not row.get(key) and entry.get(key) not in (None, ""):
+                row[key] = entry[key]
+        row["findings"] = entry.get("findings")
+        row["none_found"] = bool(entry.get("none_found"))
+    for observed in _list(runtime.get("agents")):
+        observed = _dict(observed)
+        label = str(observed.get("label") or "")
+        if not label:
+            continue
+        # A row with nothing but a label is a slot the harness reserved and
+        # never filled. Treating it as an agent that ran would put five empty
+        # reviewers on the published panel.
+        if not any(observed.get(key) for key in ("state", "model", "agentType")):
+            continue
+        row = rows.setdefault(label, {"slot": label})
+        if observed.get("model") and not row.get("model"):
+            row["model"] = str(observed["model"])
+        if observed.get("agentType"):
+            row["agent_type"] = str(observed["agentType"])
+        if observed.get("state"):
+            row["state"] = str(observed["state"])
+        if observed.get("tokens") is not None:
+            row["tokens"] = observed["tokens"]
+        if observed.get("toolCalls") is not None and not row.get("tool_calls"):
+            row["tool_calls"] = observed["toolCalls"]
+    return [
+        {key: value for key, value in row.items() if value not in (None, "")}
+        for _, row in sorted(rows.items())
+    ]
+
+
+def model_map(agents: list[dict]) -> dict[str, str]:
+    """Which model wrote which report, keyed by the slot that wrote it.
+
+    This is the site's model table. A run on this path has a real per-agent
+    split, because the plugin pins a model in each agent file, so the table says
+    something rather than repeating one id down a column.
+    """
+    return {
+        str(row["slot"]): str(row["model"])
+        for row in agents
+        if row.get("slot") and row.get("model")
+    }
+
+
+def model_phrase(models: dict[str, str]) -> str:
+    """The models that wrote this review, counted by how many agents ran on each."""
+    counts: dict[str, int] = {}
+    for model in models.values():
+        counts[model] = counts.get(model, 0) + 1
+    if not counts:
+        return "models the run did not record"
+    return ", ".join(
+        f"{model} ({count} agent{'' if count == 1 else 's'})"
+        for model, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    )
+
+
+def completeness(progress: dict, package: dict) -> dict:
+    """The stage ledger, which is what says whether the review is whole.
+
+    The server keeps a ledger of the stages a run requires and the ones that
+    reported. A run can reach `complete` with a stage that never reported only
+    when the editor accepted the pool without it, so the counts and the
+    acceptance travel together in the record.
+    """
+    stages = _dict(progress.get("stages")) or _dict(package.get("stages"))
+    if not stages:
+        return {}
+    record = {
+        "required": [str(s) for s in _list(stages.get("required"))],
+        "reported": [str(s) for s in _list(stages.get("reported"))],
+        "missing": [str(s) for s in _list(stages.get("missing"))],
+        "none_found": [str(s) for s in _list(stages.get("none_found"))],
+        "editor_accepted": bool(stages.get("editor_accepted")),
+    }
+    attempts = {
+        str(slot): int(count)
+        for slot, count in _dict(stages.get("attempts")).items()
+        if isinstance(count, int)
+    }
+    if attempts:
+        record["attempts"] = attempts
+        record["retried"] = sorted(slot for slot, count in attempts.items() if count > 1)
+    return record
 
 
 def read_run(run_dir: Path) -> dict:
     """Everything about the run that the run itself recorded.
 
-    This is the fix for a provenance record that described a run nobody had
-    looked at. The engine CLI writes `protocol.json` (provider, model, mode,
-    reviewer count), `manifest.json` (the paper id and the engine source
-    manifest, both captured when the call started), `editor-package.json` (the
-    workflow version, the synthesis policy and the reviewer provenance),
-    `progress.json` (final status and usage) and a usage receipt per call.
-    `core-artifact.json` exists only when a caller went through
-    `peerreviewagents.engine.api.run_review`, so nothing here may depend on it.
+    The plugin server and the starter write five files into the review folder.
+    `protocol.json` says what was asked of the engine: the arm, the reviewer
+    count, the tool allowances and one entry per agent slot. `manifest.json`
+    captures the paper id and the hash of every plugin and engine file loaded,
+    at the moment the run started. `progress.json` holds the final status, the
+    guard status and the stage ledger. `runtime.json` holds what the harness
+    observed: the models, the wall time, the tokens and the Claude Code version.
+    `editor-package.json` holds the review.
 
     Every key in the result was read from one of those files. A value the run
     did not record is left out, so a caller that needs it has to say so rather
     than silently inherit a default from the prepare step or a publish flag.
     """
-    run_dir = Path(run_dir)
+    run_dir = resolve_review_dir(run_dir)
     protocol = maybe_json(run_dir / "protocol.json")
     manifest = maybe_json(run_dir / "manifest.json")
     progress = maybe_json(run_dir / "progress.json")
-    artifact = maybe_json(run_dir / "core-artifact.json")
+    runtime = maybe_json(run_dir / "runtime.json")
     # Reading provenance is not the same job as reading the review. A run with
     # no editor package is refused by cmd_publish, which asks for it directly,
     # and this function stays able to describe a run that failed.
@@ -504,127 +536,140 @@ def read_run(run_dir: Path) -> dict:
     # A published record is read by strangers, and an absolute path in it
     # describes the machine that wrote it rather than the review. The path is
     # recorded when it is inside this repository and left out otherwise.
-    if run_dir.resolve().is_relative_to(REPO):
-        record["directory"] = run_dir.resolve().relative_to(REPO).as_posix()
+    if run_dir.is_relative_to(REPO):
+        record["directory"] = run_dir.relative_to(REPO).as_posix()
 
     def put(key: str, value: object) -> None:
         if value not in (None, "", [], {}):
             record[key] = value
 
-    plan = manifest.get("plan")
-    plan = plan if isinstance(plan, dict) else {}
-    nested = manifest.get("protocol")
-    nested = nested if isinstance(nested, dict) else {}
-    stages = stage_manifests(run_dir)
-    synthesis = package.get("synthesis_provenance")
-    synthesis = synthesis if isinstance(synthesis, dict) else {}
+    plan = _dict(manifest.get("plan")) or _dict(protocol.get("plan"))
 
-    put("workflow", protocol.get("mode") or artifact.get("workflow"))
-    put("workflow_version", package.get("workflow_version") or protocol.get("version"))
-    put("model", protocol.get("model") or nested.get("model") or artifact.get("model_requested"))
-    put("provider", protocol.get("provider") or nested.get("provider"))
-    put("effort", protocol.get("effort") or nested.get("effort"))
+    put("arm", protocol.get("arm") or package.get("arm") or plan.get("arm") or progress.get("arm"))
+    put(
+        "workflow_version",
+        package.get("workflow_version")
+        or manifest.get("workflow_version")
+        or protocol.get("version"),
+    )
+    put(
+        "finding_schema_version",
+        package.get("finding_schema_version")
+        or manifest.get("finding_schema_version")
+        or protocol.get("finding_schema_version"),
+    )
+    put("provider", protocol.get("provider"))
     reviewers = package.get("reviewer_count")
     if not isinstance(reviewers, int):
         reviewers = protocol.get("reviewers")
-    put("reviewers", reviewers if isinstance(reviewers, int) else None)
-    # The synthesis call records its policy and its tool budget in the stage
-    # folder it ran in, not in the run's top level manifest, which carries the
-    # paper id, the engine source and the plan. Reading only the top level
-    # found neither on any real run.
-    put("synthesis_policy", _first(
-        manifest.get("synthesis_policy"),
-        plan.get("synthesis_policy"),
-        package.get("synthesis_policy"),
-        *(stage.get("synthesis_policy") for stage in stages),
-    ))
-    put("synthesis_tool_limit", _first(
-        manifest.get("synthesis_tool_limit"),
-        synthesis.get("tool_limit"),
-        *(stage.get("synthesis_tool_limit") for stage in stages),
-    ))
-    # Only an ensemble manifest carries the paper id at the top level. The
-    # independent and panel modes put it in protocol.json and nest the protocol
-    # inside the manifest, so a run in either mode recorded no paper id here
-    # and the binding check below it was skipped rather than enforced.
-    put("paper_id", _first(
-        manifest.get("paper_id"),
-        protocol.get("paper_id"),
-        nested.get("paper_id"),
-    ))
-    # What the reviewers were allowed to spend. The ensemble manifest names it
-    # in its plan, and every policy but the study one also writes itself into
-    # protocol.json: review_policy.protocol_overlay adds no keys for
-    # `standard-v1` so that a run made under the engine's original limits keeps
-    # a byte-identical protocol and stays resumable. So an absent key on a run
-    # that recorded a protocol means the study policy, which is the engine's own
-    # reading of it, and without this a five-finding standard-v1 review and a
-    # thirty-call agentic-v1 review published indistinguishable records.
-    put("review_policy", _first(
-        plan.get("review_policy"),
-        protocol.get("review_policy"),
-        nested.get("review_policy"),
-        STUDY_POLICY_NAME if protocol else None,
-    ))
+    if not isinstance(reviewers, int):
+        reviewers = progress.get("reviewers")
+    if isinstance(reviewers, int):
+        record["reviewers"] = reviewers
+    put("specialist_tracks", [str(t) for t in _list(plan.get("specialists"))])
+    put("synthesis_policy", package.get("synthesis_policy"))
+    put("paper_id", manifest.get("paper_id") or protocol.get("paper_id"))
+    put("literature_cutoff", protocol.get("literature_cutoff"))
+    put("body_finding_limit", protocol.get("body_finding_limit"))
     put("engine_source", manifest.get("code"))
-    put("status", progress.get("status"))
+    put("status", progress.get("status") or runtime.get("status"))
     # Kept because the status alone no longer distinguishes the two outcomes a
     # reader cares about: a manuscript nobody found fault with is `clean` with
     # no findings, and a review whose every finding was thrown away is
     # `all-findings-quarantined`.
-    put("review_guard_status", progress.get("review_guard_status"))
-    put("usage", progress.get("usage"))
-    put("artifact_version", artifact.get("artifact_version"))
+    put(
+        "review_guard_status",
+        progress.get("review_guard_status") or package.get("review_guard_status"),
+    )
+    for key in (
+        "findings_delivered",
+        "findings_submitted",
+        "quarantined_findings_count",
+        "tool_calls_total",
+    ):
+        value = progress.get(key)
+        if isinstance(value, int):
+            record[key] = value
+    if isinstance(package.get("escalated_count"), int):
+        record["escalated_count"] = package["escalated_count"]
+    put(
+        "findings_by_track",
+        {
+            str(track): count
+            for track, count in _dict(package.get("findings_by_track")).items()
+            if isinstance(count, int)
+        },
+    )
+    for key in ("wall_seconds", "tokens_total"):
+        value = runtime.get(key)
+        if isinstance(value, (int, float)):
+            record[key] = value
+    put("completeness", completeness(progress, package))
 
-    for path in sorted(run_dir.rglob("tool-config.json")):
-        cutoff = maybe_json(path).get("literature_cutoff")
-        if cutoff:
-            record["literature_cutoff"] = str(cutoff)
-            break
-
-    record["errors"] = run_errors(run_dir, progress)
+    record["errors"] = run_errors(progress, runtime, package)
     return record
 
 
-def run_errors(run_dir: Path, progress: dict) -> list[str]:
+def run_errors(progress: dict, runtime: dict, package: dict) -> list[str]:
     """What the run recorded going wrong, rather than an empty list by default.
 
-    A blocked run says so in progress.json. A finding the engine refused to
-    accept is quarantined with a reason instead of ending the run, so those are
-    counted here: a reader deciding how much to trust a review should see that
-    three of its findings were thrown away.
+    A blocked run says so in progress.json, and the starter repeats the cause in
+    runtime.json. A finding the server refused to accept is quarantined with a
+    reason instead of ending the run, so those are counted here: a reader
+    deciding how much to trust a review should see that three of its findings
+    were thrown away.
 
     Finishing with no findings is not one of these. A run that read the
     manuscript and raised nothing is `complete` with the guard status `clean`,
     and listing that as an error told a reader a review of a sound manuscript
-    had gone wrong. Every finding quarantined is a different outcome and is
-    listed, because the engine records it as `complete-without-findings` and the
-    two read nothing alike.
+    had gone wrong. A reviewer that reported no findings on its track is the
+    same, which is why `none_found` is recorded and not listed here.
     """
-    errors = []
+    errors: list[str] = []
     if progress.get("error"):
         errors.append(str(progress["error"]))
-    status = progress.get("status")
+    reason = str(runtime.get("blocked_reason") or "")
+    if reason and reason not in errors:
+        errors.append(reason)
+    status = str(progress.get("status") or runtime.get("status") or "")
     if status and status not in FINISHED_STATUSES:
         errors.append(f"The run finished in state {status}.")
     # Said plainly, because the two readings are far apart: the reviewers
     # endorsed nothing because every finding they wrote failed the engine's
-    # evidence guards, which is not the same as a manuscript they found sound.
-    if progress.get("review_guard_status") == ALL_FINDINGS_QUARANTINED:
+    # evidence guards, which is not a manuscript they found sound.
+    guard = str(progress.get("review_guard_status") or package.get("review_guard_status") or "")
+    if guard == ALL_FINDINGS_QUARANTINED:
         errors.append(
             "Every finding this run produced was quarantined by the engine's "
             "evidence guards, so the review endorses none of them."
         )
-    quarantined = sorted(Path(run_dir).rglob("*-quarantined.json"))
-    if quarantined:
-        errors.append(f"{len(quarantined)} quarantined reviewer response(s) in this run.")
-    # The engine writes this inside the stage folder the synthesis ran in, so
-    # looking for it at the top of the run found nothing and every validation
-    # problem the synthesis recorded was dropped from the published record.
-    for path in sorted(Path(run_dir).rglob("synthesis-validation.json")):
-        for problem in maybe_json(path).get("problems") or []:
-            errors.append(str(problem))
+    quarantined = progress.get("quarantined_findings_count")
+    if isinstance(quarantined, int) and quarantined > 0:
+        errors.append(
+            f"{quarantined} finding(s) failed the evidence guards and were "
+            "quarantined out of this review."
+        )
+    stages = _dict(progress.get("stages")) or _dict(package.get("stages"))
+    missing = [str(s) for s in _list(stages.get("missing"))]
+    if missing:
+        errors.append(
+            f"{len(missing)} required stage(s) never reported: {', '.join(sorted(missing))}."
+        )
+    if stages and not stages.get("editor_accepted"):
+        errors.append("The editor stage did not accept the pooled findings.")
     return errors
+
+
+def editor_package(run_dir: Path) -> dict:
+    """The engine's final review, read from the run folder it was written in."""
+    run_dir = resolve_review_dir(run_dir)
+    candidate = run_dir / "editor-package.json"
+    if candidate.is_file():
+        return read_json(candidate)
+    raise CommandError(
+        f"No editor-package.json under {run_dir}. Point --run at the folder "
+        "`peerreview review` wrote."
+    )
 
 
 def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
@@ -642,8 +687,8 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
     paper = maybe_json(Path(workspace) / "paper.json")
     if not paper:
         raise CommandError(
-            f"No paper.json in {workspace}. Point --workspace at the folder the "
-            "engine's import command wrote."
+            f"No paper.json in {workspace}. Point --workspace at the manuscript "
+            "folder the run imported."
         )
     imported = str(paper.get("source_sha256") or "")
     expected = str(prepared["input"]["sha256"])
@@ -656,43 +701,50 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
         raise CommandError(
             "This run reviewed different bytes than were prepared. The prepared "
             f"PDF hashes to {expected} and the imported manuscript hashes to "
-            f"{imported}. Import the PDF that prepare fetched, or prepare the "
+            f"{imported}. Review the PDF that prepare fetched, or prepare the "
             "paper this workspace holds."
         )
     workspace_paper_id = str(paper.get("id") or "")
     run_paper_id = str(run.get("paper_id") or "")
-    # Skipping the comparison when either side is missing is what made this
-    # guard optional. A run in independent or panel mode records its paper id
-    # in protocol.json rather than the manifest, and the manifest was the only
-    # place this used to look, so the check passed by having nothing to check.
     if not workspace_paper_id:
         raise CommandError(
             f"The paper.json in {workspace} records no paper id, so this run "
             "cannot be tied to the manuscript that was imported. Import the "
-            "paper again with the engine's import command."
+            "paper again."
         )
     if not run_paper_id:
         raise CommandError(
             "The run records no paper id, so there is nothing to compare "
             "against the workspace and no way to tell which paper it reviewed. "
-            "The engine writes it to protocol.json or manifest.json when the "
-            "call starts."
+            "The plugin server writes it into protocol.json and manifest.json "
+            "when the run starts."
         )
     if run_paper_id != workspace_paper_id:
         raise CommandError(
             f"The run reviewed paper {run_paper_id} but --workspace holds paper "
             f"{workspace_paper_id}. Point --run and --workspace at the same review."
         )
+    manifest = Path(workspace) / "manifest.json"
     return {
-        "workspace_manifest_sha256": digest((Path(workspace) / "manifest.json").read_bytes())
-        if (Path(workspace) / "manifest.json").is_file()
-        else None,
-        "paper_id": workspace_paper_id or None,
+        "workspace_manifest_sha256": digest(manifest.read_bytes()) if manifest.is_file() else None,
+        "paper_id": workspace_paper_id,
     }
 
 
 def sorted_findings(package: dict) -> list[dict]:
-    findings = [f for f in package.get("findings") or [] if isinstance(f, dict)]
+    """The findings the editor put in the body of the letter, worst first."""
+    findings = [f for f in _list(package.get("findings")) if isinstance(f, dict)]
+    return sorted(findings, key=lambda f: SEVERITY_ORDER.get(str(f.get("severity")), 9))
+
+
+def appendix_findings(package: dict) -> list[dict]:
+    """The findings the editor kept but did not place in the letter's body.
+
+    The plugin caps the body at eight. Everything else a reviewer raised and the
+    editor accepted goes to the appendix rather than being dropped, so the
+    bundle publishes both and says which is which.
+    """
+    findings = [f for f in _list(package.get("appendix")) if isinstance(f, dict)]
     return sorted(findings, key=lambda f: SEVERITY_ORDER.get(str(f.get("severity")), 9))
 
 
@@ -705,6 +757,10 @@ def severity_counts(findings: list[dict]) -> dict[str, int]:
     return counts
 
 
+def escalated(findings: list[dict]) -> list[dict]:
+    return [f for f in findings if f.get("escalate")]
+
+
 def _location(finding: dict) -> str:
     placement = finding.get("placement")
     if placement not in (None, "anchored"):
@@ -713,106 +769,193 @@ def _location(finding: dict) -> str:
     return f"block {block}" if block else "not located"
 
 
-def method_paragraph(run: dict, model: str) -> str:
+def _tags(finding: dict) -> str:
+    """How a reader should weigh one finding, in the engine's own vocabulary.
+
+    The track says which reader raised it, and the basis says what it rests on:
+    `computed` is arithmetic the reviewer did and recorded, `two-quotes` is two
+    anchored passages that disagree, and `judgement` is neither. A reader
+    deciding whether to act on a finding needs that before the wording.
+    """
+    parts = [str(finding.get("severity") or "unstated")]
+    track = str(finding.get("track") or "")
+    if track:
+        parts.append(f"track {track}")
+    basis = str(finding.get("basis") or "")
+    if basis:
+        parts.append(f"basis {basis}")
+    parts.append(_location(finding))
+    if finding.get("escalate"):
+        parts.append("escalated")
+    return ", ".join(parts)
+
+
+def basis_note(finding: dict) -> list[str]:
+    basis = str(finding.get("basis") or "")
+    if not basis:
+        return []
+    reason = str(finding.get("basis_reason") or "").strip()
+    return [f"**What it rests on:** {basis}" + (f". {reason}" if reason else ""), ""]
+
+
+def method_paragraph(run: dict, models: dict[str, str]) -> str:
     """Describe the run that happened, from what the run recorded.
 
-    This used to be a fixed paragraph saying one model took one reading with no
-    debate. The documented command runs an ensemble with two discovery
-    reviewers and a debate synthesis, so the fixed text described a workflow
-    nobody had run. Every clause below is now conditional on a recorded value,
-    and an unrecorded one is admitted rather than assumed.
+    Every clause is conditional on a recorded value, and an unrecorded one is
+    admitted rather than assumed. There is no debate stage to describe in 0.9
+    and no single model: the plugin pins a model per agent file, and the record
+    carries the map.
     """
     reviewers = run.get("reviewers")
-    synthesis = str(run.get("synthesis_policy") or "")
-    workflow = str(run.get("workflow") or "")
+    tracks = [str(t) for t in _list(run.get("specialist_tracks"))]
+    arm = str(run.get("arm") or "")
 
     if not isinstance(reviewers, int):
         shape = (
             "The run did not record how many reviewer passes it made, so this "
-            "review cannot be described more precisely than that it was "
-            f"produced by the engine's {workflow or 'review'} workflow."
+            "review cannot be described more precisely than as the output of "
+            f"the engine's {arm or 'review'} arm."
         )
     elif reviewers <= 1:
         shape = (
-            "One reviewer pass produced this review, so nothing checked the "
-            "reviewer that was any better than the reviewer. Read it as one "
-            "careful reading of the manuscript."
+            "One core reviewer read the whole manuscript, so nothing checked "
+            "that reviewer that was any better than it. Read it as one careful "
+            "reading."
         )
     else:
         shape = (
-            f"{reviewers} reviewer passes read the manuscript independently, and "
-            "a further call combined them into the review below."
+            f"{reviewers} core reviewers read the manuscript independently, "
+            "each writing up what it found on its own."
         )
-        if synthesis == "debate":
-            shape += (
-                " That combining call ran under the debate policy, so each "
-                "finding had to survive an argument against it before it was "
-                "kept."
-            )
-        elif synthesis:
-            shape += f" That combining call ran under the {synthesis} policy."
+    if tracks:
+        shape += (
+            f" {len(tracks)} specialist readers then checked it on one dimension "
+            f"each ({', '.join(tracks)}), and an editor agent pooled every "
+            "finding, ruled on the ones a reviewer escalated, and chose which "
+            "belong in the body of the letter."
+        )
+    elif arm:
+        shape += f" The run used the {arm} arm, which convened no specialist readers."
 
     return (
-        f"{shape} Every pass used the same model, {model}, on a Claude Code "
-        "subscription on the editor's own machine. There was no desk screen and "
-        "no panel of differently briefed referees, and one model agreeing with "
-        "itself is not independent corroboration."
+        f"{shape} Every agent ran inside one Claude Code session on the editor's "
+        "own machine, on a subscription, each on the model its plugin agent file "
+        f"pins: {model_phrase(models)}. There was no desk screen and no debate "
+        "stage, and agents sharing a model are not independent corroboration of "
+        "one another."
     )
 
 
 def attestation_paragraph(attestation: dict) -> str:
-    """Who stands behind the decision, which depends on whether anyone read it.
-
-    This sentence used to be unconditional, so a rehearsal written with
-    `--human-reviewed no` claimed in its own summary that a named human editor
-    had read the run. The record alongside it said the opposite.
-    """
+    """Who stands behind the decision, which depends on whether anyone read it."""
     editor = str(attestation.get("editor") or "the editor")
     if attestation.get("human_reviewed_before_merge"):
         return (
             f"The decision above was chosen by {editor}, a human editor, after "
-            "reading the run. The engine grades findings and does not recommend "
-            "a verdict."
+            "reading the run. The engine's editor agent records an advisory "
+            "judgement and recommends no verdict."
         )
     return (
         f"{editor} typed the decision above without attesting to having read "
         "the run, so it stands on nothing and this bundle is a rehearsal that "
-        "must not be published. The engine grades findings and does not "
-        "recommend a verdict."
+        "must not be published. The engine's editor agent records an advisory "
+        "judgement and recommends no verdict."
     )
 
 
-def render_summary(preprint: Preprint, package: dict, provenance: dict, findings: list[dict]) -> str:
+def verdict_section(verdict: dict) -> list[str]:
+    """The editor agent's judgement, labelled as advisory everywhere it appears.
+
+    It is published because it is the most useful thing in the run for a reader
+    deciding whether to read the paper, and it is labelled because it is one
+    model's reading. It is not the decision, it recommends no verdict, and the
+    record says the decision came from a person.
+    """
+    verdict = _dict(verdict)
+    rows = [
+        ("Significance", verdict.get("significance")),
+        ("Strength of evidence", verdict.get("strength_of_evidence")),
+        ("Reasoning", verdict.get("reasoning")),
+        ("What it rests on", verdict.get("basis")),
+        ("Stated limitation", verdict.get("limitation")),
+    ]
+    rows = [(label, str(value).strip()) for label, value in rows if str(value or "").strip()]
+    if not rows:
+        return []
+    lines = [
+        "## Advisory judgement from the engine",
+        "",
+        "This is the editor agent's reading, not the decision. It recommends no "
+        "accept or reject, it is one model's judgement of the manuscript, and "
+        "the decision above is the editor's. Whether anyone read the run before "
+        "taking it is stated with the decision, not here.",
+        "",
+    ]
+    for label, value in rows:
+        lines += [f"**{label}.** {value}", ""]
+    return lines
+
+
+def render_summary(
+    preprint: Preprint, package: dict, provenance: dict, findings: list[dict]
+) -> str:
     counts = severity_counts(findings)
     generator = provenance["generator"]
+    run = generator["run"]
+    appendix = appendix_findings(package)
+    escalations = escalated(findings) + escalated(appendix)
     lines = [
         f"# Review Summary: {preprint.title or 'Untitled submission'}",
         "",
         f"**Decision:** {provenance['decision'].title()}",
         "**Target venue:** In Silico",
         f"**Generated by:** {generator['engine']['name']} {generator['engine']['version']}, "
-        f"run locally on {generator['model_ids']['requested']}",
-        f"**Findings:** {len(findings)} total "
-        f"({counts['major']} major, {counts['moderate']} moderate, {counts['minor']} minor)",
+        f"{generator['plugin']['workflow_version']}, run locally on the "
+        f"{run.get('arm') or 'unrecorded'} arm",
+        f"**Findings in this letter:** {len(findings)} "
+        f"({counts['major']} major, {counts['moderate']} moderate, {counts['minor']} minor)"
+        + (f", with {len(appendix)} more in the appendix" if appendix else ""),
+        f"**Escalated by a reviewer:** {len(escalations)}",
         "",
         "## How this review was produced",
         "",
-        method_paragraph(generator["run"], generator["model_ids"]["requested"]),
+        method_paragraph(run, provenance.get("models") or {}),
         "",
         attestation_paragraph(generator["attestation"]),
         "",
     ]
+    tracks = _dict(run.get("findings_by_track"))
+    if tracks:
+        lines += [
+            "Findings raised per track, before the editor pooled them: "
+            + ", ".join(f"{track} {count}" for track, count in sorted(tracks.items()))
+            + ".",
+            "",
+        ]
     summary = str(package.get("summary") or "").strip()
     if summary:
-        lines += ["## Reviewer summary", "", summary, ""]
+        lines += ["## The editor agent's summary of the review", "", summary, ""]
+    lines += verdict_section(package.get("verdict"))
     if findings:
-        lines += ["## Findings", ""]
+        lines += ["## Findings in the letter", ""]
         for number, finding in enumerate(findings, 1):
             title = str(finding.get("title") or "Untitled finding").strip()
-            severity = str(finding.get("severity") or "unstated")
-            lines.append(f"{number}. **{title}** ({severity}, {_location(finding)})")
+            lines.append(f"{number}. **{title}** ({_tags(finding)})")
         lines.append("")
-    limitations = [str(v).strip() for v in package.get("limitations") or [] if str(v).strip()]
+    if appendix:
+        limit = run.get("body_finding_limit")
+        lines += [
+            "## Findings in the appendix",
+            "",
+            "Accepted by the editor agent and kept out of the letter's body, "
+            f"which the workflow caps at {limit or 'a fixed number of'} findings.",
+            "",
+        ]
+        for number, finding in enumerate(appendix, 1):
+            title = str(finding.get("title") or "Untitled finding").strip()
+            lines.append(f"{number}. **{title}** ({_tags(finding)})")
+        lines.append("")
+    limitations = [str(v).strip() for v in _list(package.get("limitations")) if str(v).strip()]
     if limitations:
         lines += ["## Stated limitations of this review", ""]
         lines += [f"- {item}" for item in limitations]
@@ -820,12 +963,13 @@ def render_summary(preprint: Preprint, package: dict, provenance: dict, findings
     return "\n".join(lines)
 
 
-def render_decision_letter(preprint: Preprint, package: dict, provenance: dict, findings: list[dict]) -> str:
+def render_decision_letter(
+    preprint: Preprint, package: dict, provenance: dict, findings: list[dict]
+) -> str:
     required = [f for f in findings if str(f.get("severity")) in REQUIRED_SEVERITIES]
     optional = [f for f in findings if str(f.get("severity")) == "minor"]
+    appendix = appendix_findings(package)
     attestation = provenance["generator"]["attestation"]
-    # Same defect as the summary's. The claim that the decision was taken after
-    # reading the run was printed whether or not anybody said they had read it.
     if attestation.get("human_reviewed_before_merge"):
         standing = (
             "This letter reports one locally generated review. The decision is "
@@ -842,8 +986,9 @@ def render_decision_letter(preprint: Preprint, package: dict, provenance: dict, 
         "",
         f"**Decision:** {provenance['decision'].title()}",
         "",
-        f"{standing} Everything below it is the reviewer's, quoted or "
-        "paraphrased from the saved output rather than rewritten.",
+        f"{standing} Everything below it is the reviewers' and the editor "
+        "agent's, quoted or paraphrased from the saved run rather than "
+        "rewritten.",
         "",
     ]
     summary = str(package.get("summary") or "").strip()
@@ -861,16 +1006,60 @@ def render_decision_letter(preprint: Preprint, package: dict, provenance: dict, 
         lines += [
             "## Findings",
             "",
-            "The reviewer recorded no findings against this manuscript.",
+            "The reviewers recorded no findings against this manuscript.",
             "",
         ]
+    if appendix:
+        lines += [
+            "## Appendix",
+            "",
+            "Findings the editor agent accepted and left out of the body above. "
+            "They are not withdrawn, and they are listed in full here.",
+            "",
+        ]
+        for number, finding in enumerate(appendix, 1):
+            lines += _letter_entry(f"A{number}", finding)
+    rulings = [r for r in _list(package.get("escalation_rulings")) if isinstance(r, dict)]
+    if rulings:
+        by_uid = {str(f.get("finding_uid") or ""): f for f in [*findings, *appendix]}
+        lines += [
+            "## Rulings on escalated findings",
+            "",
+            "A reviewer may escalate a finding it believes bears on whether the "
+            "paper stands. The editor agent ruled on each one, and the rulings "
+            "are published whichever way they went.",
+            "",
+        ]
+        for ruling in rulings:
+            uid = str(ruling.get("finding_uid") or "")
+            title = str(_dict(by_uid.get(uid)).get("title") or "").strip()
+            lines += [f"### {title or uid or 'Unidentified finding'}", ""]
+            if uid:
+                lines += [f"`{uid}`", ""]
+            text = str(ruling.get("ruling") or "").strip()
+            if text:
+                lines += [text, ""]
     return "\n".join(lines)
 
 
 def _letter_entry(label: str, finding: dict) -> list[str]:
     title = str(finding.get("title") or "Untitled finding").strip()
-    severity = str(finding.get("severity") or "unstated")
-    lines = [f"### {label}. {title}", "", f"**Severity:** {severity}  ", f"**Location:** {_location(finding)}", ""]
+    lines = [
+        f"### {label}. {title}",
+        "",
+        f"**Severity:** {str(finding.get('severity') or 'unstated')}  ",
+        f"**Raised by:** {str(finding.get('slot') or 'an unrecorded slot')} "
+        f"on track {str(finding.get('track') or 'unrecorded')}  ",
+        f"**Location:** {_location(finding)}",
+        "",
+    ]
+    if finding.get("escalate"):
+        lines += [
+            "**The reviewer escalated this finding as bearing on the paper's "
+            "central claim.**",
+            "",
+        ]
+    lines += basis_note(finding)
     quote = str(finding.get("quote") or "").strip()
     if quote:
         lines += ["Manuscript passage:", "", f"> {quote}", ""]
@@ -883,6 +1072,15 @@ def _letter_entry(label: str, finding: dict) -> list[str]:
     counter = str(finding.get("counterevidence") or "").strip()
     if counter:
         lines += [f"**Strongest counterpoint:** {counter}", ""]
+    reason = str(finding.get("editor_reason") or "").strip()
+    if reason:
+        lines += [f"**The editor agent's reason for placing it here:** {reason}", ""]
+    raising = finding.get("reviewers_raising")
+    if isinstance(raising, int) and raising > 1:
+        lines += [f"**Raised independently by {raising} reviewers.**", ""]
+    uid = str(finding.get("finding_uid") or "").strip()
+    if uid:
+        lines += [f"`{uid}`", ""]
     return lines
 
 
@@ -914,17 +1112,17 @@ def render_stats(preprint: Preprint, ingest: dict, generator: dict) -> str:
         "",
         "## How the text was read",
         "",
-        f"Imported by {ingest.get('tool') or 'the engine importer'} into evidence-linked "
-        "source blocks. Quotations in this review were validated against those "
-        "blocks before the review was saved.",
+        f"Imported by {ingest.get('tool') or 'the engine importer'} into "
+        "evidence-linked source blocks. Quotations in this review were validated "
+        "against those blocks before the review was saved.",
         "",
     ]
     return "\n".join(lines)
 
 
 def ingest_record(workspace: Path | None) -> dict:
-    """What the reviewer was handed, measured off the workspace with no model."""
-    record = {"format": "markdown", "tool": "peerreviewagents.engine import", "caveman": None}
+    """What the reviewers were handed, measured off the workspace with no model."""
+    record = {"format": "markdown", "tool": "peerreviewagents import_paper"}
     if workspace is None:
         return record
     workspace = Path(workspace)
@@ -935,13 +1133,25 @@ def ingest_record(workspace: Path | None) -> dict:
         record["text_sha256"] = digest(text.encode())
     paper = workspace / "paper.json"
     if paper.is_file():
-        try:
-            blocks = read_json(paper).get("blocks")
-        except (OSError, json.JSONDecodeError):
-            blocks = None
+        blocks = maybe_json(paper).get("blocks")
         if isinstance(blocks, list):
             record["blocks"] = len(blocks)
     return record
+
+
+def track_reports(run_dir: Path) -> dict[str, Path]:
+    """The specialist reports the run wrote, keyed by the file name they keep.
+
+    `src/lib/corpus.js` already lists any `audit_<track>.md` in a bundle as a
+    report of its own, so copying them in is all that is needed to publish what
+    each specialist read the manuscript for.
+    """
+    run_dir = resolve_review_dir(run_dir)
+    return {
+        path.name: path
+        for path in sorted(run_dir.glob("audit_*.md"))
+        if path.is_file() and path.stat().st_size
+    }
 
 
 def review_kind(plan_kind: str, baseline_eligible: bool) -> str:
@@ -949,10 +1159,10 @@ def review_kind(plan_kind: str, baseline_eligible: bool) -> str:
 
     `review.kind` is printed on the provenance panel and read by Notices.astro,
     so this reuses the hosted panel's words rather than inventing one. The rule
-    there is that an ungraded run is an experiment whatever else it is, and
-    every run on this path is ungraded unless the editor claims it. A revision
-    round keeps its own name, because what it is measured against matters more
-    than how it was produced.
+    there is that an ungraded run is an experiment whatever else it is, and a
+    run on this path is ungraded unless the editor claims it. A revision round
+    keeps its own name, because what it is measured against matters more than
+    how it was produced.
     """
     if plan_kind == "revision round":
         return "revision"
@@ -970,6 +1180,8 @@ def build_provenance(
     package: dict,
     run: dict,
     fingerprint: dict,
+    plugin: dict,
+    agents: list[dict],
     decision: str,
     editor: str,
     human_reviewed: bool,
@@ -980,21 +1192,23 @@ def build_provenance(
     submitter_is_author: str,
     baseline_eligible: bool,
     ingest: dict,
-    observed: list[str],
-    requested_model: str,
     transport: dict,
     review_id: str,
     publishing: bool,
 ) -> dict:
     """The published record of what produced this review.
 
-    Version 3. It carries the same identity fields as the hosted panel's version
+    Version 4. It carries the same identity fields as the hosted panel's version
     2 record, and in place of that panel's accounting it carries a generator
-    block: the engine and its fingerprint, the transport and its billing policy,
-    the model ids, the input hash, and the attestation that a person read the run
-    before it was merged.
+    block: the engine and the hash of every file it loaded, the plugin and the
+    workflow that decided which agents ran, the transport and its billing
+    policy, one row per agent with the model it ran on, the input hash, the
+    stage ledger that says whether the review is whole, the editor agent's
+    advisory judgement, and the attestation that a person read the run before it
+    was merged.
     """
     findings = sorted_findings(package)
+    appendix = appendix_findings(package)
     # Recorded only when somebody actually submitted the paper. A review an
     # editor started themselves was solicited by nobody, and writing an empty
     # claim for it would be read as a claim we failed to collect.
@@ -1006,16 +1220,18 @@ def build_provenance(
     kind = review_kind(str(prepared.get("plan_kind") or ""), baseline_eligible)
     if not editor:
         raise CommandError("An editor has to be named before a review can be attested")
-    # The run's own record, with the finding count this bundle actually wrote
-    # added. Nothing from the prepare step or the publish flags is folded in:
-    # prepare states an intention and the run states what happened, and when the
-    # two disagree the run is the one that is true.
+    # The run's own record, with the counts this bundle actually wrote added.
+    # Nothing from the prepare step or the publish flags is folded in: prepare
+    # states an intention and the run states what happened, and when the two
+    # disagree the run is the one that is true.
     run_record = {key: value for key, value in run.items() if key != "engine_source"}
     run_record["findings"] = len(findings)
+    run_record["appendix_findings"] = len(appendix)
+    run_record["escalated_in_bundle"] = len(escalated(findings) + escalated(appendix))
     # The provider is the run's too. It used to be a constant at the top level
     # and another constant inside the transport, so a record could say
-    # claude-code twice over a run that had asked the engine for Codex, and
-    # nothing in the file compared the two.
+    # claude-code twice over a run on another transport, and nothing in the file
+    # compared the two.
     provider = str(run.get("provider") or "")
     if not provider:
         raise CommandError(
@@ -1024,18 +1240,31 @@ def build_provenance(
         )
     if str(transport.get("provider") or "") != provider:
         raise CommandError(
-            f"The run used the {provider} transport and the login was read from "
-            f"{transport.get('provider')}. A record that names two transports "
-            "describes neither run."
+            f"The run used the {provider} transport and the transport record "
+            f"names {transport.get('provider')}. A record that names two "
+            "transports describes neither run."
+        )
+    models = model_map(agents)
+    if not models:
+        raise CommandError(
+            "This run records no model for any agent, so the record cannot say "
+            "what wrote the review. The plugin server writes one per slot into "
+            "protocol.json, and the starter records what the harness served "
+            "into runtime.json."
         )
     generator = {
         "kind": GENERATOR_KIND,
         "engine": engine_record(),
         "engine_fingerprint": fingerprint,
+        "plugin": plugin,
         "transport": transport,
-        "model_ids": {"requested": requested_model, "observed": observed},
+        "agents": agents,
         "input": prepared["input"],
         "run": run_record,
+        # Published, and labelled advisory in the schema, on the page and in the
+        # documents. The engine recommends no verdict, and the decision below is
+        # a person's.
+        "advisory_verdict": _dict(package.get("verdict")),
         "decision_source": "human_editor",
         "attestation": {
             "locally_generated": True,
@@ -1048,13 +1277,6 @@ def build_provenance(
             "statement": ATTESTATION if human_reviewed else UNREAD_STATEMENT,
         },
     }
-    # A model the operator asked for and a model the transport served are two
-    # different claims. Saying which is which costs nothing and settles an
-    # argument that would otherwise need the run directory.
-    # An exact comparison here flagged a dated release of the requested model
-    # as a substitution, which the engine itself accepts as the same model.
-    if substituted_models(observed, requested_model):
-        generator["model_ids"]["substituted"] = True
     return {
         "schema_version": PROVENANCE_SCHEMA,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
@@ -1071,12 +1293,11 @@ def build_provenance(
             "route": route,
         },
         "provider": provider,
-        # One model wrote every word of this review. `models` is the per-stage
-        # split, and claiming one here would describe a panel that did not run,
-        # so it stays empty and `model` carries the single id. The site reads
-        # exactly that pair as "nothing checked the reviewer".
-        "model": requested_model,
-        "models": {},
+        # Which model wrote which report, keyed by the slot that wrote it. The
+        # plugin pins a model per agent file, so this is a real split rather
+        # than one id repeated down a column, and the site reads exactly this
+        # field when it says what checked the reviewers.
+        "models": models,
         "decision": decision,
         "desk_rejected": False,
         "round": 1,
@@ -1085,7 +1306,7 @@ def build_provenance(
         # A subscription has no per-review price. Null says there is no figure,
         # where a zero would read as a measured free run.
         "total_cost_usd": None,
-        "errors": [str(e) for e in run.get("errors") or []],
+        "errors": [str(e) for e in _list(run.get("errors"))],
         "preprint": preprint.to_dict(),
         **attribution,
     }
@@ -1102,12 +1323,25 @@ def write_manifest(dest: Path) -> None:
     write_json(dest / "manifest.json", {"schema_version": 1, "files": files})
 
 
-def write_round_record(dest: Path, preprint: Preprint, provenance: dict, findings: list[dict]) -> None:
+def write_round_record(
+    dest: Path, preprint: Preprint, provenance: dict, findings: list[dict]
+) -> None:
+    """The machine-readable round record a later revision round is measured against.
+
+    Each required revision carries the engine's own `finding_uid` now. A
+    revision round has to say which of the previous round's findings it is
+    answering, and an `R1-03` that means nothing outside this file could not be
+    matched back to the finding the reviewer wrote.
+    """
     required = [
         {
             "id": f"R1-{number:02d}",
+            "finding_uid": str(finding.get("finding_uid") or ""),
+            "track": str(finding.get("track") or ""),
+            "basis": str(finding.get("basis") or ""),
+            "escalated": bool(finding.get("escalate")),
             "text": str(finding.get("comment") or finding.get("title") or "").strip(),
-            "source_reviewer": "",
+            "source_reviewer": str(finding.get("slot") or ""),
             "blocking": False,
         }
         for number, finding in enumerate(
@@ -1134,16 +1368,48 @@ def write_round_record(dest: Path, preprint: Preprint, provenance: dict, finding
     )
 
 
+def claude_version() -> str | None:
+    """What `claude --version` prints, through the engine's own resolver.
+
+    Reported rather than required, and never a review: the preflight is allowed
+    to say the harness is missing, which is more useful than refusing to print
+    the fingerprint the operator asked for.
+    """
+    try:
+        starter = importlib.import_module(STARTER_MODULE)
+    except ImportError:
+        return None
+    try:
+        return starter.claude_version()
+    except Exception:  # noqa: BLE001 - a preflight must not fail on a missing CLI
+        return None
+
+
 def cmd_fingerprint(args: argparse.Namespace) -> int:
-    """Preflight. Prints what would be recorded, and calls no model."""
+    """Preflight. Prints what is installed, and calls no model."""
+    manifest = installed_code_manifest()
     record = {
         "engine": engine_record(),
-        "engine_fingerprint": engine_fingerprint(),
-        # No run exists yet, so the preflight asks about the one transport this
-        # path can publish. A review on anything else is refused later anyway.
-        "transport": transport_record(provider=TRANSPORT_PROVIDER, probe=not args.offline),
+        "engine_fingerprint": code_fingerprint(manifest, "installed_engine"),
+        "plugin_fingerprint": code_fingerprint(
+            manifest, "installed_engine", prefix=PLUGIN_PREFIX
+        ),
+        "workflow_sha256": manifest.get(WORKFLOW_FILE),
+        "transport": {
+            "provider": TRANSPORT_PROVIDER,
+            "executable": "claude",
+            "version": claude_version(),
+            "billing_policy": BILLING_POLICY,
+            "paid_api_key_used": False,
+        },
     }
     print(json.dumps(record, indent=2))
+    if not record["transport"]["version"]:
+        print(
+            "\nThe Claude CLI did not report a version. A review needs it on "
+            "PATH and signed in to the subscription account.",
+            file=sys.stderr,
+        )
     return 0
 
 
@@ -1179,11 +1445,13 @@ def cmd_prepare(args: argparse.Namespace) -> int:
         preprint.pdf_bytes = len(data)
 
     kind = "pdf" if preprint is None else ("arxiv" if preprint.source == "arxiv" else "doi")
-    identifier = args.paper if preprint is None else (preprint.identifier or preprint.doi or preprint.url)
+    identifier = (
+        args.paper if preprint is None else (preprint.identifier or preprint.doi or preprint.url)
+    )
     record = {
         "publishable": publishable,
         "pdf": str(pdf),
-        "workflow": args.workflow,
+        "arm": args.arm,
         "reviewers": args.reviewers,
         "literature_cutoff": args.literature_cutoff or dt.date.today().isoformat(),
         "input": {
@@ -1227,10 +1495,9 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 def absolute_path_fields(value: object, trail: str = "") -> list[str]:
     """Where a record carries a path that only exists on the machine that wrote it.
 
-    A published provenance record is read by people with no access to this
-    disk, so an absolute path in it identifies the operator's filesystem rather
-    than the review. Two fields leaked one: the run directory always, and the
-    review id whenever the destination sat outside the repository.
+    A published provenance record is read by people with no access to this disk,
+    so an absolute path in it identifies the operator's filesystem rather than
+    the review.
     """
     found: list[str] = []
     if isinstance(value, dict):
@@ -1246,20 +1513,28 @@ def absolute_path_fields(value: object, trail: str = "") -> list[str]:
 
 _DROPPED = object()
 
-# The fields engine 0.8.0 fills with a path on the machine that ran the review.
-# `source_review_path` is written once per reviewer in ensemble.py and again
-# inside every entry of `candidate_origins`, which carries those same
-# provenance dicts, so naming the leaf covers both. `memo_path` rides along
-# with each focused evidence memo, from focused_investigation.py.
+# The fields the engine fills with a path on the machine that ran the review.
+# The plugin server writes the manuscript's absolute path as `pdf` and the
+# loaded plugin's as `plugin_root`, both into the run manifest. The older names
+# are kept because a run folder written by an earlier engine may still be
+# published from.
 #
 # This is a list of field names rather than a test on the value because the
 # first version tested the value: any string beginning with a slash was taken
 # for a path. A reviewer writing "/ 2 is the wrong denominator" had the comment
 # silently deleted from the published package, and a path written inside a
 # sentence was missed regardless. Review content is never rewritten now. What
-# catches a path the engine starts recording in a field nothing here knows
-# about is the leak scan over the written bundle, below.
-PATH_FIELDS = frozenset({"source_review_path", "memo_path", "run_directory"})
+# catches a path the engine starts recording in a field nothing here knows about
+# is the leak scan over the written bundle, below.
+PATH_FIELDS = frozenset({
+    "memo_path",
+    "pdf",
+    "plugin_dir",
+    "plugin_root",
+    "run_directory",
+    "source_review_path",
+    "workspace",
+})
 
 
 def readable_path(text: str) -> object:
@@ -1290,18 +1565,17 @@ def without_local_paths(value: object, *, field: str = "") -> object:
     """The same JSON with the engine's path fields made repo relative or dropped.
 
     `editor-package.json` is the engine's own output copied into the bundle, and
-    the engine records the absolute path of every reviewer package it read. That
-    published one home directory per reviewer. Only the fields in `PATH_FIELDS`
-    and dictionary keys that are themselves absolute paths are touched, so the
-    review's own words reach the reader as the reviewer wrote them.
+    a run folder records absolute paths in several places. Only the fields in
+    `PATH_FIELDS` and dictionary keys that are themselves absolute paths are
+    touched, so the review's own words reach the reader as the reviewer wrote
+    them.
     """
     if isinstance(value, dict):
         scrubbed = {}
         for key, child in value.items():
-            # `synthesis_provenance.shared_images` maps each attached figure's
-            # absolute path to its hash, at api.py:229 by way of `_hash_files`,
-            # so there the leak is the key. A key that is an absolute path is
-            # never something a reviewer wrote.
+            # A mapping keyed by an absolute path, such as a per-file hash map,
+            # leaks through the key rather than the value. A key that is an
+            # absolute path is never something a reviewer wrote.
             name = key
             if isinstance(key, str) and (key.startswith("/") or key.startswith("file://")):
                 relative = readable_path(key)
@@ -1330,8 +1604,8 @@ def local_path_needles() -> list[str]:
     which both missed and over-matched: it read none of the Markdown, nothing
     keyed by a path, no `~/` or Windows form, and no path written inside a
     sentence, while flagging a reviewer's own arithmetic. These two strings are
-    the operator's home directory and this checkout, in whatever shape they
-    take on the machine doing the publishing. No review has a reason to contain
+    the operator's home directory and this checkout, in whatever shape they take
+    on the machine doing the publishing. No review has a reason to contain
     either, and prose does not contain them by accident.
     """
     needles = {str(REPO.resolve())}
@@ -1347,7 +1621,8 @@ def bundle_local_path_leaks(dest: Path) -> list[str]:
 
     This reads what is on disk rather than what the code meant to write, which
     is the point: it is the guard that catches a path the engine started
-    recording in a field nothing here knows about, in any file of the bundle.
+    recording in a field nothing here knows about, in any file of the bundle,
+    including the specialist reports copied in from the run.
     """
     needles = local_path_needles()
     found: list[str] = []
@@ -1405,8 +1680,8 @@ def bundle_identifier(dest: Path) -> str:
 
     The repository relative path when there is one. A rehearsal written outside
     the repository keeps the last three segments, which is the slug and the
-    route, because that identifies the bundle and nothing else about the
-    machine it was written on.
+    route, because that identifies the bundle and nothing else about the machine
+    it was written on.
     """
     dest = Path(dest).resolve()
     repo = REPO.resolve()
@@ -1418,10 +1693,10 @@ def bundle_identifier(dest: Path) -> str:
 def require_complete_run(run_dir: Path, run: dict) -> None:
     """A published review has to come from a run that finished.
 
-    Publishing checked neither. A directory holding only an editor package, with
-    no protocol.json and no progress.json, published with an empty error list,
-    and so did a run whose progress.json said `blocked`. Both produced a record
-    that read like a clean review.
+    Publishing checked neither the state nor the transport. A directory holding
+    only an editor package, with no protocol.json and no progress.json,
+    published with an empty error list, and so did a run whose progress.json
+    said `blocked`. Both produced a record that read like a clean review.
 
     Finished means `complete`, and nothing else. A run that read the manuscript
     and raised no finding is `complete` with the guard status `clean`, and it
@@ -1437,16 +1712,16 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
     alone sent the operator back to a log to find out there was no Claude login.
 
     The transport is checked here as well. This path records Claude Code runs
-    only, and the engine will run Codex for anyone who asks it to, so a Codex
-    run reaching publish would otherwise be written up with a Claude
+    only, so a run on anything else would otherwise be written up with a Claude
     subscription attestation it has no claim to.
     """
-    protocol_path = Path(run_dir) / "protocol.json"
+    run_dir = resolve_review_dir(run_dir)
+    protocol_path = run_dir / "protocol.json"
     if not protocol_path.is_file():
         raise CommandError(
             f"{run_dir} has no protocol.json, so there is no record of what was "
-            "asked of the engine. Point --run at the engine's review output "
-            "folder."
+            "asked of the engine. Point --run at the folder `peerreview review` "
+            "wrote."
         )
     # Only the file's existence was checked, so a zero byte protocol.json
     # satisfied the guard while answering none of the questions it was added to
@@ -1457,12 +1732,16 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
             f"{protocol_path} is empty or is not a JSON object, so the run "
             "records nothing about what was asked of the engine."
         )
-    missing = [field for field in ("workflow", "model", "provider") if not run.get(field)]
+    # The arm replaces 0.8's mode and policy, and there is no single model to
+    # require: the plugin pins one per agent file, and protocol.json says so in
+    # a sentence rather than an id. What has to be recorded is which arm ran,
+    # on which transport, under which workflow.
+    missing = [field for field in ("arm", "provider", "workflow_version") if not run.get(field)]
     if missing:
         raise CommandError(
             f"{protocol_path} records no {', '.join(missing)}, so the published "
             "record could not say how the review was produced. Point --run at "
-            "the engine's review output folder."
+            "the folder `peerreview review` wrote."
         )
     provider = str(run.get("provider") or "")
     if provider not in PUBLISHABLE_PROVIDERS:
@@ -1473,15 +1752,33 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
             "is a claim about a Claude subscription, so a run on another "
             "transport cannot be published through it."
         )
+    # progress.json is the server's ledger: the final status, the guard status
+    # and the stage counts are all written there. read_run falls back to
+    # runtime.json's status and the editor package's stage counts so that a
+    # damaged run can still be described, and those fallbacks are the reason
+    # the file's absence has to be refused here by name. A folder holding an
+    # editor package and a runtime record, with no ledger, reads as a finished
+    # clean review on the strength of two files that say nothing about the
+    # guards.
+    progress_path = run_dir / "progress.json"
+    if not maybe_json(progress_path):
+        raise CommandError(
+            f"{run_dir} has no readable progress.json, so the run recorded no "
+            "ledger of its stages or its evidence guards. Point --run at the "
+            "folder `peerreview review` wrote."
+        )
     status = str(run.get("status") or "")
     if not status:
         raise CommandError(
-            f"{run_dir} has no progress.json, so the run never recorded whether "
-            "it finished. A review cannot be published from it."
+            f"{progress_path} records no status, so the run never recorded "
+            "whether it finished. A review cannot be published from it."
         )
-    # Named before the status, because this is the case the status describes
-    # and the operator needs to be told which of the two it is.
-    if run.get("review_guard_status") == ALL_FINDINGS_QUARANTINED or status == WITHOUT_FINDINGS_STATUS:
+    # Named before the status, because this is the case the status describes and
+    # the operator needs to be told which of the two it is.
+    if (
+        run.get("review_guard_status") == ALL_FINDINGS_QUARANTINED
+        or status == WITHOUT_FINDINGS_STATUS
+    ):
         raise CommandError(
             f"This run ended as {status} with guard status "
             f"{run.get('review_guard_status') or 'unrecorded'}, which the engine "
@@ -1492,13 +1789,27 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
             "engine or publish nothing."
         )
     if status not in FINISHED_STATUSES:
-        cause = next((str(problem) for problem in run.get("errors") or [] if problem), "")
+        cause = next((str(problem) for problem in _list(run.get("errors")) if problem), "")
         raise CommandError(
             f"This run ended in state {status} rather than "
             f"{' or '.join(FINISHED_STATUSES)}, so it is not a review."
             + (f" The run recorded: {cause}" if cause else "")
             + " Re-run the engine, or drop --publish to keep the bundle as a "
             "rehearsal."
+        )
+    # The stage ledger is the only thing that says whether every reader the arm
+    # asked for actually reported. A run can reach `complete` with a stage
+    # missing when the editor accepted the pool without it, and a bundle that
+    # says three core reviewers and six specialists over a run where two of them
+    # never answered is a claim about a panel that did not sit.
+    ledger = _dict(run.get("completeness"))
+    missing_stages = [str(s) for s in _list(ledger.get("missing"))]
+    if missing_stages:
+        raise CommandError(
+            f"{len(missing_stages)} stage(s) the {run.get('arm')} arm requires "
+            f"never reported: {', '.join(sorted(missing_stages))}. The bundle "
+            "would describe readers that did not report. Re-run the review, or "
+            "drop --publish to keep it as a rehearsal."
         )
 
 
@@ -1521,33 +1832,23 @@ def cmd_publish(args: argparse.Namespace) -> int:
             "Read it, then pass --human-reviewed yes."
         )
     # A rehearsal that carried a true attestation was a published record in
-    # every respect except where it sat, so copying its folder into
-    # docs/reviews by hand produced a review that passed every check. An
-    # attestation is a claim attached to a publication, and a rehearsal makes
-    # no publication, so the two cannot be asked for together.
+    # every respect except where it sat, so copying its folder into docs/reviews
+    # by hand produced a review that passed every check. An attestation is a
+    # claim attached to a publication, and a rehearsal makes no publication, so
+    # the two cannot be asked for together.
     if human_reviewed and not args.publish:
         raise CommandError(
             "--human-reviewed yes is an attestation, which only a published "
             "review can carry. Add --publish to publish this run, or pass "
             "--human-reviewed no to rehearse the bundle."
         )
-    # Publishing with the probe skipped wrote `login_verified: false` and no
-    # auth fields at all, and the record validated. A published record has to
-    # name the account the review was billed to.
-    if args.publish and args.offline:
-        raise CommandError(
-            "--offline skips the login check, so the record would say the "
-            "subscription login was never verified. Drop --offline to publish, "
-            "or drop --publish to rehearse."
-        )
 
-    run_dir = Path(args.run).resolve()
+    run_dir = resolve_review_dir(Path(args.run))
     package = editor_package(run_dir)
     run = read_run(run_dir)
-    requested_model = resolve_requested_model(run, args.model)
     if args.publish:
         require_complete_run(run_dir, run)
-    workspace = Path(args.workspace).resolve()
+    workspace = resolve_workspace(run_dir, args.workspace)
     preprint_data = prepared.get("preprint")
     if preprint_data is None:
         raise CommandError("A bundle needs preprint metadata. Prepare with --paper.")
@@ -1559,38 +1860,53 @@ def cmd_publish(args: argparse.Namespace) -> int:
         prepared["input"]["workspace_manifest_sha256"] = binding["workspace_manifest_sha256"]
     ingest = ingest_record(workspace)
 
-    # The fingerprint is the engine's own source manifest from the moment the
-    # run started, not a re-hash of whatever is installed now. Taking it at
-    # publish time recorded the bytes of the machine writing the bundle, which
-    # is not the claim the record makes.
+    # The fingerprint is the engine's own record of every file it loaded, taken
+    # at the moment the run started, not a re-hash of whatever is installed now.
+    # Taking it at publish time recorded the bytes of the machine writing the
+    # bundle, which is not the claim the record makes.
     engine_source = run.get("engine_source")
     if not isinstance(engine_source, dict) or not engine_source:
         raise CommandError(
-            f"{run_dir} records no engine source manifest, so the code that "
-            "produced this review cannot be identified. The engine writes it to "
+            f"{run_dir} records no source manifest, so the code that produced "
+            "this review cannot be identified. The plugin server writes it to "
             "manifest.json at the start of a run."
         )
-    fingerprint = fingerprint_from_manifest(engine_source, "run_manifest")
+    fingerprint = code_fingerprint(engine_source, "run_manifest")
+    plugin = plugin_record(engine_source, run)
     try:
-        installed = engine_fingerprint()
+        installed = installed_code_manifest()
     except CommandError:
         installed = None
     if installed is not None:
-        fingerprint["matches_installed_engine"] = installed["sha256"] == fingerprint["sha256"]
+        fingerprint["matches_installed_engine"] = (
+            code_fingerprint(installed, "installed_engine")["sha256"] == fingerprint["sha256"]
+        )
+        plugin["matches_installed_plugin"] = (
+            installed.get(WORKFLOW_FILE) == plugin["workflow_sha256"]
+        )
+
+    runtime = maybe_json(run_dir / "runtime.json")
+    agents = agent_rows(maybe_json(run_dir / "protocol.json"), package, runtime)
+    # The transport is the run's own, read from the start-up probe the engine ran
+    # before it spent anything. A run on a transport this path cannot publish is
+    # refused here even when the bundle is only a rehearsal.
+    transport = transport_record(
+        provider=str(run.get("provider") or ""),
+        runtime=runtime,
+        startup=maybe_json(run_dir / "startup.json"),
+    )
 
     dest = publish_destination(prepared, publishing=args.publish)
     route = f"v{prepared['draft']}/r{prepared['attempt']}"
     review_id = bundle_identifier(dest)
-    # The run's transport, so the login that is probed is the login the review
-    # ran on, and a run on anything this path cannot publish is refused here
-    # even when the bundle is only a rehearsal.
-    transport = transport_record(provider=str(run.get("provider") or ""), probe=not args.offline)
     provenance = build_provenance(
         preprint=preprint,
         prepared=prepared,
         package=package,
         run=run,
         fingerprint=fingerprint,
+        plugin=plugin,
+        agents=agents,
         decision=args.decision,
         editor=args.editor,
         human_reviewed=human_reviewed,
@@ -1601,15 +1917,13 @@ def cmd_publish(args: argparse.Namespace) -> int:
         submitter_is_author=args.submitter_is_author,
         baseline_eligible=args.baseline_eligible,
         ingest=ingest,
-        observed=observed_models(run_dir),
-        requested_model=requested_model,
         transport=transport,
         review_id=review_id,
         publishing=args.publish,
     )
 
-    # The engine's own output is copied into the bundle, and it records the
-    # absolute path of each reviewer package it read. Scrubbing happens before
+    # The engine's own output is copied into the bundle, and a run folder
+    # records absolute paths in several places. Scrubbing happens before
     # anything is written, so the manifest hashes the file a reader will get.
     published_package = without_local_paths(package) if args.publish else package
 
@@ -1627,6 +1941,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # dropped from the JSON and then printed in decision_letter.md, where no
     # scan was looking for it.
     findings = sorted_findings(published_package)
+    reports = track_reports(run_dir)
     if dest.exists() and any(dest.iterdir()):
         raise CommandError(f"Refusing to overwrite an existing review bundle: {dest}")
 
@@ -1647,10 +1962,16 @@ def cmd_publish(args: argparse.Namespace) -> int:
         (stage / "manuscript_stats.md").write_text(
             render_stats(preprint, ingest, provenance["generator"]), encoding="utf-8"
         )
+        # The specialist reports, as each track wrote them. The site lists an
+        # `audit_<track>.md` as a report of its own, so a reader can see what
+        # the statistics reader looked for rather than only what the editor
+        # agent kept from it.
+        for name, path in reports.items():
+            shutil.copyfile(path, stage / name)
         write_json(stage / "provenance.json", provenance)
         write_round_record(stage, preprint, provenance, findings)
         # Kept beside the documents so a reader can check a quotation against
-        # the structured record the reviewer actually produced.
+        # the structured record the reviewers actually produced.
         write_json(stage / "editor-package.json", published_package)
 
         # Read back what is actually on disk before the manifest fixes it. This
@@ -1671,12 +1992,19 @@ def cmd_publish(args: argparse.Namespace) -> int:
 
     print(f"bundle   {dest}")
     print(f"decision {provenance['decision']} (chosen by {args.editor})")
-    print(f"findings {len(findings)}")
-    print(f"baseline {'eligible' if provenance['review']['baseline_eligible'] else 'experimental only'}")
-    observed = provenance["generator"]["model_ids"]["observed"]
-    print(f"model    requested {requested_model}, observed {', '.join(observed) or 'not reported'}")
-    if provenance["generator"]["model_ids"].get("substituted"):
-        print("warning  the transport served a model other than the one requested")
+    print(
+        f"findings {len(findings)} in the letter, "
+        f"{provenance['generator']['run']['appendix_findings']} in the appendix"
+    )
+    print(f"reports  {len(reports)} specialist track report(s) copied in")
+    print(
+        f"baseline {'eligible' if provenance['review']['baseline_eligible'] else 'experimental only'}"
+    )
+    print(f"models   {model_phrase(provenance['models'])}")
+    if run.get("specialist_tracks"):
+        absent = [track for track in SPECIALIST_TRACKS if f"audit_{track}.md" not in reports]
+        if absent:
+            print(f"warning  no specialist report written for: {', '.join(absent)}")
     if not args.publish:
         print("rehearsal, written outside docs/reviews. Re-run with --publish to publish.")
     return 0
@@ -1686,30 +2014,48 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("fingerprint", help="Print the engine and transport record, calling no model")
-    p.add_argument("--offline", action="store_true", help="Skip the CLI authentication probe")
+    p = sub.add_parser(
+        "fingerprint", help="Print the installed engine and plugin, calling no model"
+    )
     p.set_defaults(func=cmd_fingerprint)
 
     p = sub.add_parser("prepare", help="Resolve a paper, fetch its bytes, and plan the bundle path")
     p.add_argument("--paper", help="arXiv id, bioRxiv or medRxiv DOI, or an archive URL")
     p.add_argument("--pdf", help="Local PDF supplying the exact bytes for that identity")
     p.add_argument("--out", required=True, help="Empty folder for the fetched paper and the plan")
-    p.add_argument("--workflow", default="ensemble")
-    p.add_argument("--reviewers", type=int, default=2)
+    p.add_argument(
+        "--arm",
+        default="full-two-track",
+        help="The engine arm the review will run. Recorded here so the plan and "
+        "the run can be compared, and taken from the run when the bundle is written",
+    )
+    p.add_argument("--reviewers", type=int, default=3, help="Core reviewers the review will run")
     p.add_argument("--literature-cutoff", default="")
-    p.add_argument("--replace", action="store_true", help="Allow a new attempt on an already reviewed draft")
+    p.add_argument(
+        "--replace", action="store_true", help="Allow a new attempt on an already reviewed draft"
+    )
     p.set_defaults(func=cmd_prepare)
 
     p = sub.add_parser("publish", help="Write a review bundle from a finished engine run")
     p.add_argument("--prepared", required=True, help="The folder prepare wrote")
-    p.add_argument("--run", required=True, help="The engine review output folder")
+    p.add_argument(
+        "--run",
+        required=True,
+        help="The folder `peerreview review` wrote, or the review folder inside it",
+    )
     p.add_argument(
         "--workspace",
-        required=True,
-        help="The imported manuscript workspace. Required: its paper.json is "
-        "what ties this run to the paper that was prepared",
+        default="",
+        help="The imported manuscript workspace. Defaults to the manuscript "
+        "folder beside the run, whose paper.json is what ties this run to the "
+        "paper that was prepared",
     )
-    p.add_argument("--decision", required=True, choices=DECISIONS, help="The editor's decision, not the engine's")
+    p.add_argument(
+        "--decision",
+        required=True,
+        choices=DECISIONS,
+        help="The editor's decision, not the engine's",
+    )
     p.add_argument(
         "--editor",
         required=True,
@@ -1724,12 +2070,8 @@ def build_parser() -> argparse.ArgumentParser:
         "Answering no writes a rehearsal bundle that cannot be published",
     )
     p.add_argument(
-        "--model",
-        default="",
-        help="Optional cross-check. The model is read from the run, and a "
-        "value here that disagrees with it is a refusal rather than an override",
+        "--submitter", default="", help="GitHub login of the submitter, when there is one"
     )
-    p.add_argument("--submitter", default="", help="GitHub login of the submitter, when there is one")
     p.add_argument(
         "--submitter-is-author",
         default="",
@@ -1741,10 +2083,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--baseline-eligible",
         action="store_true",
         help="Let this review set the paper's editorial status. Off by default, "
-        "because one model wrote all of it",
+        "because no human read the manuscript",
     )
-    p.add_argument("--publish", action="store_true", help="Write into docs/reviews rather than runs")
-    p.add_argument("--offline", action="store_true", help="Skip the CLI authentication probe")
+    p.add_argument(
+        "--publish", action="store_true", help="Write into docs/reviews rather than runs"
+    )
     p.set_defaults(func=cmd_publish)
     return parser
 

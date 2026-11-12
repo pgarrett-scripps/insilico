@@ -4,18 +4,24 @@ These cover the parts of scripts/local_review.py that can run without
 peerreviewagents installed: the refusals, the documents rendered from saved
 engine output, and the manifest. The schema side of the same path is checked by
 scripts/check_local_provenance.mjs, which needs Node rather than Python.
+
+Everything here is written against the run folder engine 0.9's plugin writes:
+`protocol.json`, `manifest.json`, `progress.json`, `runtime.json`,
+`startup.json`, `editor-package.json` and one `audit_<track>.md` per specialist
+reader. The fixtures below copy the shapes of a real 0.9 run rather than an
+idealised version of them, including the placeholder agent rows the harness
+emits and the absolute paths the plugin server records, because both of those
+were defects the generator had to be taught to handle.
 """
 from __future__ import annotations
 
 import contextlib
-import datetime as dt
 import io
 import json
 import os
 import subprocess
 import sys
 import tempfile
-import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -36,111 +42,447 @@ PAPER = Preprint(
     pdf_bytes=2048,
 )
 
+TRACKS = local_review.SPECIALIST_TRACKS
+CORE_SLOTS = ("core-1", "core-2", "core-3")
+SONNET = "claude-sonnet-5-5"
+OPUS = "claude-opus-5-5"
+HAIKU = "claude-haiku-5-5"
+CLAUDE_CODE_VERSION = "2.1.322"
+STARTED_AT = "2026-11-11T12:00:00+00:00"
+WORKFLOW_VERSION = "plugin-two-track-v1"
+FINDING_SCHEMA = "review-finding-v3"
+
 # Deliberately out of severity order, and one severity the engine does not emit.
 FINDINGS = [
-    {"severity": "minor", "title": "A typo", "comment": "Fix the spelling.", "block_id": "b7"},
+    {
+        "severity": "minor",
+        "title": "A typo",
+        "comment": "Fix the spelling.",
+        "finding_uid": "f-004",
+        "slot": "core-2",
+        "track": "citations",
+        "basis": "judgement",
+        "placement": "anchored",
+        "block_id": "b7",
+    },
     {
         "severity": "major",
         "title": "The headline effect is unguarded",
         "comment": "Report the confidence interval.",
         "quote": "effects were large",
+        "finding_uid": "f-001",
+        "slot": "spec-stats",
+        "track": "stats",
+        "basis": "computed",
+        "basis_reason": "The reported mean and n do not give the stated interval.",
+        "escalate": True,
         "block_id": "b2",
     },
-    {"severity": "moderate", "title": "Missing n", "comment": "State the sample size.", "block_id": "b4"},
-    {"severity": "catastrophic", "title": "Not a severity the engine emits", "comment": "Ignore."},
+    {
+        "severity": "moderate",
+        "title": "Missing n",
+        "comment": "State the sample size.",
+        "finding_uid": "f-002",
+        "slot": "core-1",
+        "track": "methods-reporting",
+        "basis": "two-quotes",
+        "block_id": "b4",
+    },
+    {
+        "severity": "catastrophic",
+        "title": "Not a severity the engine emits",
+        "comment": "Ignore.",
+        "finding_uid": "f-003",
+    },
 ]
+
+# What the editor agent accepted and kept out of the body of the letter.
+APPENDIX = [
+    {
+        "severity": "moderate",
+        "title": "Panel b has no axis label",
+        "comment": "Label the y axis.",
+        "finding_uid": "f-010",
+        "slot": "spec-figures-tables",
+        "track": "figures-tables",
+        "basis": "two-quotes",
+        "editor_placement": "appendix",
+        "editor_reason": "The body was already at its cap.",
+        "block_id": "b9",
+    },
+    {
+        "severity": "minor",
+        "title": "Two different totals",
+        "comment": "The abstract and table 1 disagree.",
+        "finding_uid": "f-011",
+        "slot": "core-3",
+        "track": "consistency",
+        "basis": "two-quotes",
+        "escalate": True,
+        "block_id": "b11",
+    },
+]
+
+VERDICT = {
+    "significance": "A useful result on a narrow question.",
+    "strength_of_evidence": "Moderate, and weaker than the abstract claims.",
+    "reasoning": "The headline interval does not follow from the reported numbers.",
+    "basis": "Two anchored passages and one arithmetic check.",
+    "limitation": "No reader re-ran the analysis.",
+}
+
+FINDINGS_BY_TRACK = {
+    "stats": 2,
+    "figures-tables": 1,
+    "methods-reporting": 1,
+    "citations": 1,
+    "consistency": 1,
+    "field": 0,
+}
 
 PACKAGE = {
     "summary": "One careful reading of the manuscript.",
     "findings": FINDINGS,
+    "appendix": APPENDIX,
     "limitations": ["Did not re-run the analysis."],
+    "verdict": VERDICT,
+    "decisions": ["Kept the stats finding in the body."],
+    "escalation_rulings": [
+        {
+            "finding_uid": "f-001",
+            "ruling": "Upheld. The interval cannot be read off the reported numbers.",
+        },
+        {
+            "finding_uid": "f-011",
+            "ruling": "Not upheld. The totals differ by a rounding step.",
+        },
+    ],
+    "escalated_count": 2,
+    "findings_by_track": FINDINGS_BY_TRACK,
+    "reviewer_count": 3,
+    "reviewer_provenance": [
+        {
+            "slot": "core-1",
+            "track": "core",
+            "model": SONNET,
+            "attempt": 1,
+            "tool_calls": 12,
+            "findings": 3,
+            "none_found": False,
+        },
+        {
+            "slot": "core-2",
+            "track": "core",
+            "model": SONNET,
+            "attempt": 2,
+            "tool_calls": 14,
+            "findings": 2,
+            "none_found": False,
+        },
+        {
+            "slot": "core-3",
+            "track": "core",
+            "model": SONNET,
+            "attempt": 1,
+            "tool_calls": 9,
+            "findings": 0,
+            "none_found": True,
+        },
+    ],
+    "arm": "full-two-track",
+    "synthesis_policy": "editor-pooled",
+    "workflow_version": WORKFLOW_VERSION,
+    "finding_schema_version": FINDING_SCHEMA,
+    "review_guard_status": "clean",
+    "findings_delivered": 6,
+    "quarantined_findings_count": 0,
+    "quarantined_findings": [],
 }
 
 
-def provenance_fixture() -> dict:
+def _slot_model(slot: str) -> str | None:
+    """The model the plugin's agent file pins for one slot.
+
+    The recorder is the one slot with no model of its own in protocol.json. The
+    harness reports what it actually ran it on, which is how the record ends up
+    naming three models for a run whose protocol names two.
+    """
+    if slot == "editor":
+        return OPUS
+    if slot == "recorder":
+        return None
+    return SONNET
+
+
+def _protocol_agents(tracks: tuple[str, ...]) -> dict:
+    """One entry per agent slot, as the plugin server writes them."""
+    agents: dict[str, dict] = {}
+    for slot in CORE_SLOTS:
+        agents[slot] = {
+            "role": "core-reviewer",
+            "track": "core",
+            "attempt": 2 if slot == "core-2" else 1,
+            "tool_calls": 12,
+            "model": SONNET,
+            "allowed_tools": ["Read", "Grep"],
+        }
+    for track in tracks:
+        agents[f"spec-{track}"] = {
+            "role": "specialist",
+            "track": track,
+            "attempt": 1,
+            "tool_calls": 7,
+            "model": SONNET,
+            "allowed_tools": ["Read", "Grep"],
+        }
+    agents["editor"] = {
+        "role": "editor",
+        "attempt": 1,
+        "tool_calls": 4,
+        "model": OPUS,
+        "allowed_tools": ["Read"],
+    }
+    agents["recorder"] = {
+        "role": "recorder",
+        "attempt": 1,
+        "tool_calls": 2,
+        "model": None,
+        "allowed_tools": ["Read"],
+    }
+    return agents
+
+
+def _stages(tracks: tuple[str, ...], **overrides) -> dict:
+    """The stage ledger, which is what says whether the review is whole."""
+    required = [*CORE_SLOTS, *(f"spec-{track}" for track in tracks)]
+    attempts = {slot: 1 for slot in required}
+    attempts["core-2"] = 2
+    ledger = {
+        "required": required,
+        "reported": list(required),
+        "missing": [],
+        "none_found": ["spec-field"],
+        "attempts": attempts,
+        "editor_accepted": True,
+    }
+    ledger.update(overrides)
+    return ledger
+
+
+def _runtime_agents(tracks: tuple[str, ...]) -> list[dict]:
+    """What the harness observed, placeholder rows and all.
+
+    The first five rows are what Claude Code emits for an agent it has not
+    named yet: a label and nothing else. A real 0.9 run carries them, and a
+    generator that counted them published five empty reviewers on the panel,
+    so the fixture keeps them.
+    """
+    rows: list[dict] = [{"label": f"agent-{index}"} for index in range(5)]
+    for slot in CORE_SLOTS:
+        rows.append(
+            {
+                "label": slot,
+                "state": "complete",
+                "attempt": 2 if slot == "core-2" else 1,
+                "agentType": "pra:core-reviewer",
+                "model": SONNET,
+                "tokens": 48000,
+                "toolCalls": 12,
+                "durationMs": 210000,
+            }
+        )
+    for track in tracks:
+        rows.append(
+            {
+                "label": f"spec-{track}",
+                "state": "complete",
+                "attempt": 1,
+                "agentType": f"pra:{track}",
+                "model": SONNET,
+                "tokens": 21000,
+                "toolCalls": 7,
+                "durationMs": 90000,
+            }
+        )
+    rows.append(
+        {
+            "label": "editor",
+            "state": "complete",
+            "attempt": 1,
+            "agentType": "pra:editor",
+            "model": OPUS,
+            "tokens": 32000,
+            "toolCalls": 4,
+            "durationMs": 120000,
+        }
+    )
+    # The recorder slot runs on haiku, which protocol.json does not say, so the
+    # published model map has a model in it that the protocol never named.
+    rows.append(
+        {
+            "label": "ingest",
+            "state": "complete",
+            "attempt": 1,
+            "agentType": "pra:recorder",
+            "model": HAIKU,
+            "tokens": 9000,
+            "toolCalls": 2,
+            "durationMs": 30000,
+        }
+    )
+    return rows
+
+
+def _expected_models() -> dict[str, str]:
+    """The model map the fixture run has to produce, slot by slot."""
+    models = {slot: SONNET for slot in CORE_SLOTS}
+    models.update({f"spec-{track}": SONNET for track in TRACKS})
+    models["editor"] = OPUS
+    models["ingest"] = HAIKU
+    return models
+
+
+EXPECTED_MODEL_PHRASE = (
+    f"{SONNET} (9 agents), {HAIKU} (1 agent), {OPUS} (1 agent)"
+)
+
+# The plugin and engine files the run loaded, hashed at the moment it started.
+# `plugin-python/` deliberately does not fall under the `plugin/` prefix, which
+# is what the plugin fingerprint is taken over.
+CODE = {
+    "plugin/workflows/review.js": "1" * 64,
+    "plugin/agents/core-reviewer.md": "2" * 64,
+    "plugin/agents/editor.md": "3" * 64,
+    "engine/starter.py": "4" * 64,
+    "plugin-python/server.py": "5" * 64,
+}
+
+
+def _plan(tracks: tuple[str, ...]) -> dict:
     return {
-        "schema_version": local_review.PROVENANCE_SCHEMA,
-        "decision": "major",
-        "ingest": {"format": "markdown", "tool": "engine import", "text_sha256": "c" * 64, "chars": 40000},
-        "generator": {
-            "kind": local_review.GENERATOR_KIND,
-            "engine": {"name": local_review.ENGINE_PACKAGE, "version": "0.8.0"},
-            "model_ids": {"requested": local_review.DEFAULT_MODEL, "observed": [local_review.DEFAULT_MODEL]},
-            "input": {
-                "kind": "doi",
-                "identifier": PAPER.doi,
-                "sha256": "b" * 64,
-                "bytes": 2048,
-                "local_file": False,
-            },
-            "run": {
-                "workflow": "ensemble",
-                "workflow_version": "ensemble-v3",
-                "reviewers": 2,
-                "synthesis_policy": "debate",
-                "findings": len(FINDINGS),
-                "errors": [],
-            },
-            "decision_source": "human_editor",
-            "attestation": {
-                "locally_generated": True,
-                "human_reviewed_before_merge": True,
-                "editor": "fixture-editor",
-                "statement": local_review.ATTESTATION,
-            },
-        },
+        "arm": "full-two-track",
+        "reviewers": 3,
+        "specialists": list(tracks),
+        "editor": True,
+        "revision": False,
+        "summary": "Three core reviewers, six specialists, one editor.",
+        "execution": "parallel",
     }
 
 
+def _startup(**overrides) -> dict:
+    """The engine's own start-up probe, which is the transport evidence.
+
+    Nothing is probed at publish time in 0.9. The claim the record makes is
+    that a Claude Code session started, loaded the plugin and connected its MCP
+    server, and this file is where the engine wrote that down before it spent
+    anything.
+    """
+    record = {
+        "at": STARTED_AT,
+        "probe": {
+            "plugins": ["pra"],
+            "mcp_servers": [
+                {"name": "plugin:pra:peerreview", "status": "connected", "source": "plugin"}
+            ],
+        },
+        "problems": [],
+        "tools_expected": ["mcp__pra__submit_finding"],
+    }
+    record.update(overrides)
+    return record
+
+
+def _runtime(tracks: tuple[str, ...], **overrides) -> dict:
+    record = {
+        "status": "complete",
+        "wall_seconds": 1840.5,
+        "tokens_total": 412000,
+        "agents": _runtime_agents(tracks),
+        "claude_code_version": CLAUDE_CODE_VERSION,
+    }
+    record.update(overrides)
+    return record
+
+
+def _run_transport() -> dict:
+    """The transport block the fixture run produces, built by the real code.
+
+    `transport_record` is pure in 0.9, so the fixture does not have to stub it
+    out the way the 0.8 fixtures stubbed the publish-time probe. That is the
+    point of the shape: publishing needs no network and no CLI.
+    """
+    return local_review.transport_record(
+        provider="claude-code", runtime=_runtime(TRACKS), startup=_startup()
+    )
+
+
 def _run_directory(
-    root: Path, *, stage: dict | None = None, started_at: float | None = None, **overrides
+    root: Path, *, report_tracks: tuple[str, ...] | None = None, **overrides
 ) -> Path:
-    """A run directory holding the files the engine's CLI really writes.
+    """A run directory holding the files engine 0.9's plugin really writes.
 
-    The layout matters, and this fixture used to get it wrong in a way that hid
-    a defect. An ensemble run's top level manifest carries the paper id, the
-    engine source and the plan. The synthesis policy, the tool budget and the
-    validation report live in the stage folder the synthesis ran in, which is
-    `debate/` under the default policy, along with that stage's tool config.
-    Writing the stage's keys at the top level made a generator that looked
-    there pass against a shape no run has.
+    One flat folder: what was asked of the engine in `protocol.json`, the paper
+    id and the hash of every plugin and engine file loaded in `manifest.json`,
+    the final status and the stage ledger in `progress.json`, what the harness
+    observed in `runtime.json`, the start-up probe in `startup.json`, the review
+    in `editor-package.json`, and one `audit_<track>.md` per specialist reader.
 
-    `core-artifact.json` is deliberately absent. Only
-    peerreviewagents.engine.api.run_review writes one, and the skill drives the
-    CLI, so anything that reads provenance out of it reads nothing.
+    The manifest carries the absolute manuscript path and plugin root the plugin
+    server writes into it. They are here on purpose: nothing in the published
+    record may name them, and a fixture without them would let a generator that
+    copied them through pass.
 
-    The stage's `execution/usage.jsonl` holds one row per model call. The
-    generator reads `models_observed` out of those rows, which is how a
-    substituted model is caught, so a fixture with no rows at all would let
-    that check pass against nothing. The `started_at` stamp on each row is
-    the run's own clock. Nothing here reads it any more, now that the engine
-    writes no billing confirmation to judge fresh against, and the fixture
-    keeps it because the engine writes it.
+    An override value of None leaves that file out, which is how the refusals
+    for a run missing one of them are tested.
     """
     run = Path(root)
     run.mkdir(parents=True, exist_ok=True)
+    home = str(Path.home().resolve())
     files = {
         "protocol.json": {
             "provider": "claude-code",
-            "model": "claude-sonnet-5-5",
+            "model": "Each agent runs on the model its agent file pins.",
             "effort": "high",
-            "mode": "ensemble",
-            "reviewers": 2,
-            "version": "3",
+            "mode": "plugin",
+            "arm": "full-two-track",
+            "reviewers": 3,
+            "paper_id": "paper-abc",
+            "literature_cutoff": None,
+            "version": WORKFLOW_VERSION,
+            "finding_schema_version": FINDING_SCHEMA,
+            "body_finding_limit": 8,
+            "agents": _protocol_agents(TRACKS),
+            "plan": _plan(TRACKS),
         },
         "manifest.json": {
             "paper_id": "paper-abc",
-            "review_input_sha256": "d" * 64,
-            "plan": {"synthesis_policy": "debate", "independent_reviewers": 2},
-            "code": {"engine/reviewer.py": "e" * 64, "engine/api.py": "f" * 64},
+            "source_sha256": "b" * 64,
+            "pdf": f"{home}/runs/local/paper.pdf",
+            "code": dict(CODE),
+            "workflow_version": WORKFLOW_VERSION,
+            "finding_schema_version": FINDING_SCHEMA,
+            "claude_code_version": CLAUDE_CODE_VERSION,
+            "plugin_root": f"{home}/Repos/PeerReviewAgents/plugins/pra",
+            "plan": _plan(TRACKS),
         },
-        "editor-package.json": {
-            "workflow_version": "ensemble-v3",
-            "reviewer_count": 2,
-            "findings": FINDINGS,
-            "summary": PACKAGE["summary"],
+        "progress.json": {
+            "status": "complete",
+            "error": "",
+            "reviewers": 3,
+            "arm": "full-two-track",
+            "stages": _stages(TRACKS),
+            "findings_delivered": 6,
+            "quarantined_findings_count": 0,
+            "review_guard_status": "clean",
+            "tool_calls": 64,
+            "tool_calls_total": 64,
+            "started": STARTED_AT,
+            "updated": "2026-11-11T12:31:00+00:00",
         },
-        "progress.json": {"status": "complete", "usage": {"calls": 3}},
+        "runtime.json": _runtime(TRACKS),
+        "startup.json": _startup(),
+        "editor-package.json": dict(PACKAGE, stages=_stages(TRACKS)),
     }
     files.update(overrides)
     for name, payload in files.items():
@@ -148,26 +490,19 @@ def _run_directory(
             continue
         (run / name).write_text(json.dumps(payload), encoding="utf-8")
 
-    stage_dir = run / "debate"
-    stage_files = {"synthesis_policy": "debate", "synthesis_tool_limit": 12}
-    stage_files.update(stage or {})
-    stage_dir.mkdir(parents=True, exist_ok=True)
-    (stage_dir / "manifest.json").write_text(json.dumps(stage_files), encoding="utf-8")
-    workspace_config = stage_dir / "execution" / "workspace"
-    workspace_config.mkdir(parents=True, exist_ok=True)
-    (workspace_config / "tool-config.json").write_text(
-        json.dumps({"literature_cutoff": "2026-11-01"}), encoding="utf-8"
-    )
-
-    launched = time.time() - 120 if started_at is None else float(started_at)
-    rows = [
-        {"call": index, "started_at": launched + index * 30, "models_observed": []}
-        for index in range(2)
-    ]
-    (stage_dir / "execution" / "usage.jsonl").write_text(
-        "".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8"
-    )
+    for track in TRACKS if report_tracks is None else report_tracks:
+        (run / f"audit_{track}.md").write_text(
+            f"# {track}\n\nWhat this reader checked, and what it found.\n", encoding="utf-8"
+        )
     return run
+
+
+def _run_tree(root: Path, **overrides) -> Path:
+    """The two folders `peerreview review <pdf> <out>` writes under one out dir."""
+    root = Path(root)
+    _run_directory(root / local_review.REVIEW_DIRECTORY, **overrides)
+    _workspace(root / local_review.MANUSCRIPT_DIRECTORY)
+    return root
 
 
 def _workspace(root: Path, paper_id: str = "paper-abc") -> Path:
@@ -222,34 +557,206 @@ def _publish(prepared: Path, run: Path, workspace: Path, *extra: str) -> int:
     )
 
 
-# A fixture for the engine's billing confirmation stood here, along with the
-# checks that judged one against the instant the run started. Engine 0.8.0
-# removes billing confirmation entirely: there is no file to read, no freshness
-# window to judge, and no provider or policy recorded in the run. The login on
-# the transport record now comes from the publish-time probe alone, which is
-# what check_publishing_needs_a_verified_login holds in place.
+@contextlib.contextmanager
+def _stub_engine(version: str = "0.9.0"):
+    """The installed distribution, which this suite runs without.
 
-
-def _probed_transport() -> dict:
-    """What the publish-time probe returns when the CLI is signed in.
-
-    Stubbed rather than probed, because the probe shells out to the Claude CLI
-    through the engine's model_runtime and this file runs with no engine
-    installed. A check wanting to publish for real patches
-    local_review.transport_record with this.
+    `engine_record` reads the installed version through importlib.metadata and
+    refuses when there is none, so every check that builds a record has to say
+    which engine it is pretending to be.
     """
-    return {
+    original = local_review.engine_record
+    local_review.engine_record = lambda: {"name": local_review.ENGINE_PACKAGE, "version": version}
+    try:
+        yield
+    finally:
+        local_review.engine_record = original
+
+
+@contextlib.contextmanager
+def _published_tree(root: Path):
+    """A published tree somewhere harmless, for the checks that publish for real."""
+    original = local_review.REVIEWS
+    local_review.REVIEWS = Path(root)
+    try:
+        yield Path(root)
+    finally:
+        local_review.REVIEWS = original
+
+
+def _stage_record(**overrides) -> dict:
+    """The completeness block as the real reader produces it from the ledger."""
+    return local_review.completeness({"stages": _stages(TRACKS, **overrides)}, {})
+
+
+def _run_record(**overrides) -> dict:
+    """The generator.run block of a published record, as read_run produces it."""
+    record = {
+        "arm": "full-two-track",
         "provider": "claude-code",
-        "executable": "claude",
-        "version": "2.0.0",
-        "billing_policy": local_review.BILLING_POLICY,
-        "auth_method": "claude.ai",
-        "subscription_type": "max",
-        "login_verified": True,
-        "paid_api_key_used": False,
-        "verified_at": "2026-11-11T12:00:00+00:00",
-        "verified_by": "publish_time_probe",
+        "workflow_version": WORKFLOW_VERSION,
+        "finding_schema_version": FINDING_SCHEMA,
+        "reviewers": 3,
+        "specialist_tracks": list(TRACKS),
+        "synthesis_policy": "editor-pooled",
+        "paper_id": "paper-abc",
+        "body_finding_limit": 8,
+        "status": "complete",
+        "review_guard_status": "clean",
+        "findings_delivered": 6,
+        "quarantined_findings_count": 0,
+        "escalated_count": 2,
+        "findings_by_track": dict(FINDINGS_BY_TRACK),
+        "completeness": _stage_record(),
+        "findings": len(local_review.sorted_findings(PACKAGE)),
+        "appendix_findings": len(APPENDIX),
+        "escalated_in_bundle": 2,
+        "errors": [],
     }
+    record.update(overrides)
+    return record
+
+
+def provenance_fixture() -> dict:
+    """A version 4 record, in the shape build_provenance writes one."""
+    return {
+        "schema_version": local_review.PROVENANCE_SCHEMA,
+        "decision": "major",
+        "provider": "claude-code",
+        "models": _expected_models(),
+        "ingest": {
+            "format": "markdown",
+            "tool": "peerreviewagents import_paper",
+            "text_sha256": "c" * 64,
+            "chars": 40000,
+        },
+        "generator": {
+            "kind": local_review.GENERATOR_KIND,
+            "engine": {"name": local_review.ENGINE_PACKAGE, "version": "0.9.0"},
+            "engine_fingerprint": {
+                "algorithm": "sha256",
+                "file_count": len(CODE),
+                "sha256": "a" * 64,
+                "source": "run_manifest",
+            },
+            "plugin": {
+                "fingerprint": {
+                    "algorithm": "sha256",
+                    "file_count": 3,
+                    "sha256": "e" * 64,
+                    "source": "run_manifest",
+                },
+                "workflow_sha256": "1" * 64,
+                "workflow_version": WORKFLOW_VERSION,
+                "finding_schema_version": FINDING_SCHEMA,
+            },
+            "transport": _run_transport(),
+            "agents": [
+                {"slot": "core-1", "role": "core-reviewer", "model": SONNET, "findings": 3},
+                {"slot": "editor", "role": "editor", "model": OPUS},
+                {"slot": "ingest", "agent_type": "pra:recorder", "model": HAIKU},
+            ],
+            "input": {
+                "kind": "doi",
+                "identifier": PAPER.doi,
+                "sha256": "b" * 64,
+                "bytes": 2048,
+                "local_file": False,
+            },
+            "run": _run_record(),
+            "advisory_verdict": dict(VERDICT),
+            "decision_source": "human_editor",
+            "attestation": {
+                "locally_generated": True,
+                "human_reviewed_before_merge": True,
+                "rehearsal": False,
+                "editor": "fixture-editor",
+                "statement": local_review.ATTESTATION,
+            },
+        },
+    }
+
+
+def _build_arguments(**overrides) -> dict:
+    """Everything build_provenance needs, with one place to change it."""
+    arguments = dict(
+        preprint=PAPER,
+        prepared={
+            "input": {
+                "kind": "doi",
+                "identifier": PAPER.doi,
+                "sha256": "b" * 64,
+                "bytes": 2048,
+                "local_file": False,
+            },
+            "plan_kind": "first review",
+        },
+        package=PACKAGE,
+        run=_run_record(),
+        fingerprint={
+            "algorithm": "sha256",
+            "file_count": len(CODE),
+            "sha256": "a" * 64,
+            "source": "run_manifest",
+        },
+        plugin={
+            "fingerprint": {
+                "algorithm": "sha256",
+                "file_count": 3,
+                "sha256": "e" * 64,
+                "source": "run_manifest",
+            },
+            "workflow_sha256": "1" * 64,
+            "workflow_version": WORKFLOW_VERSION,
+            "finding_schema_version": FINDING_SCHEMA,
+        },
+        agents=[
+            {"slot": "core-1", "model": SONNET},
+            {"slot": "editor", "model": OPUS},
+            {"slot": "ingest", "model": HAIKU},
+        ],
+        decision="major",
+        route="v1/r1",
+        draft=1,
+        attempt=1,
+        submitter="",
+        submitter_is_author="",
+        baseline_eligible=False,
+        ingest={"format": "markdown", "tool": "peerreviewagents import_paper"},
+        transport=_run_transport(),
+        review_id="docs/reviews/2026/fixture/v1/r1",
+        publishing=True,
+    )
+    arguments.update(overrides)
+    return arguments
+
+
+def _schema(name: str = "review-provenance.schema.json") -> dict:
+    return json.loads(
+        (Path(__file__).resolve().parents[2] / "schemas" / name).read_text(encoding="utf-8")
+    )
+
+
+def _schema_run_status() -> str:
+    """The one run status the published schema accepts, read from the schema.
+
+    Read rather than written out here, so a run this file calls publishable
+    cannot be one `npm run check:schema` would then reject, and so the two
+    cannot drift apart silently.
+    """
+    return _schema()["properties"]["generator"]["properties"]["run"]["properties"]["status"]["const"]
+
+
+def _schema_verified_by() -> str:
+    """The one transport evidence the published schema accepts."""
+    generator = _schema()["properties"]["generator"]["properties"]
+    return generator["transport"]["properties"]["verified_by"]["const"]
+
+
+def _schema_run_requires() -> list[str]:
+    return list(
+        _schema()["properties"]["generator"]["properties"]["run"].get("required") or []
+    )
 
 
 def check_severity_is_read_from_the_engine_not_guessed() -> None:
@@ -269,6 +776,19 @@ def check_severity_is_read_from_the_engine_not_guessed() -> None:
     assert counts == {"major": 1, "moderate": 1, "minor": 1}, f"severity miscounted: {counts}"
     assert sum(counts.values()) < len(ordered), "an unknown severity was counted as a known one"
 
+    # The appendix is the editor agent's overflow, not a second class of finding,
+    # so it is read and ordered the same way.
+    appendix = local_review.appendix_findings(PACKAGE)
+    assert [f["severity"] for f in appendix] == ["moderate", "minor"], (
+        f"the appendix is not ordered by severity: {appendix}"
+    )
+    assert [f["finding_uid"] for f in local_review.escalated(ordered)] == ["f-001"], (
+        "an escalated body finding was not found"
+    )
+    assert [f["finding_uid"] for f in local_review.escalated(appendix)] == ["f-011"], (
+        "an escalated appendix finding was not found"
+    )
+
 
 def check_the_decision_is_attributed_to_a_person() -> None:
     """The engine recommends no verdict, and the documents must say who did."""
@@ -278,18 +798,28 @@ def check_the_decision_is_attributed_to_a_person() -> None:
     letter = local_review.render_decision_letter(PAPER, PACKAGE, prov, findings)
 
     assert "human editor" in summary, "the summary must say a person chose the decision"
-    assert "does not recommend a verdict" in summary, "the summary must say the engine recommends none"
+    assert "recommends no verdict" in summary, "the summary must say the engine recommends none"
     assert "editor's" in letter, "the decision letter must attribute the decision to the editor"
     assert "fixture-editor" in summary, "the summary must name the editor who read the run"
-    assert "one model agreeing with itself" in summary, (
-        "the summary must disclose that a single model produced every pass"
+    assert "agents sharing a model are not independent corroboration of one another" in summary, (
+        "the summary must disclose that agents on one model do not corroborate each other"
     )
+    assert "3 core reviewers" in summary, f"the panel is not described: {summary}"
+    assert "6 specialist readers" in summary, f"the specialists are not described: {summary}"
+    assert "2 more in the appendix" in summary, "the appendix findings are not counted"
+    assert "**Escalated by a reviewer:** 2" in summary, "the escalations are not counted"
+    assert "Findings raised per track" in summary, "the per-track counts were not published"
 
     # The documents are rendered from saved output, so the reviewer's own words
     # have to appear in them verbatim.
     assert PACKAGE["summary"] in summary, "the reviewer's summary was not carried through"
     assert "Report the confidence interval." in letter, "a finding's comment was not carried through"
     assert "> effects were large" in letter, "a quoted manuscript passage was not carried through"
+    assert "The reported mean and n do not give the stated interval." in letter, (
+        "the basis the reviewer recorded was not carried through"
+    )
+    assert "Rulings on escalated findings" in letter, "the editor agent's rulings were not published"
+    assert "rounding step" in letter, "a ruling that went against the reviewer was dropped"
 
     # Severity decides whether a finding is required or optional. Nothing else
     # does, and in particular the decision does not.
@@ -297,6 +827,13 @@ def check_the_decision_is_attributed_to_a_person() -> None:
     assert "The headline effect is unguarded" in required, "a major finding must be required"
     assert "Missing n" in required, "a moderate finding must be required"
     assert "A typo" not in required, "a minor finding must not be required"
+
+    # And the appendix is published in full rather than summarised away.
+    appendix = letter.split("## Appendix", 1)[1]
+    assert "Panel b has no axis label" in appendix, "an appendix finding was dropped"
+    assert "The body was already at its cap." in appendix, (
+        "the editor agent's reason for moving a finding was dropped"
+    )
 
 
 def check_a_minor_finding_is_never_a_required_revision() -> None:
@@ -320,12 +857,25 @@ def check_a_minor_finding_is_never_a_required_revision() -> None:
     ids = [item["id"] for item in record["required_revisions"]]
     assert ids == sorted(set(ids)), f"required revision ids are not unique and ordered: {ids}"
 
+    # A revision round has to say which finding it is answering, and an id this
+    # file invented means nothing outside it. The engine's own uid travels with
+    # the entry, along with the track it came from and what it rests on.
+    first = record["required_revisions"][0]
+    assert first["finding_uid"] == "f-001", f"the engine's own uid was dropped: {first}"
+    assert first["track"] == "stats", f"the track was dropped: {first}"
+    assert first["basis"] == "computed", f"the basis was dropped: {first}"
+    assert first["escalated"] is True, f"the escalation was dropped: {first}"
+    assert first["source_reviewer"] == "spec-stats", f"the slot was dropped: {first}"
+    assert all(item["finding_uid"] for item in record["required_revisions"]), (
+        f"a required revision carries no uid: {record['required_revisions']}"
+    )
+
 
 def check_an_unclaimed_review_is_labelled_an_experiment() -> None:
-    """One model wrote it, so the page has to say so unless an editor claims it.
+    """Agents wrote it, so the page has to say so unless an editor claims it.
 
     The word matters because Notices.astro and the provenance panel both read
-    it, and because "editorial" on a single-model run would overstate what
+    it, and because "editorial" on an unclaimed run would overstate what
     produced the review.
     """
     for plan_kind in ("first review", "same-draft re-review", "unpublishable local run"):
@@ -398,28 +948,9 @@ def check_a_bare_pdf_cannot_be_published() -> None:
             encoding="utf-8",
         )
         run = _run_directory(Path(tmp) / "run")
-        workspace = Path(tmp) / "workspace"
-        workspace.mkdir()
+        workspace = _workspace(Path(tmp) / "workspace")
 
-        code = local_review.main(
-            [
-                "publish",
-                "--prepared",
-                str(prepared),
-                "--run",
-                str(run),
-                "--workspace",
-                str(workspace),
-                "--decision",
-                "major",
-                "--editor",
-                "fixture-editor",
-                "--human-reviewed",
-                "yes",
-                "--publish",
-                "--offline",
-            ]
-        )
+        code = _publish(prepared, run, workspace, "--publish")
         assert code == 2, f"publishing an unidentified PDF should fail, got exit {code}"
 
     # And the decision is a closed set, so a typo cannot reach the record.
@@ -444,57 +975,19 @@ def check_the_attestation_says_what_it_has_to_say() -> None:
     assert "no editor" in unread.lower(), f"a rehearsal must say nobody read it: {unread}"
     assert "must not be published" in unread, f"a rehearsal must say so plainly: {unread}"
     assert "—" not in unread and ";" not in unread, "the rehearsal statement is authored prose"
-    assert local_review.GENERATOR_KIND == "local-claude-code", (
+    assert local_review.GENERATOR_KIND == "local-claude-code-plugin", (
         f"the generator kind is pinned by the schema: {local_review.GENERATOR_KIND}"
     )
     assert local_review.TRANSPORT_PROVIDER == "claude-code", (
         f"the transport is pinned by the schema: {local_review.TRANSPORT_PROVIDER}"
     )
-    assert "—" not in statement and ";" not in statement, "the attestation is authored prose"
-
-
-def check_a_subscription_login_is_not_a_paid_provider() -> None:
-    """A Max subscription reports apiProvider "firstParty", and must be accepted.
-
-    The guard used to refuse any truthy apiProvider, so a real subscription
-    login failed the preflight: `fingerprint` exited 2 and the skill could never
-    start. The engine accepts None or firstParty, and this path has to accept
-    the same set or it refuses accounts the engine would run on. It also has to
-    look at loggedIn and authMethod, which it did not.
-    """
-    record = local_review.transport_from_status(
-        {
-            "loggedIn": True,
-            "authMethod": "claude.ai",
-            "apiProvider": "firstParty",
-            "subscriptionType": "max",
-        },
-        provider="claude-code",
+    assert local_review.PROVENANCE_SCHEMA == 4, (
+        f"the plugin record is schema version 4: {local_review.PROVENANCE_SCHEMA}"
     )
-    assert record["paid_api_key_used"] is False, "a subscription login is not a paid key"
-    assert record["auth_method"] == "claude.ai", f"auth method lost: {record}"
-    assert record["subscription_type"] == "max", f"subscription type lost: {record}"
-    assert record["api_provider"] == "firstParty", f"api provider lost: {record}"
-    assert record["billing_policy"], "the record must name the billing policy it ran under"
-
-    # An unset apiProvider is the other shape a subscription login takes.
-    assert local_review.transport_from_status(
-        {"loggedIn": True, "authMethod": "oauth", "apiProvider": None},
-        provider="claude-code",
-    )["api_provider"] == "firstParty"
-
-    refusals = {
-        "not logged in": {"loggedIn": False, "authMethod": "claude.ai"},
-        "a key rather than a login": {"loggedIn": True, "authMethod": "apiKey"},
-        "a cloud reseller": {"loggedIn": True, "authMethod": "claude.ai", "apiProvider": "bedrock"},
-        "a CLI that could not answer": {"error": "claude: command not found"},
-    }
-    for why, status in refusals.items():
-        try:
-            local_review.transport_from_status(status, provider="claude-code")
-        except local_review.CommandError:
-            continue
-        raise AssertionError(f"{why} was accepted as a subscription login: {status}")
+    assert len(local_review.SPECIALIST_TRACKS) == 6, (
+        f"0.9 convenes six specialist readers: {local_review.SPECIALIST_TRACKS}"
+    )
+    assert "—" not in statement and ";" not in statement, "the attestation is authored prose"
 
 
 def check_the_skill_commands_match_the_engine_parser() -> None:
@@ -546,50 +1039,106 @@ def check_the_skill_commands_match_the_engine_parser() -> None:
 def check_provenance_is_read_from_the_run() -> None:
     """Nothing in the record may be copied from an intention or a flag.
 
-    The old code read `core-artifact.json`, which the CLI never writes, so the
-    workflow, the reviewer count, the literature cutoff and the model were all
-    taken from the prepare defaults or the publish flags, and the error list was
-    always empty. Each of these comes from a file the run itself wrote.
+    Every field here comes from one of the five files the plugin writes. A value
+    the run did not record is left out rather than defaulted, because a default
+    silently becomes the published claim about a run that did something else.
     """
     with tempfile.TemporaryDirectory() as tmp:
         run_dir = _run_directory(Path(tmp) / "run")
-        assert not (run_dir / "core-artifact.json").exists(), "the CLI writes no core artifact"
-
         run = local_review.read_run(run_dir)
-        assert run["workflow"] == "ensemble", f"workflow not read from protocol.json: {run}"
-        assert run["workflow_version"] == "ensemble-v3", f"workflow version lost: {run}"
-        assert run["reviewers"] == 2, f"reviewer count not read from the run: {run}"
-        assert run["synthesis_policy"] == "debate", f"synthesis policy not read: {run}"
-        assert run["model"] == "claude-sonnet-5-5", f"model not read from protocol.json: {run}"
-        assert run["literature_cutoff"] == "2026-11-01", f"cutoff not read from the run: {run}"
+
+        assert run["arm"] == "full-two-track", f"arm not read from protocol.json: {run}"
+        assert run["provider"] == "claude-code", f"provider not read from protocol.json: {run}"
+        assert run["workflow_version"] == WORKFLOW_VERSION, f"workflow version lost: {run}"
+        assert run["finding_schema_version"] == FINDING_SCHEMA, f"finding schema lost: {run}"
+        assert run["reviewers"] == 3, f"reviewer count not read from the run: {run}"
+        assert run["specialist_tracks"] == list(TRACKS), f"the specialists were not read: {run}"
+        assert run["synthesis_policy"] == "editor-pooled", f"synthesis policy not read: {run}"
         assert run["paper_id"] == "paper-abc", f"paper id not read from the manifest: {run}"
+        assert run["body_finding_limit"] == 8, f"the body cap was not read: {run}"
         assert run["status"] == "complete", f"status not read from progress.json: {run}"
+        assert run["review_guard_status"] == "clean", f"the guard verdict was not read: {run}"
+        assert run["findings_delivered"] == 6, f"the delivered count was not read: {run}"
+        assert run["quarantined_findings_count"] == 0, f"a zero count is a count: {run}"
+        assert run["tool_calls_total"] == 64, f"the tool calls were not read: {run}"
+        assert run["escalated_count"] == 2, f"the escalations were not read: {run}"
+        assert run["findings_by_track"] == FINDINGS_BY_TRACK, f"the track counts were not read: {run}"
+        assert run["wall_seconds"] == 1840.5, f"the wall time was not read from runtime.json: {run}"
+        assert run["tokens_total"] == 412000, f"the token total was not read: {run}"
         assert run["errors"] == [], f"a clean run should record no errors: {run}"
-        assert run["synthesis_tool_limit"] == 12, f"tool budget not read from the stage: {run}"
         assert "directory" not in run, (
             f"a run outside this repository must not be named by its path: {run}"
         )
+        # protocol.json records `literature_cutoff: null` on a run that set no
+        # cutoff, and null is not a cutoff.
+        assert "literature_cutoff" not in run, f"a null cutoff was published as one: {run}"
+        dated = local_review.read_run(
+            _run_directory(
+                Path(tmp) / "dated",
+                **{
+                    "protocol.json": {
+                        "provider": "claude-code",
+                        "arm": "full-two-track",
+                        "reviewers": 3,
+                        "literature_cutoff": "2026-11-01",
+                        "version": WORKFLOW_VERSION,
+                        "agents": _protocol_agents(TRACKS),
+                    }
+                },
+            )
+        )
+        assert dated["literature_cutoff"] == "2026-11-01", f"a real cutoff was dropped: {dated}"
 
-        fingerprint = local_review.fingerprint_from_manifest(run["engine_source"], "run_manifest")
-        assert fingerprint["file_count"] == 2, f"fingerprint miscounted: {fingerprint}"
+        # The code that produced the review, hashed from the run's own manifest
+        # rather than from whatever is installed at publish time.
+        fingerprint = local_review.code_fingerprint(run["engine_source"], "run_manifest")
+        assert fingerprint["file_count"] == len(CODE), f"fingerprint miscounted: {fingerprint}"
         assert fingerprint["source"] == "run_manifest", "the fingerprint must say where it came from"
         assert len(fingerprint["sha256"]) == 64, f"not a sha256: {fingerprint}"
 
+        plugin = local_review.plugin_record(run["engine_source"], run)
+        assert plugin["workflow_sha256"] == "1" * 64, f"the workflow hash was not read: {plugin}"
+        assert plugin["fingerprint"]["file_count"] == 3, (
+            f"the plugin fingerprint covers the plugin's own files: {plugin['fingerprint']}"
+        )
+        assert plugin["workflow_version"] == WORKFLOW_VERSION, f"workflow version lost: {plugin}"
+
+        # Two runs can both say plugin-two-track-v1 and have run different agent
+        # files, so a manifest with no workflow file cannot be published.
+        for why, (code, record) in {
+            "no workflow file": ({"plugin/agents/editor.md": "3" * 64}, run),
+            "no workflow version": (dict(CODE), {}),
+        }.items():
+            try:
+                local_review.plugin_record(code, record)
+            except local_review.CommandError:
+                continue
+            raise AssertionError(f"a plugin record was written with {why}")
+
         # A value the run did not record is absent, never defaulted.
         bare = local_review.read_run(Path(tmp) / "empty")
-        for key in ("workflow", "reviewers", "model", "literature_cutoff", "paper_id"):
+        for key in ("arm", "reviewers", "provider", "paper_id", "completeness"):
             assert key not in bare, f"{key} was invented for a run that recorded nothing: {bare}"
 
         # And what went wrong is read rather than assumed to be nothing.
         broken = _run_directory(
             Path(tmp) / "broken",
-            **{"progress.json": {"status": "failed", "error": "the transport hung up"}},
+            **{
+                "progress.json": {
+                    "status": "failed",
+                    "error": "the transport hung up",
+                    "review_guard_status": "partially-quarantined",
+                    "quarantined_findings_count": 2,
+                },
+                "runtime.json": _runtime(TRACKS, status="failed", blocked_reason="no plugin loaded"),
+            },
         )
-        (broken / "responses").mkdir()
-        (broken / "responses" / "r1-quarantined.json").write_text("{}", encoding="utf-8")
         errors = local_review.read_run(broken)["errors"]
         assert any("hung up" in e for e in errors), f"the recorded error was dropped: {errors}"
         assert any("failed" in e for e in errors), f"a failed run should say so: {errors}"
+        assert any("no plugin loaded" in e for e in errors), (
+            f"the starter's own reason was dropped: {errors}"
+        )
         assert any("quarantined" in e for e in errors), f"quarantined findings are errors: {errors}"
 
 
@@ -653,58 +1202,41 @@ def check_a_rehearsal_is_never_written_into_the_published_tree() -> None:
     )
 
 
-def check_a_substituted_model_is_visible() -> None:
-    """The engine records models_observed, a list, in every usage receipt.
-
-    Looking for a scalar `model` key instead found the requested id and called
-    it observed, so the drift banner could never fire.
-    """
-    with tempfile.TemporaryDirectory() as tmp:
-        run = _run_directory(Path(tmp) / "run")
-        (run / "usage.jsonl").write_text(
-            "\n".join(
-                [
-                    json.dumps({"models_observed": ["claude-haiku-5-5"], "input_tokens": 10}),
-                    "",
-                    "not json at all",
-                    json.dumps({"models_observed": ["claude-haiku-5-5", "claude-sonnet-5-5"]}),
-                ]
-            ),
-            encoding="utf-8",
-        )
-        observed = local_review.observed_models(run)
-        assert observed == ["claude-haiku-5-5", "claude-sonnet-5-5"], (
-            f"the served models were not read from the receipts: {observed}"
-        )
-        assert "claude-haiku-5-5" in observed, "a substituted model must be visible"
-
-        # Nothing reported is an empty list, not the model that was asked for.
-        assert local_review.observed_models(_run_directory(Path(tmp) / "quiet")) == []
-
-
 def check_the_method_paragraph_describes_the_run_that_happened() -> None:
     """The fixed wording described a workflow nobody ran.
 
-    It said one model, no debate, one reading, while the documented command runs
-    an ensemble of two reviewers and the engine's default synthesis is debate.
+    In 0.9 there is no debate stage to describe and no single model: the plugin
+    pins a model per agent file, so the paragraph counts agents per model and
+    says outright that agents sharing one are not corroborating each other.
     """
-    ensemble = local_review.method_paragraph(
-        {"workflow": "ensemble", "reviewers": 2, "synthesis_policy": "debate"}, "claude-sonnet-5-5"
+    models = _expected_models()
+    full = local_review.method_paragraph(
+        {"arm": "full-two-track", "reviewers": 3, "specialist_tracks": list(TRACKS)}, models
     )
-    assert "2 reviewer passes" in ensemble, f"the reviewer count is not in the text: {ensemble}"
-    assert "debate" in ensemble, f"a debate synthesis is not described: {ensemble}"
-    assert "One reviewer pass" not in ensemble, "an ensemble run must not be called one reading"
+    assert "3 core reviewers" in full, f"the reviewer count is not in the text: {full}"
+    assert "6 specialist readers" in full, f"the specialists are not described: {full}"
+    assert "an editor agent pooled every finding" in full, f"the editor is not described: {full}"
+    assert EXPECTED_MODEL_PHRASE in full, f"the per-model counts are wrong: {full}"
+    assert "no debate stage" in full, f"0.9 ran none, so the paragraph says so: {full}"
+    for claim in ("debate round", "rounds of debate", "debated"):
+        assert claim not in full, f"0.9 has no debate stage to describe: {full}"
+    assert "One core reviewer" not in full, "a three reviewer run must not be called one reading"
 
-    single = local_review.method_paragraph({"workflow": "single", "reviewers": 1}, "claude-opus-5-5")
-    assert "One reviewer pass" in single, f"a single pass is not described: {single}"
-    assert "debate" not in single, f"a single pass has no debate: {single}"
-    assert "claude-opus-5-5" in single, "the paragraph must name the model that ran"
+    single = local_review.method_paragraph(
+        {"arm": "single", "reviewers": 1}, {"core-1": OPUS}
+    )
+    assert "One core reviewer" in single, f"a single pass is not described: {single}"
+    assert "convened no specialist readers" in single, f"an arm with no specialists: {single}"
+    assert OPUS in single, "the paragraph must name the model that ran"
 
-    unrecorded = local_review.method_paragraph({}, "claude-sonnet-5-5")
+    unrecorded = local_review.method_paragraph({}, {})
     assert "did not record" in unrecorded, (
         f"an unmeasured run must say so rather than claim a shape: {unrecorded}"
     )
-    for text in (ensemble, single, unrecorded):
+    assert "models the run did not record" in unrecorded, (
+        f"a run with no model map must say so: {unrecorded}"
+    )
+    for text in (full, single, unrecorded):
         assert "—" not in text and ";" not in text, "the paragraph is authored prose"
 
 
@@ -715,32 +1247,8 @@ def check_an_attestation_needs_a_named_editor() -> None:
     nobody has read must say that rather than attest to a reading that did not
     happen.
     """
-    engine_record = local_review.engine_record
-    local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
-    arguments = dict(
-        preprint=PAPER,
-        prepared={"input": {"kind": "doi", "identifier": PAPER.doi, "sha256": "b" * 64, "bytes": 1, "local_file": False}, "plan_kind": "first review"},
-        package=PACKAGE,
-        # A real run always records its transport, because publish refuses one
-        # that does not, and the record takes the provider from here rather
-        # than from a constant.
-        run={"workflow": "ensemble", "reviewers": 2, "errors": [], "provider": "claude-code"},
-        fingerprint={"algorithm": "sha256", "file_count": 2, "sha256": "a" * 64, "source": "run_manifest"},
-        decision="major",
-        route="v1/r1",
-        draft=1,
-        attempt=1,
-        submitter="",
-        submitter_is_author="",
-        baseline_eligible=False,
-        ingest={},
-        observed=["claude-haiku-5-5"],
-        requested_model="claude-sonnet-5-5",
-        transport={"provider": "claude-code", "paid_api_key_used": False},
-        review_id="docs/reviews/2026/fixture/v1/r1",
-        publishing=True,
-    )
-    try:
+    arguments = _build_arguments()
+    with _stub_engine():
         try:
             local_review.build_provenance(editor="", human_reviewed=True, **arguments)
         except local_review.CommandError:
@@ -762,101 +1270,40 @@ def check_an_attestation_needs_a_named_editor() -> None:
             "an unread run must not claim a reading"
         )
         assert unread["attestation"]["statement"] == local_review.UNREAD_STATEMENT
-        assert unread["model_ids"]["substituted"] is True, (
-            f"a served model nobody asked for must be flagged: {unread['model_ids']}"
+        assert unread["decision_source"] == "human_editor", (
+            f"the decision is a person's whoever read the run: {unread['decision_source']}"
         )
-    finally:
-        local_review.engine_record = engine_record
-
-
-def check_the_model_comes_from_the_run_not_the_flag() -> None:
-    """A run on opus published a record saying sonnet.
-
-    The model came from `--model`, whose default was sonnet. The skill lets the
-    operator run opus, and step five of it passed the default through, so an
-    opus run was published as a sonnet run and the summary went on to say every
-    pass had used that model.
-    """
-    # The flag may not carry a default, because a default silently becomes the
-    # published claim for a run that asked for something else.
-    parsed = local_review.build_parser().parse_args(
-        [
-            "publish", "--prepared", "p", "--run", "r", "--workspace", "w",
-            "--decision", "major", "--editor", "e", "--human-reviewed", "yes",
-        ]
-    )
-    assert not parsed.model, (
-        f"--model defaults to {parsed.model!r}, so a run on another model would "
-        "be published under that id"
-    )
-
-    with tempfile.TemporaryDirectory() as tmp:
-        run = local_review.read_run(
-            _run_directory(
-                Path(tmp) / "opus",
-                **{
-                    "protocol.json": {
-                        "provider": "claude-code",
-                        "model": "claude-opus-5-5",
-                        "mode": "ensemble",
-                        "reviewers": 2,
-                        "version": "3",
-                    }
-                },
-            )
-        )
-        assert run["model"] == "claude-opus-5-5", f"the run's model was not read: {run}"
-        assert local_review.resolve_requested_model(run, "") == "claude-opus-5-5", (
-            "the record must name the model the run asked for"
-        )
-        # A dated release of the same model is the same request.
-        assert local_review.resolve_requested_model(
-            {"model": "claude-opus-5-5-20260929"}, "claude-opus-5-5"
-        ) == "claude-opus-5-5-20260929"
-
-        for flag in ("claude-sonnet-5-5", "claude-haiku-5-5"):
-            try:
-                local_review.resolve_requested_model(run, flag)
-            except local_review.CommandError:
-                continue
-            raise AssertionError(f"--model {flag} silently overrode an opus run")
-
-        # And a run that recorded no model cannot be described at all.
-        try:
-            local_review.resolve_requested_model({}, "claude-sonnet-5-5")
-        except local_review.CommandError:
-            pass
-        else:
-            raise AssertionError("a run with no recorded model was given one from a flag")
 
 
 def check_a_run_with_no_manifest_paper_id_is_still_bound() -> None:
-    """Only an ensemble manifest carries the paper id at the top level.
+    """The paper id is written in two places, and only one of them is required.
 
-    The independent and panel modes record it in protocol.json and nest the
-    protocol inside the manifest, so a run in either mode reported no paper id,
-    and the binding check skipped itself rather than failing. A run of paper B
-    published under paper A exited zero again, by a different route.
+    The plugin server writes it into both protocol.json and the run manifest. A
+    run whose manifest omits it reported no paper id, and the binding check
+    skipped itself rather than failing, so a run of paper B could be published
+    under paper A by that route.
     """
     with tempfile.TemporaryDirectory() as tmp:
-        panel = _run_directory(
-            Path(tmp) / "panel",
+        elsewhere = _run_directory(
+            Path(tmp) / "elsewhere",
             **{
                 "protocol.json": {
                     "provider": "claude-code",
-                    "model": "claude-sonnet-5-5",
-                    "mode": "panel",
-                    "paper_id": "paper-xyz",
+                    "arm": "full-two-track",
                     "reviewers": 3,
+                    "paper_id": "paper-xyz",
+                    "version": WORKFLOW_VERSION,
+                    "agents": _protocol_agents(TRACKS),
                 },
                 "manifest.json": {
-                    "protocol": {"paper_id": "paper-xyz", "model": "claude-sonnet-5-5"},
-                    "source_manifest_sha256": "9" * 64,
-                    "code": {"engine/reviewer.py": "e" * 64},
+                    "source_sha256": "9" * 64,
+                    "code": dict(CODE),
+                    "workflow_version": WORKFLOW_VERSION,
+                    "plan": _plan(TRACKS),
                 },
             },
         )
-        run = local_review.read_run(panel)
+        run = local_review.read_run(elsewhere)
         assert run["paper_id"] == "paper-xyz", f"paper id not read from protocol.json: {run}"
 
         workspace = _workspace(Path(tmp) / "workspace", "paper-abc")
@@ -866,7 +1313,7 @@ def check_a_run_with_no_manifest_paper_id_is_still_bound() -> None:
         except local_review.CommandError:
             pass
         else:
-            raise AssertionError("a panel run of another paper was bound to this workspace")
+            raise AssertionError("a run of another paper was bound to this workspace")
 
         # Neither side may be missing. A comparison with nothing to compare is
         # not a check that passed.
@@ -902,7 +1349,22 @@ def check_an_unfinished_run_cannot_be_published() -> None:
             "no progress.json": _run_directory(Path(tmp) / "no-progress", **{"progress.json": None}),
             "a blocked run": _run_directory(
                 Path(tmp) / "blocked",
-                **{"progress.json": {"status": "blocked", "error": "Unexpected model returned"}},
+                **{
+                    "progress.json": {
+                        "status": "blocked",
+                        "error": "No Claude Code login on this machine",
+                        "stages": _stages(TRACKS),
+                    },
+                    "runtime.json": _runtime(
+                        TRACKS,
+                        status="blocked",
+                        blocked_reason="No Claude Code login on this machine",
+                    ),
+                },
+            ),
+            "a run still going": _run_directory(
+                Path(tmp) / "running",
+                **{"progress.json": {"status": "running", "stages": _stages(TRACKS)}},
             ),
         }
         for why, run_dir in cases.items():
@@ -917,57 +1379,50 @@ def check_an_unfinished_run_cannot_be_published() -> None:
             f"a blocked run must say so in the record: {blocked['errors']}"
         )
 
-        # And the refusal repeats what the run said went wrong. `blocked` is a
-        # status engine 0.8.0 writes when the launch guard stops a run, and the
+        # And the refusal repeats what the run said went wrong. `blocked` is the
+        # status the starter writes when the launch guard stops a run, and the
         # cause is the only part of it an operator can act on: a refusal naming
         # the state alone sends them back to read progress.json by hand.
         try:
-            local_review.require_complete_run(
-                cases["a blocked run"], local_review.read_run(cases["a blocked run"])
-            )
+            local_review.require_complete_run(cases["a blocked run"], blocked)
         except local_review.CommandError as error:
             assert "blocked" in str(error), f"the refusal has to name the state: {error}"
-            assert "Unexpected model returned" in str(error), (
+            assert "No Claude Code login" in str(error), (
                 f"the refusal has to carry the cause the run recorded: {error}"
             )
         else:
             raise AssertionError("a blocked run was published")
 
 
-def _schema_run_status() -> str:
-    """The one run status the published schema accepts, read from the schema.
-
-    Read rather than written out here, so a run this file calls publishable
-    cannot be one `npm run check:schema` would then reject, and so the two
-    cannot drift apart silently.
-    """
-    schema = json.loads(
-        (Path(__file__).resolve().parents[2] / "schemas" / "review-provenance.schema.json")
-        .read_text(encoding="utf-8")
-    )
-    return schema["properties"]["generator"]["properties"]["run"]["properties"]["status"]["const"]
-
-
 def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
     """A run can finish every stage and raise no finding, and that is a result.
 
-    Engine 0.8.0 records that outcome as `status: complete` with
-    `review_guard_status: clean` and an empty findings list. It was refused
-    here as an unfinished run, which made the published corpus one that
-    silently drops every review finding a manuscript sound: the papers nothing
-    is wrong with are exactly the ones that never got published, and the record
-    read as if the engine always finds something.
+    Engine 0.9 records that outcome as `status: complete` with
+    `review_guard_status: clean` and an empty findings list. Refusing it here
+    would make the published corpus one that silently drops every review finding
+    a manuscript sound: the papers nothing is wrong with would be exactly the
+    ones that never got published, and the record would read as if the engine
+    always finds something.
 
-    `complete-without-findings` is a different outcome and must not publish.
-    The engine writes that status in one case only, when every finding the
-    reviewers raised failed the evidence guards and was quarantined: see
-    engine/ensemble.py, engine/reviewer.py and engine/api.py, each of which
-    writes it beside `review_guard_status: all-findings-quarantined`. A review
-    that endorses none of its own findings is not the claim that a manuscript
-    was found sound, and a letter telling the authors the reviewer recorded no
-    findings would be false. The refusal has to be an exit code, because that
-    is the only thing that stops a bundle being written.
+    `complete-without-findings` is a different outcome and must not publish. The
+    engine writes that status when every finding the reviewers raised failed the
+    evidence guards and was quarantined. A review that endorses none of its own
+    findings is not the claim that a manuscript was found sound, and a letter
+    telling the authors the reviewers recorded no findings would be false. The
+    refusal has to be an exit code, because that is the only thing that stops a
+    bundle being written.
     """
+    sound_package = dict(
+        PACKAGE,
+        findings=[],
+        appendix=[],
+        escalation_rulings=[],
+        escalated_count=0,
+        findings_by_track={track: 0 for track in TRACKS},
+        findings_delivered=0,
+        summary="Three reviewers read the manuscript and raised nothing.",
+        stages=_stages(TRACKS),
+    )
     with tempfile.TemporaryDirectory() as tmp:
         empty = _run_directory(
             Path(tmp) / "empty",
@@ -975,27 +1430,11 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 "progress.json": {
                     "status": "complete",
                     "review_guard_status": "clean",
-                    "usage": {"calls": 3},
+                    "stages": _stages(TRACKS),
+                    "findings_delivered": 0,
+                    "quarantined_findings_count": 0,
                 },
-                # The policy the reviewers ran under, where the engine writes
-                # it. A published record has to name it, or an agentic run and
-                # a bounded study run read the same.
-                "manifest.json": {
-                    "paper_id": "paper-abc",
-                    "review_input_sha256": "d" * 64,
-                    "plan": {
-                        "synthesis_policy": "debate",
-                        "independent_reviewers": 2,
-                        "review_policy": "agentic-v1",
-                    },
-                    "code": {"engine/reviewer.py": "e" * 64, "engine/api.py": "f" * 64},
-                },
-                "editor-package.json": {
-                    "workflow_version": "ensemble-v3",
-                    "reviewer_count": 2,
-                    "findings": [],
-                    "summary": "Two reviewers read the manuscript and raised nothing.",
-                },
+                "editor-package.json": sound_package,
             },
         )
         record = local_review.read_run(empty)
@@ -1005,51 +1444,47 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
         local_review.require_complete_run(empty, record)
         assert record["status"] == _schema_run_status(), f"status lost: {record}"
         assert record["review_guard_status"] == "clean", f"the guard verdict was not read: {record}"
-        assert record["review_policy"] == "agentic-v1", f"the review policy was not read: {record}"
         assert local_review.sorted_findings(local_review.editor_package(empty)) == [], (
             "a run with no findings has no findings"
         )
 
         # It publishes, documents and all, rather than refusing at the last step.
-        # The engine and the login are both stubbed, the way every other
-        # publishing check here stubs them, because CI runs this file with no
-        # engine installed and no CLI to read a login from.
-        transport_record = local_review.transport_record
-        local_review.transport_record = lambda **_: _probed_transport()
-        engine_record = local_review.engine_record
-        local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
-        reviews = local_review.REVIEWS
-        try:
-            local_review.REVIEWS = Path(tmp) / "reviews"
-            destination = local_review.REVIEWS / "2026" / "fixture-sound-paper" / "v1" / "r1"
-            code = _publish(
-                _prepared(Path(tmp) / "prepared", destination),
-                empty,
-                _workspace(Path(tmp) / "workspace"),
-                "--publish",
-                # Repeated deliberately. _publish types `major`, argparse keeps
-                # the last value, and a review that raised nothing is an accept.
-                "--decision", "accept",
-            )
+        # Only the installed engine is stubbed: the transport record is read from
+        # the run's own start-up probe, so publishing needs no CLI and no network.
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-sound-paper" / "v1" / "r1"
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    empty,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                    # Repeated deliberately. _publish types `major`, argparse keeps
+                    # the last value, and a review that raised nothing is an accept.
+                    "--decision", "accept",
+                )
             assert code == 0, f"a review that raised nothing should publish, got exit {code}"
             letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
-            assert letter.strip(), "a review with no findings still owes the authors a letter"
+            assert "recorded no findings" in letter, (
+                "a review with no findings still owes the authors a letter that says so"
+            )
             published = json.loads((destination / "provenance.json").read_text(encoding="utf-8"))
             run_record = published["generator"]["run"]
             assert run_record["status"] == _schema_run_status(), (
                 f"the published status is not the one the schema accepts: {run_record}"
             )
             assert run_record["findings"] == 0, f"an empty review recorded findings: {run_record}"
+            assert run_record["appendix_findings"] == 0, f"an empty review has no appendix: {run_record}"
             assert run_record["review_guard_status"] == "clean", (
                 f"the published record has to carry the guard verdict: {run_record}"
             )
-            assert run_record["review_policy"] == "agentic-v1", (
-                f"the published record has to name the policy the run used: {run_record}"
+            assert run_record["completeness"]["missing"] == [], (
+                f"a whole review has no missing stage: {run_record['completeness']}"
             )
-        finally:
-            local_review.REVIEWS = reviews
-            local_review.transport_record = transport_record
-            local_review.engine_record = engine_record
+            assert published["generator"]["decision_source"] == "human_editor", (
+                "the decision is still a person's on a review that found nothing"
+            )
 
         # Every finding quarantined is a different claim. The guard says so in
         # the record it reads, and the publish guard refuses the run.
@@ -1059,14 +1494,15 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 "progress.json": {
                     "status": "complete-without-findings",
                     "review_guard_status": "all-findings-quarantined",
-                    "usage": {"calls": 3},
+                    "stages": _stages(TRACKS),
+                    "quarantined_findings_count": 4,
                 },
-                "editor-package.json": {
-                    "workflow_version": "ensemble-v3",
-                    "reviewer_count": 2,
-                    "findings": [],
-                    "summary": "Every finding the reviewers raised failed the guards.",
-                },
+                "editor-package.json": dict(
+                    sound_package,
+                    summary="Every finding the reviewers raised failed the guards.",
+                    review_guard_status="all-findings-quarantined",
+                    quarantined_findings_count=4,
+                ),
             },
         )
         quarantined_record = local_review.read_run(quarantined)
@@ -1086,14 +1522,8 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
         # And the whole command refuses, with a non-zero exit and no bundle on
         # disk. An error line printed beside a written bundle is not a refusal:
         # the folder is what gets committed.
-        transport_record = local_review.transport_record
-        local_review.transport_record = lambda **_: _probed_transport()
-        engine_record = local_review.engine_record
-        local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
-        reviews = local_review.REVIEWS
-        try:
-            local_review.REVIEWS = Path(tmp) / "reviews-quarantined"
-            destination = local_review.REVIEWS / "2026" / "fixture-quarantined" / "v1" / "r1"
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews-quarantined") as reviews:
+            destination = reviews / "2026" / "fixture-quarantined" / "v1" / "r1"
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr):
                 code = _publish(
@@ -1109,10 +1539,6 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 f"the refusal has to say what the guards did: {message!r}"
             )
             assert not destination.exists(), f"a bundle was written to {destination}"
-        finally:
-            local_review.REVIEWS = reviews
-            local_review.transport_record = transport_record
-            local_review.engine_record = engine_record
 
         # Neither field alone carries the gate. A run that says `complete` and
         # still reports every finding quarantined is refused on the guard, and
@@ -1122,9 +1548,12 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             "the guard alone": {
                 "status": "complete",
                 "review_guard_status": "all-findings-quarantined",
-                "usage": {"calls": 3},
+                "stages": _stages(TRACKS),
             },
-            "the status alone": {"status": "complete-without-findings", "usage": {"calls": 3}},
+            "the status alone": {
+                "status": "complete-without-findings",
+                "stages": _stages(TRACKS),
+            },
         }
         for index, (why, progress) in enumerate(refusals.items()):
             run_dir = _run_directory(Path(tmp) / f"refused-{index}", **{"progress.json": progress})
@@ -1142,7 +1571,8 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 "progress.json": {
                     "status": "complete",
                     "review_guard_status": "partially-quarantined",
-                    "usage": {"calls": 3},
+                    "stages": _stages(TRACKS),
+                    "quarantined_findings_count": 1,
                 }
             },
         )
@@ -1153,16 +1583,14 @@ def check_a_run_on_another_transport_is_not_published() -> None:
     """A Codex run published as a Claude Code run, with the attestation to match.
 
     The transport on the record was a constant, so a run whose `protocol.json`
-    named `codex` and a Codex model still published with provider
-    `claude-code`, a `claude-code` transport block and this repository's claim
-    about a Claude subscription paying for it. Nothing in the bundle said
-    otherwise. The only thing that had ever stopped it was the engine's billing
-    confirmation, which 0.8.0 removes.
+    named `codex` still published with provider `claude-code` and this
+    repository's claim about a Claude subscription paying for it. Nothing in the
+    bundle said otherwise.
 
     In Silico publishes Claude Code runs only for now, so the run's own record
-    decides: a provider this path does not publish is refused before any probe
-    runs, and both the provider and the model on the record are read from the
-    run rather than from a constant, so the two cannot disagree.
+    decides: a provider this path does not publish is refused before any record
+    is built, and the provider on the record is read from the run rather than
+    from a constant, so the two cannot disagree.
     """
     assert local_review.PUBLISHABLE_PROVIDERS == ("claude-code",), (
         f"the publishable transports are a deliberate list: {local_review.PUBLISHABLE_PROVIDERS}"
@@ -1174,11 +1602,11 @@ def check_a_run_on_another_transport_is_not_published() -> None:
             **{
                 "protocol.json": {
                     "provider": "codex",
-                    "model": "gpt-5.6-terra",
-                    "effort": "high",
-                    "mode": "ensemble",
-                    "reviewers": 2,
-                    "version": "3",
+                    "arm": "full-two-track",
+                    "reviewers": 3,
+                    "paper_id": "paper-abc",
+                    "version": WORKFLOW_VERSION,
+                    "agents": _protocol_agents(TRACKS),
                 }
             },
         )
@@ -1192,24 +1620,18 @@ def check_a_run_on_another_transport_is_not_published() -> None:
         else:
             raise AssertionError("a run on another transport passed the publish guard")
 
-        # The probe refuses it too, so no second provider's CLI is ever asked
-        # for a login on this path, not even for a rehearsal.
+        # The transport record refuses it too, before it looks at anything else,
+        # so no other provider's run is ever written up under this attestation.
         try:
-            local_review.transport_record(provider="codex", probe=False)
+            local_review.transport_record(provider="codex", runtime={}, startup=_startup())
         except local_review.CommandError as error:
             assert "codex" in str(error), f"the refusal has to name the transport: {error}"
         else:
             raise AssertionError("a transport record was written for another provider")
 
         # And the command refuses, with a non-zero exit and nothing on disk.
-        transport_record = local_review.transport_record
-        local_review.transport_record = lambda **_: _probed_transport()
-        engine_record = local_review.engine_record
-        local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
-        reviews = local_review.REVIEWS
-        try:
-            local_review.REVIEWS = Path(tmp) / "reviews"
-            destination = local_review.REVIEWS / "2026" / "fixture-codex-run" / "v1" / "r1"
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-codex-run" / "v1" / "r1"
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr):
                 code = _publish(
@@ -1222,131 +1644,506 @@ def check_a_run_on_another_transport_is_not_published() -> None:
             assert code != 0, f"a Codex run was published, exit {code}"
             assert "codex" in message, f"the refusal has to name the transport: {message!r}"
             assert not destination.exists(), f"a bundle was written to {destination}"
-        finally:
-            local_review.REVIEWS = reviews
-            local_review.transport_record = transport_record
-            local_review.engine_record = engine_record
 
-        # The published record takes both from the run. A transport block that
-        # disagrees with the run is refused rather than written, so the two
+        # The published record takes the provider from the run. A transport block
+        # that disagrees with the run is refused rather than written, so the two
         # cannot be made to say different things by stubbing one of them.
-        good = _run_directory(Path(tmp) / "good")
-        engine_record = local_review.engine_record
-        local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
-        try:
-            arguments = dict(
-                preprint=PAPER,
-                prepared={
-                    "input": {
-                        "kind": "doi",
-                        "identifier": PAPER.doi,
-                        "sha256": "b" * 64,
-                        "bytes": 1,
-                        "local_file": False,
-                    },
-                    "plan_kind": "first review",
-                },
-                package=PACKAGE,
-                run=local_review.read_run(good),
-                fingerprint={
-                    "algorithm": "sha256",
-                    "file_count": 2,
-                    "sha256": "a" * 64,
-                    "source": "run_manifest",
-                },
-                decision="major",
-                editor="fixture-editor",
-                human_reviewed=True,
-                route="v1/r1",
-                draft=1,
-                attempt=1,
-                submitter="",
-                submitter_is_author="",
-                baseline_eligible=False,
-                ingest={},
-                observed=["claude-sonnet-5-5"],
-                requested_model="claude-sonnet-5-5",
-                review_id="docs/reviews/2026/fixture/v1/r1",
-                publishing=True,
-            )
+        with _stub_engine():
             written = local_review.build_provenance(
-                **arguments, transport=_probed_transport()
+                **_build_arguments(editor="fixture-editor", human_reviewed=True)
             )
             assert written["generator"]["transport"]["provider"] == "claude-code"
             assert written["generator"]["run"]["provider"] == "claude-code"
-            assert written["generator"]["run"]["model"] == "claude-sonnet-5-5"
+            assert written["provider"] == "claude-code"
 
-            mismatched = dict(_probed_transport(), provider="codex")
+            mismatched = dict(_run_transport(), provider="codex")
             try:
-                local_review.build_provenance(**arguments, transport=mismatched)
+                local_review.build_provenance(
+                    **_build_arguments(
+                        editor="fixture-editor", human_reviewed=True, transport=mismatched
+                    )
+                )
             except local_review.CommandError as error:
                 assert "codex" in str(error), f"the refusal has to name both sides: {error}"
             else:
                 raise AssertionError("a record was written whose transport disagreed with the run")
-        finally:
-            local_review.engine_record = engine_record
+
+            # A run that recorded no provider at all cannot be described either.
+            try:
+                local_review.build_provenance(
+                    **_build_arguments(
+                        editor="fixture-editor",
+                        human_reviewed=True,
+                        run=_run_record(provider=""),
+                    )
+                )
+            except local_review.CommandError:
+                pass
+            else:
+                raise AssertionError("a record was written for a run with no transport")
 
 
-def check_a_dated_model_id_is_not_a_substitution() -> None:
-    """The drift banner fired on a model the engine had already accepted.
+def check_the_transport_claim_rests_on_the_runs_own_probe() -> None:
+    """Nothing is probed at publish time, so the claim has to be narrower.
 
-    `model_runtime.same_model` treats a dated release and a bracketed variant
-    of the requested id as the same request, because those are the forms the
-    transport reports back. Comparing the strings exactly instead called every
-    dated id a substitution.
+    0.8 shelled out to the Claude CLI while writing the bundle and published
+    what it said about the account. The engine reads no authentication status in
+    0.9, and this path will not guess one, so the record claims only what the
+    run itself recorded: a Claude Code session started, loaded the plugin and
+    connected its MCP server, which the engine writes to `startup.json` before
+    it spends anything, on a Claude Code version `runtime.json` names.
+
+    That makes publishing a pure read of the run folder. The PATH is emptied
+    below to prove it, because a function that shells out to `claude` cannot be
+    run by an editor on a machine where the CLI is not installed, and the whole
+    point of reading the run is that it was already proved once.
     """
-    requested = "claude-sonnet-5-5"
-    # The record is what the banner reads, so check it end to end first.
-    engine_record = local_review.engine_record
-    local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
+    assert local_review.VERIFIED_BY == _schema_verified_by(), (
+        f"the schema accepts {_schema_verified_by()!r} and this path writes "
+        f"{local_review.VERIFIED_BY!r}"
+    )
+
+    restore = os.environ.get("PATH", "")
+    os.environ["PATH"] = ""
     try:
-        arguments = dict(
-            preprint=PAPER,
-            prepared={
-                "input": {"kind": "doi", "identifier": PAPER.doi, "sha256": "b" * 64, "bytes": 1, "local_file": False},
-                "plan_kind": "first review",
-            },
-            package=PACKAGE,
-            run={"workflow": "ensemble", "reviewers": 2, "errors": [], "provider": "claude-code"},
-            fingerprint={"algorithm": "sha256", "file_count": 2, "sha256": "a" * 64, "source": "run_manifest"},
-            decision="major",
-            editor="fixture-editor",
-            human_reviewed=True,
-            route="v1/r1",
-            draft=1,
-            attempt=1,
-            submitter="",
-            submitter_is_author="",
-            baseline_eligible=False,
-            ingest={},
-            requested_model=requested,
-            transport={"provider": "claude-code", "paid_api_key_used": False},
-            review_id="docs/reviews/2026/fixture/v1/r1",
-            publishing=True,
-        )
-        dated = local_review.build_provenance(observed=[f"{requested}-20260929"], **arguments)
-        assert "substituted" not in dated["generator"]["model_ids"], (
-            "a dated release of the requested model was published as a substitution: "
-            f"{dated['generator']['model_ids']}"
-        )
-        swapped = local_review.build_provenance(observed=["claude-haiku-5-5"], **arguments)
-        assert swapped["generator"]["model_ids"]["substituted"] is True, (
-            f"a genuinely different model was not flagged: {swapped['generator']['model_ids']}"
+        record = local_review.transport_record(
+            provider="claude-code", runtime=_runtime(TRACKS), startup=_startup()
         )
     finally:
-        local_review.engine_record = engine_record
+        os.environ["PATH"] = restore
 
-    for same in (requested, f"{requested}-20260929", f"{requested}[1m]"):
-        assert local_review.model_matches(same, requested), f"{same} is the requested model"
-    for other in ("claude-haiku-5-5", "claude-opus-5-5", "claude-sonnet-5", ""):
-        assert not local_review.model_matches(other, requested), f"{other} is a different model"
-
-    assert local_review.substituted_models([f"{requested}-20260929"], requested) == [], (
-        "a dated release of the requested model is not a substitution"
+    assert record["provider"] == "claude-code", f"the transport was lost: {record}"
+    assert record["version"] == CLAUDE_CODE_VERSION, (
+        f"the harness version comes from runtime.json: {record}"
     )
-    assert local_review.substituted_models(
-        [f"{requested}-20260929", "claude-haiku-5-5"], requested
-    ) == ["claude-haiku-5-5"], "a genuinely different model has to stay visible"
+    assert record["verified_at"] == STARTED_AT, f"the probe's own stamp was lost: {record}"
+    assert record["verified_by"] == local_review.VERIFIED_BY, f"the evidence changed: {record}"
+    assert record["login_verified"] is True, f"a session that started is a session: {record}"
+    assert record["paid_api_key_used"] is False, f"this path cannot reach a paid key: {record}"
+    assert record["billing_policy"] == local_review.BILLING_POLICY, (
+        f"the record must name the policy it ran under: {record}"
+    )
+
+    # A run that recorded neither version says so with a null rather than a
+    # guess, because the schema would rather have nothing than an invention.
+    quiet = local_review.transport_record(
+        provider="claude-code",
+        runtime={},
+        startup={"probe": {"mcp_servers": [{"name": "pra:peerreview", "status": "connected"}]}},
+    )
+    assert quiet["version"] is None, f"a version was invented: {quiet}"
+    assert quiet["verified_at"] is None, f"a timestamp was invented: {quiet}"
+
+    refusals = {
+        "another transport": {"provider": "codex", "startup": _startup()},
+        "no start-up probe at all": {"provider": "claude-code", "startup": {}},
+        "a probe that reported a problem": {
+            "provider": "claude-code",
+            "startup": _startup(problems=["the pra plugin failed to load"]),
+        },
+        "no MCP server": {
+            "provider": "claude-code",
+            "startup": _startup(probe={"plugins": ["pra"], "mcp_servers": []}),
+        },
+        "an MCP server that never connected": {
+            "provider": "claude-code",
+            "startup": _startup(
+                probe={
+                    "mcp_servers": [
+                        {"name": "plugin:pra:peerreview", "status": "failed", "source": "plugin"}
+                    ]
+                }
+            ),
+        },
+        "somebody else's MCP server": {
+            "provider": "claude-code",
+            "startup": _startup(
+                probe={"mcp_servers": [{"name": "plugin:other:search", "status": "connected"}]}
+            ),
+        },
+    }
+    for why, keywords in refusals.items():
+        try:
+            local_review.transport_record(runtime=_runtime(TRACKS), **keywords)
+        except local_review.CommandError:
+            continue
+        raise AssertionError(f"a transport record was written for a run with {why}")
+
+    # A run whose start-up probe is missing is refused by the command too, not
+    # only by the function, and nothing is written.
+    with tempfile.TemporaryDirectory() as tmp:
+        unproved = _run_directory(Path(tmp) / "unproved", **{"startup.json": None})
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-unproved" / "v1" / "r1"
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    unproved,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                )
+            assert code != 0, f"a run with no start-up probe was published, exit {code}"
+            assert "startup.json" in stderr.getvalue(), (
+                f"the refusal has to name the evidence it wanted: {stderr.getvalue()!r}"
+            )
+            assert not destination.exists(), f"a bundle was written to {destination}"
+
+
+def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
+    """runtime.json opens with five rows that are a label and nothing else.
+
+    Claude Code emits one per agent it has reserved and not yet named, so a real
+    0.9 run carries `agent-0` through `agent-4` beside the agents that ran.
+    Counting them put five empty reviewers on the published panel and in the
+    model table, which is a claim about a panel that did not sit.
+    """
+    protocol = {"agents": _protocol_agents(TRACKS)}
+    runtime = _runtime(TRACKS)
+    rows = local_review.agent_rows(protocol, PACKAGE, runtime)
+
+    slots = [row["slot"] for row in rows]
+    assert not [slot for slot in slots if slot.startswith("agent-")], (
+        f"a placeholder row was published as an agent that ran: {slots}"
+    )
+    assert len(rows) == 12, f"expected three core, six specialists, an editor, a recorder and the ingest row: {slots}"
+    assert all("slot" in row for row in rows), f"a row with no slot: {rows}"
+
+    by_slot = {row["slot"]: row for row in rows}
+    assert by_slot["core-1"]["agent_type"] == "pra:core-reviewer", (
+        f"the harness's own label for a core reviewer was lost: {by_slot['core-1']}"
+    )
+    assert by_slot["spec-stats"]["track"] == "stats", f"the track was lost: {by_slot['spec-stats']}"
+    assert by_slot["core-3"]["none_found"] is True, (
+        f"a reviewer that reported nothing on its track must say so: {by_slot['core-3']}"
+    )
+    assert by_slot["core-2"]["attempt"] == 2, f"a retried slot lost its attempt: {by_slot['core-2']}"
+    assert by_slot["editor"]["model"] == OPUS, f"the editor's model was lost: {by_slot['editor']}"
+    assert "model" not in by_slot["recorder"], (
+        f"protocol.json pins no model for the recorder: {by_slot['recorder']}"
+    )
+
+    models = local_review.model_map(rows)
+    assert models == _expected_models(), f"the model map is wrong: {models}"
+    assert local_review.model_phrase(models) == EXPECTED_MODEL_PHRASE, (
+        f"the model counts are wrong: {local_review.model_phrase(models)}"
+    )
+    assert local_review.model_phrase({}) == "models the run did not record", (
+        "a run with no model map must say so rather than name one"
+    )
+
+    # A runtime with nothing but placeholders describes no agents at all, and a
+    # record with no model for any agent cannot say what wrote the review.
+    placeholders = local_review.agent_rows(
+        protocol, PACKAGE, {"agents": [{"label": f"agent-{index}"} for index in range(5)]}
+    )
+    assert len(placeholders) == 11, f"the protocol's own slots are still agents: {placeholders}"
+    assert HAIKU not in local_review.model_map(placeholders).values(), (
+        "the recorder's model is only known from the harness"
+    )
+    with _stub_engine():
+        try:
+            local_review.build_provenance(
+                **_build_arguments(editor="fixture-editor", human_reviewed=True, agents=[])
+            )
+        except local_review.CommandError:
+            pass
+        else:
+            raise AssertionError("a record was written that named no model for any agent")
+
+
+def check_a_stage_that_never_reported_is_not_a_whole_review() -> None:
+    """The stage ledger is the only thing that says the panel actually sat.
+
+    A run reaches `complete` when the editor accepts the pooled findings, and it
+    can do that with a specialist that never answered. A bundle saying three
+    core reviewers and six specialists over such a run describes readers that
+    did not report, so the ledger travels with the record and a missing stage is
+    refused.
+    """
+    ledger = _stage_record()
+    assert ledger["required"] == [*CORE_SLOTS, *(f"spec-{t}" for t in TRACKS)], (
+        f"the required stages are the arm's own: {ledger}"
+    )
+    assert ledger["missing"] == [], f"a whole review has no missing stage: {ledger}"
+    assert ledger["none_found"] == ["spec-field"], (
+        f"a reader that found nothing is not a reader that did not report: {ledger}"
+    )
+    assert ledger["editor_accepted"] is True, f"the editor accepted the pool: {ledger}"
+    assert ledger["retried"] == ["core-2"], f"a retried slot has to be visible: {ledger}"
+
+    assert "completeness" in _schema_run_requires(), (
+        "the schema requires the stage ledger, so a run without one cannot publish"
+    )
+    assert local_review.completeness({}, {}) == {}, (
+        "a run with no ledger records none rather than an empty one that reads as whole"
+    )
+
+    with tempfile.TemporaryDirectory() as tmp:
+        no_ledger = local_review.read_run(
+            _run_directory(
+                Path(tmp) / "no-ledger",
+                **{
+                    "progress.json": {"status": "complete", "review_guard_status": "clean"},
+                    "editor-package.json": dict(PACKAGE),
+                },
+            )
+        )
+        assert "completeness" not in no_ledger, (
+            f"a run that kept no ledger must not be described as whole: {no_ledger}"
+        )
+
+        short = _run_directory(
+            Path(tmp) / "short",
+            **{
+                "progress.json": {
+                    "status": "complete",
+                    "review_guard_status": "clean",
+                    "stages": _stages(
+                        TRACKS,
+                        reported=[*CORE_SLOTS, "spec-stats"],
+                        missing=["spec-citations", "spec-field"],
+                    ),
+                }
+            },
+        )
+        record = local_review.read_run(short)
+        assert record["completeness"]["missing"] == ["spec-citations", "spec-field"], (
+            f"the missing stages were not read: {record['completeness']}"
+        )
+        assert any("never reported" in problem for problem in record["errors"]), (
+            f"a stage that never reported is an error: {record['errors']}"
+        )
+        try:
+            local_review.require_complete_run(short, record)
+        except local_review.CommandError as error:
+            assert "spec-citations" in str(error), f"the refusal has to name the stage: {error}"
+            assert "full-two-track" in str(error), f"the refusal has to name the arm: {error}"
+        else:
+            raise AssertionError("a review was published over a specialist that never reported")
+
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-short-run" / "v1" / "r1"
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    short,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                )
+            assert code != 0, f"a run with a missing stage was published, exit {code}"
+            assert not destination.exists(), f"a bundle was written to {destination}"
+
+        # An editor that never accepted the pool is recorded as a problem rather
+        # than smoothed over, because the findings in the bundle were pooled by
+        # something that did not finish.
+        unaccepted = local_review.read_run(
+            _run_directory(
+                Path(tmp) / "unaccepted",
+                **{
+                    "progress.json": {
+                        "status": "complete",
+                        "review_guard_status": "clean",
+                        "stages": _stages(TRACKS, editor_accepted=False),
+                    }
+                },
+            )
+        )
+        assert unaccepted["completeness"]["editor_accepted"] is False, (
+            f"the acceptance was not read: {unaccepted['completeness']}"
+        )
+        assert any("did not accept" in problem for problem in unaccepted["errors"]), (
+            f"an editor that did not accept the pool is an error: {unaccepted['errors']}"
+        )
+
+
+def check_every_specialist_report_reaches_the_bundle() -> None:
+    """Six readers each wrote a report, and the bundle publishes all six.
+
+    The editor agent keeps what it keeps, and `audit_<track>.md` is the only
+    place a reader can see what the statistics reader looked for rather than
+    only what survived the pooling. `src/lib/corpus.js` already lists any
+    `audit_<track>.md` in a bundle as a report of its own, so copying them in is
+    all that is needed.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run = _run_directory(Path(tmp) / "run")
+        reports = local_review.track_reports(run)
+        assert sorted(reports) == sorted(f"audit_{track}.md" for track in TRACKS), (
+            f"the specialist reports were not found: {sorted(reports)}"
+        )
+
+        # An empty file is not a report. The engine writes one for a reader that
+        # was convened and never answered, and publishing it would show a reader
+        # with nothing to say as a reader that said nothing.
+        (run / "audit_field.md").write_text("", encoding="utf-8")
+        assert "audit_field.md" not in local_review.track_reports(run), (
+            "an empty specialist report was published as a report"
+        )
+        (run / "audit_field.md").write_text("# field\n\nNothing found.\n", encoding="utf-8")
+
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-reports" / "v1" / "r1"
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    run,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                )
+            assert code == 0, f"this bundle should publish, got exit {code}: {out.getvalue()}"
+            written = sorted(path.name for path in destination.iterdir())
+            for track in TRACKS:
+                assert f"audit_{track}.md" in written, (
+                    f"the {track} report did not reach the bundle: {written}"
+                )
+            manifest = json.loads((destination / "manifest.json").read_text())["files"]
+            assert all(f"audit_{track}.md" in manifest for track in TRACKS), (
+                f"a copied report was left out of the manifest: {sorted(manifest)}"
+            )
+            assert "reports  6 specialist track report(s) copied in" in out.getvalue(), (
+                f"the command has to say what it copied: {out.getvalue()!r}"
+            )
+
+        # A run that wrote only one of them publishes, and says which readers
+        # left no report rather than letting the bundle imply six.
+        thin = _run_directory(Path(tmp) / "thin", report_tracks=("stats",))
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews-thin") as reviews:
+            destination = reviews / "2026" / "fixture-thin-reports" / "v1" / "r1"
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared-thin", destination),
+                    thin,
+                    _workspace(Path(tmp) / "workspace-thin"),
+                    "--publish",
+                )
+            assert code == 0, f"a run with one report should still publish, got exit {code}"
+            printed = out.getvalue()
+            assert "warning  no specialist report written for:" in printed, (
+                f"the absent readers were not named: {printed!r}"
+            )
+            for track in TRACKS:
+                if track != "stats":
+                    assert track in printed.split("warning", 1)[1], (
+                        f"{track} wrote no report and was not named: {printed!r}"
+                    )
+
+
+def check_the_run_folder_is_found_whichever_path_is_typed() -> None:
+    """`peerreview review <pdf> <out>` writes two folders, and both are typed.
+
+    The review lands in `<out>/review` and the imported manuscript in
+    `<out>/manuscript`. An editor types one or the other, and pointing --run at
+    the out directory used to read an empty folder and report a run that
+    recorded nothing.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        out = _run_tree(Path(tmp) / "out")
+        review_dir = out / local_review.REVIEW_DIRECTORY
+
+        assert local_review.resolve_review_dir(out) == review_dir, (
+            "the out directory has to resolve to the review folder inside it"
+        )
+        assert local_review.resolve_review_dir(review_dir) == review_dir, (
+            "the review folder itself has to resolve to itself"
+        )
+        assert local_review.read_run(out) == local_review.read_run(review_dir), (
+            "the two paths describe one run"
+        )
+        assert local_review.editor_package(out) == local_review.editor_package(review_dir)
+        assert sorted(local_review.track_reports(out)) == sorted(
+            local_review.track_reports(review_dir)
+        ), "the specialist reports have to be found from either path"
+
+        # The workspace defaults to the one the run actually used, which is the
+        # manuscript folder beside it, and the flag still wins when it is given.
+        assert local_review.resolve_workspace(review_dir, "") == (
+            out / local_review.MANUSCRIPT_DIRECTORY
+        ), "the manuscript folder beside the run is the default workspace"
+        elsewhere = _workspace(Path(tmp) / "elsewhere")
+        assert local_review.resolve_workspace(review_dir, str(elsewhere)) == elsewhere, (
+            "a named workspace has to be used"
+        )
+
+        lonely = _run_directory(Path(tmp) / "lonely")
+        try:
+            local_review.resolve_workspace(lonely, "")
+        except local_review.CommandError as error:
+            assert "paper.json" in str(error), f"the refusal has to say what it wanted: {error}"
+        else:
+            raise AssertionError("a run with no manuscript workspace beside it was accepted")
+
+        # And the command publishes from the out directory with no --workspace,
+        # which is the shortest thing an editor can type.
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-whole-out" / "v1" / "r1"
+            prepared = _prepared(Path(tmp) / "prepared", destination)
+            with contextlib.redirect_stdout(io.StringIO()):
+                code = local_review.main(
+                    [
+                        "publish",
+                        "--prepared", str(prepared),
+                        "--run", str(out),
+                        "--decision", "major",
+                        "--editor", "fixture-editor",
+                        "--human-reviewed", "yes",
+                        "--publish",
+                    ]
+                )
+            assert code == 0, f"publishing from the out directory failed with exit {code}"
+            assert (destination / "provenance.json").is_file(), "no record was written"
+
+
+def check_the_advisory_verdict_is_labelled_advisory() -> None:
+    """The editor agent's judgement is published, and it is not the decision.
+
+    It is the most useful thing in the run for a reader deciding whether to read
+    the paper, so it is published rather than dropped. It is one model's reading,
+    so every place it appears says so and says the decision came from a person.
+    """
+    lines = local_review.verdict_section(VERDICT)
+    assert lines[0] == "## Advisory judgement from the engine", f"the heading changed: {lines[:1]}"
+    body = "\n".join(lines)
+    assert "not the decision" in body, f"the verdict has to be labelled: {body}"
+    assert "recommends no" in body, f"the verdict has to recommend nothing: {body}"
+    assert "one model's judgement" in body, f"the verdict has to name what it is: {body}"
+    for value in VERDICT.values():
+        assert value in body, f"a field of the verdict was dropped: {body}"
+    assert "—" not in body and ";" not in body, "the section is authored prose"
+
+    # A run that recorded no verdict publishes no section, rather than an empty
+    # heading a reader would read as a verdict withheld.
+    assert local_review.verdict_section({}) == [], "an absent verdict renders nothing"
+    assert local_review.verdict_section({"significance": "   "}) == [], (
+        "a blank verdict renders nothing"
+    )
+
+    prov = provenance_fixture()
+    findings = local_review.sorted_findings(PACKAGE)
+    summary = local_review.render_summary(PAPER, PACKAGE, prov, findings)
+    assert "## Advisory judgement from the engine" in summary, (
+        "the summary has to carry the engine's judgement"
+    )
+    assert summary.index("human editor") < summary.index("Advisory judgement"), (
+        "the person who decided comes before the engine's reading"
+    )
+
+    with _stub_engine():
+        record = local_review.build_provenance(
+            **_build_arguments(editor="fixture-editor", human_reviewed=True)
+        )
+    assert record["generator"]["advisory_verdict"] == VERDICT, (
+        f"the verdict was not published as recorded: {record['generator']['advisory_verdict']}"
+    )
+    assert record["generator"]["decision_source"] == "human_editor", (
+        "the decision source is the person, whatever the engine judged"
+    )
+    assert record["decision"] == "major", "the published decision is the editor's"
+    bare = local_review.build_provenance.__doc__ or ""
+    assert "advisory" in bare, "the record's own documentation has to say what it publishes"
 
 
 def check_a_published_record_names_no_local_path() -> None:
@@ -1374,6 +2171,17 @@ def check_a_published_record_names_no_local_path() -> None:
         "runs[0].directory"
     ], "a leak inside a list has to be named"
 
+    # The whole record, built from a run whose manifest carries the absolute
+    # manuscript path and plugin root the plugin server writes into it.
+    with _stub_engine():
+        record = local_review.build_provenance(
+            **_build_arguments(editor="fixture-editor", human_reviewed=True)
+        )
+    assert local_review.absolute_path_fields(record) == [], (
+        f"the record names the machine that wrote it: "
+        f"{local_review.absolute_path_fields(record)}"
+    )
+
     inside = local_review.REVIEWS / "2026" / "fixture-paper" / "v1" / "r1"
     assert local_review.bundle_identifier(inside) == "docs/reviews/2026/fixture-paper/v1/r1", (
         "a bundle in this repository is named by its path here"
@@ -1381,61 +2189,6 @@ def check_a_published_record_names_no_local_path() -> None:
     outside = local_review.bundle_identifier(Path("/tmp/elsewhere/fixture/v1/r1"))
     assert not outside.startswith("/"), f"a bundle id must not be an absolute path: {outside}"
     assert outside == "fixture/v1/r1", f"a bundle id should still identify the bundle: {outside}"
-
-
-def check_publishing_needs_a_verified_login() -> None:
-    """`--publish --offline` wrote login_verified false and validated.
-
-    The record then claimed a review billed to a subscription while saying in
-    the same breath that nobody had checked which account it was. Engine 0.8.0
-    writes no billing confirmation at all, so the publish-time probe is the only
-    source the record has, and skipping it leaves nothing to stand on.
-    """
-    with tempfile.TemporaryDirectory() as tmp:
-        run = _run_directory(Path(tmp) / "run")
-        # A real destination, because the refusal has to come before anything is
-        # written rather than after the bundle is already on disk.
-        destination = local_review.REVIEWS / "2026" / "smoke-login-fixture" / "v1" / "r1"
-        prepared = _prepared(Path(tmp) / "prepared", destination)
-        workspace = _workspace(Path(tmp) / "workspace")
-        code = _publish(prepared, run, workspace, "--publish", "--offline")
-        assert code == 2, f"--publish --offline should be refused, got exit {code}"
-        assert not destination.exists(), (
-            f"the refusal came after the bundle was written to {destination}"
-        )
-
-
-def check_the_synthesis_record_is_read_where_the_engine_writes_it() -> None:
-    """The synthesis policy, its tool budget and its validation report.
-
-    All three were looked for at the top of the run directory. The engine
-    writes them inside the stage folder the synthesis ran in, so all three were
-    always missing and every validation problem the synthesis recorded was
-    dropped from the published record.
-    """
-    with tempfile.TemporaryDirectory() as tmp:
-        run = _run_directory(Path(tmp) / "run")
-        assert not (run / "synthesis-validation.json").exists(), (
-            "the engine does not write the validation report at the top level"
-        )
-        record = local_review.read_run(run)
-        assert record["synthesis_policy"] == "debate", f"policy not read from the stage: {record}"
-        assert record["synthesis_tool_limit"] == 12, f"budget not read from the stage: {record}"
-
-        # A budget of zero is a budget, not a missing value.
-        zero = local_review.read_run(
-            _run_directory(Path(tmp) / "zero", stage={"synthesis_policy": "debate", "synthesis_tool_limit": 0})
-        )
-        assert zero["synthesis_tool_limit"] == 0, f"a zero budget was dropped: {zero}"
-
-        (run / "debate" / "synthesis-validation.json").write_text(
-            json.dumps({"problems": ["a finding quoted text not in the manuscript"]}),
-            encoding="utf-8",
-        )
-        errors = local_review.read_run(run)["errors"]
-        assert any("not in the manuscript" in e for e in errors), (
-            f"a validation problem was dropped from the record: {errors}"
-        )
 
 
 def check_a_rehearsal_claims_no_reading() -> None:
@@ -1448,6 +2201,7 @@ def check_a_rehearsal_claims_no_reading() -> None:
     findings = local_review.sorted_findings(PACKAGE)
     unread = provenance_fixture()
     unread["generator"]["attestation"]["human_reviewed_before_merge"] = False
+    unread["generator"]["attestation"]["rehearsal"] = True
     unread["generator"]["attestation"]["statement"] = local_review.UNREAD_STATEMENT
 
     summary = local_review.render_summary(PAPER, PACKAGE, unread, findings)
@@ -1459,6 +2213,9 @@ def check_a_rehearsal_claims_no_reading() -> None:
         assert "must not be published" in text, f"the {name} of a rehearsal must say so: {text}"
         assert "—" not in text and ";" not in text, f"the {name} is authored prose"
     assert "fixture-editor" in summary, "the rehearsal still names who typed the decision"
+    assert "recommends no verdict" in summary, (
+        "a rehearsal still has to say the engine recommends nothing"
+    )
 
     # And the attested wording is still there when somebody did read it.
     attested = local_review.render_summary(PAPER, PACKAGE, provenance_fixture(), findings)
@@ -1577,51 +2334,15 @@ def check_a_missing_engine_fails_the_skill_check_in_ci() -> None:
     )
 
 
-def check_the_locked_engine_release_is_the_one_declared() -> None:
-    """The lock has to name the engine release requirements.in asks for.
-
-    It used to assert a version floor, on the grounds that
-    `peerreviewagents==0.6.0` ships no `peerreviewagents.engine` package and
-    every engine check in CI was installing a wheel it could not use. A floor
-    passes a lock one release behind the declared pin, which is the same defect
-    at a different version: the checks run against an engine whose commands,
-    flags and modules are not the ones this repo is written for.
-
-    This reads both files rather than the installed tree, so it fails on a
-    laptop with a newer engine checked out and on CI alike.
-    """
-    root = Path(local_review.__file__).resolve().parents[1]
-
-    def pinned(name: str) -> str:
-        pins = [
-            line.split("==", 1)[1].split(" ", 1)[0].strip()
-            for line in (root / name).read_text(encoding="utf-8").splitlines()
-            if line.startswith("peerreviewagents==")
-        ]
-        assert len(pins) == 1, f"expected one peerreviewagents pin in {name}, found {pins}"
-        return pins[0]
-
-    declared, locked = pinned("requirements.in"), pinned("requirements.txt")
-    assert declared == locked, (
-        f"requirements.in asks for peerreviewagents {declared} and requirements.txt "
-        f"locks {locked}, so CI installs an engine this repository is not written for. "
-        "Recompile the lock."
-    )
-    version = tuple(int(part) for part in locked.split(".")[:2])
-    assert version >= (0, 8), (
-        f"the lock pins peerreviewagents {locked}. The commands, flags and modules "
-        "this repository calls are the 0.8 ones"
-    )
-
-
 def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
     """What gets scrubbed is a list of fields, and what gets scanned is a string.
 
-    editor-package.json is copied out of the run as it stands, and an ensemble
-    run writes `reviewer_provenance[].source_review_path` as the absolute path
-    of each reviewer's package on the machine that ran it, `memo_path` beside
-    each evidence memo, and `synthesis_provenance.shared_images` keyed by the
-    absolute path of every figure. Those are the leaks.
+    editor-package.json is copied out of the run as it stands, and a run folder
+    records absolute paths in several places: the plugin server writes the
+    manuscript's path as `pdf` and the loaded plugin's as `plugin_root`, a
+    reviewer's package is recorded at `source_review_path`, each evidence memo at
+    `memo_path`, and a figure map is keyed by the absolute path of every figure.
+    Those are the leaks.
 
     Deciding by value rather than by field made the cure worse: a finding whose
     comment began with a slash was deleted from the published package, and one
@@ -1632,11 +2353,13 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
     """
     home = str(Path.home().resolve())
     leaky = {
-        "workflow_version": "ensemble-v3",
+        "workflow_version": WORKFLOW_VERSION,
         "summary": "One reading.",
+        "pdf": f"{home}/runs/local/paper.pdf",
+        "plugin_root": f"{home}/Repos/PeerReviewAgents/plugins/pra",
         "reviewer_provenance": [
-            {"reviewer": 1, "source_review_path": f"{home}/runs/out/reviewer-1/editor-package.json"},
-            {"reviewer": 2, "source_review_path": f"{home}/runs/out/reviewer-2/editor-package.json"},
+            {"slot": "core-1", "source_review_path": f"{home}/runs/out/core-1/editor-package.json"},
+            {"slot": "core-2", "source_review_path": f"{home}/runs/out/core-2/editor-package.json"},
         ],
         "focused_evidence_provenance": [{"memo_sha256": "a" * 64, "memo_path": f"{home}/memo.md"}],
         "synthesis_provenance": {"shared_images": {f"{home}/runs/fig1.png": "b" * 64}},
@@ -1664,10 +2387,12 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
     # where the path is the dictionary key.
     flat = json.dumps(scrubbed)
     assert home not in flat, f"a local path survived the scrub: {flat}"
+    assert "pdf" not in scrubbed, f"the manuscript's own path was published: {scrubbed}"
+    assert "plugin_root" not in scrubbed, f"the loaded plugin's path was published: {scrubbed}"
     assert len(scrubbed["reviewer_provenance"]) == 2, (
         f"the reviewers themselves must survive: {scrubbed['reviewer_provenance']}"
     )
-    assert scrubbed["reviewer_provenance"][0]["reviewer"] == 1, "a sibling field was dropped"
+    assert scrubbed["reviewer_provenance"][0]["slot"] == "core-1", "a sibling field was dropped"
     assert scrubbed["focused_evidence_provenance"][0]["memo_sha256"] == "a" * 64, (
         "the hash that tied the memo to its bytes was dropped with the path"
     )
@@ -1700,27 +2425,34 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
         )
 
         # The forms the old scan could not see: a path inside a sentence in the
-        # Markdown, a path used as a key, and a path in a nested receipt file.
+        # Markdown, a path used as a key, a path in a specialist report copied
+        # out of the run, and a path in a nested receipt file.
         (dest / "decision_letter.md").write_text(
-            f"The reviewer read {home}/runs/out/reviewer-1.\n", encoding="utf-8"
+            f"The reviewer read {home}/runs/out/core-1.\n", encoding="utf-8"
         )
         (dest / "editor-package.json").write_text(
             json.dumps({"shared_images": {f"{home}/fig1.png": "b" * 64}}), encoding="utf-8"
         )
+        (dest / "audit_stats.md").write_text(
+            f"Checked the tables in {home}/runs/local.\n", encoding="utf-8"
+        )
         nested = dest / "attachments"
         nested.mkdir()
-        (nested / "usage.jsonl").write_text(
+        (nested / "runtime.json").write_text(
             json.dumps({"cwd": f"{home}/Repos"}) + "\n", encoding="utf-8"
         )
         found = local_review.bundle_local_path_leaks(dest)
-        assert len(found) == 3, f"every text file in the bundle has to be read: {found}"
+        assert len(found) == 4, f"every text file in the bundle has to be read: {found}"
         assert any(line.startswith("decision_letter.md") for line in found), (
             f"the rendered Markdown was not scanned: {found}"
         )
         assert any(line.startswith("editor-package.json") for line in found), (
             f"a path used as a key was not seen: {found}"
         )
-        assert any(line.startswith("attachments/usage.jsonl") for line in found), (
+        assert any(line.startswith("audit_stats.md") for line in found), (
+            f"a specialist report copied out of the run was not scanned: {found}"
+        )
+        assert any(line.startswith("attachments/runtime.json") for line in found), (
             f"a nested receipt was not scanned: {found}"
         )
 
@@ -1742,12 +2474,22 @@ def check_an_empty_protocol_file_is_not_a_record_of_the_run() -> None:
             "a JSON list": "[]",
             "a JSON null": "null",
             "truncated JSON": '{"provider": "claude-code"',
-            "a file with no workflow, model or provider": "{}",
-            "a file naming no model": '{"provider": "claude-code", "mode": "ensemble"}',
+            "a file with no arm, provider or workflow": "{}",
+            "a file naming no provider": '{"arm": "full-two-track"}',
         }
         for why, content in broken.items():
             run = _run_directory(Path(tmp) / why.replace(" ", "-"))
             (run / "protocol.json").write_text(content, encoding="utf-8")
+            # The workflow version and the arm are also written in the package
+            # and the manifest, so the fixture drops them from there too. What
+            # is being tested is that the run has to say what was asked of the
+            # engine, not that one field survives in a second file.
+            (run / "manifest.json").write_text(
+                json.dumps({"paper_id": "paper-abc", "code": dict(CODE)}), encoding="utf-8"
+            )
+            (run / "editor-package.json").write_text(
+                json.dumps({"summary": "A reading.", "findings": []}), encoding="utf-8"
+            )
             try:
                 local_review.require_complete_run(run, local_review.read_run(run))
             except local_review.CommandError:
@@ -1758,12 +2500,12 @@ def check_an_empty_protocol_file_is_not_a_record_of_the_run() -> None:
 def check_a_rehearsal_cannot_be_copied_into_place_as_a_review() -> None:
     """A rehearsal bundle moved by hand into docs/reviews passed every check.
 
-    `--human-reviewed yes --offline` without `--publish` wrote a bundle with a
-    true attestation, `login_verified: false` and whatever run status it had,
-    and once that folder sat in the published tree the schema, the local
-    provenance check, the manifests and the attempt ledger all passed it. So the
-    only thing keeping a rehearsal out of the record was which directory it had
-    been written to, and a directory can be copied.
+    `--human-reviewed yes` without `--publish` wrote a bundle with a true
+    attestation and whatever run status it had, and once that folder sat in the
+    published tree the schema, the local provenance check, the manifests and the
+    attempt ledger all passed it. So the only thing keeping a rehearsal out of
+    the record was which directory it had been written to, and a directory can
+    be copied.
     """
     with tempfile.TemporaryDirectory() as tmp:
         run = _run_directory(Path(tmp) / "run")
@@ -1773,7 +2515,7 @@ def check_a_rehearsal_cannot_be_copied_into_place_as_a_review() -> None:
 
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            code = _publish(prepared, run, workspace, "--offline")
+            code = _publish(prepared, run, workspace)
         message = stderr.getvalue()
         assert code == 2, f"an attestation on a rehearsal should be refused, got exit {code}"
         assert "--human-reviewed" in message and "--publish" in message, (
@@ -1784,46 +2526,19 @@ def check_a_rehearsal_cannot_be_copied_into_place_as_a_review() -> None:
     # And the record says so outright, because the schema refuses a true value
     # here. Said in the record rather than implied by the folder, the claim
     # survives the folder being moved.
-    engine_record = local_review.engine_record
-    local_review.engine_record = lambda: {"name": "engine", "version": "0.8.0"}
-    arguments = dict(
-        preprint=PAPER,
-        prepared={
-            "input": {"kind": "doi", "identifier": PAPER.doi, "sha256": "b" * 64, "bytes": 1, "local_file": False},
-            "plan_kind": "first review",
-        },
-        package=PACKAGE,
-        run={"workflow": "ensemble", "reviewers": 2, "errors": [], "provider": "claude-code"},
-        fingerprint={"algorithm": "sha256", "file_count": 2, "sha256": "a" * 64, "source": "run_manifest"},
-        decision="major",
-        editor="fixture-editor",
-        route="v1/r1",
-        draft=1,
-        attempt=1,
-        submitter="",
-        submitter_is_author="",
-        baseline_eligible=False,
-        ingest={},
-        observed=[local_review.DEFAULT_MODEL],
-        requested_model=local_review.DEFAULT_MODEL,
-        transport={"provider": "claude-code", "paid_api_key_used": False},
-        review_id="docs/reviews/2026/fixture/v1/r1",
-    )
-    try:
+    with _stub_engine():
         published = local_review.build_provenance(
-            human_reviewed=True, publishing=True, **arguments
+            **_build_arguments(editor="fixture-editor", human_reviewed=True, publishing=True)
         )["generator"]["attestation"]
         assert published["rehearsal"] is False, f"a published review is not a rehearsal: {published}"
 
         rehearsed = local_review.build_provenance(
-            human_reviewed=False, publishing=False, **arguments
+            **_build_arguments(editor="fixture-editor", human_reviewed=False, publishing=False)
         )["generator"]["attestation"]
         assert rehearsed["rehearsal"] is True, f"a rehearsal has to say so: {rehearsed}"
         assert rehearsed["human_reviewed_before_merge"] is False, (
             f"a rehearsal cannot carry a reading: {rehearsed}"
         )
-    finally:
-        local_review.engine_record = engine_record
 
 
 def check_a_written_bundle_carries_no_local_path() -> None:
@@ -1833,67 +2548,32 @@ def check_a_written_bundle_carries_no_local_path() -> None:
     wiring: the documents were rendered from the unscrubbed package, so a path
     dropped from editor-package.json was printed in decision_letter.md, where
     nothing was looking. This publishes for real, with the field names engine
-    0.8.0 writes, and reads every file of the finished bundle.
+    0.9 writes, and reads every file of the finished bundle, including the
+    specialist reports copied in from the run.
 
     It also checks what a refusal leaves behind. The guards used to run after
     six files were already in docs/reviews, so a refused publish left most of a
     bundle there, unmanifested and with nothing to say it had been rejected.
-
-    The login probe is stubbed, because publishing for real is the point here
-    and the probe is the one step that needs the engine and the signed-in CLI.
     """
     home = str(Path.home().resolve())
-    package = {
-        "workflow_version": "ensemble-v3",
-        "reviewer_count": 2,
-        "summary": "One careful reading of the manuscript.",
-        "findings": [
-            {
-                "severity": "major",
-                "title": "The denominator is wrong",
-                "comment": "/ 2 is the wrong denominator in equation 4.",
-                "block_id": "b2",
-            },
-            {
-                "severity": "minor",
-                "title": "A typo",
-                "comment": "Fix the spelling.",
-                "block_id": "b7",
-            },
+    package = dict(
+        PACKAGE,
+        stages=_stages(TRACKS),
+        reviewer_provenance=[
+            dict(entry, source_review_path=f"{home}/runs/out/{entry['slot']}/package.json")
+            for entry in PACKAGE["reviewer_provenance"]
         ],
-        "reviewer_provenance": [
-            {
-                "reviewer": 1,
-                "sha256": "a" * 64,
-                "source_review_path": f"{home}/runs/out/reviewer-1/editor-package.json",
-            },
-            {
-                "reviewer": 2,
-                "sha256": "b" * 64,
-                "source_review_path": f"{home}/runs/out/reviewer-2/editor-package.json",
-            },
-        ],
-        "candidate_origins": {
-            "issue-1": {"reviewer": 1, "source_review_path": f"{home}/runs/out/reviewer-1/x.json"}
+        candidate_origins={
+            "f-001": {"slot": "spec-stats", "source_review_path": f"{home}/runs/out/spec-stats.json"}
         },
-        "focused_evidence_provenance": [{"memo_sha256": "c" * 64, "memo_path": f"{home}/memo.md"}],
-        "synthesis_provenance": {"shared_images": {f"{home}/runs/fig1.png": "d" * 64}},
-    }
+        focused_evidence_provenance=[{"memo_sha256": "c" * 64, "memo_path": f"{home}/memo.md"}],
+        synthesis_provenance={"shared_images": {f"{home}/runs/fig1.png": "d" * 64}},
+    )
 
-    engine_record = local_review.engine_record
-    local_review.engine_record = lambda: {
-        "name": local_review.ENGINE_PACKAGE,
-        "version": "0.8.0",
-        "api_version": "3",
-    }
-    transport_record = local_review.transport_record
-    local_review.transport_record = lambda **_: _probed_transport()
-    reviews = local_review.REVIEWS
-    try:
-        with tempfile.TemporaryDirectory() as tmp:
-            local_review.REVIEWS = Path(tmp) / "reviews"
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
             run = _run_directory(Path(tmp) / "run", **{"editor-package.json": package})
-            destination = local_review.REVIEWS / "2026" / "fixture-paper" / "v1" / "r1"
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
             prepared = _prepared(Path(tmp) / "prepared", destination)
             workspace = _workspace(Path(tmp) / "workspace")
 
@@ -1904,6 +2584,7 @@ def check_a_written_bundle_carries_no_local_path() -> None:
 
             written = sorted(path.name for path in destination.iterdir())
             assert "manifest.json" in written, f"the bundle was not finished: {written}"
+            assert "audit_stats.md" in written, f"the specialist reports were not copied: {written}"
             for path in sorted(destination.rglob("*")):
                 if path.is_file():
                     text = path.read_text(encoding="utf-8", errors="replace")
@@ -1918,21 +2599,24 @@ def check_a_written_bundle_carries_no_local_path() -> None:
             assert [f["comment"] for f in published["findings"]] == [
                 f["comment"] for f in package["findings"]
             ], f"a finding was rewritten or dropped on the way out: {published['findings']}"
+            assert [entry["slot"] for entry in published["reviewer_provenance"]] == list(
+                CORE_SLOTS
+            ), f"a reviewer was dropped with its path: {published['reviewer_provenance']}"
             letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
-            assert "/ 2 is the wrong denominator" in letter, (
+            assert "Report the confidence interval." in letter, (
                 "the reviewer's own comment did not reach the decision letter"
             )
             round_record = json.loads((destination / local_review.ROUND_RECORD).read_text())
-            assert round_record["required_revisions"][0]["text"].startswith("/ 2"), (
+            assert round_record["required_revisions"][0]["finding_uid"] == "f-001", (
                 f"the round record lost the finding: {round_record['required_revisions']}"
             )
 
             # And a path in a field nothing here knows about refuses, leaving
             # the published tree as it found it.
-            unknown = local_review.REVIEWS / "2026" / "fixture-paper" / "v1" / "r2"
+            unknown = reviews / "2026" / "fixture-paper" / "v1" / "r2"
             second_run = _run_directory(
                 Path(tmp) / "run-2",
-                **{"editor-package.json": {**package, "working_directory": f"{home}/runs"}},
+                **{"editor-package.json": dict(package, working_directory=f"{home}/runs")},
             )
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
@@ -1947,7 +2631,40 @@ def check_a_written_bundle_carries_no_local_path() -> None:
             assert "Nothing was written" in stderr.getvalue(), (
                 f"the refusal has to say the tree was left alone: {stderr.getvalue()!r}"
             )
-    finally:
-        local_review.REVIEWS = reviews
-        local_review.engine_record = engine_record
-        local_review.transport_record = transport_record
+
+
+def check_the_locked_engine_release_is_the_one_declared() -> None:
+    """The lock has to name the engine release requirements.in asks for.
+
+    It used to assert a version floor, on the grounds that an older release
+    ships no engine package and every engine check in CI was installing a wheel
+    it could not use. A floor passes a lock one release behind the declared pin,
+    which is the same defect at a different version: the checks run against an
+    engine whose commands, flags and modules are not the ones this repo is
+    written for.
+
+    This reads both files rather than the installed tree, so it fails on a
+    laptop with a newer engine checked out and on CI alike.
+    """
+    root = Path(local_review.__file__).resolve().parents[1]
+
+    def pinned(name: str) -> str:
+        pins = [
+            line.split("==", 1)[1].split(" ", 1)[0].strip()
+            for line in (root / name).read_text(encoding="utf-8").splitlines()
+            if line.startswith("peerreviewagents==")
+        ]
+        assert len(pins) == 1, f"expected one peerreviewagents pin in {name}, found {pins}"
+        return pins[0]
+
+    declared, locked = pinned("requirements.in"), pinned("requirements.txt")
+    assert declared == locked, (
+        f"requirements.in asks for peerreviewagents {declared} and requirements.txt "
+        f"locks {locked}, so CI installs an engine this repository is not written for. "
+        "Recompile the lock."
+    )
+    version = tuple(int(part) for part in locked.split(".")[:2])
+    assert version >= (0, 9), (
+        f"the lock pins peerreviewagents {locked}. The plugin, the commands and the "
+        "run folder this repository reads are the 0.9 ones"
+    )

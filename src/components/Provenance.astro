@@ -28,23 +28,28 @@ const modelName = (value: string | {model?: string}) =>
     ? value.model
     : value;
 
-const modelRows = [
-  ...Object.entries(provenance.models || {}).map(([tag, v]) => ({
-    stage: TAG_LABEL[tag] || tag,
-    model: modelName(v) || fallback,
-  })),
-  ...Object.entries(provenance.agent_models || {}).map(([agent, v]) => ({
-    stage: `${agent.replace(/_/g, " ")} (override)`,
-    model: modelName(v) || fallback,
-  })),
-];
+// The hosted panel's table, keyed by the stage tags that panel used. A plugin
+// run keys `models` by agent slot instead, and its table is built from the
+// generator's agent rows below, which also know each slot's role and track.
+const modelRows = provenance.generator
+  ? []
+  : [
+      ...Object.entries(provenance.models || {}).map(([tag, v]) => ({
+        stage: TAG_LABEL[tag] || tag,
+        model: modelName(v) || fallback,
+      })),
+      ...Object.entries(provenance.agent_models || {}).map(([agent, v]) => ({
+        stage: `${agent.replace(/_/g, " ")} (override)`,
+        model: modelName(v) || fallback,
+      })),
+    ];
 
 // An empty model table means no per-stage split ran: every agent, from the
 // desk screen to the editor, used one model. That is a different artifact
 // from the graded panel the rest of the corpus records. The verdict was
 // decided by whatever reviewed the paper, with no stronger model checking it,
 // and a reader comparing two reviews needs to see that before comparing them.
-const singleModel = modelRows.length === 0 && provenance.model
+const singleModel = !provenance.generator && modelRows.length === 0 && provenance.model
   ? provenance.model
   : null;
 
@@ -104,20 +109,66 @@ const conversion = health.verdict && health.verdict !== "clean"
 // A review generated on the editor's own machine, on a subscription, and
 // uploaded as a pull request. The hosted panel's accounting does not exist for
 // one of these: there is no five-reviewer split and no dollar figure. What
-// replaces it is this block, and the two facts a reader most needs from it are
-// that the engine source is pinned by hash and that the verdict was a person's
-// rather than the model's. Absent on every version 2 record, and silent there.
+// replaces it is this block, and the facts a reader most needs from it are
+// that the engine and the plugin are pinned by hash, which agents ran on which
+// model, whether every reader the arm asked for reported, and that the verdict
+// was a person's rather than the model's. Absent on every version 2 record,
+// and silent there.
 const generator = provenance.generator || null;
 const engine = generator?.engine || {};
 const engineHash = generator?.engine_fingerprint || {};
 const transport = generator?.transport || {};
-const modelIds = generator?.model_ids || {};
+const plugin = generator?.plugin || {};
+const pluginHash = plugin.fingerprint || {};
 const input = generator?.input || {};
 const runRecord = generator?.run || {};
 const attestation = generator?.attestation || {};
+const advisory = generator?.advisory_verdict || {};
 
-// What the transport reported back, when it disagreed with what was asked for.
-// Equal lists are the ordinary case and say nothing worth a row.
+// One row per agent that ran, with the model its plugin agent file pinned. The
+// plugin pins a model per agent rather than per stage, so this is the table
+// that says what wrote which part of the review. The harness's unfilled
+// placeholder rows are dropped where the record is built, not here.
+const agentRows = (Array.isArray(generator?.agents) ? generator.agents : []).map((row) => ({
+  slot: String(row.slot || ""),
+  role: String(row.role || row.agent_type || "").replace(/^pra:/, "").replace(/[_-]/g, " "),
+  track: String(row.track || ""),
+  model: String(row.model || ""),
+  toolCalls: typeof row.tool_calls === "number" ? row.tool_calls : null,
+  attempt: typeof row.attempt === "number" ? row.attempt : null,
+  findings: typeof row.findings === "number" ? row.findings : null,
+  noneFound: row.none_found === true,
+}));
+
+// Agents pinned to the same model are not independent of one another, however
+// many of them read the manuscript. When one model ran the whole panel, that is
+// the heaviest caveat on the page and it goes above the tables rather than in
+// one.
+const agentModels = [...new Set(agentRows.map((row) => row.model).filter(Boolean))];
+const oneModelRan = agentRows.length > 1 && agentModels.length === 1
+  ? agentModels[0]
+  : null;
+
+// The stage ledger. Publishing refuses a run with a missing stage, so the
+// interesting rows here are the readers that reported nothing and the ones that
+// had to be retried: both are facts about how much of this review is one pass.
+const ledger = runRecord.completeness || {};
+const requiredStages = Array.isArray(ledger.required) ? ledger.required : [];
+const reportedStages = Array.isArray(ledger.reported) ? ledger.reported : [];
+const noneFound = Array.isArray(ledger.none_found) ? ledger.none_found : [];
+const retried = Array.isArray(ledger.retried) ? ledger.retried : [];
+const quarantined = typeof runRecord.quarantined_findings_count === "number"
+  ? runRecord.quarantined_findings_count
+  : 0;
+const specialists = Array.isArray(runRecord.specialist_tracks) ? runRecord.specialist_tracks : [];
+const advisoryRows = [
+  ["Significance", advisory.significance],
+  ["Strength of evidence", advisory.strength_of_evidence],
+  ["Reasoning", advisory.reasoning],
+  ["What it rests on", advisory.basis],
+  ["Stated limitation", advisory.limitation],
+].filter(([, value]) => String(value || "").trim());
+
 // Where the reviewed bytes came from. With a local file the hash is still the
 // hash of what the engine read, but a reader cannot fetch the identifier and
 // reproduce it, because the operator supplied the PDF from their own disk. That
@@ -128,22 +179,6 @@ const sourceOfBytes = input.local_file === undefined
   : localFile
     ? "supplied locally"
     : "fetched from the identifier";
-
-// The engine's own rule for "the same model", from model_runtime.same_model:
-// the requested id, a dated release of it, or a bracketed variant of it. Those
-// are the forms the transport reports back for one request, so comparing the
-// strings exactly called `claude-sonnet-5-5-20260929` a substitution the engine
-// had already accepted. The banner then fired on every run the transport dated,
-// and on any record listing two observed ids whatever they were.
-const observed = Array.isArray(modelIds.observed) ? modelIds.observed : [];
-const sameModel = (served, requested) => {
-  if (!requested) return false;
-  return served === requested
-    || served.startsWith(`${requested}-`)
-    || served.startsWith(`${requested}[`);
-};
-const substituted = observed.filter((served) => !sameModel(String(served), String(modelIds.requested || "")));
-const modelDrift = substituted.length ? substituted : null;
 
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""
@@ -199,6 +234,28 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </div>
     )}
 
+    {generator && (pluginHash.sha256 || plugin.workflow_sha256) && (
+      <div class="prov__cell">
+        <p class="label">Review plugin</p>
+        <p class="prov__value mono">
+          workflow {plugin.workflow_version || "unversioned"}
+          {plugin.finding_schema_version
+            ? ` · findings v${plugin.finding_schema_version}`
+            : ""}
+        </p>
+        {pluginHash.sha256 && (
+          <p class="prov__hash mono" title={pluginHash.sha256}>
+            {pluginHash.file_count} files, sha256 {String(pluginHash.sha256).slice(0, 16)}…
+          </p>
+        )}
+        {plugin.workflow_sha256 && (
+          <p class="prov__hash mono" title={plugin.workflow_sha256}>
+            workflow sha256 {String(plugin.workflow_sha256).slice(0, 16)}…
+          </p>
+        )}
+      </div>
+    )}
+
     {generator && (
       <div class="prov__cell">
         <p class="label">Input reviewed</p>
@@ -215,19 +272,36 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </div>
     )}
 
-    {generator && runRecord.workflow && (
+    {generator && runRecord.arm && (
       <div class="prov__cell">
         <p class="label">Run</p>
         <p class="prov__value mono">
-          {runRecord.workflow}
+          {runRecord.arm}
           {runRecord.reviewers ? ` · ${runRecord.reviewers} reviewer${runRecord.reviewers === 1 ? "" : "s"}` : ""}
+          {specialists.length > 0 ? ` · ${specialists.length} specialist${specialists.length === 1 ? "" : "s"}` : ""}
         </p>
         <p class="prov__hash">
           {typeof runRecord.findings === "number"
-            ? `${runRecord.findings} finding${runRecord.findings === 1 ? "" : "s"}`
+            ? `${runRecord.findings} finding${runRecord.findings === 1 ? "" : "s"} in the letter`
             : "finding count unrecorded"}
+          {typeof runRecord.appendix_findings === "number" && runRecord.appendix_findings > 0
+            ? `, ${runRecord.appendix_findings} in the appendix`
+            : ""}
+          {runRecord.escalated_in_bundle
+            ? `, ${runRecord.escalated_in_bundle} escalated`
+            : ""}
           {runRecord.literature_cutoff ? `, literature to ${runRecord.literature_cutoff}` : ""}
         </p>
+        {/* A finding the evidence guards threw out never reaches the letter, and
+            a reader weighing the review should see how many were thrown out
+            rather than only how many survived. */}
+        {quarantined > 0 && (
+          <p class="prov__hash">
+            {quarantined} finding{quarantined === 1 ? " was" : "s were"} quarantined
+            by the evidence guards and {quarantined === 1 ? "is" : "are"} not in
+            this bundle.
+          </p>
+        )}
       </div>
     )}
 
@@ -247,7 +321,7 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     {/* A local run records no debate round count. Showing "N/A" for a number
         the hosted panel measured and this path never had would read as a
         missing measurement rather than an absent stage. */}
-    {(provenance.debate_rounds != null || !generator) && (
+    {provenance.debate_rounds != null && (
       <div class="prov__cell">
         <p class="label">Debate rounds</p>
         <p class="prov__value mono">{provenance.debate_rounds ?? "N/A"}</p>
@@ -315,8 +389,9 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       {attestation.editor
         ? <span class="mono">{attestation.editor}</span>
         : "a human editor"}
-      {" "}after reading the run, and publishing it required that editor to merge
-      it.
+      {attestation.human_reviewed_before_merge === true
+        ? ", who read the run before taking it, and publishing it required that editor to merge it."
+        : ". Whether that editor read the run before taking the decision is not recorded here, so read it as a decision taken on the engine's reports."}
       {attestation.statement && (
         <span class="prov__attest">{attestation.statement}</span>
       )}
@@ -334,13 +409,116 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     </p>
   )}
 
-  {modelDrift && (
+  {oneModelRan && (
     <p class="prov__warn prov__warn--block">
-      <strong>The transport served a different model than was asked for.</strong>{" "}
-      The run requested <span class="mono">{modelIds.requested}</span> and the
-      calls reported <span class="mono">{modelDrift.join(", ")}</span>.
-      Read the review as the work of what answered, not of what was requested.
+      <strong>One model wrote this entire review.</strong> All{" "}
+      {agentRows.length} agents ran on{" "}
+      <span class="mono">{oneModelRan}</span>. Agents that share a model are not
+      independent corroboration of one another, so read agreement between them
+      as one reader repeating itself rather than as several readers concurring.
     </p>
+  )}
+
+  {generator && retried.length > 0 && (
+    <p class="prov__warn prov__warn--block">
+      <strong>A reader had to be run more than once.</strong>{" "}
+      {retried.join(", ")} did not report on the first attempt and was retried.
+      The report published is the attempt that answered, and the earlier ones
+      are in the run folder rather than here.
+    </p>
+  )}
+
+  {generator && advisoryRows.length > 0 && (
+    <details class="prov__more">
+      <summary>The engine's own judgement, which decided nothing</summary>
+      <div class="table-scroll">
+        <table class="prov__table">
+          <tbody>
+            {advisoryRows.map(([label, value]) => (
+              <tr>
+                <td>{label}</td>
+                <td>{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prov__note">
+        Advisory only. The editor agent grades significance and strength of
+        evidence and recommends no verdict, and the decision on this review was
+        taken by a person who was free to disagree with every line of it.
+      </p>
+    </details>
+  )}
+
+  {agentRows.length > 0 && (
+    <details class="prov__more">
+      <summary>Which model wrote which part</summary>
+      <div class="table-scroll">
+        <table class="prov__table">
+          <thead>
+            <tr>
+              <th>Agent</th><th>Track</th><th>Model</th><th>Findings</th><th>Tool calls</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agentRows.map((row) => (
+              <tr>
+                <td>{row.role || row.slot}</td>
+                <td class="mono">{row.track || "N/A"}</td>
+                <td class="mono">{row.model || "unrecorded"}</td>
+                <td class="mono">
+                  {row.noneFound
+                    ? "none found"
+                    : row.findings == null ? "N/A" : row.findings}
+                </td>
+                <td class="mono">{row.toolCalls == null ? "N/A" : row.toolCalls}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prov__note">
+        Each agent's model is pinned by its own file in the plugin, not chosen at
+        run time. These are the models the run reported having used, read back
+        out of the harness record rather than out of the request.
+      </p>
+    </details>
+  )}
+
+  {generator && requiredStages.length > 0 && (
+    <details class="prov__more">
+      <summary>
+        Every reader the arm asked for
+        {` (${reportedStages.length} of ${requiredStages.length} reported)`}
+      </summary>
+      <div class="table-scroll">
+        <table class="prov__table">
+          <thead>
+            <tr><th>Stage</th><th>Reported</th></tr>
+          </thead>
+          <tbody>
+            {requiredStages.map((stage) => (
+              <tr>
+                <td class="mono">{stage}</td>
+                <td>
+                  {!reportedStages.includes(stage)
+                    ? "no report"
+                    : noneFound.includes(stage)
+                      ? "reported, found nothing"
+                      : "reported"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prov__note">
+        A reader that found nothing is a result, not a gap. Publishing refuses a
+        run with a stage that never reported at all, so this table exists to let
+        a reader check that claim rather than take it.
+      </p>
+    </details>
   )}
 
   {singleModel && (
