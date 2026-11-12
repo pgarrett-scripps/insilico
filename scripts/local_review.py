@@ -82,6 +82,38 @@ BUNDLE_DOCUMENTS = ("summary.md", "decision_letter.md", "manuscript_stats.md")
 SEVERITY_ORDER = {"major": 0, "moderate": 1, "minor": 2}
 REQUIRED_SEVERITIES = ("major", "moderate")
 
+# The one state a review may be published from. `bundle.FINISHED_STATUSES`
+# carries a second, `complete-without-findings`, and that is not a review here.
+# The engine writes it in exactly one case: every finding the reviewers raised
+# failed the evidence guards and was quarantined. See ensemble.py around the
+# final progress write, reviewer.py's guard branch and api.py's
+# manuscript_only_progress, all three of which set it only when
+# review_guard_status is all-findings-quarantined.
+#
+# A run that read the manuscript end to end and genuinely raised nothing is
+# `complete` with the guard status `clean`, and that publishes with an empty
+# findings list, which is the honest record of a manuscript found sound. The
+# quarantined case is the opposite claim, a review endorsing none of its own
+# work, and publishing it under the same words would tell authors their paper
+# drew no findings when every finding was thrown away.
+FINISHED_STATUSES = ("complete",)
+ALL_FINDINGS_QUARANTINED = "all-findings-quarantined"
+WITHOUT_FINDINGS_STATUS = "complete-without-findings"
+
+# insilico publishes Claude Code runs only. The engine still supports Codex
+# behind `--provider codex`, and nothing here is written for it: the attestation
+# names a Claude subscription, the login probe reads the Claude CLI and the
+# billing policy below describes that account. A Codex run published through
+# this path would carry all three claims about a transport it never used.
+PUBLISHABLE_PROVIDERS = ("claude-code",)
+
+# What the engine calls its bounded study budget, spelled out rather than
+# imported: this module has to read a run with no engine installed, which is how
+# CI runs the smoke suite. It is `review_policy.STUDY_POLICY_NAME`, and the
+# policy that adds no protocol keys, so a run whose protocol names no policy ran
+# under this one.
+STUDY_POLICY_NAME = "standard-v1"
+
 
 def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -105,7 +137,7 @@ def engine():
         return importlib.import_module(ENGINE_PACKAGE)
     except ImportError as exc:
         raise CommandError(
-            "PeerReviewAgents 0.7.0 or newer is not importable. Install it, or "
+            "PeerReviewAgents 0.8.0 or newer is not importable. Install it, or "
             "run this with the paper-workbench virtual environment on PATH."
         ) from exc
 
@@ -113,7 +145,7 @@ def engine():
 def engine_fingerprint() -> dict:
     """Hash the engine source tree, not just its version number.
 
-    Two reviews can both claim engine 0.7.0 and have run different bytes, one
+    Two reviews can both claim engine 0.8.0 and have run different bytes, one
     from a release and one from a working tree. The file count and the hash of
     the whole manifest settle which.
     """
@@ -142,34 +174,33 @@ def engine_record() -> dict:
 
 
 # What a Claude subscription login looks like to `claude auth status`. The
-# engine accepts exactly these, in model_runtime.require_subscription and
-# billing.claude_billing_record, and this path has to accept the same set or it
-# refuses accounts the engine would happily run on. `firstParty` is Anthropic's
-# own name for the subscription route, so a truthy apiProvider is not by itself
-# a paid key.
+# engine accepts exactly these, in model_runtime.require_subscription, and this
+# path has to accept the same set or it refuses accounts the engine would
+# happily run on. `firstParty` is Anthropic's own name for the subscription
+# route, so a truthy apiProvider is not by itself a paid key.
+#
+# Written out rather than imported. The engine spells the pair inline inside
+# require_subscription and exports no constant, and the module that used to
+# hold one is gone along with every billing gate, so there is nothing to read
+# it from. The pair is asserted against the engine's own source in the smoke
+# suite instead, which is where a drift would be caught.
 SUBSCRIPTION_AUTH_METHODS = ("claude.ai", "oauth")
 SUBSCRIPTION_API_PROVIDERS = (None, "", "firstParty")
+
+# The route this pipeline bills on, named in every published record. The engine
+# has no billing policy of its own any more: it runs on whatever subscription
+# the Claude CLI is signed in to, and spends nothing else. So this is a
+# statement about how the review was paid for, which the login probe below
+# confirms, and not a value copied out of the engine.
 BILLING_POLICY = "claude-subscription-v1"
 
 
-def subscription_policy() -> tuple[tuple[str, ...], str]:
-    """What the engine accepts as a subscription login, and its policy name.
-
-    Taken from the engine when it is importable, so the two cannot drift apart,
-    and from the constants above otherwise. The constants are what the engine
-    ships today, so the guard behaves the same either way and can be tested
-    without installing an engine.
-    """
-    try:
-        billing = importlib.import_module(f"{ENGINE_PACKAGE}.billing")
-    except ImportError:
-        return SUBSCRIPTION_AUTH_METHODS, BILLING_POLICY
-    accepted = tuple(getattr(billing, "CLAUDE_AUTH_METHODS", SUBSCRIPTION_AUTH_METHODS))
-    return accepted or SUBSCRIPTION_AUTH_METHODS, str(getattr(billing, "CLAUDE_POLICY", BILLING_POLICY))
-
-
-def transport_from_status(status: dict) -> dict:
+def transport_from_status(status: dict, *, provider: str) -> dict:
     """Turn one `claude auth status` reading into the transport record.
+
+    `provider` is the transport the run itself recorded, passed in rather than
+    taken from a constant here, so the record cannot name one provider while the
+    run asked another.
 
     Pure, so the refusals can be tested without a CLI. Three things have to hold
     before a review may run: somebody is logged in, the login is a subscription
@@ -177,7 +208,7 @@ def transport_from_status(status: dict) -> dict:
     than a cloud reseller. Each failure gets its own message, because the fix
     differs.
     """
-    accepted, policy = subscription_policy()
+    accepted = SUBSCRIPTION_AUTH_METHODS
     error = status.get("error")
     if error:
         raise CommandError(f"The Claude CLI could not report its login: {error}")
@@ -199,10 +230,10 @@ def transport_from_status(status: dict) -> dict:
             "choose the subscription account before generating a review."
         )
     return {
-        "provider": TRANSPORT_PROVIDER,
+        "provider": provider,
         "executable": "claude",
         "version": None,
-        "billing_policy": policy,
+        "billing_policy": BILLING_POLICY,
         "auth_method": str(status.get("authMethod")),
         "subscription_type": status.get("subscriptionType"),
         "api_provider": status.get("apiProvider") or "firstParty",
@@ -210,8 +241,14 @@ def transport_from_status(status: dict) -> dict:
     }
 
 
-def transport_record(*, probe: bool = True) -> dict:
+def transport_record(*, provider: str, probe: bool = True) -> dict:
     """Which CLI ran the models, and on whose account.
+
+    `provider` is the transport the run recorded, or, in the preflight where
+    there is no run yet, the one this path publishes. Anything outside
+    `PUBLISHABLE_PROVIDERS` is refused before the probe, so no second provider's
+    CLI is ever executed from here and no bundle is written describing a
+    transport this code knows nothing about.
 
     ``paid_api_key_used`` is a constant here and a constant in the schema. This
     path cannot reach a paid key, so the field is a statement about the design
@@ -220,180 +257,34 @@ def transport_record(*, probe: bool = True) -> dict:
 
     Without a probe the login fields are absent rather than null, because an
     unprobed login is unknown and a null would read as a measured absence.
+
+    The probe is the only source of the login now. The engine used to copy a
+    billing confirmation into the run folder, naming the account that paid, and
+    that record was preferred over this probe because it answered the stronger
+    question. The engine writes no such file any more, so the honest claim is
+    the narrower one this makes: who the Claude CLI was signed in as when the
+    bundle was written.
     """
+    provider = str(provider or "")
+    if provider not in PUBLISHABLE_PROVIDERS:
+        raise CommandError(
+            f"This run used the {provider or 'unrecorded'} transport, and this "
+            f"path records {', '.join(PUBLISHABLE_PROVIDERS)} runs only. Review "
+            "the paper again on Claude Code, or publish it by another route."
+        )
     if not probe:
         return {
-            "provider": TRANSPORT_PROVIDER,
+            "provider": provider,
             "executable": "claude",
             "version": None,
-            "billing_policy": subscription_policy()[1],
+            "billing_policy": BILLING_POLICY,
             "login_verified": False,
             "paid_api_key_used": False,
         }
     runtime = importlib.import_module(f"{ENGINE_PACKAGE}.model_runtime")
-    return {**transport_from_status(runtime.auth_status(provider=TRANSPORT_PROVIDER)),
+    return {**transport_from_status(runtime.auth_status(provider=provider), provider=provider),
             "login_verified": True,
             "verified_by": "publish_time_probe"}
-
-
-def run_launched_at(run_dir: Path) -> float:
-    """When the engine started this run, as a unix timestamp.
-
-    This is the instant the confirmation has to be fresh against. Checking it
-    against the clock at publish time would refuse every review published the
-    next morning, and checking it against nothing at all is what let a 400 day
-    old confirmation through.
-
-    It is read from the usage receipts, where the engine stamps `started_at` on
-    each model call it makes, at model_runtime.py:716. The first version read
-    `protocol.json`'s own modification time, which is not the run's clock at
-    all: a `cp -r` of the run folder, or a `touch`, moved it to now and the
-    honest confirmation sitting beside it was then refused as stale, while
-    back-dating the same file published a year old confirmation as verified.
-    The usage rows are content, so copying the folder does not change them.
-    """
-    started: list[float] = []
-    for path in sorted(Path(run_dir).rglob("usage.jsonl")):
-        for row in jsonl_rows(path):
-            value = row.get("started_at")
-            if isinstance(value, (int, float)) and not isinstance(value, bool):
-                started.append(float(value))
-    if not started:
-        raise CommandError(
-            f"{run_dir} records no model call, so there is no instant to judge "
-            "the billing confirmation against. The engine stamps started_at on "
-            "every call it makes, in execution/usage.jsonl under each stage."
-        )
-    return min(started)
-
-
-def verify_billing_record(record: dict, launched_at: float) -> None:
-    """The engine's own launch guard, re-run against the run's own clock.
-
-    Publish checked the auth method and nothing else, so a confirmation naming
-    a different provider, authorising purchases, carrying a foreign policy or
-    recorded over a year before the run all published as a verified
-    subscription login. Each of those is something the engine itself refuses
-    before it will start a review, which means a run carrying one did not come
-    from the engine's guarded path.
-    """
-    compared = (
-        "The confirmation was recorded at "
-        f"{iso_timestamp(record.get('checked_at')) or 'no readable time'} and "
-        f"the run's first model call was at {iso_timestamp(launched_at)}."
-    )
-    try:
-        billing = importlib.import_module(f"{ENGINE_PACKAGE}.billing")
-    except ImportError:
-        billing = None
-    if billing is not None and callable(getattr(billing, "verify_billing", None)):
-        try:
-            billing.verify_billing(record, now=launched_at, provider=TRANSPORT_PROVIDER)
-        except Exception as error:
-            raise CommandError(
-                f"The run's billing confirmation is not one the engine would "
-                f"have accepted when it started: {error} {compared}"
-            ) from error
-        return
-
-    # The same rules written out, so the guard holds on a machine with no
-    # engine installed. These are the engine's constants, not looser ones.
-    accepted, policy = subscription_policy()
-    checked = record.get("checked_at")
-    problem = None
-    if record.get("policy") != policy or record.get("provider") != TRANSPORT_PROVIDER:
-        problem = f"it is not a {policy} record written by {TRANSPORT_PROVIDER}"
-    elif isinstance(checked, bool) or not isinstance(checked, (int, float)):
-        problem = "its timestamp is not a number"
-    elif not 0 <= launched_at - float(checked) < 86400:
-        problem = "it was not recorded within the day before the run started"
-    elif record.get("auth_method") not in accepted:
-        problem = "it does not come from a subscription login"
-    elif record.get("extra_usage_disabled") is not True:
-        problem = "it does not confirm that paid extra usage is disabled"
-    elif record.get("purchases_authorized") is not False:
-        problem = "it authorises purchases"
-    if problem:
-        raise CommandError(
-            f"The run's billing confirmation is not one the engine would have "
-            f"accepted when it started: {problem}. {compared}"
-        )
-
-
-def iso_timestamp(value: object) -> str | None:
-    """A recorded instant as an ISO 8601 string, whatever shape it arrived in.
-
-    The engine records `checked_at` as a float epoch, because that is what its
-    own comparison needs. A published record is read by people, so it carries
-    the same instant written out. The fixture used to hold an ISO string here
-    and so never exercised the conversion.
-    """
-    if isinstance(value, bool) or value is None:
-        return None
-    if isinstance(value, (int, float)):
-        # A NaN, an infinity or a year outside the platform's range is a thing
-        # the engine refuses. It reaches here anyway, because the refusal names
-        # the two instants it compared, and raising from the message rather
-        # than from the check turned a refusal into a traceback.
-        try:
-            return dt.datetime.fromtimestamp(float(value), dt.timezone.utc).isoformat()
-        except (ValueError, OverflowError, OSError):
-            return None
-    text = str(value).strip()
-    return text or None
-
-
-def transport_from_run(run_dir: Path) -> dict | None:
-    """The account the engine checked when the run started, from the run.
-
-    The engine's prepare step copies `billing_confirmation.json` into the run
-    folder, and that file records the login that actually paid for the review.
-    Probing `claude auth status` at publish time instead measures whoever is
-    logged in on the machine writing the bundle, which is a different claim and
-    can be a different account. So the run's own confirmation wins when it
-    exists, and the probe is the fallback.
-
-    Returns None when the run wrote no confirmation, so the caller can fall
-    back. An unusable confirmation is a refusal rather than a fallback, because
-    a run whose recorded login was not a subscription login is exactly the case
-    this guard exists for.
-    """
-    path = Path(run_dir) / "billing_confirmation.json"
-    if not path.is_file():
-        return None
-    record = maybe_json(path)
-    if not record:
-        raise CommandError(
-            f"{path} is empty or is not a JSON object, so the run records no "
-            "readable billing confirmation. A file the engine wrote is a "
-            "record; a file that cannot be read is not, and falling back to a "
-            "probe here would answer a different question."
-        )
-    accepted, policy = subscription_policy()
-    method = str(record.get("auth_method") or "")
-    if method not in accepted:
-        raise CommandError(
-            f"The run records auth method {method or 'none'}, which is not a "
-            f"subscription login. The engine accepts {', '.join(accepted)}. "
-            "This run was not billed the way a local review has to be."
-        )
-    verify_billing_record(record, run_launched_at(run_dir))
-    transport = {
-        "provider": TRANSPORT_PROVIDER,
-        "executable": "claude",
-        "version": None,
-        "billing_policy": str(record.get("policy") or policy),
-        "auth_method": method,
-        "subscription_type": record.get("subscription_type"),
-        "api_provider": "firstParty",
-        "login_verified": True,
-        "verified_by": "run_billing_confirmation",
-        "paid_api_key_used": False,
-    }
-    checked = iso_timestamp(record.get("checked_at"))
-    if checked:
-        transport["verified_at"] = checked
-    return transport
 
 
 def jsonl_rows(path: Path) -> list[dict]:
@@ -661,8 +552,27 @@ def read_run(run_dir: Path) -> dict:
         protocol.get("paper_id"),
         nested.get("paper_id"),
     ))
+    # What the reviewers were allowed to spend. The ensemble manifest names it
+    # in its plan, and every policy but the study one also writes itself into
+    # protocol.json: review_policy.protocol_overlay adds no keys for
+    # `standard-v1` so that a run made under the engine's original limits keeps
+    # a byte-identical protocol and stays resumable. So an absent key on a run
+    # that recorded a protocol means the study policy, which is the engine's own
+    # reading of it, and without this a five-finding standard-v1 review and a
+    # thirty-call agentic-v1 review published indistinguishable records.
+    put("review_policy", _first(
+        plan.get("review_policy"),
+        protocol.get("review_policy"),
+        nested.get("review_policy"),
+        STUDY_POLICY_NAME if protocol else None,
+    ))
     put("engine_source", manifest.get("code"))
     put("status", progress.get("status"))
+    # Kept because the status alone no longer distinguishes the two outcomes a
+    # reader cares about: a manuscript nobody found fault with is `clean` with
+    # no findings, and a review whose every finding was thrown away is
+    # `all-findings-quarantined`.
+    put("review_guard_status", progress.get("review_guard_status"))
     put("usage", progress.get("usage"))
     put("artifact_version", artifact.get("artifact_version"))
 
@@ -683,13 +593,28 @@ def run_errors(run_dir: Path, progress: dict) -> list[str]:
     accept is quarantined with a reason instead of ending the run, so those are
     counted here: a reader deciding how much to trust a review should see that
     three of its findings were thrown away.
+
+    Finishing with no findings is not one of these. A run that read the
+    manuscript and raised nothing is `complete` with the guard status `clean`,
+    and listing that as an error told a reader a review of a sound manuscript
+    had gone wrong. Every finding quarantined is a different outcome and is
+    listed, because the engine records it as `complete-without-findings` and the
+    two read nothing alike.
     """
     errors = []
     if progress.get("error"):
         errors.append(str(progress["error"]))
     status = progress.get("status")
-    if status and status != "complete":
+    if status and status not in FINISHED_STATUSES:
         errors.append(f"The run finished in state {status}.")
+    # Said plainly, because the two readings are far apart: the reviewers
+    # endorsed nothing because every finding they wrote failed the engine's
+    # evidence guards, which is not the same as a manuscript they found sound.
+    if progress.get("review_guard_status") == ALL_FINDINGS_QUARANTINED:
+        errors.append(
+            "Every finding this run produced was quarantined by the engine's "
+            "evidence guards, so the review endorses none of them."
+        )
     quarantined = sorted(Path(run_dir).rglob("*-quarantined.json"))
     if quarantined:
         errors.append(f"{len(quarantined)} quarantined reviewer response(s) in this run.")
@@ -1087,6 +1012,22 @@ def build_provenance(
     # two disagree the run is the one that is true.
     run_record = {key: value for key, value in run.items() if key != "engine_source"}
     run_record["findings"] = len(findings)
+    # The provider is the run's too. It used to be a constant at the top level
+    # and another constant inside the transport, so a record could say
+    # claude-code twice over a run that had asked the engine for Codex, and
+    # nothing in the file compared the two.
+    provider = str(run.get("provider") or "")
+    if not provider:
+        raise CommandError(
+            "This run records no provider, so the record cannot say which "
+            "transport produced the review."
+        )
+    if str(transport.get("provider") or "") != provider:
+        raise CommandError(
+            f"The run used the {provider} transport and the login was read from "
+            f"{transport.get('provider')}. A record that names two transports "
+            "describes neither run."
+        )
     generator = {
         "kind": GENERATOR_KIND,
         "engine": engine_record(),
@@ -1129,7 +1070,7 @@ def build_provenance(
             "baseline_eligible": baseline_eligible,
             "route": route,
         },
-        "provider": TRANSPORT_PROVIDER,
+        "provider": provider,
         # One model wrote every word of this review. `models` is the per-stage
         # split, and claiming one here would describe a panel that did not run,
         # so it stays empty and `model` carries the single id. The site reads
@@ -1198,7 +1139,9 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
     record = {
         "engine": engine_record(),
         "engine_fingerprint": engine_fingerprint(),
-        "transport": transport_record(probe=not args.offline),
+        # No run exists yet, so the preflight asks about the one transport this
+        # path can publish. A review on anything else is refused later anyway.
+        "transport": transport_record(provider=TRANSPORT_PROVIDER, probe=not args.offline),
     }
     print(json.dumps(record, indent=2))
     return 0
@@ -1303,11 +1246,11 @@ def absolute_path_fields(value: object, trail: str = "") -> list[str]:
 
 _DROPPED = object()
 
-# The fields engine 0.7.0 fills with a path on the machine that ran the review.
-# `source_review_path` is written once per reviewer at ensemble.py:364 and
-# again inside every entry of `candidate_origins`, which carries those same
+# The fields engine 0.8.0 fills with a path on the machine that ran the review.
+# `source_review_path` is written once per reviewer in ensemble.py and again
+# inside every entry of `candidate_origins`, which carries those same
 # provenance dicts, so naming the leaf covers both. `memo_path` rides along
-# with each focused evidence memo at ensemble.py:296.
+# with each focused evidence memo, from focused_investigation.py.
 #
 # This is a list of field names rather than a test on the value because the
 # first version tested the value: any string beginning with a slash was taken
@@ -1316,7 +1259,7 @@ _DROPPED = object()
 # sentence was missed regardless. Review content is never rewritten now. What
 # catches a path the engine starts recording in a field nothing here knows
 # about is the leak scan over the written bundle, below.
-PATH_FIELDS = frozenset({"source_review_path", "memo_path", "source_packet", "run_directory"})
+PATH_FIELDS = frozenset({"source_review_path", "memo_path", "run_directory"})
 
 
 def readable_path(text: str) -> object:
@@ -1479,6 +1422,24 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
     no protocol.json and no progress.json, published with an empty error list,
     and so did a run whose progress.json said `blocked`. Both produced a record
     that read like a clean review.
+
+    Finished means `complete`, and nothing else. A run that read the manuscript
+    and raised no finding is `complete` with the guard status `clean`, and it
+    publishes as a review with the empty findings list the reader should see.
+    The engine's other finished state, `complete-without-findings`, is written
+    only when every finding was quarantined, so it is refused here by name
+    before the status check: that bundle's letter would tell the authors their
+    paper drew no findings, when the truth is that the review endorses none of
+    the findings it wrote.
+
+    A blocked run is refused too, and the refusal repeats the cause the run
+    itself recorded rather than only the state name, because the state name
+    alone sent the operator back to a log to find out there was no Claude login.
+
+    The transport is checked here as well. This path records Claude Code runs
+    only, and the engine will run Codex for anyone who asks it to, so a Codex
+    run reaching publish would otherwise be written up with a Claude
+    subscription attestation it has no claim to.
     """
     protocol_path = Path(run_dir) / "protocol.json"
     if not protocol_path.is_file():
@@ -1503,17 +1464,41 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
             "record could not say how the review was produced. Point --run at "
             "the engine's review output folder."
         )
+    provider = str(run.get("provider") or "")
+    if provider not in PUBLISHABLE_PROVIDERS:
+        raise CommandError(
+            f"This run recorded the {provider} transport, and this path "
+            f"publishes {', '.join(PUBLISHABLE_PROVIDERS)} runs only. Every "
+            "claim a published bundle makes about how the review was paid for "
+            "is a claim about a Claude subscription, so a run on another "
+            "transport cannot be published through it."
+        )
     status = str(run.get("status") or "")
     if not status:
         raise CommandError(
             f"{run_dir} has no progress.json, so the run never recorded whether "
             "it finished. A review cannot be published from it."
         )
-    if status != "complete":
+    # Named before the status, because this is the case the status describes
+    # and the operator needs to be told which of the two it is.
+    if run.get("review_guard_status") == ALL_FINDINGS_QUARANTINED or status == WITHOUT_FINDINGS_STATUS:
         raise CommandError(
-            f"This run finished in state {status} rather than complete, so it "
-            "is not a review. Re-run the engine, or drop --publish to keep the "
-            "bundle as a rehearsal."
+            f"This run ended as {status} with guard status "
+            f"{run.get('review_guard_status') or 'unrecorded'}, which the engine "
+            "writes when every finding it produced was quarantined by the "
+            "evidence guards. A review that endorses none of its own findings is "
+            "not a manuscript found sound, and publishing it would say so to the "
+            "authors. Read the quarantine reasons in the run, and re-run the "
+            "engine or publish nothing."
+        )
+    if status not in FINISHED_STATUSES:
+        cause = next((str(problem) for problem in run.get("errors") or [] if problem), "")
+        raise CommandError(
+            f"This run ended in state {status} rather than "
+            f"{' or '.join(FINISHED_STATUSES)}, so it is not a review."
+            + (f" The run recorded: {cause}" if cause else "")
+            + " Re-run the engine, or drop --publish to keep the bundle as a "
+            "rehearsal."
         )
 
 
@@ -1596,7 +1581,10 @@ def cmd_publish(args: argparse.Namespace) -> int:
     dest = publish_destination(prepared, publishing=args.publish)
     route = f"v{prepared['draft']}/r{prepared['attempt']}"
     review_id = bundle_identifier(dest)
-    transport = transport_from_run(run_dir) or transport_record(probe=not args.offline)
+    # The run's transport, so the login that is probed is the login the review
+    # ran on, and a run on anything this path cannot publish is refused here
+    # even when the bundle is only a rehearsal.
+    transport = transport_record(provider=str(run.get("provider") or ""), probe=not args.offline)
     provenance = build_provenance(
         preprint=preprint,
         prepared=prepared,

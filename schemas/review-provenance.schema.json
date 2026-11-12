@@ -75,8 +75,8 @@
               "const": true
             },
             "verified_by": {
-              "$comment": "Where the login was read. The run's own billing confirmation is the stronger source, because it names the account that paid rather than the one logged in when the bundle was written.",
-              "enum": ["run_billing_confirmation", "publish_time_probe"]
+              "$comment": "Where the login was read. The run's own billing confirmation used to be accepted here, and was the stronger source because it named the account that paid rather than the one logged in when the bundle was written. Engine 0.8.0 writes no such file, so the publish-time probe is the only source a record can honestly name, and leaving the stronger value selectable would let a bundle claim a check that nothing performed. No published bundle carries this field, so narrowing it rewrote nothing.",
+              "enum": ["publish_time_probe"]
             },
             "verified_at": { "type": "string" },
             "paid_api_key_used": { "const": false }
@@ -123,10 +123,19 @@
             "reviewers": { "type": "integer", "minimum": 1 },
             "synthesis_policy": { "type": "string" },
             "synthesis_tool_limit": { "type": "integer", "minimum": 0 },
+            "review_policy": {
+              "$comment": "The allowance the reviewers ran under, as the engine named it: agentic-v1 is high effort with thirty tool calls and no finding cap, standard-v1 is the bounded study budget of at most five findings in about 900 words. Optional, because the fourteen published records predate the field and because a run that recorded no policy must leave it out rather than claim one.",
+              "type": "string",
+              "minLength": 1
+            },
             "paper_id": { "type": "string" },
             "status": {
-              "$comment": "The engine writes running, blocked or complete. Only a complete run is a review, so a bundle written from one that stopped part way cannot validate even if its folder is moved into place by hand.",
+              "$comment": "The engine writes running, blocked, complete or complete-without-findings. Only complete is a review here, so a bundle written from a run that stopped part way cannot validate even if its folder is moved into place by hand, and neither can one written from the quarantined outcome, which the engine spells complete-without-findings.",
               "const": "complete"
+            },
+            "review_guard_status": {
+              "$comment": "The engine's verdict on its own findings. clean and partially-quarantined are publishable: a review that raised nothing is clean with no findings, and one that lost some findings to the guards still endorses the rest. all-findings-quarantined is not, because such a review endorses none of its own work, which is a different claim from a manuscript found sound and must not be published as one.",
+              "enum": ["clean", "partially-quarantined"]
             },
             "usage": { "type": "object" },
             "literature_cutoff": { "type": "string" },

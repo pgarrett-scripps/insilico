@@ -3,7 +3,7 @@
 Hermetic: no network, no API key, no model call.
 
 What this guards is the *data contract* between the pipeline and the site.
-run_review.py writes documents and provenance.json. the site reads them and
+review_bundle.py writes documents and provenance.json. the site reads them and
 renders every page. So the failure that matters is a bundle the site cannot
 read, a missing field, a score that never reaches provenance, reports that
 bleed between versions, not the shape of any particular page. Page rendering
@@ -26,10 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 REPO = Path(__file__).resolve().parents[2]
 
 from fetch_preprint import Preprint  # noqa: E402
-from run_review import (  # noqa: E402
-    BUNDLE_FILES,
-    write_bundle,
-)
+from review_bundle import BUNDLE_FILES, write_bundle  # noqa: E402
 
 
 def provenance_of(bundle: Path) -> dict:

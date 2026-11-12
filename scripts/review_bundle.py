@@ -143,7 +143,8 @@ def write_bundle(
         "models": json.loads(os.environ.get("REVIEW_MODELS") or "{}"),
         "agent_models": json.loads(os.environ.get("REVIEW_AGENT_MODELS") or "{}"),
         # Always set from the resolved config before this runs. the literal is
-        # only reached by a direct call in a test, and matches peerreview.toml.
+        # only reached by a direct call in a test, and matches the default the
+        # hosted panel's config carried before that config was retired.
         "debate_rounds": int(os.environ.get("REVIEW_DEBATE_ROUNDS", "2")),
         "decision": decision,
         # A desk reject and a panel reject are both `decision: reject` but are

@@ -26,7 +26,7 @@ def parse_command(body: str) -> dict:
 
     Grammar, deliberately tiny:
 
-        /review                          the configured panel (peerreview.toml)
+        /review                          the panel's own configured models
         /review anthropic                the same, said out loud
         /review openrouter <model>       one model for every agent
         /review replace ...              redo a draft already reviewed
@@ -77,9 +77,9 @@ def parse_command(body: str) -> dict:
         if len(rest) > 1:
             raise CommandError(
                 f"`{command} anthropic` takes no model: the Anthropic runs use "
-                "the per-stage split in `peerreview.toml`, which is the whole "
-                "point of that file. To force one model, use "
-                f"`{command} openrouter <model>`."
+                "the panel's own per-stage model split, which is the whole "
+                "point of naming the provider and nothing else. To force one "
+                f"model, use `{command} openrouter <model>`."
             )
         return out
 

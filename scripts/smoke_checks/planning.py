@@ -12,14 +12,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 REPO = Path(__file__).resolve().parents[2]
 
 from fetch_preprint import Preprint  # noqa: E402
-from run_review import (  # noqa: E402
-    BUNDLE_FILES,
-    CommandError,
+from review_bundle import BUNDLE_FILES, write_bundle  # noqa: E402
+from review_commands import CommandError  # noqa: E402
+from review_plan import (  # noqa: E402
     draft_number,
     paper_slug,
     plan_review,
     slugify,
-    write_bundle,
 )
 
 from .support import provenance_of  # noqa: E402
@@ -293,7 +292,7 @@ def check_rerun_refuses_a_moved_draft() -> None:
     converted text was byte-identical every time. A file-hash guard refuses
     every bioRxiv rerun, including the correct ones. This one did.
     """
-    from run_review import draft_matches
+    from review_plan import draft_matches
 
     same, other = "c" * 64, "d" * 64
 

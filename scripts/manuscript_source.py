@@ -347,7 +347,7 @@ def select_manuscript_source(
     config: dict,
     *,
     fetcher: Callable[..., bytes] = _get,
-    loader: Callable | None = None,
+    loader: Callable,
     ocr: Callable[[Path, Path], str] = _ocr_pdf,
     try_structured: bool = True,
     previous_attempts: list[dict] | None = None,
@@ -379,10 +379,10 @@ def select_manuscript_source(
     if pdf is None:
         raise OfficialFullTextUnavailable(attempts)
 
-    if loader is None:
-        from peerreviewagents.ingest.loader import load_manuscript_record
-
-        loader = load_manuscript_record
+    # `loader` has no default. It used to fall back to the engine's own ingest
+    # loader, which engine 0.8.0 deletes, and a default import that no longer
+    # resolves is a crash at the one point where the PDF lane is the last
+    # option left. The caller passes the converter it actually has.
     try:
         parsed = loader(str(pdf), config)
         validation = validate_text(parsed.text, preprint)

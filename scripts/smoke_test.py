@@ -11,18 +11,13 @@ from smoke_checks.bundles import (
     check_solicitation_is_labelled,
     check_unscorable_dimension_is_not_a_good_score,
 )
-from smoke_checks.commands import (
-    check_command_parsing_is_strict,
-    check_desk_screen_is_non_enforcing,
-    check_one_model_means_one_model,
-    check_rerun_does_not_inherit_the_prior_round,
-)
+from smoke_checks.commands import check_command_parsing_is_strict
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
 from smoke_checks.local import (
     check_a_bare_pdf_cannot_be_published,
-    check_a_billing_confirmation_the_engine_would_refuse_is_refused,
     check_a_dated_model_id_is_not_a_substitution,
     check_a_destination_outside_its_tree_is_refused,
+    check_a_finished_run_that_endorses_nothing_is_a_review,
     check_a_minor_finding_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
     check_a_published_record_names_no_local_path,
@@ -30,6 +25,7 @@ from smoke_checks.local import (
     check_a_rehearsal_claims_no_reading,
     check_a_rehearsal_is_never_written_into_the_published_tree,
     check_a_run_of_one_paper_cannot_be_published_as_another,
+    check_a_run_on_another_transport_is_not_published,
     check_a_run_with_no_manifest_paper_id_is_still_bound,
     check_a_subscription_login_is_not_a_paid_provider,
     check_a_substituted_model_is_visible,
@@ -45,7 +41,7 @@ from smoke_checks.local import (
     check_severity_is_read_from_the_engine_not_guessed,
     check_the_attestation_says_what_it_has_to_say,
     check_the_decision_is_attributed_to_a_person,
-    check_the_locked_engine_release_contains_the_engine,
+    check_the_locked_engine_release_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
     check_the_model_comes_from_the_run_not_the_flag,
     check_the_skill_commands_match_the_engine_parser,
@@ -127,8 +123,6 @@ def main() -> int:
     print("ok  submission issues get one safe editor command preview")
     check_full_text_source_hierarchy()
     print("ok  official full text is preferred and damaged PDF text falls back to OCR")
-    check_desk_screen_is_non_enforcing()
-    print("ok  desk screening is temporarily non-enforcing")
     check_metadata_fetch_retries_throttling()
     print("ok  a throttled metadata lookup is retried, a missing one is not")
     check_pdf_download_retries_a_flaky_server()
@@ -137,12 +131,8 @@ def main() -> int:
     print("ok  a rate limit is waited out in minutes, within a budget")
     check_command_parsing_is_strict()
     print("ok  editor commands are parsed strictly")
-    check_one_model_means_one_model()
-    print("ok  one named model means one model")
     check_rerun_refuses_a_moved_draft()
     print("ok  a rerun refuses a draft that moved")
-    check_rerun_does_not_inherit_the_prior_round()
-    print("ok  a rerun does not inherit the round it tests")
 
     check_severity_is_read_from_the_engine_not_guessed()
     print("ok  an unrecognised severity stays visible and out of the counts")
@@ -179,7 +169,11 @@ def main() -> int:
     check_a_run_with_no_manifest_paper_id_is_still_bound()
     print("ok  a run that records its paper id outside the manifest is still bound")
     check_an_unfinished_run_cannot_be_published()
-    print("ok  a run that did not finish cannot be published")
+    print("ok  a run that did not finish cannot be published, and the cause is named")
+    check_a_finished_run_that_endorses_nothing_is_a_review()
+    print("ok  a run that finished and raised nothing publishes, a quarantined one does not")
+    check_a_run_on_another_transport_is_not_published()
+    print("ok  a run on another transport is refused rather than labelled claude-code")
     check_a_dated_model_id_is_not_a_substitution()
     print("ok  model drift uses the engine's own rule for the same model")
     check_a_published_record_names_no_local_path()
@@ -194,12 +188,8 @@ def main() -> int:
     print("ok  a bundle is written only inside the tree it belongs to")
     check_a_missing_engine_fails_the_skill_check_in_ci()
     print("ok  the skill command check fails in CI rather than skipping itself")
-    check_the_locked_engine_release_contains_the_engine()
-    print("ok  the locked release contains the engine the checks import")
     check_no_published_file_in_a_bundle_names_a_local_path()
     print("ok  the engine's path fields are scrubbed and every bundle file is scanned")
-    check_a_billing_confirmation_the_engine_would_refuse_is_refused()
-    print("ok  a billing confirmation the engine would refuse does not publish")
     check_an_empty_protocol_file_is_not_a_record_of_the_run()
     print("ok  an empty protocol.json is not a record of what the engine was asked")
     check_a_rehearsal_cannot_be_copied_into_place_as_a_review()
@@ -210,6 +200,14 @@ def main() -> int:
     assert slugify("") == "", "empty title should yield an empty slug"
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"
     print(f"\n{len(NASTY_TITLES)} fixture bundle(s) written cleanly")
+
+    # Last on purpose, after everything else has reported. This one asserts a
+    # fact about requirements.txt rather than about any code here, and it fails
+    # for as long as the engine release in use is installed from git instead of
+    # a lock that can name it. A failing assertion ends the run, so anywhere
+    # earlier this known mismatch would hide every check after it.
+    check_the_locked_engine_release_is_the_one_declared()
+    print("ok  the lock pins the engine release requirements.in declares")
     return 0
 
 
