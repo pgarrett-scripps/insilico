@@ -29,12 +29,14 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import getpass
 import hashlib
 import importlib
 import importlib.metadata
 import json
 import re
 import shutil
+import socket
 import sys
 import tempfile
 from pathlib import Path
@@ -51,6 +53,7 @@ from review_plan import (  # noqa: E402
     plan_review,
 )
 from review_provenance import insilico_version, pipeline_version  # noqa: E402
+from review_schema import InvalidProvenance, assert_valid_provenance  # noqa: E402
 
 ENGINE_PACKAGE = "peerreviewagents"
 PROVENANCE_SCHEMA = 4
@@ -594,9 +597,17 @@ def startup_stamp(reading: dict) -> str | None:
     which the published record carries as `verified_at` because it is when the
     evidence for the transport claim was gathered. It is read from the file
     rather than invented, and a run without it publishes with a null.
+
+    The file is taken from `reading['files']`, which is the engine's own map of
+    the run files it found, rather than by joining `startup.json` onto the run
+    folder here. Joining the name was this script deciding where the engine
+    keeps a file: the reading already says where it is, and a run folder with no
+    `startup.json` is absent from that map instead of being opened and missed.
     """
-    review_dir = Path(str(reading.get("review") or ""))
-    return str(maybe_json(review_dir / "startup.json").get("at") or "") or None
+    stamped = _dict(reading.get("files")).get("startup.json")
+    if not stamped:
+        return None
+    return str(maybe_json(Path(str(stamped))).get("at") or "") or None
 
 
 def review_package(reading: dict) -> dict:
@@ -1497,6 +1508,12 @@ def write_round_record(
     )
 
 
+# What a version actually looks like: a number, a dot, a number, at the start,
+# with an optional `v`. Claude Code prints `2.0.14 (Claude Code)`, which matches,
+# and every refusal a broken install prints instead does not.
+VERSION_SHAPE = re.compile(r"^v?\d+\.\d+")
+
+
 def claude_version() -> str | None:
     """What `claude --version` prints, through the engine's own resolver.
 
@@ -1506,6 +1523,14 @@ def claude_version() -> str | None:
     reported rather than required and never a review: the preflight is allowed
     to say the harness is missing, which is more useful than refusing to print
     the fingerprint the operator asked for.
+
+    The resolver returns the first line of the command's output, standard error
+    included, and does not look at its exit status. A CLI that is on PATH but
+    will not run answers with its complaint, and the fingerprint recorded that
+    complaint as the version of the harness: `transport.version` read
+    `"claude: error while loading shared libraries"`. Only something shaped like
+    a version is kept, so a broken harness reports no version, which is what the
+    line beneath the record already knows how to say.
     """
     try:
         resolver = engine_public("claude_code_version", "the harness cannot be named")
@@ -1515,7 +1540,8 @@ def claude_version() -> str | None:
         version = resolver()
     except Exception:  # noqa: BLE001 - a preflight must not fail on a missing CLI
         return None
-    return str(version) if version else None
+    reported = str(version or "").strip()
+    return reported if VERSION_SHAPE.match(reported) else None
 
 
 def cmd_fingerprint(args: argparse.Namespace) -> int:
@@ -1626,56 +1652,261 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 
 
 # Everything that names the machine a review was produced on rather than the
-# review itself. The scan this feeds used to know two strings, the operator's
-# home directory and this checkout, which is narrow for a public site: a run
-# that wrote `~/papers/x.pdf`, a drive mounted somewhere else, a path under a
-# temporary directory or a mail address all passed it, in a record field nothing
-# here lists or in prose inside a bundled document.
+# review itself. The scan has two halves, and they answer different questions.
 #
-# Each pattern is written to miss the three shapes that look like a path and are
-# not. A slash with a word character in front of it is prose, `and/or` or the
-# `p/n` in a reviewer's arithmetic. A slash with a colon or another slash in
-# front of it is inside a URL, so a DOI link survives. And a path of one
-# segment, `/mnt` or `/tmp`, names nothing about the operator, so two segments
-# are required before a string is treated as a local path.
-LOCAL_REFERENCE_PATTERNS = (
-    ("an absolute path", re.compile(r"(?<![\w~:/])/[A-Za-z0-9._][\w.+-]*(?:/[\w.+-]+)+/?")),
-    ("a file URL", re.compile(r"file://[^\s\"'<>)\]]+")),
-    ("a path in the home directory", re.compile(r"(?<![\w/])~/[\w.+-]+(?:/[\w.+-]+)*")),
-    ("a Windows path", re.compile(r"(?<!\w)[A-Za-z]:[\\/][\w.+-]+(?:[\\/][\w.+-]+)*")),
-    ("an email address", re.compile(r"[\w.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")),
+# The first half is the exact facts. This process can look up the home
+# directory, the user name, the host name, this checkout, the run folder, the
+# temporary directory and the working directory, so it does not have to
+# recognise any of them from the shape of a string. Each is refused wherever it
+# appears, in a record field, in rendered prose, or in a sentence quoted from
+# the manuscript, because a published page that repeats one of them names the
+# operator whatever the reason it got there.
+#
+# The second half is the patterns, and they are narrow on purpose. The first
+# version of them described the shape of a path loosely and refused ordinary
+# review text with it: `mAP@0.5` and `IoU@0.75` read as mail addresses,
+# `(events)/person/year` and `5 mg /kg/day` read as absolute paths, and `E:/Z`
+# and the `$f:\mathbb{R}$` of a specialist's notation read as Windows paths. A
+# review that cannot be published because it discusses `mAP@0.5` is as broken
+# as one that leaks a path. A pattern now fires only on something that cannot
+# be anything but a local path: an absolute path whose first segment is a
+# directory a machine of this kind actually has, a home relative path, a
+# `$HOME` path, a file URL, a Windows share, or a Windows path with an upper
+# case drive letter and at least two segments after it. `/etc/hosts` and the
+# link target in `[x](/reviews/2026/foo/v1)` name nothing about the operator,
+# so neither of them is a leak.
+#
+# A mail address has to end in an alphabetic top level domain, which is what
+# tells `someone@example.org` from `mAP@0.5`. One printed in the manuscript is
+# already public, so it is allowed when it appears there verbatim, and that
+# allowance covers every pattern hit: text that is in the manuscript is the
+# paper's own words rather than this machine's. The exact facts are never
+# allowed, by the paper or by anything else.
+#
+# The roots are the directories a path on a machine of this kind starts with.
+# `home` and `Users` are where people keep their files, `mnt`, `media`, `data`
+# and `srv` are where drives and shares are attached, and `tmp`, `var`, `root`,
+# `opt` and `private` are the rest of a filesystem a run folder gets written
+# under. A first segment outside this list is a word in a sentence far more
+# often than it is a directory.
+LOCAL_ROOTS = (
+    "home",
+    "Users",
+    "mnt",
+    "tmp",
+    "var",
+    "root",
+    "opt",
+    "srv",
+    "media",
+    "data",
+    "private",
 )
 
+# One segment of a path, as any of these systems spells it. A segment stops at
+# whitespace, at a quote, and at the punctuation that ends a sentence around a
+# path rather than belonging to it.
+_SEGMENT = r"[\w.+~%-]+"
+_ROOTS = "|".join(LOCAL_ROOTS)
 
-def local_references(text: str) -> list[tuple[str, str]]:
-    """Every local path or address in one string, as (what it is, what it says)."""
+LOCAL_REFERENCE_PATTERNS = (
+    (
+        "an absolute path",
+        # A leading slash or two, then one of the roots, then at least one more
+        # segment. The lookbehind drops the two shapes that are not a path: a
+        # slash after a word character or a dot is prose or arithmetic, and a
+        # slash after a colon or another slash is inside a URL, which is why
+        # `https://home/x` is left alone while `//home/x` is not.
+        re.compile(rf"(?<![\w~:./])//?(?:{_ROOTS})(?:/{_SEGMENT})+/?"),
+    ),
+    ("a file URL", re.compile(r"file://[^\s\"'<>)\]]+")),
+    (
+        "a path in a home directory",
+        re.compile(rf"(?<![\w/])~(?:{_SEGMENT})?/{_SEGMENT}(?:/{_SEGMENT})*"),
+    ),
+    (
+        "a path under $HOME",
+        re.compile(rf"\$(?:HOME|\{{HOME\}})/{_SEGMENT}(?:/{_SEGMENT})*"),
+    ),
+    (
+        "a Windows share",
+        re.compile(rf"\\\\{_SEGMENT}\\{_SEGMENT}(?:\\{_SEGMENT})*"),
+    ),
+    (
+        "a Windows path",
+        # An upper case drive letter and at least two segments after it. A lower
+        # case one is the `$f:\mathbb{R}$` of a reviewer's notation far more
+        # often than it is a drive, and a drive with a single segment, `E:/Z`,
+        # is a matrix entry in their algebra more often than it is a file.
+        re.compile(rf"(?<![\w:])[A-Z]:[\\/]{_SEGMENT}(?:[\\/]{_SEGMENT})+"),
+    ),
+    (
+        "an email address",
+        re.compile(r"[\w.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}"),
+    ),
+)
+
+Fact = tuple[str, "re.Pattern[str]"]
+
+
+def machine_facts(*, run_dir: Path | str | None = None) -> tuple[Fact, ...]:
+    """The strings that name this machine, looked up rather than recognised.
+
+    All of it is known at publish time, so none of it has to be guessed from
+    the shape of a string. The home directory, this checkout, the temporary
+    directory, the working directory and the run folder are paths. The user
+    name is matched as a path segment rather than as a word, because a user
+    name is also somebody's name in a sentence. The host name is matched whole.
+
+    A fact is refused wherever it appears, which is the one rule the manuscript
+    cannot waive. A paper that happens to print this operator's home directory
+    does not make it publishable from here.
+    """
+    exact: dict[str, str] = {}
+
+    def fact(why: str, value: object) -> None:
+        text = str(value or "").rstrip("/")
+        if len(text) > 1 and text not in ("~", "/"):
+            exact.setdefault(text, why)
+
+    for why, source in (
+        ("the home directory", Path.home),
+        ("the working directory", Path.cwd),
+    ):
+        try:
+            fact(why, source().resolve())
+        except (OSError, RuntimeError):
+            pass
+    fact("this checkout", REPO.resolve())
+    fact("the temporary directory", Path(tempfile.gettempdir()).resolve())
+    host = socket.gethostname()
+    fact("the host name", host)
+    fact("the host name", host.split(".")[0])
+    if run_dir is not None:
+        try:
+            fact("the run folder", Path(run_dir).resolve())
+        except (OSError, RuntimeError):
+            pass
+
+    facts = [(why, re.compile(re.escape(text))) for text, why in exact.items()]
+    try:
+        user = getpass.getuser()
+    except Exception:  # noqa: BLE001 - no account name is not a failure to scan
+        try:
+            user = Path.home().name
+        except (OSError, RuntimeError):
+            user = ""
+    if len(user) > 1:
+        facts.append(
+            (
+                "the user name as a path segment",
+                re.compile(rf"[/\\]{re.escape(user)}(?![\w.+-])"),
+            )
+        )
+    return tuple(facts)
+
+
+_THIS_MACHINE: tuple[Fact, ...] | None = None
+
+
+def this_machine() -> tuple[Fact, ...]:
+    """The facts about this machine, worked out once."""
+    global _THIS_MACHINE
+    if _THIS_MACHINE is None:
+        _THIS_MACHINE = machine_facts()
+    return _THIS_MACHINE
+
+
+def manuscript_text(workspace: Path | str | None) -> str:
+    """The manuscript as the reviewers were handed it, for the allowance above.
+
+    A hit that appears verbatim in here is the paper's own text: the author
+    address printed on its first page, a repository path in its data
+    availability statement, a tool path in its methods. Publishing a review
+    cannot be refused because the paper under review says something, so those
+    are allowed. The exact facts are not.
+    """
+    if workspace is None:
+        return ""
+    manuscript = Path(workspace) / "manuscript.md"
+    try:
+        return manuscript.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def local_references(
+    text: str,
+    *,
+    facts: tuple[Fact, ...] | None = None,
+    manuscript: str = "",
+) -> list[tuple[str, str]]:
+    """Every local path or address in one string, as (what it is, what it says).
+
+    The longest form of each hit only. A home directory sitting inside a longer
+    path is one leak and not two, and reporting it twice would make a refusal
+    read as though more had escaped than did.
+    """
+    facts = this_machine() if facts is None else facts
+    found: list[tuple[str, str]] = [
+        (why, match.group(0)) for why, pattern in facts for match in pattern.finditer(text)
+    ]
+    named = {hit for _, hit in found}
+    for why, pattern in LOCAL_REFERENCE_PATTERNS:
+        for match in pattern.finditer(text):
+            hit = match.group(0)
+            if hit in named or (manuscript and hit in manuscript):
+                continue
+            found.append((why, hit))
     return [
-        (why, match.group(0))
-        for why, pattern in LOCAL_REFERENCE_PATTERNS
-        for match in pattern.finditer(text)
+        (why, hit)
+        for why, hit in found
+        if not any(hit != other and hit in other for _, other in found)
     ]
 
 
-def local_reference_fields(value: object, trail: str = "") -> list[str]:
+def local_reference_fields(
+    value: object,
+    *,
+    facts: tuple[Fact, ...] | None = None,
+    manuscript: str = "",
+    trail: str = "",
+) -> list[str]:
     """Where a record names the machine that wrote it rather than the review.
 
     A published provenance record is read by people with no access to this disk,
-    so an absolute path, a home-relative path or a mail address in it identifies
-    the operator rather than the review. Every string in the record is read,
-    whatever field it sits in, because the scrubber works from a list of field
-    names and this is the guard on the field the engine has not written yet.
+    so a path on it, the name of this machine or somebody's address in it
+    identifies the operator rather than the review. Every string in the record
+    is read, whatever field it sits in, because the scrubber works from a list
+    of field names and this is the guard on the field the engine has not
+    written yet. A dictionary key is read too: a map of figures keyed by their
+    absolute paths leaks through the key rather than the value.
+
+    Each line names the field, what the hit is, and the text itself, so an
+    editor reading a refusal can see which string in which field stopped it.
     """
+    facts = this_machine() if facts is None else facts
     found: list[str] = []
     if isinstance(value, dict):
         for key, child in value.items():
-            found += local_reference_fields(child, f"{trail}.{key}" if trail else str(key))
+            below = f"{trail}.{key}" if trail else str(key)
+            if isinstance(key, str):
+                found += [
+                    f"{below} (the field name) names {why}, {hit!r}"
+                    for why, hit in local_references(key, facts=facts, manuscript=manuscript)
+                ]
+            found += local_reference_fields(
+                child, facts=facts, manuscript=manuscript, trail=below
+            )
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            found += local_reference_fields(child, f"{trail}[{index}]")
+            found += local_reference_fields(
+                child, facts=facts, manuscript=manuscript, trail=f"{trail}[{index}]"
+            )
     elif isinstance(value, str):
         found += [
-            f"{trail or '(root)'} names {why}, {text!r}"
-            for why, text in local_references(value)
+            f"{trail or '(root)'} names {why}, {hit!r}"
+            for why, hit in local_references(value, facts=facts, manuscript=manuscript)
         ]
     return found
 
@@ -1766,37 +1997,82 @@ def without_local_paths(value: object, *, field: str = "") -> object:
     return value
 
 
-def local_path_needles() -> list[str]:
-    """This machine's own two directories, named exactly.
+# Every file in a bundle is scanned. The two JSON forms are parsed first, the
+# rest is read as the text it is.
+SCANNED_SUFFIXES = (".json", ".jsonl", ".md", ".txt")
+PARSED_SUFFIXES = (".json", ".jsonl")
 
-    The patterns above describe the shape of a local path. These two strings are
-    the operator's home directory and this checkout as they actually are on the
-    machine doing the publishing, so a leak of either is named for what it is
-    even in a form the patterns were not written for.
+
+def file_local_references(
+    path: Path,
+    *,
+    facts: tuple[Fact, ...] | None = None,
+    manuscript: str = "",
+) -> list[str]:
+    """What one file in a bundle says about the machine it was written on.
+
+    A JSON file is parsed and every string in it read at any depth, key or
+    value, rather than being scanned as text. JSON doubles a backslash, so
+    `C:\\Users\\someone\\x.pdf` reaches the file as `C:\\\\Users\\\\...` and a
+    text scan of it matched nothing: a Windows path nested inside a record the
+    engine wrote went out in a published bundle. Parsing reads the value a
+    reader of that file gets.
+
+    Markdown and plain text are scanned as text, because the prose is the
+    content there and there is no structure to walk.
+
+    Each line names the field as well as the hit, so a refusal says where in the
+    file to look. A JSON file that will not parse is scanned as text and said to
+    be unparsed rather than skipped, because a half-written record is exactly
+    when a scan matters.
     """
-    needles = {str(REPO.resolve())}
+    facts = this_machine() if facts is None else facts
     try:
-        needles.add(str(Path.home().resolve()))
-    except (OSError, RuntimeError):
-        pass
-    return sorted(needle for needle in needles if needle not in ("", "/"))
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+    suffix = path.suffix.lower()
+
+    def as_text(field: str) -> list[str]:
+        return [
+            f"{field} names {why}, {hit!r}"
+            for why, hit in local_references(text, facts=facts, manuscript=manuscript)
+        ]
+
+    if suffix == ".json":
+        try:
+            value = json.loads(text)
+        except ValueError:
+            return as_text("(unparsed JSON, read as text)")
+        return local_reference_fields(value, facts=facts, manuscript=manuscript)
+    if suffix == ".jsonl":
+        found: list[str] = []
+        for number, line in enumerate(text.splitlines(), start=1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except ValueError:
+                found += [
+                    f"line {number} (unparsed JSON, read as text) names {why}, {hit!r}"
+                    for why, hit in local_references(
+                        line, facts=facts, manuscript=manuscript
+                    )
+                ]
+                continue
+            found += local_reference_fields(
+                row, facts=facts, manuscript=manuscript, trail=f"line {number}"
+            )
+        return found
+    return as_text("text")
 
 
-def text_local_references(text: str) -> list[str]:
-    """What one file's text says about the machine it was written on.
-
-    The longest form of each leak only. A home directory sitting inside a longer
-    path is one leak, not two, and reporting it twice would make a refusal read
-    as though more had escaped than did.
-    """
-    found = {text_found for _, text_found in local_references(text)}
-    found |= {needle for needle in local_path_needles() if needle in text}
-    return sorted(
-        hit for hit in found if not any(hit != other and hit in other for other in found)
-    )
-
-
-def bundle_local_path_leaks(dest: Path) -> list[str]:
+def bundle_local_path_leaks(
+    dest: Path,
+    *,
+    facts: tuple[Fact, ...] | None = None,
+    manuscript: str = "",
+) -> list[str]:
     """Every file in a written bundle that names the machine that wrote it.
 
     This reads what is on disk rather than what the code meant to write, which
@@ -1805,17 +2081,14 @@ def bundle_local_path_leaks(dest: Path) -> list[str]:
     including the specialist reports copied in from the run and the prose of a
     document rendered from them.
     """
+    facts = this_machine() if facts is None else facts
     found: list[str] = []
     for path in sorted(Path(dest).rglob("*")):
-        if not path.is_file() or path.suffix.lower() not in (".json", ".jsonl", ".md", ".txt"):
-            continue
-        try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
+        if not path.is_file() or path.suffix.lower() not in SCANNED_SUFFIXES:
             continue
         found += [
-            f"{path.relative_to(dest).as_posix()} names {hit}"
-            for hit in text_local_references(text)
+            f"{path.relative_to(dest).as_posix()}: {line}"
+            for line in file_local_references(path, facts=facts, manuscript=manuscript)
         ]
     return found
 
@@ -2109,14 +2382,36 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # anything is written, so the manifest hashes the file a reader will get.
     published_package = without_local_paths(package) if args.publish else package
 
+    # What counts as naming this machine, worked out once for both scans: the
+    # exact facts, this run folder among them, and the manuscript whose own
+    # words neither scan may refuse the review for.
+    facts = machine_facts(run_dir=run_dir)
+    manuscript = manuscript_text(workspace)
+
     if args.publish:
-        leaked = local_reference_fields(provenance)
+        leaked = local_reference_fields(provenance, facts=facts, manuscript=manuscript)
         if leaked:
             raise CommandError(
                 "This record would publish the machine it was made on: "
                 f"{', '.join(leaked)}. A published record may not name the "
                 "operator's filesystem or anybody's address."
             )
+
+    # The repository's schema gate, run here rather than after the bundle is on
+    # disk. `npm run check:schema` validates what is already in docs/reviews, so
+    # a record carrying a value the schema does not allow used to publish with
+    # exit 0 and be caught by a later check, leaving a bundle to delete by hand.
+    # Rehearsals are validated too: a rehearsal exists to find out whether this
+    # run would publish, and one that would be refused at the gate should say so
+    # now rather than look like a clean dry run.
+    try:
+        assert_valid_provenance(provenance, source="provenance.json")
+    except InvalidProvenance as error:
+        raise CommandError(
+            f"{error} Nothing was written. The record has to satisfy "
+            "schemas/review-provenance.schema.json before a bundle exists, and "
+            "the schema is not the thing to edit to make this pass."
+        ) from error
 
     # Every document is rendered from the scrubbed package. Rendering from the
     # unscrubbed one put the paths back: a reviewer's `source_review_path` was
@@ -2160,7 +2455,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
         # is the check that cannot be fooled by a file nobody thought to scrub,
         # or by a field no version of this script knows the engine writes.
         if args.publish:
-            leaked = bundle_local_path_leaks(stage)
+            leaked = bundle_local_path_leaks(stage, facts=facts, manuscript=manuscript)
             if leaked:
                 raise CommandError(
                     "This bundle names the machine that produced it: "

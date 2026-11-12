@@ -240,7 +240,7 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         <p class="prov__value mono">
           workflow {plugin.workflow_version || "unversioned"}
           {plugin.finding_schema_version
-            ? ` · findings v${plugin.finding_schema_version}`
+            ? ` · findings ${plugin.finding_schema_version}`
             : ""}
         </p>
         {pluginHash.sha256 && (

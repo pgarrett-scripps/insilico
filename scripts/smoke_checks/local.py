@@ -37,6 +37,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fetch_preprint import Preprint  # noqa: E402
 import local_review  # noqa: E402
+import review_schema  # noqa: E402
 
 PAPER = Preprint(
     url="https://www.biorxiv.org/content/10.1101/2026.03.12.711120v1",
@@ -204,7 +205,11 @@ PACKAGE = {
         },
     ],
     "arm": "full-two-track",
-    "synthesis_policy": "editor-pooled",
+    # `editor` or `none`, the two words the engine writes: `editor` when an
+    # editor agent pooled the findings and `none` when nothing pooled them. This
+    # fixture used to say `editor-pooled`, which no engine writes, so every
+    # check that read it was reading a shape the publish path never meets.
+    "synthesis_policy": "editor",
     "workflow_version": WORKFLOW_VERSION,
     "finding_schema_version": FINDING_SCHEMA,
     "review_guard_status": "clean",
@@ -313,6 +318,18 @@ def _protocol_agents(tracks: tuple[str, ...]) -> dict:
         "allowed_tools": ["Read"],
     }
     return agents
+
+
+def _tool_calls(tracks: tuple[str, ...]) -> dict[str, int]:
+    """Tool calls per agent slot, which is the shape `progress.json` carries.
+
+    The plugin server writes `{slot: agent.calls}` and the run total beside it
+    as `tool_calls_total`. This fixture used to write a single integer as
+    `tool_calls`, a shape no engine produces, so anything here that read it was
+    reading a run that could not exist. Derived from the protocol agents so the
+    slots are the ones the protocol declares and the total is their sum.
+    """
+    return {slot: int(agent["tool_calls"]) for slot, agent in _protocol_agents(tracks).items()}
 
 
 def _stages(tracks: tuple[str, ...], **overrides) -> dict:
@@ -519,7 +536,12 @@ def _run_directory(
             "provider": "claude-code",
             "model": "Each agent runs on the model its agent file pins.",
             "effort": "high",
-            "mode": "plugin",
+            # The engine writes the arm here, twice: `mode` and `arm` are the
+            # same word. The fixture used to say `plugin`, which the engine
+            # never writes, and the publish path reads `mode` to say which arm
+            # ran, so the one value a reader of the page sees was a word no run
+            # could have produced.
+            "mode": "full-two-track",
             "arm": "full-two-track",
             "reviewers": 3,
             "paper_id": "paper-abc",
@@ -550,8 +572,8 @@ def _run_directory(
             "findings_delivered": 6,
             "quarantined_findings_count": 0,
             "review_guard_status": "clean",
-            "tool_calls": 64,
-            "tool_calls_total": 64,
+            "tool_calls": _tool_calls(TRACKS),
+            "tool_calls_total": sum(_tool_calls(TRACKS).values()),
             "started": STARTED_AT,
             "updated": "2026-11-11T12:31:00+00:00",
         },
@@ -596,8 +618,14 @@ def _run_tree(root: Path, **overrides) -> Path:
     return root
 
 
-def _workspace(root: Path, paper_id: str = "paper-abc") -> Path:
-    """The folder the engine's import command writes, as publish needs it."""
+def _workspace(root: Path, paper_id: str = "paper-abc", manuscript: str | None = None) -> Path:
+    """The folder the engine's import command writes, as publish needs it.
+
+    `manuscript.md` is part of that folder, written by the importer as the
+    blocks the reviewers were handed. The leak scan reads it, because a hit that
+    appears in the paper is the paper's own text rather than this machine's, so a
+    check of the allowance has to be able to say what the paper said.
+    """
     workspace = Path(root)
     workspace.mkdir(parents=True, exist_ok=True)
     (workspace / "paper.json").write_text(
@@ -605,6 +633,12 @@ def _workspace(root: Path, paper_id: str = "paper-abc") -> Path:
     )
     (workspace / "manifest.json").write_text(
         json.dumps({"paper_id": paper_id, "files": {}}), encoding="utf-8"
+    )
+    (workspace / "manuscript.md").write_text(
+        manuscript
+        if manuscript is not None
+        else "[b1 | Abstract | manuscript page 1]\nA fixture manuscript.\n",
+        encoding="utf-8",
     )
     return workspace
 
@@ -2875,9 +2909,15 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
     # And the bundle is scanned as a bundle, in every text file, for anything
     # that names the machine rather than the review. This machine's own two
     # directories are named exactly, on top of the shapes.
-    needles = local_review.local_path_needles()
-    assert str(local_review.REPO.resolve()) in needles, "the checkout has to be one of the needles"
-    assert home in needles, "the operator's home directory has to be one of the needles"
+    facts = local_review.machine_facts(run_dir=Path(home) / "runs" / "local" / "review")
+    for why, value in (
+        ("the checkout", str(local_review.REPO.resolve())),
+        ("the home directory", home),
+        ("the run folder", f"{home}/runs/local/review"),
+    ):
+        assert any(pattern.search(value) for _, pattern in facts), (
+            f"{why} has to be one of the facts this machine is known by: {value}"
+        )
 
     with tempfile.TemporaryDirectory() as tmp:
         dest = Path(tmp)
@@ -3290,6 +3330,425 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
     )
 
 
+def check_a_review_of_a_detection_paper_publishes() -> None:
+    """The same two guards, through publish, on a run that reads like a real one.
+
+    The findings talk about `mAP@0.5`, dose per kilogram per day, a matrix entry
+    and a map in set notation, and quote the author address printed in the
+    manuscript. All of it published before the scan was narrowed only because no
+    reviewer had written it yet, and all of it has to publish now.
+
+    Then the leak, in the one place the old scan could not see it: a Windows
+    path inside a list inside a finding, where JSON doubles the backslash. That
+    bundle is refused and nothing is written.
+    """
+    home = str(Path.home().resolve())
+    notation = dict(
+        PACKAGE,
+        stages=_stages(TRACKS),
+        summary=(
+            "Detection improves to mAP@0.5 of 0.71, and IoU@0.75 is the wrong "
+            "operating point for the claim in the abstract."
+        ),
+        limitations=[
+            "The dose is reported as 5 mg /kg/day, and the incidence as 3.1 "
+            "(events)/person/year, so the two tables cannot both be right.",
+            r"The map $f:\mathbb{R}$ is assumed continuous, and E:/Z is undefined.",
+        ],
+        findings=[
+            dict(
+                PACKAGE["findings"][0],
+                comment=(
+                    "The interval cannot be read off mAP@0.5 and the per-class "
+                    "counts. Correspondence to a.author@univ.example.edu asks "
+                    "for the alignment files, and /etc/hosts is the convention "
+                    "they cite."
+                ),
+            ),
+            *PACKAGE["findings"][1:],
+        ],
+    )
+    manuscript = (
+        "[b1 | Abstract | manuscript page 1]\nA detection paper.\n\n"
+        "[b2 | Methods | manuscript page 2]\n"
+        "Correspondence to a.author@univ.example.edu.\n"
+    )
+
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            run = _run_directory(Path(tmp) / "run", **{"editor-package.json": notation})
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            workspace = _workspace(Path(tmp) / "workspace", manuscript=manuscript)
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    run,
+                    workspace,
+                    "--publish",
+                )
+            assert code == 0, (
+                f"a review that discusses a detection metric has to publish, got exit {code}: "
+                f"{out.getvalue()}"
+            )
+            letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
+            assert "mAP@0.5" in letter, "the reviewer's own metric did not reach the letter"
+
+            # And the leak, nested where a text scan of the file cannot see it.
+            nested = reviews / "2026" / "fixture-paper" / "v1" / "r2"
+            leaking = dict(
+                notation,
+                findings=[
+                    dict(
+                        notation["findings"][0],
+                        where=["ok", "C:\\Users\\someone\\runs\\out\\core-1.json"],
+                    ),
+                    *notation["findings"][1:],
+                ],
+            )
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                refused = _publish(
+                    _prepared(Path(tmp) / "prepared-2", nested, attempt=2),
+                    _run_directory(Path(tmp) / "run-2", **{"editor-package.json": leaking}),
+                    workspace,
+                    "--publish",
+                )
+            message = stderr.getvalue()
+            assert refused == 2, f"a path nested in a finding should refuse, got {refused}"
+            assert not nested.exists(), f"a refused publish left a bundle at {nested}"
+            assert "Nothing was written" in message, (
+                f"the refusal has to say the tree was left alone: {message!r}"
+            )
+
+
+def check_a_record_the_schema_refuses_is_never_written() -> None:
+    """A guard value the engine cannot write published with exit 0.
+
+    `npm run check:schema` is the gate on the repository and it runs after the
+    fact, so a record carrying a word the schema does not list was written into
+    the published tree and caught later, leaving a bundle to delete by hand.
+    `review_guard_status` is the case in hand: `read_run` reports whatever the
+    run recorded, publish copies it into the record, and the schema allows only
+    `clean` and `quarantined`.
+
+    Publish validates the record against that schema before it writes anything.
+    """
+    with _stub_engine():
+        record = local_review.build_provenance(
+            **_build_arguments(editor="fixture-editor", human_reviewed=True, publishing=True)
+        )
+    review_schema.assert_valid_provenance(record, source="fixture")
+
+    broken = json.loads(json.dumps(record))
+    broken["generator"]["run"]["review_guard_status"] = "partially-quarantined"
+    try:
+        review_schema.assert_valid_provenance(broken, source="fixture")
+    except review_schema.InvalidProvenance as refusal:
+        assert "review_guard_status" in str(refusal), f"the refusal has to name the field: {refusal}"
+    else:
+        raise AssertionError("a guard status the schema does not list was accepted")
+
+    # A keyword the validator does not implement stops it rather than passing
+    # quietly, because a validator that ignores what it cannot read reports a
+    # record sound that nobody checked.
+    try:
+        review_schema.provenance_problems(
+            {"schema_version": 4}, {"type": "object", "dependentRequired": {"a": ["b"]}}
+        )
+    except review_schema.UnsupportedSchema as stopped:
+        assert "dependentRequired" in str(stopped), f"it has to name the keyword: {stopped}"
+    else:
+        raise AssertionError("an unsupported schema keyword was quietly ignored")
+
+    # And through publish, with the word in the run rather than in the record:
+    # nothing is written, and the refusal says so.
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            run = _run_directory(
+                Path(tmp) / "run",
+                **{
+                    "progress.json": {
+                        "status": "complete",
+                        "error": "",
+                        "reviewers": 3,
+                        "arm": "full-two-track",
+                        "stages": _stages(TRACKS),
+                        "findings_delivered": 6,
+                        "quarantined_findings_count": 0,
+                        "review_guard_status": "partially-quarantined",
+                        "tool_calls": _tool_calls(TRACKS),
+                        "tool_calls_total": sum(_tool_calls(TRACKS).values()),
+                        "started": STARTED_AT,
+                        "updated": "2026-11-11T12:31:00+00:00",
+                    },
+                    "editor-package.json": dict(
+                        PACKAGE,
+                        stages=_stages(TRACKS),
+                        review_guard_status="partially-quarantined",
+                    ),
+                },
+            )
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    run,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                )
+            message = stderr.getvalue()
+            assert code == 2, f"a record the schema refuses must not publish, got exit {code}"
+            assert not destination.exists(), f"a refused publish left a bundle at {destination}"
+            assert "review_guard_status" in message, (
+                f"the refusal has to name the field that failed: {message!r}"
+            )
+            assert "Nothing was written" in message, (
+                f"the refusal has to say the tree was left alone: {message!r}"
+            )
+
+
+# Ordinary review text, every line of it refused by the first version of the
+# leak scan. A specialist reader writes like this, so each one has to publish.
+REVIEW_TEXT = (
+    "detection improves to mAP@0.5 of 0.71, which the abstract rounds up",
+    "IoU@0.75 is the wrong operating point for this claim",
+    "the incidence is 3.1 (events)/person/year, not per month",
+    "the dose is reported as 5 mg /kg/day for six weeks",
+    r"the map $f:\mathbb{R}$ is assumed continuous and never shown to be",
+    "the matrix entry E:/Z is left undefined in equation 4",
+    "the hosts convention is the one /etc/hosts uses",
+    "the earlier round is linked as [x](/reviews/2026/foo/v1)",
+    "https://home/x resolves, so that URL is not a path",
+    "docs/reviews/2026/paper/v1/r1 is where the last attempt sits",
+    "the denominator should be n/2 and/or the paired count",
+)
+
+# And the strings that are a leak whatever file they sit in.
+LEAKING_TEXT = (
+    "/mnt/data1/papers/draft.pdf",
+    "/tmp/claude-1000/session/run",
+    "~/papers/x.pdf",
+    "~someone/papers/x.pdf",
+    "$HOME/papers/x.pdf",
+    "${HOME}/papers/x.pdf",
+    "file:///var/tmp/draft.pdf",
+    r"\\fileserver\share\papers",
+    r"C:\Users\someone\papers\x.pdf",
+    "D:/papers/drafts/x.pdf",
+    "//home/someone/papers/x.pdf",
+    "someone@example.org",
+)
+
+
+def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
+    """The scan refused the review it was guarding.
+
+    `mAP@0.5` and `IoU@0.75` read as mail addresses, `(events)/person/year` and
+    `5 mg /kg/day` read as absolute paths, `E:/Z` and the `$f:\\mathbb{R}$` of a
+    specialist's notation read as Windows paths, and an author address quoted
+    from the paper read as a leak. Each of them made publish exit 2, so a review
+    that discussed a detection metric could not be published at all, which is as
+    broken as one that leaks a path.
+
+    What is refused now is either an exact fact about this machine, looked up
+    rather than recognised, or one of a few shapes that cannot be anything but a
+    local path. A hit that appears verbatim in the manuscript is the paper's own
+    text and is allowed, except for the facts, which no paper can waive.
+    """
+    manuscript = (
+        "[b1 | Abstract | manuscript page 1]\nA short fixture manuscript.\n\n"
+        "[b2 | Methods | manuscript page 2]\n"
+        "Correspondence to a.author@univ.example.edu, data at /srv/public/set.\n"
+    )
+    facts = local_review.machine_facts(run_dir="/tmp/fixture-run/review")
+
+    for text in REVIEW_TEXT:
+        hits = local_review.local_references(text, facts=facts, manuscript=manuscript)
+        assert hits == [], f"ordinary review text was refused as a leak: {text!r} -> {hits}"
+
+    for text in LEAKING_TEXT:
+        hits = local_review.local_references(text, facts=facts, manuscript=manuscript)
+        assert hits, f"a local path published: {text!r}"
+
+    # The manuscript's own words, both ways round. The address printed in the
+    # paper is allowed, the same shape that is not in the paper is not, and
+    # `/srv/public/set` is a path the paper gives rather than one from here.
+    for allowed in (
+        "write to a.author@univ.example.edu for the alignment files",
+        "the data they cite at /srv/public/set is not the set in table 2",
+    ):
+        hits = local_review.local_references(allowed, facts=facts, manuscript=manuscript)
+        assert hits == [], f"the paper's own text was refused: {allowed!r} -> {hits}"
+    assert local_review.local_references(
+        "write to someone@example.org instead", facts=facts, manuscript=manuscript
+    ), "an address the paper does not print is still a leak"
+
+    # And the facts, refused even when the manuscript prints them, because a
+    # paper that happens to name this operator's home directory does not make
+    # it publishable from here.
+    for why, value in (
+        ("the home directory", f"{Path.home().resolve()}/papers/x.pdf"),
+        ("the run folder", "/tmp/fixture-run/review/progress.json"),
+    ):
+        assert local_review.local_references(value, facts=facts, manuscript=value), (
+            f"{why} is a fact about this machine and the paper cannot allow it: {value}"
+        )
+
+    # Every refusal names the file, the field and the text, which is what an
+    # editor reading one needs in order to find it.
+    with tempfile.TemporaryDirectory() as tmp:
+        dest = Path(tmp)
+        (dest / "summary.md").write_text(
+            "\n\n".join(REVIEW_TEXT) + "\n", encoding="utf-8"
+        )
+        (dest / "provenance.json").write_text(
+            json.dumps({"review": {"id": "p/v1/r1"}, "notes": list(REVIEW_TEXT)}),
+            encoding="utf-8",
+        )
+        assert local_review.bundle_local_path_leaks(
+            dest, facts=facts, manuscript=manuscript
+        ) == [], "a bundle of ordinary review text must publish"
+
+        # A Windows path inside a JSON value, at depth, in a list. JSON doubles
+        # a backslash, so the text scan this replaced saw nothing here and a
+        # published bundle carried the path.
+        (dest / "editor-package.json").write_text(
+            json.dumps({"extra": {"deep": [{"where": ["ok", "C:\\Users\\ty\\x.pdf"]}]}}),
+            encoding="utf-8",
+        )
+        # A path keyed by itself, and a path in one row of a JSONL file.
+        (dest / "findings.jsonl").write_text(
+            json.dumps({"uid": "f-1", "comment": "mAP@0.5 is fine"}) + "\n"
+            + json.dumps({"uid": "f-2", "memo": "/mnt/data1/papers/draft.pdf"}) + "\n",
+            encoding="utf-8",
+        )
+        found = local_review.bundle_local_path_leaks(dest, facts=facts, manuscript=manuscript)
+        windows = [line for line in found if line.startswith("editor-package.json:")]
+        assert windows == [
+            "editor-package.json: extra.deep[0].where[1] names a Windows path, "
+            "'C:\\\\Users\\\\ty\\\\x.pdf'"
+        ], f"a Windows path inside a JSON value was not seen as a value: {found}"
+        rows = [line for line in found if line.startswith("findings.jsonl:")]
+        assert rows == [
+            "findings.jsonl: line 2.memo names an absolute path, "
+            "'/mnt/data1/papers/draft.pdf'"
+        ], f"a leak in one row of a JSONL file has to name the row: {found}"
+        assert len(found) == 2, f"nothing else in this bundle is a leak: {found}"
+
+        # A JSON file that will not parse is read as text rather than skipped,
+        # because a half-written record is exactly when a scan matters.
+        (dest / "editor-package.json").write_text(
+            '{"memo": "/mnt/data1/papers/draft.pdf", ', encoding="utf-8"
+        )
+        damaged = local_review.file_local_references(
+            dest / "editor-package.json", facts=facts, manuscript=manuscript
+        )
+        assert damaged and "unparsed JSON" in damaged[0], (
+            f"a damaged JSON file has to be scanned as text: {damaged}"
+        )
+
+
+def check_the_run_fixture_is_a_run_the_engine_could_have_written() -> None:
+    """The fixtures drifted into shapes no engine writes.
+
+    `synthesis_policy` said `editor-pooled` where the engine writes `editor` or
+    `none`, `protocol.json` said `mode: plugin` where the engine writes the arm,
+    and `progress.json` carried `tool_calls: 64` where the engine writes one
+    count per agent slot. A check that reads a shape the publish path never
+    meets proves nothing about publishing.
+
+    Generating these from the plugin server would be better, and it is closed:
+    the writers live on `peerreviewagents.plugin.server`, a private submodule,
+    and `check_nothing_reaches_into_the_engines_internals` refuses an import of
+    one. So the shapes are asserted instead, against the vocabulary the schema
+    and the protocol state, and the two numbers have to agree.
+    """
+    # The arms 0.9 defines, as the schema's own note on `generator.run.arm`
+    # lists them.
+    arms = {
+        "full-two-track",
+        "reviewers-only",
+        "single",
+        "single-revision",
+        "manuscript-only",
+        "draft-check",
+    }
+    assert PACKAGE["synthesis_policy"] in ("editor", "none"), (
+        f"the engine writes `editor` or `none`: {PACKAGE['synthesis_policy']!r}"
+    )
+    assert PACKAGE["arm"] in arms, f"the package's arm is not one the engine runs: {PACKAGE['arm']}"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        run = _run_directory(Path(tmp) / "run")
+        protocol = json.loads((run / "protocol.json").read_text(encoding="utf-8"))
+        progress = json.loads((run / "progress.json").read_text(encoding="utf-8"))
+
+        assert protocol["mode"] == protocol["arm"], (
+            f"the engine writes the arm as `mode` as well: {protocol['mode']!r}"
+        )
+        assert protocol["arm"] in arms, f"the protocol's arm is not one the engine runs: {protocol}"
+
+        calls = progress["tool_calls"]
+        assert isinstance(calls, dict), f"tool calls are counted per agent slot: {calls!r}"
+        assert set(calls) == set(protocol["agents"]), (
+            "the slots that made tool calls are the slots the protocol declares: "
+            f"{sorted(set(calls) ^ set(protocol['agents']))}"
+        )
+        assert all(isinstance(count, int) for count in calls.values()), (
+            f"each slot's tool calls are a count: {calls}"
+        )
+        assert progress["tool_calls_total"] == sum(calls.values()), (
+            "the run total has to be the sum of the slots: "
+            f"{progress['tool_calls_total']} against {sum(calls.values())}"
+        )
+
+
+def check_a_version_is_only_recorded_when_it_looks_like_one() -> None:
+    """The fingerprint recorded a broken harness's complaint as its version.
+
+    The engine's resolver returns the first line of `claude --version`, standard
+    error included, and does not look at the exit status. A CLI that is on PATH
+    and will not run answers with its error, and `transport.version` carried
+    that sentence. Only something shaped like a version is kept now, so a broken
+    harness reports none, and the line under the record already says what that
+    means.
+    """
+    original = local_review.engine_public
+    answers = {
+        "2.0.14 (Claude Code)": "2.0.14 (Claude Code)",
+        "v1.2.3": "v1.2.3",
+        "claude: error while loading shared libraries: libffi.so.8": None,
+        "/usr/bin/claude: not found": None,
+        "Error: not logged in": None,
+        "": None,
+        None: None,
+    }
+    try:
+        for reported, expected in answers.items():
+            local_review.engine_public = lambda *a, reported=reported, **k: (
+                lambda: reported
+            )
+            assert local_review.claude_version() == expected, (
+                f"{reported!r} should be recorded as {expected!r}, got "
+                f"{local_review.claude_version()!r}"
+            )
+    finally:
+        local_review.engine_public = original
+
+    # The page is told the finding schema version by the record, and the value
+    # already carries its own `v`. The component printed another one in front of
+    # it, so every published page read `findings vreview-finding-v3`.
+    component = (
+        Path(local_review.__file__).resolve().parents[1] / "src" / "components" / "Provenance.astro"
+    ).read_text(encoding="utf-8")
+    assert "findings v${" not in component, (
+        "the finding schema version carries its own `v`, so the page must not add one"
+    )
+
+
 # The checks that read a run folder, which in 0.9 means the engine reads it.
 # They write a fixture run to disk and hand it to `peerreviewagents.read_run`,
 # so they are checks against the real reader, and there is nothing for them to
@@ -3355,6 +3814,14 @@ ENGINE_BACKED = (
     (
         check_a_written_bundle_carries_no_local_path,
         "a published bundle, read back off disk, names no local path",
+    ),
+    (
+        check_a_review_of_a_detection_paper_publishes,
+        "a review full of @-notation publishes, and one naming a Windows path does not",
+    ),
+    (
+        check_a_record_the_schema_refuses_is_never_written,
+        "a record the provenance schema refuses is never written",
     ),
 )
 

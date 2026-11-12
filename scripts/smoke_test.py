@@ -18,18 +18,21 @@ from smoke_checks.local import (
     check_a_minor_finding_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
     check_a_rehearsal_claims_no_reading,
+    check_a_version_is_only_recorded_when_it_looks_like_one,
     check_a_rehearsal_is_never_written_into_the_published_tree,
     check_a_run_of_one_paper_cannot_be_published_as_another,
     check_an_attestation_needs_a_named_editor,
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_every_published_file_is_hashed,
     check_nothing_reaches_into_the_engines_internals,
+    check_ordinary_review_text_publishes_and_a_local_path_does_not,
     check_severity_is_read_from_the_engine_not_guessed,
     check_the_advisory_verdict_is_labelled_advisory,
     check_the_attestation_says_what_it_has_to_say,
     check_the_decision_is_attributed_to_a_person,
     check_the_locked_engine_release_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
+    check_the_run_fixture_is_a_run_the_engine_could_have_written,
     check_the_skill_commands_match_the_engine_parser,
     run_engine_backed_checks,
 )
@@ -152,6 +155,12 @@ def main() -> int:
     print("ok  the engine's verdict is published and labelled advisory")
     check_nothing_reaches_into_the_engines_internals()
     print("ok  every engine name these scripts use is on the package's own surface")
+    check_ordinary_review_text_publishes_and_a_local_path_does_not()
+    print("ok  ordinary review notation publishes and a local path is refused by name")
+    check_the_run_fixture_is_a_run_the_engine_could_have_written()
+    print("ok  the run fixtures are shaped the way the engine writes a run")
+    check_a_version_is_only_recorded_when_it_looks_like_one()
+    print("ok  a version is recorded only when the probe answered with one")
 
     run_engine_backed_checks()
 
