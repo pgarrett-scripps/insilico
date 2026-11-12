@@ -233,7 +233,11 @@ directory, this checkout, the run folder, and the working or temporary directory
 when either is deeper than one level, plus a host name that carries a digit, a
 hyphen or a dot. Each fact is registered in both the spelling it was given in
 and the spelling it resolves to, so a home directory or a run folder reached
-through a symbolic link is the same fact under either name.
+through a symbolic link is the same fact under either name. The run folder is
+registered twice over for the same reason: once as the engine resolved it and
+once as it was typed on the command line, together with the folder each of
+those sits in, because a reviewer who was handed a link has only the typed
+spelling to paste into a comment.
 
 Each one is matched as a plain case-insensitive substring, in every string and
 every JSON field name at any depth. The text is scanned as written and again in
@@ -247,7 +251,18 @@ slashes and `/./` segments. The loop is what matters: one pass would decode
 `%252F` to `%2F` and stop, and HTML entities can hide a percent sign from the
 decoder that runs before them, so the steps repeat until the text is stable. A
 scheme's `//` survives the collapse, because `https://home/x` is a URL and
-`//home/x` is a path and the colon in front is what tells them apart. There is
+`//home/x` is a path and the colon in front is what tells them apart.
+
+A backslash is two characters at once and nothing in the text says which one it
+is, so the canonical form is built twice and a hit from either counts. In one
+reading the escape is dropped first, which is what `\/home\/ty\/x` and
+`ty\-MS\-7C80` need. In the other the backslash is folded to a separator first,
+which is what `\opt\.cache\insilico` needs, since dropping the escape first
+would eat the separator in front of a segment that starts with `.`, `-` or `_`
+and turn the path into `/opt.cache/insilico`. Neither reading is the right one
+and the scan does not try to pick.
+
+There is
 no left or right boundary on the match, no
 vocabulary that is exempt and no prose-only mode, because a string like
 `/home/ty` or `ty-ms-7c80` cannot turn up in a review of a paper or in this

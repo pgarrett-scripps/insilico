@@ -4106,6 +4106,7 @@ def _detected_facts(
     cwd: str = "/data",
     checkout: str = "/export/people/pretend/insilico",
     run_dir: str | None = None,
+    typed_run: str | None = None,
 ) -> tuple:
     """The facts `machine_facts` detects on a machine described here.
 
@@ -4144,7 +4145,7 @@ def _detected_facts(
     os.environ["PWD"] = cwd
     os.environ["TMPDIR"] = tmp
     try:
-        return local_review.machine_facts(run_dir=run_dir)
+        return local_review.machine_facts(run_dir=run_dir, typed_run=typed_run)
     finally:
         for name, value in saved.items():
             if value is None:
@@ -4501,6 +4502,12 @@ def check_every_spelling_of_a_machine_fact_is_the_same_fact() -> None:
     canonical form, so folding never loses a hit it would have found as
     written.
 
+    Both readings of a backslash are canonicalised, because a quoted separator
+    and a quoted punctuation mark are written the same way: a path segment that
+    starts with `.`, `-` or `_` is lost by one reading and a quoted host name by
+    the other. The run folder is a fact in the spelling the editor typed as well
+    as the one the engine resolved it to.
+
     Every case here is a tier 1 refusal: unwaivable by the flag and by the
     manuscript, refused as an allowance, and through a real publish it leaves
     nothing on disk.
@@ -4575,6 +4582,94 @@ def check_every_spelling_of_a_machine_fact_is_the_same_fact() -> None:
                     f"{[leak.line for leak in hits]}"
                 )
 
+    # A path segment that begins with punctuation, which is the case that
+    # decides how a backslash has to be read. Read as a quoted punctuation mark
+    # first, `\opt\.cache\insilico` becomes `/opt.cache/insilico`, which is a
+    # path on no machine, and the fact is gone with no hit at all. Read as a
+    # separator first it is the path it was. Neither reading is right on its
+    # own, `ty\-MS\-7C80` needing the other one, so both are canonicalised and
+    # a hit is taken from whichever found it. These four are a cache directory,
+    # a scratch disk, a runs folder and the macOS temporary directory.
+    for checkout in (
+        "/opt/.cache/insilico",
+        "/data/-scratch/run",
+        "/mnt/data1/.runs/p1",
+        "/var/folders/_k/abc/T",
+    ):
+        facts = _detected_facts(
+            home="/home/pretend", user="pretend", checkout=checkout
+        )
+        for separator, label in (("\\", "a backslash"), ("＼", "U+FF3C")):
+            quoted = checkout.replace("/", separator)
+            for text in (quoted, f"the run wrote {quoted}/x.pdf"):
+                hits = local_review.local_references(text, facts=facts)
+                assert any(leak.machine_fact for leak in hits), (
+                    f"a checkout at {checkout} published as {label}: {text!r} -> "
+                    f"{[leak.line for leak in hits]}"
+                )
+                for waiver in ({"manuscript": f"{text}\n"}, {"allowed": (text,)}):
+                    again = local_review.local_references(text, facts=facts, **waiver)
+                    assert any(leak.machine_fact for leak in again), (
+                        f"{list(waiver)[0]} waived {checkout} written as {label}: "
+                        f"{text!r}"
+                    )
+
+    # And the reading the other order is there for still holds: a quoted slash
+    # and a quoted hyphen are the separator and the hyphen they stand for.
+    facts = _detected_facts(
+        home="/home/pretend", user="pretend", checkout="/home/pretend/insilico",
+        host="ty-MS-7C80",
+    )
+    for text in ("\\/home\\/pretend\\/x", "ty\\-MS\\-7C80", "ty＼-MS＼-7C80"):
+        hits = local_review.local_references(text, facts=facts)
+        assert any(leak.machine_fact for leak in hits), (
+            f"a quoted separator stopped being this machine: {text!r} -> "
+            f"{[leak.line for leak in hits]}"
+        )
+
+    # The run folder in the spelling the editor typed. The engine resolves the
+    # path it is given before it records it, so a run reached through a link was
+    # a fact only as the target, and the path the editor typed, which is the one
+    # in every log line they can see, was tier 2 and published with the flag the
+    # refusal printed.
+    with tempfile.TemporaryDirectory() as tmp:
+        real = Path(tmp) / "real-runs"
+        link = Path(tmp) / "linked-runs"
+        real.mkdir()
+        link.symlink_to(real, target_is_directory=True)
+        (real / "one").mkdir()
+        typed = link / "one"
+        facts = _detected_facts(
+            home="/home/pretend",
+            user="pretend",
+            checkout="/home/pretend/insilico",
+            run_dir=str(real / "one"),
+            typed_run=str(typed),
+        )
+        cases = (
+            ("the typed run folder", f"{typed}/audit.md"),
+            ("the typed run's parent", f"{link}/notes.txt"),
+            ("the bare typed parent", str(link)),
+            ("the typed run as entities", f"{typed}/audit.md".replace("/", "&sol;")),
+            (
+                "the typed run with a zero-width space",
+                f"{typed}/audit.md".replace("/", "/​"),
+            ),
+        )
+        for why, text in cases:
+            hits = local_review.local_references(text, facts=facts)
+            assert any(leak.machine_fact for leak in hits), (
+                f"{why} published: {text!r} -> {[leak.line for leak in hits]}"
+            )
+            for waiver in ({"manuscript": f"{text}\n"}, {"allowed": (text,)}):
+                again = local_review.local_references(text, facts=facts, **waiver)
+                assert any(leak.machine_fact for leak in again), (
+                    f"{list(waiver)[0]} waived {why}: {text!r}"
+                )
+            assert local_review.names_a_specific_fact(text, facts), (
+                f"{why} has to be refused as an allowance: {text!r}"
+            )
+
 
 def check_a_machine_fact_in_any_spelling_leaves_no_bundle_behind() -> None:
     """The same spellings through a real publish, which has to write nothing.
@@ -4584,6 +4679,13 @@ def check_a_machine_fact_in_any_spelling_leaves_no_bundle_behind() -> None:
     half written and then refused is worse than either outcome. The fact used
     here is this checkout, which is two segments or more on any machine that can
     run this suite, and the refusal has to say the hit is one no flag waives.
+
+    Then the same publish from two checkouts whose paths hold a segment starting
+    with punctuation, because the backslash spellings used to pass in a clone at
+    `/opt/.cache/insilico` and this check would have said so only on a machine
+    whose checkout happened to be spelled that way. Then a run reached through a
+    symbolic link and published by the path the editor typed, which the engine
+    resolves before it records it.
     """
     checkout = str(local_review.REPO)
     with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
@@ -4629,6 +4731,129 @@ def check_a_machine_fact_in_any_spelling_leaves_no_bundle_behind() -> None:
                     f"the refusal has to say the tree was left alone: {message!r}"
                 )
 
+    # The same publish from a checkout whose path holds a segment starting with
+    # punctuation, which no longer depends on the shape of the checkout this
+    # suite happens to be run from. In a clone at `/opt/.cache/insilico` the
+    # backslash spellings used to pass the scan and publish, because one reading
+    # of a backslash turns `\opt\.cache\insilico` into `/opt.cache/insilico`.
+    # `REPO` names only how a path inside the repository is written down, so
+    # standing it somewhere else for the length of a publish into a temporary
+    # tree changes which strings are this machine and nothing else.
+    quoted = [
+        spelling
+        for spelling in _path_spellings("/placeholder")
+        if "backslash" in spelling[0]
+    ]
+    assert len(quoted) == 3, f"the backslash spellings went missing: {quoted}"
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            workspace = _workspace(Path(tmp) / "workspace")
+            standing = local_review.REPO
+            cases = [
+                (checkout, why, text)
+                for checkout in ("/opt/.cache/insilico", "/opt/-x/insilico")
+                for why, text in _path_spellings(checkout)
+                if "backslash" in why
+            ]
+            try:
+                for index, (checkout, why, text) in enumerate(cases, start=1):
+                    local_review.REPO = Path(checkout)
+                    package = dict(
+                        PACKAGE,
+                        stages=_stages(TRACKS),
+                        findings=[
+                            dict(
+                                PACKAGE["findings"][0],
+                                comment=f"The reviewer read the draft at {text}/x.pdf.",
+                            ),
+                            *PACKAGE["findings"][1:],
+                        ],
+                    )
+                    run = _run_directory(
+                        Path(tmp) / f"run-{index}", **{"editor-package.json": package}
+                    )
+                    destination = reviews / "2026" / "fixture-paper" / "v1" / f"r{index}"
+                    stderr = io.StringIO()
+                    with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(
+                        io.StringIO()
+                    ):
+                        code = _publish(
+                            _prepared(
+                                Path(tmp) / f"prepared-{index}", destination, attempt=index
+                            ),
+                            run,
+                            workspace,
+                            "--publish",
+                        )
+                    message = stderr.getvalue()
+                    assert code == 2, (
+                        f"a checkout at {checkout} written with {why} published, "
+                        f"exit {code}: {text!r}"
+                    )
+                    assert not destination.exists(), (
+                        f"a refused publish left a bundle at {destination}"
+                    )
+                    assert "name this machine itself" in message, (
+                        f"{why} of {checkout} was refused as something a flag could "
+                        f"waive: {message!r}"
+                    )
+            finally:
+                local_review.REPO = standing
+
+    # A run reached through a symbolic link, published by the path the editor
+    # typed. The engine resolves what it is given before it records it, so the
+    # typed spelling reached the scan only as the target it pointed at, and a
+    # review quoting the path the editor had just typed published it with the
+    # flag the refusal offered.
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            workspace = _workspace(Path(tmp) / "workspace")
+            real = Path(tmp) / "real-runs"
+            real.mkdir()
+            link = Path(tmp) / "linked-runs"
+            link.symlink_to(real, target_is_directory=True)
+            typed = link / "one"
+            for index, (why, text) in enumerate(
+                (
+                    ("the run folder as it was typed", f"{typed}/audit_statistics.md"),
+                    ("the folder the typed run sits in", f"{link}/notes.txt"),
+                ),
+                start=1,
+            ):
+                package = dict(
+                    PACKAGE,
+                    stages=_stages(TRACKS),
+                    findings=[
+                        dict(
+                            PACKAGE["findings"][0],
+                            comment=f"The reviewer read the audit at {text}.",
+                        ),
+                        *PACKAGE["findings"][1:],
+                    ],
+                )
+                _run_directory(real / "one", **{"editor-package.json": package})
+                destination = reviews / "2026" / "fixture-paper" / "v1" / f"r{index}"
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(
+                    io.StringIO()
+                ):
+                    code = _publish(
+                        _prepared(
+                            Path(tmp) / f"prepared-{index}", destination, attempt=index
+                        ),
+                        typed,
+                        workspace,
+                        "--publish",
+                    )
+                message = stderr.getvalue()
+                assert code == 2, f"{why} published, exit {code}: {text!r}"
+                assert not destination.exists(), (
+                    f"a refused publish left a bundle at {destination}"
+                )
+                assert "name this machine itself" in message, (
+                    f"{why} was refused as something a flag could waive: {message!r}"
+                )
+
 
 def check_a_path_shaped_key_is_refused_rather_than_published_without_it() -> None:
     """A published artifact was quietly missing an entry, or quietly holding one.
@@ -4643,14 +4868,24 @@ def check_a_path_shaped_key_is_refused_rather_than_published_without_it() -> Non
     Engine 4f50944 writes no mapping keyed by a path, so there is nothing for
     that rewrite to be faithful to. Every path-shaped key is refused now, inside
     this repository or outside it, and `--allow-text` publishes one as it
-    stands. What is still projected is a value in one of the engine's own path
+    stands unless the key names this machine, which no flag publishes and which
+    the refusal therefore does not offer the flag for. What is still projected
+    is a value in one of the engine's own path
     fields, and each projection is printed on publish, so a dropped `pdf` is
     never silent either. A value in such a field that is not a path at all is
     left alone, because `/ 2 is the wrong denominator` is a sentence.
     """
     home = str(Path.home().resolve())
-    for key in (f"{home}/fig1.png", "/export/people/pretend/fig1.png",
-                str(local_review.REPO / "docs" / "figs" / "a.png")):
+    # Which way out the refusal offers follows the tier of the key. A key that
+    # names this machine is tier 1 wherever it sits, and the version that
+    # offered the flag for one sent the editor to an allowance that was then
+    # refused for naming a specific fact, which reads as the script changing
+    # its mind between one command and the next.
+    for key, waivable in (
+        (f"{home}/fig1.png", False),
+        (str(local_review.REPO / "docs" / "figs" / "a.png"), False),
+        ("/export/people/pretend/fig1.png", True),
+    ):
         package = {"summary": "One reading.", "shared_images": {key: "a" * 64}}
         try:
             local_review.without_local_paths(package)
@@ -4659,9 +4894,23 @@ def check_a_path_shaped_key_is_refused_rather_than_published_without_it() -> Non
         else:
             raise AssertionError(f"a path used as a field name published: {key}")
         assert key in message, f"the refusal has to name the key: {message!r}"
-        assert "--allow-text=" in message, (
-            f"the refusal has to say how to publish it deliberately: {message!r}"
+        assert ("--allow-text=" in message) is waivable, (
+            f"the refusal for {key!r} offered the wrong way out: {message!r}"
         )
+        if not waivable:
+            assert "no flag publishes it" in message, (
+                f"a key naming this machine has to say no flag waives it: {message!r}"
+            )
+            # And the flag does not publish it when it is passed anyway.
+            try:
+                local_review.without_local_paths(package, allowed=(key,))
+            except local_review.CommandError:
+                pass
+            else:
+                raise AssertionError(
+                    f"an allowance published a field name that is this machine: {key}"
+                )
+            continue
 
         # Named back on the command line, it is published as it stands, value
         # and all, rather than edited on the way out.

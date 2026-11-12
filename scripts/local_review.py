@@ -1950,7 +1950,9 @@ def path_segments(text: str) -> int:
     return len([part for part in re.split(r"[\\/]+", text.strip("\\/")) if part])
 
 
-def machine_facts(*, run_dir: Path | str | None = None) -> tuple[Fact, ...]:
+def machine_facts(
+    *, run_dir: Path | str | None = None, typed_run: Path | str | None = None
+) -> tuple[Fact, ...]:
     """The strings that name this machine, looked up rather than recognised.
 
     All of it is known at publish time, so none of it has to be guessed from the
@@ -2025,14 +2027,26 @@ def machine_facts(*, run_dir: Path | str | None = None) -> tuple[Fact, ...]:
         both_spellings(why, os.environ.get(name, ""))
     both_spellings("this checkout", REPO)
     both_spellings("the temporary directory", tempfile.gettempdir())
-    if run_dir is not None:
-        both_spellings("the run folder", run_dir)
+    # The run folder, in the spelling the engine reads back and in the one the
+    # editor typed. The engine resolves the path it was given before it records
+    # it, so on a machine where the runs sit under a link, `--run
+    # ~/runs/latest` never became a fact at all and the path the editor typed
+    # and every log line holds was tier 2, waivable with the flag the refusal
+    # printed. `typed_run` is absolute but not resolved, which is the whole
+    # point of it.
+    for why, folder in (
+        ("the run folder", run_dir),
+        ("the run folder as it was given", typed_run),
+    ):
+        if folder is None:
+            continue
+        both_spellings(why, folder)
         # The folder the runs live in, which is the home directory or the
         # checkout on most machines and a scratch disk on some. It is in every
         # run path the engine writes, so a run folder named relative to it still
         # names the machine.
         try:
-            both_spellings("the folder the runs live in", Path(str(run_dir)).parent)
+            both_spellings("the folder the runs live in", Path(str(folder)).parent)
         except (OSError, RuntimeError, ValueError):
             pass
 
@@ -2193,7 +2207,7 @@ _DOT_SEGMENT = re.compile(r"/\.(?=/)")
 _REPEATED_SLASH = re.compile(r"(?<!:)/{2,}")
 
 
-def canonical_text(text: str) -> str:
+def canonical_text(text: str, *, escapes_first: bool = True) -> str:
     """One string reduced to the characters it reads as, to a fixed point.
 
     Every encoding this scan has been got past is undone here rather than in a
@@ -2206,6 +2220,15 @@ def canonical_text(text: str) -> str:
     slash and hyphen look-alikes, and reducing `//` and `/./` to `/`. The loop
     stops when the string stops changing, which it always does, because every
     step either shortens the string or replaces a character with an ASCII one.
+
+    A backslash is two things at once and the order decides which one it is
+    read as, so there is no order that is right. With `escapes_first`, which is
+    the default, `\\/home\\/ty` is a quoted `/home/ty` and `ty\\-MS\\-7C80` is a
+    quoted host name. Without it, a backslash is a separator before anything
+    else, and `\\opt\\.cache\\insilico` is `/opt/.cache/insilico` rather than
+    the `/opt.cache/insilico` the other reading produces, which is a path on no
+    machine. Either reading can be the one that holds the fact, so the scan
+    takes both and reads a hit from whichever found it.
 
     The case of the result is the case of the input. Every fact and every
     pattern matches case-insensitively already, so folding the case here would
@@ -2222,8 +2245,12 @@ def canonical_text(text: str) -> str:
         step = html.unescape(step)
         step = urllib.parse.unquote(step)
         step = "".join(ch for ch in step if unicodedata.category(ch) != "Cf")
-        step = _ESCAPED_PUNCTUATION.sub(r"\1", step)
-        step = step.translate(_LOOKALIKES)
+        if escapes_first:
+            step = _ESCAPED_PUNCTUATION.sub(r"\1", step)
+            step = step.translate(_LOOKALIKES)
+        else:
+            step = step.translate(_LOOKALIKES)
+            step = _ESCAPED_PUNCTUATION.sub(r"\1", step)
         step = _DOT_SEGMENT.sub("", step)
         step = _REPEATED_SLASH.sub("/", step)
         if step == current:
@@ -2235,14 +2262,17 @@ def canonical_text(text: str) -> str:
 def _scan_forms(text: str) -> tuple[str, ...]:
     """The forms of one string the scan reads: as written, and canonical.
 
-    Two forms rather than a list of encodings. The raw string is read because
-    the Windows share and the percent-encoded path are shapes in their own
-    right, and the canonical form is read because `%2Fhome%2Fbob`,
+    A handful of forms rather than a list of encodings. The raw string is read
+    because the Windows share and the percent-encoded path are shapes in their
+    own right, and the canonical form is read because `%2Fhome%2Fbob`,
     `&#47;home&#47;ty`, `/home/./ty`, `\\/home\\/ty` and `∕home∕ty` are all the
-    same path and none of them matches a pattern written in slashes.
+    same path and none of them matches a pattern written in slashes. Both
+    readings of a backslash are canonicalised, because a quoted separator and a
+    quoted punctuation mark are written the same way and whichever reading holds
+    the fact is the one that matters.
     """
-    reduced = canonical_text(text)
-    return (text,) if reduced == text else (text, reduced)
+    forms = (text, canonical_text(text), canonical_text(text, escapes_first=False))
+    return tuple(dict.fromkeys(forms))
 
 
 def names_a_specific_fact(text: str, facts: Sequence[Fact]) -> bool:
@@ -2337,18 +2367,22 @@ def local_references(
     # folding, `%2Fhome%2Fty` being a path only once decoded, and it stays, in
     # the only spelling that shows what it is.
     written = [leak for leak in carrying if not only_folded.get(leak.text, False)]
-    covers = [canonical_text(leak.text) for leak in written]
+    covers = [_scan_forms(leak.text) for leak in written]
     echoes = [leak for leak in carrying if only_folded.get(leak.text, False)]
     spellings: list[Leak] = []
     for leak, cover in zip(written, covers):
         hidden = [
-            echo for echo in echoes if echo.machine_fact and echo.text in cover
+            echo
+            for echo in echoes
+            if echo.machine_fact and any(echo.text in form for form in cover)
         ]
         if hidden and not leak.machine_fact:
             leak = leak._replace(why=hidden[0].why, machine_fact=True)
         spellings.append(leak)
     spellings += [
-        echo for echo in echoes if not any(echo.text in cover for cover in covers)
+        echo
+        for echo in echoes
+        if not any(echo.text in form for cover in covers for form in cover)
     ]
     longest = [
         leak
@@ -2529,6 +2563,7 @@ def without_local_paths(
     allowed: Sequence[str] = (),
     projected: list[str] | None = None,
     trail: str = "",
+    facts: Sequence[Fact] | None = None,
 ) -> object:
     """The same JSON with the engine's own path fields made relative or dropped.
 
@@ -2546,11 +2581,30 @@ def without_local_paths(
     `docs/figs/a.png` with nothing said. Engine 0.9 writes no mapping keyed by
     an absolute path at all, so there is no engine behaviour behind the rewrite
     to preserve, and a path-shaped key is refused here instead.
+
+    What the refusal offers depends on what the key is. A key that names this
+    machine is tier 1 wherever it sits, and the version that offered the flag
+    for one sent the editor to a flag that then refused the allowance for
+    naming a specific fact, which reads as the script changing its mind. The
+    flag is offered only for a key an allowance could actually publish, and a
+    key that names this machine is refused whatever was allowed.
     """
+    facts = this_machine() if facts is None else facts
     if isinstance(value, dict):
         scrubbed = {}
         for key, child in value.items():
-            if isinstance(key, str) and looks_like_a_path(key) and key not in set(allowed):
+            keyed_by_a_path = isinstance(key, str) and looks_like_a_path(key)
+            own_name = keyed_by_a_path and names_a_specific_fact(str(key), facts)
+            if keyed_by_a_path and (own_name or key not in set(allowed)):
+                choice = (
+                    "read it, then edit the run's own copy. A field name that"
+                    " names this machine is refused whatever it is wrapped in,"
+                    " and no flag publishes it."
+                    if own_name
+                    else "read it, then either edit the run's own copy or"
+                    " publish it deliberately with"
+                    f" --allow-text={shlex.quote(str(key))}."
+                )
                 raise CommandError(
                     f"{key!r} is a field name in the engine's own output and it"
                     " is shaped like a path. Dropping it would publish an"
@@ -2558,9 +2612,7 @@ def without_local_paths(
                     " would publish an artifact that differs from the engine's"
                     " own output with nothing saying so, and keeping it would"
                     " publish the path. None of the three is this script's"
-                    " decision: read it, then either edit the run's own copy or"
-                    " publish it deliberately with"
-                    f" --allow-text={shlex.quote(key)}."
+                    f" decision: {choice}"
                 )
             below = f"{trail}.{key}" if trail else str(key)
             cleaned = without_local_paths(
@@ -2569,6 +2621,7 @@ def without_local_paths(
                 allowed=allowed,
                 projected=projected,
                 trail=below,
+                facts=facts,
             )
             if cleaned is not _DROPPED:
                 scrubbed[key] = cleaned
@@ -2583,6 +2636,7 @@ def without_local_paths(
                     allowed=allowed,
                     projected=projected,
                     trail=f"{trail}[{index}]",
+                    facts=facts,
                 )
                 for index, child in enumerate(value)
             )
@@ -2965,7 +3019,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # against it first. An editor who read `file:///<checkout>/scripts/x.py` in
     # a refusal and passed it back waived a specific fact, because the flag was
     # taken at its word and nothing asked what the text it allowed was made of.
-    facts = machine_facts(run_dir=run_dir)
+    facts = machine_facts(run_dir=run_dir, typed_run=os.path.abspath(args.run))
     refused = [text for text in allowed if names_a_specific_fact(text, facts)]
     if refused:
         raise CommandError(
@@ -3060,7 +3114,9 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # anything is written, so the manifest hashes the file a reader will get.
     projected: list[str] = []
     published_package = (
-        without_local_paths(package, allowed=allowed, projected=projected)
+        without_local_paths(
+            package, allowed=allowed, projected=projected, facts=facts
+        )
         if args.publish
         else package
     )
