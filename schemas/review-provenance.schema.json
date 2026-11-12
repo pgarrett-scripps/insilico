@@ -321,6 +321,11 @@
           "$comment": "The bundle's path inside this repository, or its slug and route when it was written elsewhere. Never an absolute path, for the same reason as generator.run.directory.",
           "type": "string",
           "pattern": "^[^/]"
+        },
+        "allowed_text": {
+          "$comment": "Text the publish-time leak scan read as a local path or an address, which the editor then read and allowed with --allow-text because it is the review's own words rather than anything about their machine. Recorded because an allowance is an editorial decision rather than a setting: a reader of the page can see exactly what was waived and disagree with it. Absent when nothing was waived, which is the ordinary case. It can never hold a string that names the machine the review ran on, because those are looked up rather than recognised and no flag waives one.",
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
         }
       }
     },
