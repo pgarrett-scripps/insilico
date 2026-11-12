@@ -300,12 +300,16 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         </p>
         {/* A finding the evidence guards threw out never reaches the letter, and
             a reader weighing the review should see how many were thrown out
-            rather than only how many survived. */}
+            rather than only how many survived. The row itself is in the
+            bundle: review_package carries quarantined_findings into
+            editor-package.json, so saying it is not in the bundle sent a
+            reader looking for something they already had. */}
         {quarantined > 0 && (
           <p class="prov__hash">
             {quarantined} finding{quarantined === 1 ? " was" : "s were"} quarantined
-            by the evidence guards and {quarantined === 1 ? "is" : "are"} not in
-            this bundle.
+            by the evidence guards and held out of the decision letter.
+            {quarantined === 1 ? " It is" : " They are"} in this bundle's
+            editor-package.json under quarantined_findings.
           </p>
         )}
         {/* A review with nothing in it is a result, and "0 findings in the

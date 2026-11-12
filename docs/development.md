@@ -209,9 +209,12 @@ $PY scripts/local_review.py publish \
     --publish
 ```
 
-`publish` writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`,
-`editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. It
-refuses to overwrite an existing bundle. Without `--publish` the bundle lands
+`publish` writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`, one
+`audit_<track>.md` for each of the six specialist tracks the run reported on,
+`editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. A
+track the arm asked for with no report in the run is named as a gap on the
+rendered page rather than quietly left out. It refuses to overwrite an existing
+bundle. Without `--publish` the bundle lands
 under `runs/rehearsal/`, which is git-ignored: a run made to see what a prompt
 change did is a question about the pipeline, and answering it should not add a
 review to someone's paper.
@@ -228,10 +231,24 @@ the thing it names is.
 by shape: any detected path of two or more segments, which is the home
 directory, this checkout, the run folder, and the working or temporary directory
 when either is deeper than one level, plus a host name that carries a digit, a
-hyphen or a dot. Each one is matched as a plain case-insensitive substring, in
-every string and every JSON field name at any depth, after the text is
-normalised and percent-decoded and after look-alike slashes such as U+2215 and
-U+FF0F are read as slashes. There is no left or right boundary on the match, no
+hyphen or a dot. Each fact is registered in both the spelling it was given in
+and the spelling it resolves to, so a home directory or a run folder reached
+through a symbolic link is the same fact under either name.
+
+Each one is matched as a plain case-insensitive substring, in every string and
+every JSON field name at any depth. The text is scanned as written and again in
+one canonical form, built by a single function that applies the same steps over
+and over until the string stops changing: NFKC normalisation, HTML entity
+decoding, percent-decoding, removal of the format characters that print as
+nothing such as U+200B and U+FEFF, folding of look-alike slashes such as U+2215
+and U+FF0F and of look-alike hyphens such as U+2010 and U+2212, removal of a
+backslash placed in front of ASCII punctuation, and collapsing of repeated
+slashes and `/./` segments. The loop is what matters: one pass would decode
+`%252F` to `%2F` and stop, and HTML entities can hide a percent sign from the
+decoder that runs before them, so the steps repeat until the text is stable. A
+scheme's `//` survives the collapse, because `https://home/x` is a URL and
+`//home/x` is a path and the colon in front is what tells them apart. There is
+no left or right boundary on the match, no
 vocabulary that is exempt and no prose-only mode, because a string like
 `/home/ty` or `ty-ms-7c80` cannot turn up in a review of a paper or in this
 repository's own vocabulary. Nothing waives one. No flag reaches it, an
@@ -282,8 +299,18 @@ one of the engine's own path fields, which are `pdf`, `plugin_dir`,
 `memo_path`, is made relative to this checkout when it lies inside it and
 dropped when it does not. That happens only when the value is actually shaped
 like a path, so a reviewer's `/ 2 is the wrong denominator` in such a field is
-published as written. Every publish prints one line naming what was projected,
-or saying that nothing was, so the edit is never silent. A path used as a JSON
+published as written.
+
+Every publish prints one line about `editor-package.json`, because the bundle's
+copy is not the engine's file with a few strings scrubbed. It is rebuilt from the
+same reading by `review_package`, and that rebuild is the intended projection:
+the engine's package carries the whole run and the bundle publishes the parts a
+reader of the review needs. The line compares the two sets of top-level keys and
+names what the bundle does not carry, such as `stages` and `reviewer_provenance`,
+what it adds, which today is `findings_source`, and any path field that was
+rewritten or dropped. It is computed from the engine's own file read back off the
+run folder rather than from a list in this repository, so the next engine release
+changes the line instead of making it wrong. A path used as a JSON
 *field name* is refused outright, inside this checkout or outside it. Engine
 0.9 writes no mapping keyed by a path, so a rewrite there would be faithful to
 nothing, and dropping the key would publish an artifact missing an entry the
