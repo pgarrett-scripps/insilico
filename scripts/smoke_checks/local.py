@@ -3614,7 +3614,7 @@ def check_an_editor_can_publish_a_hit_the_review_meant_and_never_a_fact() -> Non
             message = stderr.getvalue()
             assert code == 2, f"a path-shaped phrase is refused first, got exit {code}"
             assert not refused_at.exists(), f"a refused publish left a bundle at {refused_at}"
-            assert "--allow-text R:/G/B" in message, (
+            assert "--allow-text=R:/G/B" in message, (
                 f"the refusal has to print the flag to copy: {message!r}"
             )
             assert "recorded in the provenance record" in message, (
@@ -3647,8 +3647,9 @@ def check_an_editor_can_publish_a_hit_the_review_meant_and_never_a_fact() -> Non
             )
             review_schema.assert_valid_provenance(record, source="allowed")
 
-            # And the fact, with the flag that names it exactly. It is refused
-            # on the same terms as it was without the flag.
+            # And the fact, with the flag that names it exactly. The flag is
+            # read before the scan runs, so what is refused is the allowance,
+            # and the reason names the allowance rather than the finding.
             leaking = dict(
                 package,
                 findings=[
@@ -3673,9 +3674,32 @@ def check_an_editor_can_publish_a_hit_the_review_meant_and_never_a_fact() -> Non
             message = stderr.getvalue()
             assert code == 2, f"no flag waives this machine's own home directory, got {code}"
             assert not nested.exists(), f"a refused publish left a bundle at {nested}"
-            assert "name this machine itself" in message, (
+            assert "An allowance may not contain anything that names this machine" in message, (
                 f"the refusal has to say why the flag did not apply: {message!r}"
             )
+            assert f"{home}/papers/draft.pdf" in message, (
+                f"the refusal has to quote the allowance it rejected: {message!r}"
+            )
+
+            # An allowance that wraps a fact in something else is rejected on
+            # the same terms: `file:///` in front of a checkout path was what
+            # got one past the flag check, because the check matched the whole
+            # allowance against a fact rather than looking inside it.
+            wrapped = reviews / "2026" / "fixture-paper" / "v1" / "r4"
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared-4", wrapped, attempt=4),
+                    run,
+                    workspace,
+                    "--publish",
+                    f"--allow-text=file:///{local_review.REPO}/scripts/local_review.py",
+                )
+            assert code == 2, f"a wrapped fact waived through the flag, got {code}"
+            assert not wrapped.exists(), f"a refused publish left a bundle at {wrapped}"
+            assert "An allowance may not contain anything that names this machine" in (
+                stderr.getvalue()
+            ), f"the refusal has to name the allowance: {stderr.getvalue()!r}"
 
 
 def check_a_draft_check_run_is_refused_as_the_arm_it_is() -> None:
@@ -3932,11 +3956,19 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
         local_review.local_references("R:/G/B channel order", facts=facts)
         + local_review.local_references(f"{Path.home().resolve()}/x.pdf", facts=facts)
     )
-    assert "--allow-text R:/G/B" in refusal, (
+    assert "--allow-text=R:/G/B" in refusal, (
         f"the refusal has to print the flag an editor can copy: {refusal!r}"
     )
-    assert f"--allow-text {Path.home().resolve()}/x.pdf" not in refusal, (
+    assert f"--allow-text={Path.home().resolve()}/x.pdf" not in refusal, (
         f"the refusal must not offer a flag for a fact about this machine: {refusal!r}"
+    )
+    # The `=` form rather than two arguments, because a hit can begin with a
+    # hyphen and as a separate argument that reads as another option.
+    hyphen = local_review.leak_refusal(
+        local_review.local_references("write to -bob@example.org", facts=facts)
+    )
+    assert "--allow-text=-bob@example.org" in hyphen, (
+        f"a hit that starts with a hyphen needs the = form: {hyphen!r}"
     )
     assert "1 of these name this machine itself" in refusal, (
         f"the refusal has to say how many hits nothing waives: {refusal!r}"
@@ -4024,32 +4056,37 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
 
 def _detected_facts(
     *,
-    home: str = "/home/pretend",
-    host: str = "claude",
+    home: str = "/export/people/pretend",
+    host: str = "ty-MS-7C80",
     user: str = "pretend",
     tmp: str = "/tmp",
     cwd: str = "/data",
+    checkout: str = "/export/people/pretend/insilico",
+    run_dir: str | None = None,
 ) -> tuple:
-    """The tier-1 facts `machine_facts` detects on a machine described here.
+    """The facts `machine_facts` detects on a machine described here.
 
-    Tier 1 is looked up, so the only way to check that it is bounded is to say
-    what was looked up. Each of these is a real machine someone publishes from:
-    a host called `claude` or `media`, a user called `pi` or `test`, a working
-    directory of `/data`. The patching lasts exactly one call and the sources
-    are put back, because a fact detected from the wrong machine would be wrong
-    for every other check in this file.
+    A fact is looked up rather than recognised, so the only way to check how it
+    is matched is to say what was looked up. Each of these is a real machine
+    someone publishes from: a home outside `/home` entirely, a host called
+    `media` or `editor`, a user called `pi` or `test`, a working directory of
+    `/data`. The patching lasts exactly one call and the sources are put back,
+    because a fact detected from the wrong machine would be wrong for every
+    other check in this file.
     """
     saved = {name: Path.__dict__.get(name) for name in ("home", "cwd")}
     saved_host = local_review.socket.gethostname
     saved_user = local_review.getpass.getuser
     saved_tmp = local_review.tempfile.gettempdir
+    saved_repo = local_review.REPO
     Path.home = classmethod(lambda cls: Path(home))  # type: ignore[method-assign]
     Path.cwd = classmethod(lambda cls: Path(cwd))  # type: ignore[method-assign]
     local_review.socket.gethostname = lambda: host
     local_review.getpass.getuser = lambda: user
     local_review.tempfile.gettempdir = lambda: tmp
+    local_review.REPO = Path(checkout)
     try:
-        return local_review.machine_facts()
+        return local_review.machine_facts(run_dir=run_dir)
     finally:
         for name, value in saved.items():
             if value is None:
@@ -4059,145 +4096,321 @@ def _detected_facts(
         local_review.socket.gethostname = saved_host
         local_review.getpass.getuser = saved_user
         local_review.tempfile.gettempdir = saved_tmp
+        local_review.REPO = saved_repo
 
 
-# What this machine is called is refused wherever it appears, and nothing waives
-# it. That is why each of these ordinary sentences has to publish: a tier-1
-# misfire refuses every publish from the machine it misfires on, with no flag
-# and no manuscript to get around it.
-TIER_ONE_ALLOWED = (
+# A generic fact is a word that happens to be this machine's: a one-segment
+# directory, a one-word host name, a bare account name. A word is not a leak, so
+# each of these ordinary sentences has to publish with no flag and no hit at all.
+# Every one of them was refused by some version of this scan.
+MUST_PUBLISH = (
     ("the temperature/tmp ratio is unlabelled", {}),
     ("the dataset is at https://doi.org/10.1000/tmp/abc", {}),
     ("the training/data/test split is never stated", {"cwd": "/data"}),
     (r"the rotation is $2\pi$ radians", {"user": "pi"}),
     ("the train/test split is stratified", {"user": "test"}),
+    ("reported as and/or", {"user": "or"}),
+    ("the dose was 5 mg/kg/day", {}),
+    ("the dose was 5 mg /kg/day", {}),
+    ("mAP@0.5 and IoU@0.75 are reported", {}),
+    ("the rate is 3 (events)/person/year", {}),
+    ("~1/3 of the cohort responded", {}),
     ("claude-code ran the panel", {"host": "claude"}),
     ("the media files are not deposited", {"host": "media"}),
     ("a review of the core claim", {"host": "core"}),
+    ("the editor agent wrote the letter", {"host": "editor"}),
+    ("the stats reader found nothing", {"host": "stats"}),
+    ("consistency across the field is the claim", {"host": "consistency"}),
+    ("the preprint is on biorxiv", {"host": "biorxiv"}),
     ("localhosting the server is enough to reproduce it", {"host": "localhost"}),
+    ("/tmp alone names no run", {"tmp": "/tmp"}),
+    ("/data alone names no run", {"cwd": "/data"}),
 )
 
-# And the forms that are this machine, in either case, however they are written.
-TIER_ONE_REFUSED = (
-    ("the run wrote /tmp/claude-1000/x", {}),
-    ("under /home/pretend/papers/x.pdf", {}),
-    ("under /home/pretend", {}),
+# A generic fact is still found in the shapes where a bare word can only be a
+# machine, and there it is tier 2: refused by default, and waivable, because
+# being wrong about a word has to be survivable.
+GENERIC_HOSTS = ("media", "editor", "stats", "core", "claude", "biorxiv")
+
+# A one-segment directory is a shape too. `/tmp` and `/data` are on every
+# machine, so what is refused is something written under them.
+GENERIC_PATHS = (
+    ("the run wrote /tmp/claude-1000/x", {"tmp": "/tmp"}),
     ("/data/sets/x is where it ran", {"cwd": "/data"}),
-    (r"copied from C:\Users\pretend\x.pdf", {}),
-    ("ty-MS-7C80 wrote it", {"host": "ty-ms-7c80"}),
-    ("ty-ms-7c80 wrote it", {"host": "ty-MS-7C80"}),
-    ("media:/srv/x holds the figures", {"host": "media"}),
-    ("mail to bob@media about it", {"host": "media"}),
+    ("/export/sets/x is where it ran", {"tmp": "/export"}),
+    (r"copied from \\media\share\x.pdf", {"host": "media"}),
+    (r"copied from \\fileserver\share\draft.pdf", {}),
+)
+
+
+def _specific_forms(home: str, checkout: str, host: str) -> tuple[str, ...]:
+    """Every place a specific fact was published by a boundary that had a hole.
+
+    A boundary on the left let any character that is not a word character
+    through: a scheme, a doubled slash, a tilde, a port, a quote. A boundary on
+    the right did the same. A specific fact is a plain substring now, in either
+    case, so there is no left or right for a hole to be in.
+    """
+    return (
+        f"http://localhost:8000{checkout}/x",
+        f"file:{home}/x.pdf",
+        f"file:///{checkout}/scripts/local_review.py",
+        f"box:{home}/x",
+        f"//{home}/x",
+        f"a~{home}/x",
+        f"{home}/papers/draft.pdf",
+        f"the run wrote {home}",
+        f"{home.upper()}/x",
+        f'"{home}/x"',
+        f"[{home}/x]",
+        f"{home}/x,{home}/y",
+        f"{checkout}/scripts/local_review.py",
+        host,
+        host.lower(),
+        host.upper(),
+        f"node.{host.lower()}",
+        f"run_{host.lower()}_1",
+        f"{host}:/srv/x",
+        f"bob@{host}",
+        f"//{host}/share",
+        f"the panel ran on {host} overnight",
+    )
+
+
+# The machines the matrix is run on: this one, a home under `/home`, and a home
+# outside every root `LOCAL_ROOTS` knows, which is the case a scan that works
+# from path shapes alone cannot see at all.
+SPECIFIC_MACHINES = (
+    {},
+    {"home": "/home/ty", "user": "ty", "checkout": "/home/ty/Repos/insilico"},
+    {"host": "node1.lab"},
 )
 
 
 def check_only_this_machines_own_names_are_refused_as_this_machine() -> None:
-    """Tier 1 refused prose, and prose is most of what a review is.
+    """Every boundary on a specific fact was a hole, and a word was never a leak.
 
-    The host name was a bare case-sensitive substring, so a machine called
-    `claude`, `media`, `review` or `core` refused every publish from itself: the
-    word appears in the provenance record and in any letter that says `the media
-    files`. The user name, the temporary directory and the working directory had
-    no left boundary, so `/tmp` refused `temperature/tmp ratio`, a user called
-    `pi` refused `$2\\pi$` and a working directory of `/data` refused
-    `training/data/test`.
+    The version before this one asked for a boundary on each side of each fact,
+    so that a fact could not misfire on ordinary text. Six separate holes came
+    out of that one decision. A left boundary of `(?<![\\w.:/~-])` let through
+    every character that is not a word character: `file:` was excluded by hand
+    and `box:` was not, `//` and `a~` and `http://localhost:8000` all published
+    the home directory that followed them. A whole-field host rule published
+    `node.ty-ms-7c80`, `run_ty-ms-7c80_1` and the host as a JSON key. And the
+    same caution made a word-shaped host name unwaivable, so a machine called
+    `editor` could not publish its own provenance record.
 
-    None of that could be waived, which is what made it the serious half. A
-    tier-2 pattern that misfires costs an editor one flag; a fact that misfires
-    stops publishing from that machine altogether.
-
-    A name that is only letters is still this machine where a bare word cannot
-    be anything else: after `@`, after `//`, before `:/`, or as a whole field
-    value. A name with a digit, a dot, a hyphen or an underscore in it is a
-    machine name and nothing else, so it is matched whole, in either case.
+    The rule now splits by what the fact is rather than by where it sits. A path
+    of two or more segments and a host name carrying a digit, a hyphen or a dot
+    are specific: matched as a plain case-insensitive substring, everywhere, in
+    every string and every key at any depth, and nothing waives one. Nothing has
+    to be protected from that test, because `/home/ty` and `ty-ms-7c80` do not
+    occur in a review of a paper or in this repository's own vocabulary. A
+    one-segment directory, a one-word host and the bare account name are generic:
+    tier 2 shapes, waivable, because a word is not a leak.
     """
-    for text, machine in TIER_ONE_ALLOWED:
+    for text, machine in MUST_PUBLISH:
         facts = _detected_facts(**machine)
-        hits = [
-            leak for leak in local_review.local_references(text, facts=facts)
-            if leak.machine_fact
-        ]
+        hits = local_review.local_references(text, facts=facts)
         assert hits == [], (
             f"a machine described by {machine} cannot publish {text!r}: "
             f"{[leak.line for leak in hits]}"
         )
-
-    for text, machine in TIER_ONE_REFUSED:
-        facts = _detected_facts(**machine)
-        hits = local_review.local_references(text, facts=facts)
-        assert any(leak.machine_fact for leak in hits), (
-            f"a machine described by {machine} published its own name in {text!r}: "
-            f"{[leak.line for leak in hits]}"
+        # And in a record, where the same string is a value and a field name.
+        record = {text: "a value", "note": {"deep": [text]}}
+        found = local_review.local_reference_fields(record, facts=facts)
+        assert found == [], (
+            f"a machine described by {machine} cannot publish a record saying "
+            f"{text!r}: {[leak.line for leak in found]}"
         )
 
-    # A fact inside a longer path is reported at the length of the path and
-    # stays a fact: the pattern hit must not demote it into something a flag
-    # could waive.
-    facts = _detected_facts()
+    for machine in SPECIFIC_MACHINES:
+        facts = _detected_facts(**machine)
+        home = machine.get("home", "/export/people/pretend")
+        checkout = machine.get("checkout", "/export/people/pretend/insilico")
+        host = machine.get("host", "ty-MS-7C80")
+        for text in _specific_forms(home, checkout, host):
+            hits = local_review.local_references(text, facts=facts)
+            assert any(leak.machine_fact for leak in hits), (
+                f"a machine described by {machine} published its own name in "
+                f"{text!r}: {[leak.line for leak in hits]}"
+            )
+            # Neither the manuscript nor the flag reaches one, and an allowance
+            # that merely contains one is refused before it allows anything.
+            for waiver in ({"manuscript": f"{text}\n"}, {"allowed": (text,)}):
+                again = local_review.local_references(text, facts=facts, **waiver)
+                assert any(leak.machine_fact for leak in again), (
+                    f"{list(waiver)[0]} waived a fact about this machine: {text!r}"
+                )
+            assert local_review.names_a_specific_fact(text, facts), (
+                f"an allowance naming {text!r} has to be refused as a flag too"
+            )
+            # Through a record: as a value at depth, and as a field name, which
+            # is where the host name reached a published page.
+            record = {"generator": {"id": text, "status": "ok"}, text: "a value"}
+            found = local_review.local_reference_fields(record, facts=facts)
+            assert len([leak for leak in found if leak.machine_fact]) >= 2, (
+                f"a record naming {text!r} in a value and in a key published: "
+                f"{[leak.line for leak in found]}"
+            )
+        # An ordinary allowance is not refused by that same test.
+        assert not local_review.names_a_specific_fact("R:/G/B", facts), (
+            "an allowance that names nothing about this machine has to be taken"
+        )
+
+    # A word-shaped host is a shape and not a fact: a clean record publishes
+    # from it, and the shapes still catch it where a word can only be a machine.
+    for host in GENERIC_HOSTS:
+        facts = _detected_facts(host=host)
+        clean = {"generator": {"kind": host}, "panel": [{"slot": host, "status": "ok"}]}
+        found = local_review.local_reference_fields(clean, facts=facts)
+        assert found == [], (
+            f"a clean record was refused on a host called {host!r}: "
+            f"{[leak.line for leak in found]}"
+        )
+        for text in (f"{host}:/srv/x", f"bob@{host}", f"//{host}/share/x"):
+            hits = local_review.local_references(text, facts=facts)
+            assert hits, f"a host called {host!r} published {text!r}"
+            assert not any(leak.machine_fact for leak in hits), (
+                f"a one-word host name is not unwaivable: {[leak.line for leak in hits]}"
+            )
+            waived = local_review.local_references(
+                text, facts=facts, allowed=tuple(leak.text for leak in hits)
+            )
+            assert waived == [], (
+                f"--allow-text did not waive {text!r}: {[leak.line for leak in waived]}"
+            )
+
+    for text, machine in GENERIC_PATHS:
+        facts = _detected_facts(**machine)
+        hits = local_review.local_references(text, facts=facts)
+        assert hits, f"a machine described by {machine} published {text!r}"
+        assert not any(leak.machine_fact for leak in hits), (
+            f"one directory on this machine is not unwaivable: "
+            f"{[leak.line for leak in hits]}"
+        )
+        waived = local_review.local_references(
+            text, facts=facts, allowed=tuple(leak.text for leak in hits)
+        )
+        assert waived == [], (
+            f"--allow-text did not waive {text!r}: {[leak.line for leak in waived]}"
+        )
+
+    # A fact inside a longer path is reported at the length of the path, and the
+    # shape that found that length must not demote it into something a flag
+    # could waive. The promotion runs before the allowances are read, which is
+    # what stops `--allow-text` on the whole path from waiving the home
+    # directory inside it.
+    facts = _detected_facts(home="/home/ty", user="ty", checkout="/home/ty/Repos/insilico")
     hits = local_review.local_references(
-        "the run wrote /home/pretend/papers/draft.pdf", facts=facts
+        "the run wrote /home/ty/papers/draft.pdf", facts=facts
     )
-    assert [leak.text for leak in hits] == ["/home/pretend/papers/draft.pdf"], (
+    assert [leak.text for leak in hits] == ["/home/ty/papers/draft.pdf"], (
         f"the leak has to be reported whole: {[leak.line for leak in hits]}"
     )
     assert hits[0].machine_fact, (
         f"a path that contains a fact is still a fact: {hits[0].line}"
     )
 
-    # Neither the manuscript nor the flag waives one.
-    for waiver in ({"manuscript": "under /home/pretend/x\n"}, {"allowed": ("/home/pretend/x",)}):
-        assert local_review.local_references("under /home/pretend/x", facts=facts, **waiver), (
-            f"{waiver} waived a fact about this machine"
-        )
+    # A home outside every root the shapes know has no shape to be reported at,
+    # so the fact itself is the hit. It is still tier 1, which is the point: a
+    # scan that worked from path shapes alone could not see this home at all.
+    outside = local_review.local_references(
+        "the run wrote /export/people/pretend/papers/draft.pdf", facts=_detected_facts()
+    )
+    assert [leak.text for leak in outside] == ["/export/people/pretend"], (
+        f"a fact outside every known root is reported as itself: "
+        f"{[leak.line for leak in outside]}"
+    )
+    assert outside[0].machine_fact, f"and it is still a fact: {outside[0].line}"
 
-    # The record's own fixed vocabulary is not prose. `generator.kind` says
-    # `claude-code` and `transport.provider` says the same, so a host called
-    # `claude` would otherwise refuse its own provenance record.
-    vocabulary = local_review.local_references(
-        "claude-code", facts=_detected_facts(host="claude"), vocabulary=True
-    )
-    assert vocabulary == [], (
-        f"a value out of the record's own vocabulary was read as prose: "
-        f"{[leak.line for leak in vocabulary]}"
-    )
-    assert local_review.local_references("/home/bob/x", facts=(), vocabulary=True), (
-        "a path is a path wherever it is written, vocabulary field or not"
-    )
+    # A slash that is not a slash. NFKC folds the full-width pair and leaves the
+    # division slash, the fraction slash and the big solidus alone, and
+    # `∕home∕pretend∕x` published because of it.
+    for separator in ("\u2215", "\u2044", "\u29f8", "\uff0f"):
+        text = f"{separator}home{separator}pretend{separator}x"
+        hits = local_review.local_references(
+            text, facts=_detected_facts(home="/home/pretend", user="pretend",
+                                        checkout="/home/pretend/insilico")
+        )
+        assert any(leak.machine_fact for leak in hits), (
+            f"{separator!r} written for a slash published a home directory: "
+            f"{[leak.line for leak in hits]}"
+        )
+    for separator in ("\uff3c", "\u2216"):
+        folded = f"C:{separator}Users{separator}bob{separator}x.pdf"
+        assert "C:\\Users\\bob\\x.pdf" in local_review._scan_forms(folded), (
+            f"{separator!r} was not read as a backslash"
+        )
+        assert local_review.local_references(folded, facts=()), (
+            f"a Windows path written with {separator!r} published"
+        )
 
 
 def check_a_path_shaped_key_is_refused_rather_than_published_without_it() -> None:
-    """A published artifact was quietly missing an entry the engine wrote.
+    """A published artifact was quietly missing an entry, or quietly holding one.
 
     `editor-package.json` is the engine's own output, copied into the bundle. A
     mapping keyed by a path leaks through the key, and a key outside this
     repository used to be dropped with its value: the bundle then carried a
     hash map one entry short, with nothing in the bundle or the record to say
-    so. Dropping it publishes a false artifact and keeping it publishes the
-    path, so neither is this script's decision to make quietly.
+    so. A key inside the repository was quietly rewritten, which is the same
+    silent edit with a kinder result.
+
+    Engine 4f50944 writes no mapping keyed by a path, so there is nothing for
+    that rewrite to be faithful to. Every path-shaped key is refused now, inside
+    this repository or outside it, and `--allow-text` publishes one as it
+    stands. What is still projected is a value in one of the engine's own path
+    fields, and each projection is printed on publish, so a dropped `pdf` is
+    never silent either. A value in such a field that is not a path at all is
+    left alone, because `/ 2 is the wrong denominator` is a sentence.
     """
     home = str(Path.home().resolve())
-    package = {"summary": "One reading.", "shared_images": {f"{home}/fig1.png": "a" * 64}}
-    try:
-        local_review.without_local_paths(package)
-    except local_review.CommandError as exc:
-        message = str(exc)
-    else:
-        raise AssertionError("a path used as a field name published without a word about it")
-    assert f"{home}/fig1.png" in message, f"the refusal has to name the key: {message!r}"
-    assert "--allow-text" in message, (
-        f"the refusal has to say how to publish it deliberately: {message!r}"
+    for key in (f"{home}/fig1.png", "/export/people/pretend/fig1.png",
+                str(local_review.REPO / "docs" / "figs" / "a.png")):
+        package = {"summary": "One reading.", "shared_images": {key: "a" * 64}}
+        try:
+            local_review.without_local_paths(package)
+        except local_review.CommandError as exc:
+            message = str(exc)
+        else:
+            raise AssertionError(f"a path used as a field name published: {key}")
+        assert key in message, f"the refusal has to name the key: {message!r}"
+        assert "--allow-text=" in message, (
+            f"the refusal has to say how to publish it deliberately: {message!r}"
+        )
+
+        # Named back on the command line, it is published as it stands, value
+        # and all, rather than edited on the way out.
+        allowed = local_review.without_local_paths(package, allowed=(key,))
+        assert allowed == package, f"an allowed key has to be published verbatim: {allowed}"
+
+    # A key that is not shaped like a path is nobody's business.
+    plain = {"files": {"docs/x.md": "b" * 64, "a reading of the figure": "c" * 64}}
+    assert local_review.without_local_paths(plain) == plain, (
+        "a relative key is published as it was written"
     )
 
-    # Named back on the command line, it is published as it stands, value and
-    # all, rather than edited on the way out.
-    allowed = local_review.without_local_paths(package, allowed=(f"{home}/fig1.png",))
-    assert allowed == package, f"an allowed key has to be published verbatim: {allowed}"
-
-    # A key inside this repository is still rewritten relative to it, which is
-    # the case that was never a leak.
-    inside = {"files": {str(local_review.REPO / "docs" / "x.md"): "b" * 64}}
-    assert local_review.without_local_paths(inside) == {"files": {"docs/x.md": "b" * 64}}, (
-        "a key inside this repository is named relative to it"
+    # The engine's own path fields are still projected, and the projection is
+    # reported rather than done quietly.
+    projected: list[str] = []
+    kept = local_review.without_local_paths(
+        {
+            "pdf": f"{home}/runs/x/review.pdf",
+            "source_review_path": str(local_review.REPO / "runs" / "local"),
+            "memo_path": "/ 2 is the wrong denominator",
+        },
+        projected=projected,
+    )
+    assert "pdf" not in kept, f"an absolute path outside this repository published: {kept}"
+    assert kept["source_review_path"] == "runs/local", (
+        f"a path inside this repository is named relative to it: {kept}"
+    )
+    assert kept["memo_path"] == "/ 2 is the wrong denominator", (
+        f"a reviewer's sentence was dropped from a path field: {kept}"
+    )
+    assert projected == ["pdf dropped", "source_review_path rewritten to runs/local"], (
+        f"every projection has to be reported: {projected}"
     )
 
 
