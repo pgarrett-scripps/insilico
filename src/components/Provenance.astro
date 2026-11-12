@@ -302,6 +302,19 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
             this bundle.
           </p>
         )}
+        {/* A review with nothing in it is a result, and "0 findings in the
+            letter" on its own reads like a run that broke. The engine
+            finishes such a run as complete-without-findings and publishes it
+            like any other review, so the panel says what it means. A review
+            the guards emptied reaches the same status and is refused at
+            publish, which is why the sentence is held back when anything was
+            quarantined. */}
+        {runRecord.findings === 0 && !runRecord.appendix_findings && quarantined === 0 && (
+          <p class="prov__hash">
+            The reviewers raised no make-or-break findings against this
+            manuscript.
+          </p>
+        )}
       </div>
     )}
 
