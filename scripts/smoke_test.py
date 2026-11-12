@@ -23,6 +23,7 @@ from smoke_checks.local import (
     check_an_attestation_needs_a_named_editor,
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_every_published_file_is_hashed,
+    check_nothing_reaches_into_the_engines_internals,
     check_severity_is_read_from_the_engine_not_guessed,
     check_the_advisory_verdict_is_labelled_advisory,
     check_the_attestation_says_what_it_has_to_say,
@@ -149,6 +150,8 @@ def main() -> int:
     print("ok  the skill command check fails in CI rather than skipping itself")
     check_the_advisory_verdict_is_labelled_advisory()
     print("ok  the engine's verdict is published and labelled advisory")
+    check_nothing_reaches_into_the_engines_internals()
+    print("ok  every engine name these scripts use is on the package's own surface")
 
     run_engine_backed_checks()
 

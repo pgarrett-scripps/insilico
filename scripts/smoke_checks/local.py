@@ -23,6 +23,7 @@ were defects the generator had to be taught to handle.
 """
 from __future__ import annotations
 
+import ast
 import contextlib
 import io
 import json
@@ -400,7 +401,10 @@ def _expected_models() -> dict[str, str]:
     models = {slot: SONNET for slot in CORE_SLOTS}
     models.update({f"spec-{track}": SONNET for track in TRACKS})
     models["editor"] = OPUS
-    models["ingest"] = HAIKU
+    # Keyed by the slot, not by the label the harness ran it under. The run's
+    # own record calls that agent `ingest`, and 0.9 merges it into the
+    # protocol's `recorder` slot, which is what a reader can match to a report.
+    models["recorder"] = HAIKU
     return models
 
 
@@ -473,9 +477,18 @@ def _run_transport() -> dict:
     `transport_record` is pure in 0.9, so the fixture does not have to stub it
     out the way the 0.8 fixtures stubbed the publish-time probe. That is the
     point of the shape: publishing needs no network and no CLI.
+
+    The probe and its problems come from the engine's reading of the run, and
+    the stamp does not: `read_run` carries no time for the probe, so the
+    publish path reads that one field out of `startup.json` itself and passes
+    it in. The fixture passes the same stamp the folder holds, so a record
+    built here is the record the command builds from the same run.
     """
     return local_review.transport_record(
-        provider="claude-code", runtime=_runtime(TRACKS), startup=_startup()
+        provider="claude-code",
+        runtime=_runtime(TRACKS),
+        startup=_startup(),
+        verified_at=STARTED_AT,
     )
 
 
@@ -818,14 +831,21 @@ def _schema(name: str = "review-provenance.schema.json") -> dict:
     )
 
 
-def _schema_run_status() -> str:
-    """The one run status the published schema accepts, read from the schema.
+def _schema_run_statuses() -> list[str]:
+    """The run statuses the published schema accepts, read from the schema.
 
     Read rather than written out here, so a run this file calls publishable
     cannot be one `npm run check:schema` would then reject, and so the two
     cannot drift apart silently.
+
+    There are two of them in 0.9, because the engine finishes a review with no
+    findings in it as `complete-without-findings` and that is a review when the
+    guards took nothing. Which of the two a bundle may carry is not a question
+    the status answers, so the schema accepts both and the publish gate is the
+    engine's `publishable` flag.
     """
-    return _schema()["properties"]["generator"]["properties"]["run"]["properties"]["status"]["const"]
+    run = _schema()["properties"]["generator"]["properties"]["run"]
+    return list(run["properties"]["status"]["enum"])
 
 
 def _schema_verified_by() -> str:
@@ -1570,26 +1590,26 @@ def check_an_unfinished_run_cannot_be_published() -> None:
 def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
     """A run can finish every stage and raise no finding, and that is a result.
 
-    Engine 0.9 records that outcome as `status: complete` with
-    `review_guard_status: clean` and an empty findings list. Refusing it here
-    would make the published corpus one that silently drops every review finding
-    a manuscript sound: the papers nothing is wrong with would be exactly the
+    Engine 0.9 records that outcome as `status: complete-without-findings` with
+    `review_guard_status: clean`, an empty findings list and an editor package
+    behind it, and it calls that run publishable. Refusing it here would make
+    the published corpus one that silently drops every review finding a
+    manuscript sound: the papers nothing is wrong with would be exactly the
     ones that never got published, and the record would read as if the engine
     always finds something.
 
-    A run with anything in quarantine is a third outcome, and in 0.9 it does
-    not publish at all. The engine calls a run publishable only with the guard
-    status `clean`, so a partially quarantined run is refused here where 0.8
-    published it with a note: which findings the guards threw out, and whether
-    the review still stands without them, is a judgement for a person.
+    The same status covers the opposite outcome, and the engine is what tells
+    the two apart. A review the evidence guards emptied reaches
+    `complete-without-findings` with a quarantined count, and the engine holds
+    it back with a reason that names how many it took. Nothing here reads the
+    status to decide: the gate is `publishable` and the refusal prints
+    `not_publishable_reasons`, so a run the engine publishes and a run it holds
+    can share a status word without this file having to know which is which.
 
-    `complete-without-findings` is a different outcome and must not publish. The
-    engine writes that status when every finding the reviewers raised failed the
-    evidence guards and was quarantined. A review that endorses none of its own
-    findings is not the claim that a manuscript was found sound, and a letter
-    telling the authors the reviewers recorded no findings would be false. The
-    refusal has to be an exit code, because that is the only thing that stops a
-    bundle being written.
+    A run that kept some findings and lost others is a third outcome and does
+    publish, with the held-back count travelling in the record, because a guard
+    that could not anchor one quote has done its job and the review that
+    survives it is still a review.
     """
     sound_package = dict(
         PACKAGE,
@@ -1607,7 +1627,7 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             Path(tmp) / "empty",
             **{
                 "progress.json": {
-                    "status": "complete",
+                    "status": local_review.WITHOUT_FINDINGS_STATUS,
                     "review_guard_status": "clean",
                     "stages": _stages(TRACKS),
                     "findings_delivered": 0,
@@ -1617,12 +1637,19 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             },
         )
         reading = local_review.engine_reading(empty)
+        assert reading["publishable"] is True, (
+            "the engine publishes a review that raised nothing: "
+            f"{reading.get('not_publishable_reasons')}"
+        )
         record = local_review.run_record(reading)
         assert record["errors"] == [], (
             f"a finished run that raised nothing is not an error: {record['errors']}"
         )
         local_review.require_complete_run(empty, record, reading)
-        assert record["status"] == _schema_run_status(), f"status lost: {record}"
+        assert record["status"] == local_review.WITHOUT_FINDINGS_STATUS, f"status lost: {record}"
+        assert record["status"] in _schema_run_statuses(), (
+            f"the schema has to accept the status of a review that raised nothing: {record}"
+        )
         assert record["review_guard_status"] == "clean", f"the guard verdict was not read: {record}"
         assert local_review.sorted_findings(local_review.review_package(reading)) == [], (
             "a run with no findings has no findings"
@@ -1645,14 +1672,28 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                     "--decision", "accept",
                 )
             assert code == 0, f"a review that raised nothing should publish, got exit {code}"
+            # The one sentence the three documents owe a reader of such a
+            # review, and it is the same sentence in all three, built once in
+            # `no_findings_note` so the letter, the summary and the page cannot
+            # tell the authors three different things about the same zero.
+            sound = local_review.no_findings_note({"quarantined_findings_count": 0})
+            assert "no make-or-break findings" in sound, (
+                f"the note for a sound manuscript has to say so plainly: {sound}"
+            )
             letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
-            assert "recorded no findings" in letter, (
-                "a review with no findings still owes the authors a letter that says so"
+            assert sound in letter, (
+                "a review with no findings still owes the authors a letter that says so: "
+                f"{letter}"
+            )
+            summary = (destination / "summary.md").read_text(encoding="utf-8")
+            assert sound in summary, f"the summary owes a reader the same sentence: {summary}"
+            assert "no make-or-break findings" in _provenance_component_fields(), (
+                "the provenance page has to say plainly that nothing was raised"
             )
             published = json.loads((destination / "provenance.json").read_text(encoding="utf-8"))
             run_record = published["generator"]["run"]
-            assert run_record["status"] == _schema_run_status(), (
-                f"the published status is not the one the schema accepts: {run_record}"
+            assert run_record["status"] in _schema_run_statuses(), (
+                f"the published status is not one the schema accepts: {run_record}"
             )
             assert run_record["findings"] == 0, f"an empty review recorded findings: {run_record}"
             assert run_record["appendix_findings"] == 0, f"an empty review has no appendix: {run_record}"
@@ -1667,11 +1708,11 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             )
 
         # Every finding quarantined is a different claim, and the engine makes
-        # it on the status rather than on the guard. There is no guard word for
-        # it: the verdict is `quarantined`, exactly as it is for a run that lost
-        # one finding, and `complete-without-findings` is what says the editor
-        # was left with nothing to deliver. So the status is what the fixture
-        # turns, and the status is what the refusal has to rest on.
+        # it on the count beside the status rather than on the status alone.
+        # There is no guard word for it either: the verdict is `quarantined`,
+        # exactly as it is for a run that lost one finding. So the fixture turns
+        # the count, and the refusal rests on the engine's flag, which is what
+        # reads the count.
         quarantined = _run_directory(
             Path(tmp) / "quarantined",
             **{
@@ -1731,36 +1772,53 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             )
             assert not destination.exists(), f"a bundle was written to {destination}"
 
-        # The status carries the gate, not the guard. The engine writes only
-        # `clean` or `quarantined`, and it writes `quarantined` whether the
-        # guards took one finding or the lot, so a `quarantined` verdict cannot
-        # be a refusal on its own. A run the guards emptied is
-        # `complete-without-findings`, and that is what is refused, whatever
-        # guard verdict sits beside it.
-        refusals = {
-            f"a {verdict} guard": verdict for verdict in local_review.GUARD_VERDICTS
-        }
-        assert set(refusals) == {"a clean guard", "a quarantined guard"}, (
+        # Neither word is the gate. The engine writes only `clean` or
+        # `quarantined`, and it writes `quarantined` whether the guards took one
+        # finding or the lot, so the verdict cannot decide this on its own. It
+        # writes `complete-without-findings` for a review with nothing in it
+        # whether the reviewers raised nothing or the guards took everything, so
+        # the status cannot either. What separates them is the held-back count,
+        # and the engine is what reads it. These two runs differ in that count
+        # and in nothing else that matters, and they come out on opposite sides.
+        assert set(local_review.GUARD_VERDICTS) == {"clean", "quarantined"}, (
             f"the engine writes two guard verdicts and no more: {local_review.GUARD_VERDICTS}"
         )
-        for index, (why, verdict) in enumerate(refusals.items()):
+        for index, held in enumerate((0, 3)):
             run_dir = _run_directory(
-                Path(tmp) / f"refused-{index}",
+                Path(tmp) / f"emptied-{index}",
                 **{
                     "progress.json": {
-                        "status": "complete-without-findings",
+                        "status": local_review.WITHOUT_FINDINGS_STATUS,
+                        "review_guard_status": "clean" if not held else "quarantined",
                         "stages": _stages(TRACKS),
+                        "findings_delivered": 0,
+                        "quarantined_findings_count": held,
                     },
-                    "editor-package.json": dict(
-                        PACKAGE, stages=_stages(TRACKS), review_guard_status=verdict
-                    ),
+                    "editor-package.json": dict(sound_package, stages=_stages(TRACKS)),
                 },
             )
-            try:
-                local_review.require_complete_run(run_dir, local_review.read_run(run_dir))
-            except local_review.CommandError:
+            if held:
+                _quarantine(
+                    run_dir,
+                    *(
+                        {"finding_uid": f"f-05{n}", "severity": "major", "title": "Unquotable"}
+                        for n in range(held)
+                    ),
+                )
+            run = local_review.read_run(run_dir)
+            if not held:
+                local_review.require_complete_run(run_dir, run)
                 continue
-            raise AssertionError(f"a run that delivered no finding published on {why}")
+            try:
+                local_review.require_complete_run(run_dir, run)
+            except local_review.CommandError as error:
+                assert str(held) in str(error), (
+                    f"the refusal has to say how many the guards took: {error}"
+                )
+            else:
+                raise AssertionError(
+                    f"a review the guards emptied of {held} findings published"
+                )
 
         # A run that kept some findings and lost others does publish, and the
         # count of what was held back travels with it. A guard that cannot
@@ -1964,6 +2022,13 @@ def check_the_transport_claim_rests_on_the_runs_own_probe() -> None:
     below to prove it, because a function that shells out to `claude` cannot be
     run by an editor on a machine where the CLI is not installed, and the whole
     point of reading the run is that it was already proved once.
+
+    The probe itself comes from the engine's reading, as `startup`, and the one
+    thing that reading does not carry is when the probe ran. That is read out
+    of `startup.json` by hand, by `startup_stamp`, and handed in as
+    `verified_at`, so a record cannot claim a stamp the run never wrote. Both
+    halves are checked below: the function with the stamp passed to it, and
+    `startup_stamp` against a real run folder.
     """
     assert local_review.VERIFIED_BY == _schema_verified_by(), (
         f"the schema accepts {_schema_verified_by()!r} and this path writes "
@@ -1974,7 +2039,10 @@ def check_the_transport_claim_rests_on_the_runs_own_probe() -> None:
     os.environ["PATH"] = ""
     try:
         record = local_review.transport_record(
-            provider="claude-code", runtime=_runtime(TRACKS), startup=_startup()
+            provider="claude-code",
+            runtime=_runtime(TRACKS),
+            startup=_startup(),
+            verified_at=STARTED_AT,
         )
     finally:
         os.environ["PATH"] = restore
@@ -2003,7 +2071,15 @@ def check_the_transport_claim_rests_on_the_runs_own_probe() -> None:
 
     refusals = {
         "another transport": {"provider": "codex", "startup": _startup()},
-        "no start-up probe at all": {"provider": "claude-code", "startup": {}},
+        # A folder with no `startup.json`, and a `startup.json` holding anything
+        # other than a probe, both reach this as a reading with a null probe.
+        # The engine always returns the block, so an empty one is not what is
+        # refused: the absent probe inside it is.
+        "nothing in the start-up block": {"provider": "claude-code", "startup": {}},
+        "a reading with no probe in it": {
+            "provider": "claude-code",
+            "startup": {"probe": None, "problems": []},
+        },
         "a probe that reported a problem": {
             "provider": "claude-code",
             "startup": _startup(problems=["the pra plugin failed to load"]),
@@ -2039,7 +2115,17 @@ def check_the_transport_claim_rests_on_the_runs_own_probe() -> None:
     # A run whose start-up probe is missing is refused by the command too, not
     # only by the function, and nothing is written.
     with tempfile.TemporaryDirectory() as tmp:
+        # And the stamp the reading does not carry is read off the folder, so a
+        # published record says when the session started rather than nothing.
+        whole = _run_directory(Path(tmp) / "whole")
+        assert local_review.startup_stamp(local_review.engine_reading(whole)) == STARTED_AT, (
+            "the probe's own stamp has to be read from the run folder: "
+            f"{local_review.startup_stamp(local_review.engine_reading(whole))}"
+        )
         unproved = _run_directory(Path(tmp) / "unproved", **{"startup.json": None})
+        assert local_review.startup_stamp(local_review.engine_reading(unproved)) is None, (
+            "a run with no startup.json has no stamp to publish"
+        )
         with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
             destination = reviews / "2026" / "fixture-unproved" / "v1" / "r1"
             stderr = io.StringIO()
@@ -2070,6 +2156,11 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
     harness observed, so the fixture is a run folder rather than two
     hand-written files, and what is checked here is which of those rows reach a
     published record.
+
+    0.9 merges every task row into one row per slot and drops the label-only
+    ones itself, so nothing here filters them any more. The fixture still
+    carries them, because what has to stay true is the published panel, and the
+    run folder a real review writes is where they come from.
     """
     with tempfile.TemporaryDirectory() as tmp:
         run = _run_directory(Path(tmp) / "run")
@@ -2079,9 +2170,9 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
         assert not [slot for slot in slots if slot.startswith("agent-")], (
             f"a placeholder row was published as an agent that ran: {slots}"
         )
-        assert len(rows) == 12, (
-            "expected three core, six specialists, an editor, a recorder and "
-            f"the ingest row: {slots}"
+        assert len(rows) == 11, (
+            "expected three core reviewers, six specialists, an editor and a "
+            f"recorder, one row each: {slots}"
         )
         assert all("slot" in row for row in rows), f"a row with no slot: {rows}"
 
@@ -2105,8 +2196,17 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
         assert by_slot["editor"]["model"] == OPUS, (
             f"the editor's model was lost: {by_slot['editor']}"
         )
-        assert "model" not in by_slot["recorder"], (
-            f"protocol.json pins no model for the recorder: {by_slot['recorder']}"
+        # The harness ran the recorder under the label `ingest`, and 0.9 merges
+        # that work into the protocol's own `recorder` slot rather than
+        # publishing a twelfth agent beside it. So the model protocol.json never
+        # pinned reaches the record through the slot that ran it, which is the
+        # row a reader can match to a report.
+        assert by_slot["recorder"]["model"] == HAIKU, (
+            "the recorder's work was observed under another label and belongs to "
+            f"its slot: {by_slot['recorder']}"
+        )
+        assert "ingest" not in by_slot, (
+            f"a label the harness used was published as an agent of its own: {slots}"
         )
 
         models = local_review.model_map(rows)
@@ -3078,6 +3178,115 @@ def check_the_locked_engine_release_is_the_one_declared() -> None:
     assert version >= (0, 9), (
         f"the lock pins peerreviewagents {locked}. The plugin, the commands and the "
         "run folder this repository reads are the 0.9 ones"
+    )
+
+
+def _engine_imports(path: Path) -> list[tuple[str, tuple[str, ...]]]:
+    """Every engine module a script imports, with the names it takes from each.
+
+    Read from the syntax rather than from the text, so a module named in a
+    docstring or in a refusal message is not mistaken for an import of it. A
+    dynamic `importlib.import_module("...")` counts, because that is how this
+    repository imports the engine at all.
+    """
+    taken: list[tuple[str, tuple[str, ...]]] = []
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            taken += [(alias.name, ()) for alias in node.names]
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            taken.append((node.module, tuple(alias.name for alias in node.names)))
+        elif isinstance(node, ast.Call):
+            called = node.func
+            name = called.attr if isinstance(called, ast.Attribute) else getattr(called, "id", "")
+            if name in ("import_module", "__import__"):
+                taken += [
+                    (argument.value, ())
+                    for argument in node.args
+                    if isinstance(argument, ast.Constant) and isinstance(argument.value, str)
+                ]
+    package = local_review.ENGINE_PACKAGE
+    return [pair for pair in taken if pair[0].split(".")[0] == package]
+
+
+def _engine_public_names(path: Path) -> set[str]:
+    """The names a script asks `engine_public` for, which are engine names too.
+
+    The publish path takes nothing from the engine at import time, because the
+    engine is optional on a laptop and a missing one has to be a refusal with a
+    sentence in it rather than an ImportError at startup. So it resolves each
+    name it needs through `engine_public`, and the name is the string argument.
+    """
+    asked: set[str] = set()
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if not isinstance(node, ast.Call):
+            continue
+        called = node.func
+        name = called.attr if isinstance(called, ast.Attribute) else getattr(called, "id", "")
+        if name != "engine_public" or not node.args:
+            continue
+        first = node.args[0]
+        if isinstance(first, ast.Constant) and isinstance(first.value, str):
+            asked.add(first.value)
+    return asked
+
+
+def check_nothing_reaches_into_the_engines_internals() -> None:
+    """Every engine name these scripts use comes off the package's own surface.
+
+    The publish path and the two static checks used to import
+    `peerreviewagents.plugin.starter` and `peerreviewagents.cli.main` for the
+    plugin directory, the Claude Code version and the two argument parsers.
+    Those are the engine's internals, free to move between releases, so an
+    upgrade that renamed a private module broke a check here rather than
+    telling us the engine's supported surface had changed. 0.9 exports all of
+    them, so there is nothing left to reach for: `plugin_directory`,
+    `claude_code_version`, `review_parser`, `report_parser` and `CLI_COMMANDS`
+    are on `peerreviewagents.__all__` beside `read_run`.
+
+    What this proves is that no script went back. Imports are read from the
+    syntax of every file under scripts/, the module has to be the package
+    itself, and each name taken from it has to be one the installed engine
+    exports, which is checked against the real `__all__` when the engine is
+    importable here.
+    """
+    root = Path(local_review.__file__).resolve().parent
+    package = local_review.ENGINE_PACKAGE
+    sources = sorted(root.glob("*.py")) + sorted((root / "smoke_checks").glob("*.py"))
+    assert len(sources) > 10, f"the scripts were not found under {root}"
+
+    private = {}
+    names: set[str] = set()
+    for path in sources:
+        for module, taken in _engine_imports(path):
+            if module != package:
+                private.setdefault(path.name, []).append(module)
+            names.update(taken)
+        names.update(_engine_public_names(path))
+    assert not private, (
+        "these scripts import the engine's internals rather than its public "
+        f"surface: {private}. Every name 0.9 supports is on {package}.__all__."
+    )
+    expected = {
+        "CLI_COMMANDS",
+        "claude_code_version",
+        "plugin_directory",
+        "read_run",
+        "report_parser",
+        "review_parser",
+    }
+    assert expected <= names, (
+        "the public names this repository runs on are no longer taken from the "
+        f"engine: {sorted(expected - names)} missing from {sorted(names)}"
+    )
+    if not engine_is_importable():
+        print(f"    (the {package}.__all__ half needs the engine and was not run)")
+        return
+    exported = set(getattr(__import__(package), "__all__", ()))
+    assert exported, f"{package} exports no public surface at all"
+    missing = sorted(names - exported)
+    assert not missing, (
+        f"these scripts import {missing} from {package}, which the installed "
+        "release does not export. Either the name moved or the lock is wrong."
     )
 
 
