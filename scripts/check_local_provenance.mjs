@@ -123,10 +123,11 @@ function localRecord(overrides = {}) {
         finding_schema_version: "review-finding-v3",
         reviewers: 3,
         specialist_tracks: TRACKS,
-        synthesis_policy: "editor",
-        body_finding_limit: 8,
         paper_id: "fixture-paper",
+        claude_code_version: "2.1.322",
         status: "complete",
+        publishable: true,
+        findings_source: "editor-package",
         review_guard_status: "clean",
         completeness: {
           required: ["reviewer-1", "reviewer-2", "reviewer-3", ...TRACKS, "editor"],
@@ -145,7 +146,6 @@ function localRecord(overrides = {}) {
         quarantined_findings_count: 0,
         escalated_count: 4,
         findings_by_track: { stats: 9, citations: 7 },
-        tool_calls_total: 89,
         wall_seconds: 246.5,
         tokens_total: 636299,
         errors: [],
@@ -359,6 +359,49 @@ rejects(blockedRun, "a run that stopped part way is not a review");
 const silentAboutStatus = localRecord();
 delete silentAboutStatus.generator.run.status;
 rejects(silentAboutStatus, "a record must say that the run finished");
+
+// The engine answers the publish question itself in 0.9, from read_run, and the
+// record carries its answer rather than this repository's reading of the same
+// files. A record that admits the engine refused the run, or that omits the
+// flag, is not a bundle the gate let through.
+const unpublishable = localRecord();
+unpublishable.generator.run.publishable = false;
+rejects(unpublishable, "a run the engine refused must not validate as published");
+
+const silentAboutPublishable = localRecord();
+delete silentAboutPublishable.generator.run.publishable;
+rejects(silentAboutPublishable, "a record must carry the engine's own publish flag");
+
+// Where the published findings came from. The engine rebuilds a pool from
+// findings.jsonl when the editor package is missing or damaged, and that pool
+// carries no editorial placement: no body, no appendix, no rulings. Publishing
+// it would present the raw submissions as the editor's letter.
+const rebuiltPool = localRecord();
+rebuiltPool.generator.run.findings_source = "findings-ledger";
+rejects(rebuiltPool, "findings rebuilt from the ledger are not the editor's review");
+
+const silentAboutSource = localRecord();
+delete silentAboutSource.generator.run.findings_source;
+rejects(silentAboutSource, "a record must say where its findings came from");
+
+// A review written before a rate limit stopped the session is complete and
+// publishable, and the note is the only thing that says the session did not end
+// cleanly, so it is published.
+const noteworthy = localRecord();
+noteworthy.generator.run.note =
+  "the review was written and the run was marked blocked afterwards: the token ceiling was reached";
+assertValidProvenance(noteworthy, "a run blocked after the review was written still publishes");
+
+// The two fields the engine sets for a run it could not read as a whole. Neither
+// can be true of a run it calls publishable, so a record carrying one is a
+// record whose own explanation of its failure travelled with it.
+const excused = localRecord();
+excused.generator.run.cause = "the session ended before the editor wrote the review";
+rejects(excused, "a published record must not carry the reason the run stopped");
+
+const damaged = localRecord();
+damaged.generator.run.problems = ["editor-package.json: truncated"];
+rejects(damaged, "a published record must not carry a run file the engine could not read");
 
 // The arm replaces 0.8's mode and review policy, and it is the single name for
 // what the run was asked to do. A record without it cannot say whether three

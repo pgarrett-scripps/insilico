@@ -159,13 +159,15 @@
           }
         },
         "run": {
-          "$comment":"Read from the five files the run wrote, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured.",
+          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the findings came from, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose: the engine's reading also carries `cause` for a run that stopped and `problems` for a run file it could not read in full, and neither can be true of a run it calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it.",
           "type": "object",
           "required": [
             "arm",
             "provider",
             "workflow_version",
             "status",
+            "publishable",
+            "findings_source",
             "reviewers",
             "completeness"
           ],
@@ -189,13 +191,20 @@
               "type": "array",
               "items": { "type": "string" }
             },
-            "synthesis_policy": { "type": "string" },
-            "body_finding_limit": { "type": "integer", "minimum": 1 },
             "paper_id": { "type": "string" },
             "literature_cutoff": { "type": "string" },
+            "claude_code_version": { "type": "string" },
             "status": {
               "$comment": "The engine writes running, blocked, complete or complete-without-findings. Only complete is a review here, so a bundle written from a run that stopped part way cannot validate even if its folder is moved into place by hand, and neither can one written from the quarantined outcome, which the engine spells complete-without-findings.",
               "const": "complete"
+            },
+            "publishable": {
+              "$comment": "The engine's own answer, from read_run, to the only question the publish gate asks: the status is complete, the findings came from a readable editor package rather than the ledger, the evidence guard is clean and every run file could be read in full. It is recorded rather than inferred so a reader of the bundle sees the same flag the gate saw, and it is a const because a record written from a run the engine refused has no business on the site.",
+              "const": true
+            },
+            "findings_source": {
+              "$comment": "Where the published findings came from. The editor package is the editor agent's own placement of them. A pool rebuilt from findings.jsonl is the engine's fallback for a run whose editor package is missing or damaged, and it carries no editorial placement at all, so it is not published here.",
+              "const": "editor-package"
             },
             "review_guard_status": {
               "$comment": "The engine's verdict on its own findings. clean and partially-quarantined are publishable: a review that raised nothing is clean with no findings, and one that lost some findings to the guards still endorses the rest. all-findings-quarantined is not, because such a review endorses none of its own work, which is a different claim from a manuscript found sound and must not be published as one.",
@@ -233,11 +242,15 @@
               "type": "object",
               "additionalProperties": { "type": "integer", "minimum": 0 }
             },
-            "tool_calls_total": { "type": "integer", "minimum": 0 },
             "wall_seconds": { "type": "number", "minimum": 0 },
             "tokens_total": { "type": "integer", "minimum": 0 },
+            "note": {
+              "$comment": "What the engine records when a review was written and the session was blocked afterwards, by a rate limit or a token ceiling that fired after the review was saved. Such a run is complete and publishable, and the note is the one thing that says the session did not end cleanly, so it is published rather than dropped.",
+              "type": "string"
+            },
             "errors": { "type": "array", "items": { "type": "string" } }
-          }
+          },
+          "additionalProperties": false
         },
         "advisory_verdict": {
           "$comment":"The editor agent's judgement of the manuscript, as it wrote it. 0.9 publishes it rather than discarding it, and it sits here, under the generator and beside decision_source, for a reason: it is the engine's opinion, it is labelled advisory wherever it is shown, and the decision on the record is still a person's. A reader who disagrees with the engine can see its judgement and the editor's decision side by side. An empty object is allowed, because an arm that runs no editor produces no judgement and inventing one would be worse than recording none.",

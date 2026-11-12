@@ -1,9 +1,17 @@
-"""Local generator checks. No engine, no model, no network.
+"""Local generator checks. No model, no network, and no review is ever started.
 
-These cover the parts of scripts/local_review.py that can run without
-peerreviewagents installed: the refusals, the documents rendered from saved
-engine output, and the manifest. The schema side of the same path is checked by
-scripts/check_local_provenance.mjs, which needs Node rather than Python.
+These cover scripts/local_review.py: the refusals, the documents rendered from
+saved engine output, and the manifest. The schema side of the same path is
+checked by scripts/check_local_provenance.mjs, which needs Node rather than
+Python.
+
+Half of them need the engine. A run folder is read in 0.9 only through
+`peerreviewagents.read_run`, which is the engine's supported surface and the
+thing that decides whether a run is publishable, so a check of the publish path
+is a check against the real reader rather than against a second one written
+here. `ENGINE_BACKED` names those checks and `engine_is_importable` says whether
+this interpreter can run them; smoke_test.py skips them on a laptop with no
+engine and refuses to skip them in CI. The rest run anywhere.
 
 Everything here is written against the run folder engine 0.9's plugin writes:
 `protocol.json`, `manifest.json`, `progress.json`, `runtime.json`,
@@ -131,6 +139,11 @@ VERDICT = {
     "limitation": "No reader re-ran the analysis.",
 }
 
+# What the editor agent wrote into its package, which deliberately disagrees
+# with the findings beside it: it counts a stats finding that is not in either
+# list and a field track that raised nothing. The record is counted from the
+# findings instead, so the table on the page and the findings under it cannot
+# disagree, and these two numbers are what proves that.
 FINDINGS_BY_TRACK = {
     "stats": 2,
     "figures-tables": 1,
@@ -198,6 +211,55 @@ PACKAGE = {
     "quarantined_findings_count": 0,
     "quarantined_findings": [],
 }
+
+
+def engine_is_importable() -> bool:
+    """Whether this interpreter can read a run folder at all.
+
+    A run is read through `peerreviewagents.read_run` and nothing else, so a
+    check of the publish path has nothing to run against without the engine.
+    """
+    try:
+        __import__(local_review.ENGINE_PACKAGE).read_run
+    except (ImportError, AttributeError):
+        return False
+    return True
+
+
+def engine_is_required() -> bool:
+    """Where a missing engine is a failure rather than a reason to skip.
+
+    The same rule, and the same two environment variables, as
+    scripts/check_skill_commands.py. On a laptop the engine is optional. In CI
+    it is installed from the lock file, so a missing one is the lock being
+    wrong, and a check that quietly skipped itself there is a check worth
+    nothing. The pipeline job runs this suite on a bare interpreter on purpose,
+    to prove the engine-free half needs no engine, and waives the rule by
+    setting INSILICO_REQUIRE_ENGINE to 0.
+    """
+    false_values = {"", "0", "false", "no", "off"}
+    required = os.environ.get("INSILICO_REQUIRE_ENGINE")
+    if required is not None:
+        return required.strip().lower() not in false_values
+    return os.environ.get("CI", "").strip().lower() not in false_values
+
+
+def _counted_by_track() -> dict[str, int]:
+    """The track counts a record of this fixture has to carry.
+
+    Counted from the findings the bundle publishes rather than written out, so
+    the expectation cannot drift away from the fixture's own findings. A finding
+    with no track at all, which the engine does emit, counts towards nothing.
+    """
+    counts: dict[str, int] = {}
+    for finding in [*FINDINGS, *APPENDIX]:
+        track = str(finding.get("track") or "")
+        if track:
+            counts[track] = counts.get(track, 0) + 1
+    return counts
+
+
+COUNTED_BY_TRACK = _counted_by_track()
 
 
 def _slot_model(slot: str) -> str | None:
@@ -497,6 +559,22 @@ def _run_directory(
     return run
 
 
+def _quarantine(run: Path, *findings: dict) -> Path:
+    """The guards' own ledger of what they threw out, as the engine counts it.
+
+    `quarantined.jsonl` is where the evidence guards write a finding they
+    refused, and the engine counts the rows in that file. The editor package
+    carries a count of the same thing and the engine does not read it, so a
+    fixture that set only that number would prove nothing.
+    """
+    run = Path(run)
+    run.mkdir(parents=True, exist_ok=True)
+    (run / "quarantined.jsonl").write_text(
+        "".join(f"{json.dumps(finding)}\n" for finding in findings), encoding="utf-8"
+    )
+    return run
+
+
 def _run_tree(root: Path, **overrides) -> Path:
     """The two folders `peerreview review <pdf> <out>` writes under one out dir."""
     root = Path(root)
@@ -586,7 +664,7 @@ def _published_tree(root: Path):
 
 def _stage_record(**overrides) -> dict:
     """The completeness block as the real reader produces it from the ledger."""
-    return local_review.completeness({"stages": _stages(TRACKS, **overrides)}, {})
+    return local_review.completeness(_stages(TRACKS, **overrides))
 
 
 def _run_record(**overrides) -> dict:
@@ -598,15 +676,18 @@ def _run_record(**overrides) -> dict:
         "finding_schema_version": FINDING_SCHEMA,
         "reviewers": 3,
         "specialist_tracks": list(TRACKS),
-        "synthesis_policy": "editor-pooled",
         "paper_id": "paper-abc",
-        "body_finding_limit": 8,
+        "claude_code_version": CLAUDE_CODE_VERSION,
         "status": "complete",
+        # The engine's own answer, which is the publish gate in 0.9. A record
+        # carries it rather than this repository's reading of the same files.
+        "publishable": True,
+        "findings_source": "editor-package",
         "review_guard_status": "clean",
         "findings_delivered": 6,
         "quarantined_findings_count": 0,
         "escalated_count": 2,
-        "findings_by_track": dict(FINDINGS_BY_TRACK),
+        "findings_by_track": dict(COUNTED_BY_TRACK),
         "completeness": _stage_record(),
         "findings": len(local_review.sorted_findings(PACKAGE)),
         "appendix_findings": len(APPENDIX),
@@ -1053,16 +1134,26 @@ def check_provenance_is_read_from_the_run() -> None:
         assert run["finding_schema_version"] == FINDING_SCHEMA, f"finding schema lost: {run}"
         assert run["reviewers"] == 3, f"reviewer count not read from the run: {run}"
         assert run["specialist_tracks"] == list(TRACKS), f"the specialists were not read: {run}"
-        assert run["synthesis_policy"] == "editor-pooled", f"synthesis policy not read: {run}"
         assert run["paper_id"] == "paper-abc", f"paper id not read from the manifest: {run}"
-        assert run["body_finding_limit"] == 8, f"the body cap was not read: {run}"
-        assert run["status"] == "complete", f"status not read from progress.json: {run}"
+        assert run["claude_code_version"] == CLAUDE_CODE_VERSION, f"harness version lost: {run}"
+        assert run["status"] == "complete", f"status not read from the engine: {run}"
+        # The engine answers the publish question itself, and the record carries
+        # its answer rather than a second reading of the same files.
+        assert run["publishable"] is True, f"the engine's publish flag was not read: {run}"
+        assert run["findings_source"] == "editor-package", (
+            f"the record must say the findings are the editor's own: {run}"
+        )
         assert run["review_guard_status"] == "clean", f"the guard verdict was not read: {run}"
         assert run["findings_delivered"] == 6, f"the delivered count was not read: {run}"
         assert run["quarantined_findings_count"] == 0, f"a zero count is a count: {run}"
-        assert run["tool_calls_total"] == 64, f"the tool calls were not read: {run}"
         assert run["escalated_count"] == 2, f"the escalations were not read: {run}"
-        assert run["findings_by_track"] == FINDINGS_BY_TRACK, f"the track counts were not read: {run}"
+        # Counted from the findings, not copied from the editor's own tally. The
+        # fixture's package claims two stats findings and a field track, and the
+        # findings beside it hold one stats finding and no field one.
+        assert run["findings_by_track"] == COUNTED_BY_TRACK, f"the tracks were not counted: {run}"
+        assert run["findings_by_track"] != FINDINGS_BY_TRACK, (
+            "the editor's own tally was republished instead of the findings in the bundle"
+        )
         assert run["wall_seconds"] == 1840.5, f"the wall time was not read from runtime.json: {run}"
         assert run["tokens_total"] == 412000, f"the token total was not read: {run}"
         assert run["errors"] == [], f"a clean run should record no errors: {run}"
@@ -1115,31 +1206,58 @@ def check_provenance_is_read_from_the_run() -> None:
                 continue
             raise AssertionError(f"a plugin record was written with {why}")
 
-        # A value the run did not record is absent, never defaulted.
-        bare = local_review.read_run(Path(tmp) / "empty")
-        for key in ("arm", "reviewers", "provider", "paper_id", "completeness"):
-            assert key not in bare, f"{key} was invented for a run that recorded nothing: {bare}"
+        # A folder that is not a run at all is refused by name rather than read
+        # as a run that recorded nothing. The engine raises for both, and the
+        # refusal has to point at the folder the engine writes.
+        (Path(tmp) / "not-a-run").mkdir()
+        for why, path in {
+            "a folder that does not exist": Path(tmp) / "empty",
+            "a folder holding none of the run's files": Path(tmp) / "not-a-run",
+        }.items():
+            try:
+                local_review.read_run(path)
+            except local_review.CommandError as refusal:
+                assert "peerreview review" in str(refusal), (
+                    f"the refusal for {why} does not say where a run comes from: {refusal}"
+                )
+                continue
+            raise AssertionError(f"{why} was read as a run")
 
-        # And what went wrong is read rather than assumed to be nothing.
+        # And what went wrong is read rather than assumed to be nothing. The
+        # engine decides the status and the cause; what the record adds is the
+        # harm a run can carry past them.
         broken = _run_directory(
             Path(tmp) / "broken",
             **{
                 "progress.json": {
-                    "status": "failed",
+                    "status": "blocked",
                     "error": "the transport hung up",
-                    "review_guard_status": "partially-quarantined",
-                    "quarantined_findings_count": 2,
+                    "stages": _stages(TRACKS, reported=list(CORE_SLOTS), missing=["spec-stats"]),
                 },
-                "runtime.json": _runtime(TRACKS, status="failed", blocked_reason="no plugin loaded"),
+                "runtime.json": _runtime(TRACKS, status="blocked", blocked_reason="no plugin loaded"),
+                "editor-package.json": dict(
+                    PACKAGE,
+                    stages=_stages(TRACKS),
+                    review_guard_status="partially-quarantined",
+                ),
             },
         )
-        errors = local_review.read_run(broken)["errors"]
-        assert any("hung up" in e for e in errors), f"the recorded error was dropped: {errors}"
-        assert any("failed" in e for e in errors), f"a failed run should say so: {errors}"
+        _quarantine(
+            broken,
+            {"finding_uid": "f-020", "severity": "major", "title": "Unquotable"},
+            {"finding_uid": "f-021", "severity": "minor", "title": "Unquotable too"},
+        )
+        record = local_review.read_run(broken)
+        errors = record["errors"]
+        assert record["publishable"] is False, f"a blocked run is not publishable: {record}"
         assert any("no plugin loaded" in e for e in errors), (
             f"the starter's own reason was dropped: {errors}"
         )
+        assert any("blocked" in e for e in errors), f"a run that stopped should say so: {errors}"
         assert any("quarantined" in e for e in errors), f"quarantined findings are errors: {errors}"
+        assert any("spec-stats" in e for e in errors), (
+            f"a stage that never reported is an error: {errors}"
+        )
 
 
 def check_a_run_of_one_paper_cannot_be_published_as_another() -> None:
@@ -1362,9 +1480,16 @@ def check_an_unfinished_run_cannot_be_published() -> None:
                     ),
                 },
             ),
+            # The starter writes runtime.json when the session ends, so a run
+            # still going has none. A fixture that left a finished runtime.json
+            # beside a running progress.json would be read as complete, because
+            # the starter's status is the later of the two and wins.
             "a run still going": _run_directory(
                 Path(tmp) / "running",
-                **{"progress.json": {"status": "running", "stages": _stages(TRACKS)}},
+                **{
+                    "progress.json": {"status": "running", "stages": _stages(TRACKS)},
+                    "runtime.json": None,
+                },
             ),
         }
         for why, run_dir in cases.items():
@@ -1404,6 +1529,12 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
     ones that never got published, and the record would read as if the engine
     always finds something.
 
+    A run with anything in quarantine is a third outcome, and in 0.9 it does
+    not publish at all. The engine calls a run publishable only with the guard
+    status `clean`, so a partially quarantined run is refused here where 0.8
+    published it with a note: which findings the guards threw out, and whether
+    the review still stands without them, is a judgement for a person.
+
     `complete-without-findings` is a different outcome and must not publish. The
     engine writes that status when every finding the reviewers raised failed the
     evidence guards and was quarantined. A review that endorses none of its own
@@ -1437,14 +1568,15 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 "editor-package.json": sound_package,
             },
         )
-        record = local_review.read_run(empty)
+        reading = local_review.engine_reading(empty)
+        record = local_review.run_record(reading)
         assert record["errors"] == [], (
             f"a finished run that raised nothing is not an error: {record['errors']}"
         )
-        local_review.require_complete_run(empty, record)
+        local_review.require_complete_run(empty, record, reading)
         assert record["status"] == _schema_run_status(), f"status lost: {record}"
         assert record["review_guard_status"] == "clean", f"the guard verdict was not read: {record}"
-        assert local_review.sorted_findings(local_review.editor_package(empty)) == [], (
+        assert local_review.sorted_findings(local_review.review_package(reading)) == [], (
             "a run with no findings has no findings"
         )
 
@@ -1505,6 +1637,13 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 ),
             },
         )
+        _quarantine(
+            quarantined,
+            *(
+                {"finding_uid": f"f-03{index}", "severity": "major", "title": "Unquotable"}
+                for index in range(4)
+            ),
+        )
         quarantined_record = local_review.read_run(quarantined)
         errors = quarantined_record["errors"]
         assert any("quarantined" in problem for problem in errors), (
@@ -1540,31 +1679,42 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             )
             assert not destination.exists(), f"a bundle was written to {destination}"
 
-        # Neither field alone carries the gate. A run that says `complete` and
-        # still reports every finding quarantined is refused on the guard, and
-        # one that says `complete-without-findings` is refused on the status,
+        # Neither field alone carries the gate, and the guard verdict is read
+        # out of the editor package rather than progress.json, so each case
+        # writes it where the engine looks. A run that says `complete` and
+        # reports every finding quarantined is refused on the guard, and one
+        # that says `complete-without-findings` is refused on the status,
         # whatever guard value sits beside it.
         refusals = {
             "the guard alone": {
-                "status": "complete",
-                "review_guard_status": "all-findings-quarantined",
-                "stages": _stages(TRACKS),
+                "progress.json": {"status": "complete", "stages": _stages(TRACKS)},
+                "editor-package.json": dict(
+                    PACKAGE,
+                    stages=_stages(TRACKS),
+                    review_guard_status="all-findings-quarantined",
+                ),
             },
             "the status alone": {
-                "status": "complete-without-findings",
-                "stages": _stages(TRACKS),
+                "progress.json": {
+                    "status": "complete-without-findings",
+                    "stages": _stages(TRACKS),
+                },
             },
         }
-        for index, (why, progress) in enumerate(refusals.items()):
-            run_dir = _run_directory(Path(tmp) / f"refused-{index}", **{"progress.json": progress})
+        for index, (why, files) in enumerate(refusals.items()):
+            run_dir = _run_directory(Path(tmp) / f"refused-{index}", **files)
             try:
                 local_review.require_complete_run(run_dir, local_review.read_run(run_dir))
             except local_review.CommandError:
                 continue
             raise AssertionError(f"a quarantined run was published on {why}")
 
-        # A review that lost some findings and kept others still endorses what
-        # it kept, so it publishes. Refusing that would drop real reviews.
+        # A run that kept some findings and lost others is not published either,
+        # and that is a change from 0.8, which published it with a note. The
+        # engine calls any run with something in quarantine unpublishable:
+        # which findings the guards threw out is a judgement for a person. The
+        # refusal has to say how many and where to read them, or the operator
+        # is sent back to the run folder to find out why it was refused.
         partial = _run_directory(
             Path(tmp) / "partial",
             **{
@@ -1573,10 +1723,30 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                     "review_guard_status": "partially-quarantined",
                     "stages": _stages(TRACKS),
                     "quarantined_findings_count": 1,
-                }
+                },
+                "editor-package.json": dict(
+                    PACKAGE, stages=_stages(TRACKS), review_guard_status="partially-quarantined"
+                ),
             },
         )
-        local_review.require_complete_run(partial, local_review.read_run(partial))
+        _quarantine(
+            partial, {"finding_uid": "f-040", "severity": "moderate", "title": "Unquotable"}
+        )
+        partial_record = local_review.read_run(partial)
+        assert partial_record["publishable"] is False, (
+            f"a run with a finding in quarantine is not publishable: {partial_record}"
+        )
+        try:
+            local_review.require_complete_run(partial, partial_record)
+        except local_review.CommandError as error:
+            assert "partially-quarantined" in str(error), (
+                f"the refusal has to name the guard verdict: {error}"
+            )
+            assert "1 finding(s)" in str(error), (
+                f"the refusal has to say how much was thrown out: {error}"
+            )
+        else:
+            raise AssertionError("a run with a finding in quarantine was published")
 
 
 def check_a_run_on_another_transport_is_not_published() -> None:
@@ -1794,53 +1964,81 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
     """runtime.json opens with five rows that are a label and nothing else.
 
     Claude Code emits one per agent it has reserved and not yet named, so a real
-    0.9 run carries `agent-0` through `agent-4` beside the agents that ran.
-    Counting them put five empty reviewers on the published panel and in the
-    model table, which is a claim about a panel that did not sit.
+    0.9 run carries `agent-0` through `agent-4` beside the agents that ran, and
+    the engine's reading hands them back as rows like any other. Counting them
+    put five empty reviewers on the published panel and in the model table,
+    which is a claim about a panel that did not sit.
+
+    The rows are the engine's own merge of the protocol's slots with what the
+    harness observed, so the fixture is a run folder rather than two
+    hand-written files, and what is checked here is which of those rows reach a
+    published record.
     """
-    protocol = {"agents": _protocol_agents(TRACKS)}
-    runtime = _runtime(TRACKS)
-    rows = local_review.agent_rows(protocol, PACKAGE, runtime)
+    with tempfile.TemporaryDirectory() as tmp:
+        run = _run_directory(Path(tmp) / "run")
+        rows = local_review.agent_rows(local_review.engine_reading(run))
 
-    slots = [row["slot"] for row in rows]
-    assert not [slot for slot in slots if slot.startswith("agent-")], (
-        f"a placeholder row was published as an agent that ran: {slots}"
-    )
-    assert len(rows) == 12, f"expected three core, six specialists, an editor, a recorder and the ingest row: {slots}"
-    assert all("slot" in row for row in rows), f"a row with no slot: {rows}"
+        slots = [row["slot"] for row in rows]
+        assert not [slot for slot in slots if slot.startswith("agent-")], (
+            f"a placeholder row was published as an agent that ran: {slots}"
+        )
+        assert len(rows) == 12, (
+            "expected three core, six specialists, an editor, a recorder and "
+            f"the ingest row: {slots}"
+        )
+        assert all("slot" in row for row in rows), f"a row with no slot: {rows}"
 
-    by_slot = {row["slot"]: row for row in rows}
-    assert by_slot["core-1"]["agent_type"] == "pra:core-reviewer", (
-        f"the harness's own label for a core reviewer was lost: {by_slot['core-1']}"
-    )
-    assert by_slot["spec-stats"]["track"] == "stats", f"the track was lost: {by_slot['spec-stats']}"
-    assert by_slot["core-3"]["none_found"] is True, (
-        f"a reviewer that reported nothing on its track must say so: {by_slot['core-3']}"
-    )
-    assert by_slot["core-2"]["attempt"] == 2, f"a retried slot lost its attempt: {by_slot['core-2']}"
-    assert by_slot["editor"]["model"] == OPUS, f"the editor's model was lost: {by_slot['editor']}"
-    assert "model" not in by_slot["recorder"], (
-        f"protocol.json pins no model for the recorder: {by_slot['recorder']}"
-    )
+        by_slot = {row["slot"]: row for row in rows}
+        assert by_slot["core-1"]["role"] == "core-reviewer", (
+            f"the protocol's own role for a core reviewer was lost: {by_slot['core-1']}"
+        )
+        assert by_slot["spec-stats"]["track"] == "stats", (
+            f"the track was lost: {by_slot['spec-stats']}"
+        )
+        assert by_slot["core-1"]["findings"] > 0 and by_slot["editor"]["findings"] == 0, (
+            "the findings each slot delivered were not counted from the findings "
+            f"themselves: {by_slot['core-1']}, {by_slot['editor']}"
+        )
+        assert by_slot["spec-field"]["none_found"] is True, (
+            f"a reader that reported nothing on its track must say so: {by_slot['spec-field']}"
+        )
+        assert by_slot["core-2"]["attempt"] == 2, (
+            f"a retried slot lost its attempt: {by_slot['core-2']}"
+        )
+        assert by_slot["editor"]["model"] == OPUS, (
+            f"the editor's model was lost: {by_slot['editor']}"
+        )
+        assert "model" not in by_slot["recorder"], (
+            f"protocol.json pins no model for the recorder: {by_slot['recorder']}"
+        )
 
-    models = local_review.model_map(rows)
-    assert models == _expected_models(), f"the model map is wrong: {models}"
-    assert local_review.model_phrase(models) == EXPECTED_MODEL_PHRASE, (
-        f"the model counts are wrong: {local_review.model_phrase(models)}"
-    )
-    assert local_review.model_phrase({}) == "models the run did not record", (
-        "a run with no model map must say so rather than name one"
-    )
+        models = local_review.model_map(rows)
+        assert models == _expected_models(), f"the model map is wrong: {models}"
+        assert local_review.model_phrase(models) == EXPECTED_MODEL_PHRASE, (
+            f"the model counts are wrong: {local_review.model_phrase(models)}"
+        )
+        assert local_review.model_phrase({}) == "models the run did not record", (
+            "a run with no model map must say so rather than name one"
+        )
 
-    # A runtime with nothing but placeholders describes no agents at all, and a
-    # record with no model for any agent cannot say what wrote the review.
-    placeholders = local_review.agent_rows(
-        protocol, PACKAGE, {"agents": [{"label": f"agent-{index}"} for index in range(5)]}
-    )
-    assert len(placeholders) == 11, f"the protocol's own slots are still agents: {placeholders}"
-    assert HAIKU not in local_review.model_map(placeholders).values(), (
-        "the recorder's model is only known from the harness"
-    )
+        # A run whose harness record is nothing but placeholders still has the
+        # protocol's own slots, and the one model only the harness knew is gone
+        # from the map, so a record built from it cannot name haiku.
+        unnamed = _run_directory(
+            Path(tmp) / "unnamed",
+            **{
+                "runtime.json": _runtime(
+                    TRACKS, agents=[{"label": f"agent-{index}"} for index in range(5)]
+                )
+            },
+        )
+        placeholders = local_review.agent_rows(local_review.engine_reading(unnamed))
+        assert len(placeholders) == 11, (
+            f"the protocol's own slots are still agents: {placeholders}"
+        )
+        assert HAIKU not in local_review.model_map(placeholders).values(), (
+            "the recorder's model is only known from the harness"
+        )
     with _stub_engine():
         try:
             local_review.build_provenance(
@@ -1875,23 +2073,37 @@ def check_a_stage_that_never_reported_is_not_a_whole_review() -> None:
     assert "completeness" in _schema_run_requires(), (
         "the schema requires the stage ledger, so a run without one cannot publish"
     )
-    assert local_review.completeness({}, {}) == {}, (
+    assert local_review.completeness({}) == {}, (
         "a run with no ledger records none rather than an empty one that reads as whole"
     )
 
     with tempfile.TemporaryDirectory() as tmp:
-        no_ledger = local_review.read_run(
-            _run_directory(
-                Path(tmp) / "no-ledger",
-                **{
-                    "progress.json": {"status": "complete", "review_guard_status": "clean"},
-                    "editor-package.json": dict(PACKAGE),
-                },
-            )
+        no_ledger_dir = _run_directory(
+            Path(tmp) / "no-ledger",
+            **{
+                "progress.json": {"status": "complete", "review_guard_status": "clean"},
+                "editor-package.json": dict(PACKAGE),
+            },
         )
+        no_ledger = local_review.read_run(no_ledger_dir)
         assert "completeness" not in no_ledger, (
             f"a run that kept no ledger must not be described as whole: {no_ledger}"
         )
+        # The engine calls it publishable, because every file it reads is whole
+        # and the review is there. What it cannot say is which readers the arm
+        # asked for, and that is the claim the bundle makes, so it is refused
+        # here rather than published with the ledger left out.
+        assert no_ledger["publishable"] is True, (
+            f"the engine's own flag is not what refuses this run: {no_ledger}"
+        )
+        try:
+            local_review.require_complete_run(no_ledger_dir, no_ledger)
+        except local_review.CommandError as error:
+            assert "stage ledger" in str(error), (
+                f"the refusal has to say what is missing: {error}"
+            )
+        else:
+            raise AssertionError("a review was published from a run with no stage ledger")
 
         short = _run_directory(
             Path(tmp) / "short",
@@ -2053,7 +2265,11 @@ def check_the_run_folder_is_found_whichever_path_is_typed() -> None:
         assert local_review.read_run(out) == local_review.read_run(review_dir), (
             "the two paths describe one run"
         )
-        assert local_review.editor_package(out) == local_review.editor_package(review_dir)
+        assert local_review.review_package(
+            local_review.engine_reading(out)
+        ) == local_review.review_package(local_review.engine_reading(review_dir)), (
+            "the review read from either path is the same review"
+        )
         assert sorted(local_review.track_reports(out)) == sorted(
             local_review.track_reports(review_dir)
         ), "the specialist reports have to be found from either path"
@@ -2157,10 +2373,17 @@ def check_a_published_record_names_no_local_path() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         run = local_review.read_run(_run_directory(Path(tmp) / "run"))
         assert "directory" not in run, f"the run path was published: {run}"
-    here = local_review.read_run(local_review.REPO / "scripts")
-    assert here.get("directory") == "scripts", (
-        f"a run inside the repository is named relative to it: {here.get('directory')!r}"
-    )
+    # A run inside this repository is named relative to it, because that path
+    # is a fact about the repository rather than about the operator's disk. The
+    # fixture has to sit inside the tree to be read that way, so it is written
+    # into a temporary folder there and removed again.
+    with tempfile.TemporaryDirectory(dir=local_review.REPO) as inside_repo:
+        run_dir = _run_directory(Path(inside_repo) / "run")
+        here = local_review.read_run(run_dir)
+        expected = run_dir.relative_to(local_review.REPO).as_posix()
+        assert here.get("directory") == expected, (
+            f"a run inside the repository is named relative to it: {here.get('directory')!r}"
+        )
 
     assert local_review.absolute_path_fields({"a": {"b": "/home/someone/run"}}) == ["a.b"]
     assert local_review.absolute_path_fields({"u": "file:///home/someone"}) == ["u"]
@@ -2599,9 +2822,22 @@ def check_a_written_bundle_carries_no_local_path() -> None:
             assert [f["comment"] for f in published["findings"]] == [
                 f["comment"] for f in package["findings"]
             ], f"a finding was rewritten or dropped on the way out: {published['findings']}"
-            assert [entry["slot"] for entry in published["reviewer_provenance"]] == list(
-                CORE_SLOTS
-            ), f"a reviewer was dropped with its path: {published['reviewer_provenance']}"
+            # The fields that carried those paths do not reach the bundle at
+            # all. The engine's reading carries the review rather than the
+            # plugin server's own bookkeeping, so the class of leak is gone
+            # instead of scrubbed field by field, and the scan above is what
+            # says nothing that is published carries one.
+            for field in (
+                "reviewer_provenance",
+                "candidate_origins",
+                "focused_evidence_provenance",
+                "synthesis_provenance",
+                "working_directory",
+            ):
+                assert field not in published, (
+                    f"{field} is not part of the engine's reading of a run and "
+                    f"must not be published from it: {published.get(field)}"
+                )
             letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
             assert "Report the confidence interval." in letter, (
                 "the reviewer's own comment did not reach the decision letter"
@@ -2612,11 +2848,22 @@ def check_a_written_bundle_carries_no_local_path() -> None:
             )
 
             # And a path in a field nothing here knows about refuses, leaving
-            # the published tree as it found it.
+            # the published tree as it found it. The field is inside a finding,
+            # because a finding is published whole: a stray key beside the
+            # package is dropped with everything else the engine's reading does
+            # not carry, and would prove nothing about the guard.
             unknown = reviews / "2026" / "fixture-paper" / "v1" / "r2"
             second_run = _run_directory(
                 Path(tmp) / "run-2",
-                **{"editor-package.json": dict(package, working_directory=f"{home}/runs")},
+                **{
+                    "editor-package.json": dict(
+                        package,
+                        findings=[
+                            dict(package["findings"][0], evidence_log=f"{home}/runs/out/log.txt"),
+                            *package["findings"][1:],
+                        ],
+                    )
+                },
             )
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
@@ -2668,3 +2915,99 @@ def check_the_locked_engine_release_is_the_one_declared() -> None:
         f"the lock pins peerreviewagents {locked}. The plugin, the commands and the "
         "run folder this repository reads are the 0.9 ones"
     )
+
+
+# The checks that read a run folder, which in 0.9 means the engine reads it.
+# They write a fixture run to disk and hand it to `peerreviewagents.read_run`,
+# so they are checks against the real reader, and there is nothing for them to
+# run against when the engine is not installed.
+ENGINE_BACKED = (
+    (check_a_bare_pdf_cannot_be_published, "a review of an unidentified PDF cannot be published"),
+    (
+        check_provenance_is_read_from_the_run,
+        "the provenance record is read from what the run wrote",
+    ),
+    (
+        check_a_run_with_no_manifest_paper_id_is_still_bound,
+        "a run that records its paper id outside the manifest is still bound",
+    ),
+    (
+        check_an_unfinished_run_cannot_be_published,
+        "a run that did not finish cannot be published, and the cause is named",
+    ),
+    (
+        check_a_finished_run_that_endorses_nothing_is_a_review,
+        "a run that finished and raised nothing publishes, a quarantined one does not",
+    ),
+    (
+        check_a_run_on_another_transport_is_not_published,
+        "a run on another transport is refused rather than labelled claude-code",
+    ),
+    (
+        check_the_transport_claim_rests_on_the_runs_own_probe,
+        "the transport claim is read from the run's own start-up probe",
+    ),
+    (
+        check_a_placeholder_agent_row_is_not_a_reviewer,
+        "the harness's placeholder agent rows are not published as reviewers",
+    ),
+    (
+        check_a_stage_that_never_reported_is_not_a_whole_review,
+        "a specialist that never reported is refused, not rounded up",
+    ),
+    (
+        check_every_specialist_report_reaches_the_bundle,
+        "every specialist track report is copied into the bundle",
+    ),
+    (
+        check_the_run_folder_is_found_whichever_path_is_typed,
+        "the run folder is found from the out directory or from review/",
+    ),
+    (
+        check_a_published_record_names_no_local_path,
+        "a published record names no path on the operator's disk",
+    ),
+    (
+        check_no_published_file_in_a_bundle_names_a_local_path,
+        "the engine's path fields are scrubbed and every bundle file is scanned",
+    ),
+    (
+        check_an_empty_protocol_file_is_not_a_record_of_the_run,
+        "an empty protocol.json is not a record of what the engine was asked",
+    ),
+    (
+        check_a_rehearsal_cannot_be_copied_into_place_as_a_review,
+        "a rehearsal cannot be copied into place as a published review",
+    ),
+    (
+        check_a_written_bundle_carries_no_local_path,
+        "a published bundle, read back off disk, names no local path",
+    ),
+)
+
+
+def run_engine_backed_checks() -> None:
+    """Run the run-folder checks, or say why they did not run.
+
+    A missing engine is a reason to skip on a laptop and a failure in CI. The
+    pipeline job runs this suite on a bare interpreter on purpose, to prove the
+    engine-free half needs no engine, and waives the rule by setting
+    INSILICO_REQUIRE_ENGINE to 0, which is the only way a skip is reached where
+    CI is set.
+    """
+    if not engine_is_importable():
+        if engine_is_required():
+            raise AssertionError(
+                f"{local_review.ENGINE_PACKAGE}.read_run is not importable, so the "
+                f"{len(ENGINE_BACKED)} checks that read a run folder cannot run, and this "
+                "environment says they are required. Install the engine from the lock "
+                "file, or set INSILICO_REQUIRE_ENGINE=0 to waive it on purpose."
+            )
+        print(
+            f"skip {len(ENGINE_BACKED)} run-folder checks: "
+            f"{local_review.ENGINE_PACKAGE}.read_run is not importable here"
+        )
+        return
+    for check_function, label in ENGINE_BACKED:
+        check_function()
+        print(f"ok  {label}")

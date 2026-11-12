@@ -111,6 +111,11 @@ REQUIRED_SEVERITIES = ("major", "moderate")
 # work, and publishing it under the same words would tell authors their paper
 # drew no findings when every finding was thrown away.
 FINISHED_STATUSES = ("complete",)
+# The one guard verdict the engine publishes from. A run that kept some
+# findings and lost others reads as `partially-quarantined`, and the engine
+# does not call it publishable: what the guards threw out is a judgement for a
+# person, who can read the quarantined findings in the run and decide.
+CLEAN_GUARD = "clean"
 ALL_FINDINGS_QUARANTINED = "all-findings-quarantined"
 WITHOUT_FINDINGS_STATUS = "complete-without-findings"
 
@@ -385,66 +390,54 @@ def resolve_workspace(review_dir: Path, flag: str) -> Path:
     )
 
 
-def agent_rows(protocol: dict, package: dict, runtime: dict) -> list[dict]:
-    """One row per agent that ran, from the three files that each know part of it.
+def agent_rows(reading: dict) -> list[dict]:
+    """One row per agent that ran, as the engine read them back.
 
-    `protocol.json` holds the role, the track and the tool allowance each slot
-    was given. `editor-package.json` holds what each reviewer delivered.
-    `runtime.json` holds what the harness observed, including the model the slot
-    actually ran on.
+    `read_run` merges the protocol's slots with what the harness observed and
+    gives each one a `slot`, `role`, `track`, `model`, `attempt`, `tool_calls`,
+    `session_calls`, `tokens` and `state`. Two facts the published record wants
+    are not in those rows and are counted here: how many findings a slot
+    delivered, which the findings themselves say, and whether it reported
+    nothing, which the stage ledger says.
 
     The harness emits a placeholder row for an agent it has not named yet, with
     a label and nothing else. Those are skipped: an `agent-3` with no model, no
     state and no usage is not an agent that ran, and publishing five of them
     would overstate the panel.
     """
-    rows: dict[str, dict] = {}
-    for slot, agent in sorted(_dict(protocol.get("agents")).items()):
-        agent = _dict(agent)
-        rows[str(slot)] = {
-            "slot": str(slot),
-            "role": str(agent.get("role") or "") or None,
-            "track": str(agent.get("track") or "") or None,
-            "attempt": agent.get("attempt"),
-            "tool_calls": agent.get("tool_calls"),
-            "model": str(agent.get("model") or "") or None,
-        }
-    for entry in _list(package.get("reviewer_provenance")):
-        entry = _dict(entry)
-        slot = str(entry.get("slot") or "")
-        if not slot:
-            continue
-        row = rows.setdefault(slot, {"slot": slot})
-        for key in ("role", "track", "attempt", "tool_calls", "model"):
-            if not row.get(key) and entry.get(key) not in (None, ""):
-                row[key] = entry[key]
-        row["findings"] = entry.get("findings")
-        row["none_found"] = bool(entry.get("none_found"))
-    for observed in _list(runtime.get("agents")):
+    delivered: dict[str, int] = {}
+    for finding in _list(reading.get("findings")):
+        slot = str(_dict(finding).get("slot") or "")
+        if slot:
+            delivered[slot] = delivered.get(slot, 0) + 1
+    silent = {str(s) for s in _list(_dict(reading.get("stages")).get("none_found"))}
+    rows = []
+    for observed in _list(reading.get("agents")):
         observed = _dict(observed)
-        label = str(observed.get("label") or "")
-        if not label:
+        slot = str(observed.get("slot") or "")
+        if not slot:
             continue
         # A row with nothing but a label is a slot the harness reserved and
         # never filled. Treating it as an agent that ran would put five empty
         # reviewers on the published panel.
-        if not any(observed.get(key) for key in ("state", "model", "agentType")):
+        if not any(observed.get(key) for key in ("role", "model", "state", "tokens")):
             continue
-        row = rows.setdefault(label, {"slot": label})
-        if observed.get("model") and not row.get("model"):
-            row["model"] = str(observed["model"])
-        if observed.get("agentType"):
-            row["agent_type"] = str(observed["agentType"])
-        if observed.get("state"):
-            row["state"] = str(observed["state"])
-        if observed.get("tokens") is not None:
-            row["tokens"] = observed["tokens"]
-        if observed.get("toolCalls") is not None and not row.get("tool_calls"):
-            row["tool_calls"] = observed["toolCalls"]
-    return [
-        {key: value for key, value in row.items() if value not in (None, "")}
-        for _, row in sorted(rows.items())
-    ]
+        row = {
+            "slot": slot,
+            "role": observed.get("role"),
+            "track": observed.get("track"),
+            "attempt": observed.get("attempt"),
+            # The server's own count of what it served the slot, and the
+            # session's larger count only when the server recorded none.
+            "tool_calls": observed.get("tool_calls") or observed.get("session_calls"),
+            "model": observed.get("model"),
+            "state": observed.get("state"),
+            "tokens": observed.get("tokens"),
+            "findings": delivered.get(slot, 0),
+            "none_found": slot in silent,
+        }
+        rows.append({key: value for key, value in row.items() if value not in (None, "")})
+    return sorted(rows, key=lambda row: str(row["slot"]))
 
 
 def model_map(agents: list[dict]) -> dict[str, str]:
@@ -474,15 +467,16 @@ def model_phrase(models: dict[str, str]) -> str:
     )
 
 
-def completeness(progress: dict, package: dict) -> dict:
+def completeness(stages: dict) -> dict:
     """The stage ledger, which is what says whether the review is whole.
 
     The server keeps a ledger of the stages a run requires and the ones that
-    reported. A run can reach `complete` with a stage that never reported only
-    when the editor accepted the pool without it, so the counts and the
-    acceptance travel together in the record.
+    reported, and `read_run` hands it back as `stages`. A run can reach
+    `complete` with a stage that never reported only when the editor accepted
+    the pool without it, so the counts and the acceptance travel together in
+    the record.
     """
-    stages = _dict(progress.get("stages")) or _dict(package.get("stages"))
+    stages = _dict(stages)
     if not stages:
         return {}
     record = {
@@ -503,121 +497,168 @@ def completeness(progress: dict, package: dict) -> dict:
     return record
 
 
-def read_run(run_dir: Path) -> dict:
-    """Everything about the run that the run itself recorded.
+def engine_reading(run_dir: Path) -> dict:
+    """The engine's own reading of a run folder, which is the only way in.
 
-    The plugin server and the starter write five files into the review folder.
-    `protocol.json` says what was asked of the engine: the arm, the reviewer
-    count, the tool allowances and one entry per agent slot. `manifest.json`
-    captures the paper id and the hash of every plugin and engine file loaded,
-    at the moment the run started. `progress.json` holds the final status, the
-    guard status and the stage ledger. `runtime.json` holds what the harness
-    observed: the models, the wall time, the tokens and the Claude Code version.
-    `editor-package.json` holds the review.
+    `peerreviewagents.read_run` is the engine's supported surface for a folder
+    on disk. It returns the same keys for every run, finished or killed or
+    never started, names each file it could not read in `problems` rather than
+    raising, and answers `publishable` itself. Nothing here opens a run file
+    that it covers: a second reader beside it is a second status rule, and the
+    two would disagree the first time the engine changed one.
 
-    Every key in the result was read from one of those files. A value the run
-    did not record is left out, so a caller that needs it has to say so rather
-    than silently inherit a default from the prepare step or a publish flag.
+    It raises for the two things that are not a damaged run: a folder that is
+    not a run at all, and a run file that is a symlink, which is some other
+    file's contents offered as this run's result. Both become refusals here.
     """
-    run_dir = resolve_review_dir(run_dir)
-    protocol = maybe_json(run_dir / "protocol.json")
-    manifest = maybe_json(run_dir / "manifest.json")
-    progress = maybe_json(run_dir / "progress.json")
-    runtime = maybe_json(run_dir / "runtime.json")
-    # Reading provenance is not the same job as reading the review. A run with
-    # no editor package is refused by cmd_publish, which asks for it directly,
-    # and this function stays able to describe a run that failed.
     try:
-        package = editor_package(run_dir)
-    except CommandError:
-        package = {}
+        engine = importlib.import_module(ENGINE_PACKAGE)
+        reader = engine.read_run
+    except (ImportError, AttributeError) as exc:
+        raise CommandError(
+            f"{ENGINE_PACKAGE}.read_run is not importable, so a run folder "
+            "cannot be read. Install PeerReviewAgents 0.9.0 or newer, or run "
+            "this with the virtual environment the review ran in."
+        ) from exc
+    try:
+        reading = reader(str(Path(run_dir)))
+    except ValueError as exc:
+        raise CommandError(
+            f"The engine refused to read {run_dir}: {exc} Point --run at the "
+            "folder `peerreview review` wrote."
+        ) from exc
+    if not isinstance(reading, dict):
+        raise CommandError(f"{ENGINE_PACKAGE}.read_run returned no reading for {run_dir}")
+    return reading
+
+
+def run_files(reading: dict) -> dict:
+    """The three fields the engine's public surface does not expose.
+
+    `read_run` answers everything about what a run did and found. It does not
+    say what code the run loaded, which transport ran it, or what the start-up
+    probe saw, and a published bundle here turns on all three: it pins the
+    plugin and the workflow by hash, and it claims a Claude Code subscription
+    paid for the review. Those three fields are read here, in one place, from
+    the review folder the engine resolved. The engine's own integration notes
+    call a field reachable only this way a gap in the supported list, and this
+    is the gap, reported upstream rather than worked around everywhere.
+    """
+    review_dir = Path(str(reading.get("review") or ""))
+    return {
+        "code": _dict(maybe_json(review_dir / "manifest.json").get("code")),
+        "provider": str(maybe_json(review_dir / "protocol.json").get("provider") or ""),
+        "startup": maybe_json(review_dir / "startup.json"),
+    }
+
+
+def review_package(reading: dict) -> dict:
+    """The editor's review, in the shape the documents are rendered from.
+
+    `read_run` returns the editor's placement and judgement as separate keys,
+    de-duplicated per `finding_uid` and with a finding the editor put in both
+    lists counted once. This gathers them back into one record, which is what
+    the bundle publishes beside the documents so a reader can check a quotation
+    against the structured finding it came from.
+    """
+    return {
+        "findings": _list(reading.get("body")),
+        "appendix": _list(reading.get("appendix")),
+        "summary": reading.get("summary"),
+        "verdict": _dict(reading.get("verdict")),
+        "limitations": _list(reading.get("limitations")),
+        "escalation_rulings": _list(reading.get("escalation_rulings")),
+        "review_guard_status": reading.get("guard_status"),
+        "findings_source": reading.get("findings_source"),
+        "quarantined_findings": _list(reading.get("quarantined")),
+    }
+
+
+def read_run(run_dir: Path) -> dict:
+    """The run record for one folder, read through the engine."""
+    return run_record(engine_reading(run_dir))
+
+
+def run_record(reading: dict) -> dict:
+    """What the run recorded, kept for the published record.
+
+    Every value here comes from the engine's reading except the three in
+    `run_files`, and a value the run did not record is left out rather than
+    defaulted, so a caller that needs one has to say so rather than silently
+    inherit it from the prepare step or a publish flag.
+    """
+    identity = _dict(reading.get("identity"))
+    counts = _dict(reading.get("counts"))
+    runtime = _dict(reading.get("runtime"))
+    extra = run_files(reading)
+    review_dir = Path(str(reading.get("review") or ""))
 
     record: dict = {}
     # A published record is read by strangers, and an absolute path in it
     # describes the machine that wrote it rather than the review. The path is
     # recorded when it is inside this repository and left out otherwise.
-    if run_dir.is_relative_to(REPO):
-        record["directory"] = run_dir.relative_to(REPO).as_posix()
+    if review_dir.is_absolute() and review_dir.is_relative_to(REPO):
+        record["directory"] = review_dir.relative_to(REPO).as_posix()
 
     def put(key: str, value: object) -> None:
         if value not in (None, "", [], {}):
             record[key] = value
 
-    plan = _dict(manifest.get("plan")) or _dict(protocol.get("plan"))
-
-    put("arm", protocol.get("arm") or package.get("arm") or plan.get("arm") or progress.get("arm"))
-    put(
-        "workflow_version",
-        package.get("workflow_version")
-        or manifest.get("workflow_version")
-        or protocol.get("version"),
-    )
-    put(
-        "finding_schema_version",
-        package.get("finding_schema_version")
-        or manifest.get("finding_schema_version")
-        or protocol.get("finding_schema_version"),
-    )
-    put("provider", protocol.get("provider"))
-    reviewers = package.get("reviewer_count")
-    if not isinstance(reviewers, int):
-        reviewers = protocol.get("reviewers")
-    if not isinstance(reviewers, int):
-        reviewers = progress.get("reviewers")
-    if isinstance(reviewers, int):
-        record["reviewers"] = reviewers
-    put("specialist_tracks", [str(t) for t in _list(plan.get("specialists"))])
-    put("synthesis_policy", package.get("synthesis_policy"))
-    put("paper_id", manifest.get("paper_id") or protocol.get("paper_id"))
-    put("literature_cutoff", protocol.get("literature_cutoff"))
-    put("body_finding_limit", protocol.get("body_finding_limit"))
-    put("engine_source", manifest.get("code"))
-    put("status", progress.get("status") or runtime.get("status"))
+    put("arm", identity.get("arm"))
+    put("workflow_version", identity.get("workflow_version"))
+    put("finding_schema_version", identity.get("finding_schema_version"))
+    put("provider", extra["provider"])
+    if isinstance(identity.get("reviewers"), int):
+        record["reviewers"] = identity["reviewers"]
+    put("specialist_tracks", [str(t) for t in _list(identity.get("specialists"))])
+    put("paper_id", identity.get("paper_id"))
+    put("literature_cutoff", identity.get("literature_cutoff"))
+    put("claude_code_version", identity.get("claude_code_version")
+        or runtime.get("claude_code_version"))
+    put("engine_source", extra["code"])
+    put("status", reading.get("status"))
+    # The engine's own answer to the only question the publish gate asks, kept
+    # in the record so a reader of the bundle sees the same flag the gate did.
+    record["publishable"] = bool(reading.get("publishable"))
+    put("findings_source", reading.get("findings_source"))
+    put("cause", reading.get("cause"))
+    put("note", reading.get("note"))
+    put("problems", [str(p) for p in _list(reading.get("problems"))])
     # Kept because the status alone no longer distinguishes the two outcomes a
     # reader cares about: a manuscript nobody found fault with is `clean` with
     # no findings, and a review whose every finding was thrown away is
     # `all-findings-quarantined`.
-    put(
-        "review_guard_status",
-        progress.get("review_guard_status") or package.get("review_guard_status"),
-    )
-    for key in (
-        "findings_delivered",
-        "findings_submitted",
-        "quarantined_findings_count",
-        "tool_calls_total",
-    ):
-        value = progress.get(key)
-        if isinstance(value, int):
-            record[key] = value
-    if isinstance(package.get("escalated_count"), int):
-        record["escalated_count"] = package["escalated_count"]
-    put(
-        "findings_by_track",
-        {
-            str(track): count
-            for track, count in _dict(package.get("findings_by_track")).items()
-            if isinstance(count, int)
-        },
-    )
+    put("review_guard_status", reading.get("guard_status"))
+    for key in ("findings_delivered", "findings_submitted"):
+        if isinstance(counts.get(key), int):
+            record[key] = counts[key]
+    if isinstance(counts.get("quarantined"), int):
+        record["quarantined_findings_count"] = counts["quarantined"]
+    record["escalated_count"] = len(_list(reading.get("escalations")))
+    # Counted from the findings rather than taken from a summary field, so the
+    # table on the page and the findings beside it cannot disagree.
+    by_track: dict[str, int] = {}
+    for finding in _list(reading.get("findings")):
+        track = str(_dict(finding).get("track") or "")
+        if track:
+            by_track[track] = by_track.get(track, 0) + 1
+    put("findings_by_track", by_track)
     for key in ("wall_seconds", "tokens_total"):
-        value = runtime.get(key)
-        if isinstance(value, (int, float)):
-            record[key] = value
-    put("completeness", completeness(progress, package))
-
-    record["errors"] = run_errors(progress, runtime, package)
+        if isinstance(runtime.get(key), (int, float)):
+            record[key] = runtime[key]
+    put("completeness", completeness(reading.get("stages")))
+    record["errors"] = run_errors(reading)
     return record
 
 
-def run_errors(progress: dict, runtime: dict, package: dict) -> list[str]:
+def run_errors(reading: dict) -> list[str]:
     """What the run recorded going wrong, rather than an empty list by default.
 
-    A blocked run says so in progress.json, and the starter repeats the cause in
-    runtime.json. A finding the server refused to accept is quarantined with a
-    reason instead of ending the run, so those are counted here: a reader
-    deciding how much to trust a review should see that three of its findings
-    were thrown away.
+    `read_run` already decides why a run that is not complete stopped, so the
+    cause is taken from it rather than re-derived. What this adds is the harm a
+    finished run can still carry: findings the evidence guards threw out, a
+    reader that never reported, an editor that did not accept the pool, and a
+    file the engine could not read in full.
 
     Finishing with no findings is not one of these. A run that read the
     manuscript and raised nothing is `complete` with the guard status `clean`,
@@ -626,30 +667,27 @@ def run_errors(progress: dict, runtime: dict, package: dict) -> list[str]:
     same, which is why `none_found` is recorded and not listed here.
     """
     errors: list[str] = []
-    if progress.get("error"):
-        errors.append(str(progress["error"]))
-    reason = str(runtime.get("blocked_reason") or "")
-    if reason and reason not in errors:
-        errors.append(reason)
-    status = str(progress.get("status") or runtime.get("status") or "")
+    for value in (reading.get("cause"), reading.get("note")):
+        if str(value or "").strip():
+            errors.append(str(value).strip())
+    status = str(reading.get("status") or "")
     if status and status not in FINISHED_STATUSES:
         errors.append(f"The run finished in state {status}.")
     # Said plainly, because the two readings are far apart: the reviewers
     # endorsed nothing because every finding they wrote failed the engine's
     # evidence guards, which is not a manuscript they found sound.
-    guard = str(progress.get("review_guard_status") or package.get("review_guard_status") or "")
-    if guard == ALL_FINDINGS_QUARANTINED:
+    if str(reading.get("guard_status") or "") == ALL_FINDINGS_QUARANTINED:
         errors.append(
             "Every finding this run produced was quarantined by the engine's "
             "evidence guards, so the review endorses none of them."
         )
-    quarantined = progress.get("quarantined_findings_count")
+    quarantined = _dict(reading.get("counts")).get("quarantined")
     if isinstance(quarantined, int) and quarantined > 0:
         errors.append(
             f"{quarantined} finding(s) failed the evidence guards and were "
             "quarantined out of this review."
         )
-    stages = _dict(progress.get("stages")) or _dict(package.get("stages"))
+    stages = _dict(reading.get("stages"))
     missing = [str(s) for s in _list(stages.get("missing"))]
     if missing:
         errors.append(
@@ -657,19 +695,13 @@ def run_errors(progress: dict, runtime: dict, package: dict) -> list[str]:
         )
     if stages and not stages.get("editor_accepted"):
         errors.append("The editor stage did not accept the pooled findings.")
+    # A file the engine read only in part is a number nobody should quote, so
+    # the record carries the engine's own list of them.
+    for problem in _list(reading.get("problems")):
+        text = str(problem).strip()
+        if text and text not in errors:
+            errors.append(text)
     return errors
-
-
-def editor_package(run_dir: Path) -> dict:
-    """The engine's final review, read from the run folder it was written in."""
-    run_dir = resolve_review_dir(run_dir)
-    candidate = run_dir / "editor-package.json"
-    if candidate.is_file():
-        return read_json(candidate)
-    raise CommandError(
-        f"No editor-package.json under {run_dir}. Point --run at the folder "
-        "`peerreview review` wrote."
-    )
 
 
 def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
@@ -943,12 +975,11 @@ def render_summary(
             lines.append(f"{number}. **{title}** ({_tags(finding)})")
         lines.append("")
     if appendix:
-        limit = run.get("body_finding_limit")
         lines += [
             "## Findings in the appendix",
             "",
             "Accepted by the editor agent and kept out of the letter's body, "
-            f"which the workflow caps at {limit or 'a fixed number of'} findings.",
+            "which the workflow caps at a fixed number of findings.",
             "",
         ]
         for number, finding in enumerate(appendix, 1):
@@ -1690,7 +1721,7 @@ def bundle_identifier(dest: Path) -> str:
     return "/".join(dest.parts[-3:])
 
 
-def require_complete_run(run_dir: Path, run: dict) -> None:
+def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) -> None:
     """A published review has to come from a run that finished.
 
     Publishing checked neither the state nor the transport. A directory holding
@@ -1698,50 +1729,32 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
     published with an empty error list, and so did a run whose progress.json
     said `blocked`. Both produced a record that read like a clean review.
 
-    Finished means `complete`, and nothing else. A run that read the manuscript
-    and raised no finding is `complete` with the guard status `clean`, and it
-    publishes as a review with the empty findings list the reader should see.
-    The engine's other finished state, `complete-without-findings`, is written
-    only when every finding was quarantined, so it is refused here by name
-    before the status check: that bundle's letter would tell the authors their
-    paper drew no findings, when the truth is that the review endorses none of
-    the findings it wrote.
+    The engine answers the question now. `read_run` sets `publishable` only
+    when the status is `complete`, the findings came from a readable
+    `editor-package.json` rather than the ledger, the evidence guard is clean,
+    and every run file could be read in full. That is the gate, and it is the
+    engine's own rule rather than a second copy of it here.
 
-    A blocked run is refused too, and the refusal repeats the cause the run
-    itself recorded rather than only the state name, because the state name
-    alone sent the operator back to a log to find out there was no Claude login.
-
-    The transport is checked here as well. This path records Claude Code runs
-    only, so a run on anything else would otherwise be written up with a Claude
-    subscription attestation it has no claim to.
+    What this adds to it is the three things the flag does not cover. The
+    transport has to be one this path can publish, because every claim a bundle
+    makes about how the review was paid for is a claim about a Claude
+    subscription. Every stage the arm asked for has to have reported, because a
+    run can reach `complete` with a reader missing when the editor accepted the
+    pool without it. And the refusals are named: a run refused only as "not
+    publishable" sent the operator back to a log to find out there was no
+    Claude login.
     """
-    run_dir = resolve_review_dir(run_dir)
-    protocol_path = run_dir / "protocol.json"
-    if not protocol_path.is_file():
-        raise CommandError(
-            f"{run_dir} has no protocol.json, so there is no record of what was "
-            "asked of the engine. Point --run at the folder `peerreview review` "
-            "wrote."
-        )
-    # Only the file's existence was checked, so a zero byte protocol.json
-    # satisfied the guard while answering none of the questions it was added to
-    # ask. The run has to say what was asked of the engine, not merely have a
-    # file where that would be written.
-    if not maybe_json(protocol_path):
-        raise CommandError(
-            f"{protocol_path} is empty or is not a JSON object, so the run "
-            "records nothing about what was asked of the engine."
-        )
+    reading = reading if reading is not None else engine_reading(run_dir)
+    status = str(reading.get("status") or "")
     # The arm replaces 0.8's mode and policy, and there is no single model to
-    # require: the plugin pins one per agent file, and protocol.json says so in
-    # a sentence rather than an id. What has to be recorded is which arm ran,
-    # on which transport, under which workflow.
+    # require: the plugin pins one per agent file. What has to be recorded is
+    # which arm ran, on which transport, under which workflow.
     missing = [field for field in ("arm", "provider", "workflow_version") if not run.get(field)]
     if missing:
         raise CommandError(
-            f"{protocol_path} records no {', '.join(missing)}, so the published "
-            "record could not say how the review was produced. Point --run at "
-            "the folder `peerreview review` wrote."
+            f"This run records no {', '.join(missing)}, so the published record "
+            "could not say how the review was produced. Point --run at the "
+            "folder `peerreview review` wrote."
         )
     provider = str(run.get("provider") or "")
     if provider not in PUBLISHABLE_PROVIDERS:
@@ -1752,48 +1765,52 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
             "is a claim about a Claude subscription, so a run on another "
             "transport cannot be published through it."
         )
-    # progress.json is the server's ledger: the final status, the guard status
-    # and the stage counts are all written there. read_run falls back to
-    # runtime.json's status and the editor package's stage counts so that a
-    # damaged run can still be described, and those fallbacks are the reason
-    # the file's absence has to be refused here by name. A folder holding an
-    # editor package and a runtime record, with no ledger, reads as a finished
-    # clean review on the strength of two files that say nothing about the
-    # guards.
-    progress_path = run_dir / "progress.json"
-    if not maybe_json(progress_path):
-        raise CommandError(
-            f"{run_dir} has no readable progress.json, so the run recorded no "
-            "ledger of its stages or its evidence guards. Point --run at the "
-            "folder `peerreview review` wrote."
-        )
-    status = str(run.get("status") or "")
-    if not status:
-        raise CommandError(
-            f"{progress_path} records no status, so the run never recorded "
-            "whether it finished. A review cannot be published from it."
-        )
-    # Named before the status, because this is the case the status describes and
+    # Named before the flag, because this is the case the status describes and
     # the operator needs to be told which of the two it is.
     if (
-        run.get("review_guard_status") == ALL_FINDINGS_QUARANTINED
+        reading.get("guard_status") == ALL_FINDINGS_QUARANTINED
         or status == WITHOUT_FINDINGS_STATUS
     ):
         raise CommandError(
-            f"This run ended as {status} with guard status "
-            f"{run.get('review_guard_status') or 'unrecorded'}, which the engine "
+            f"This run ended as {status or 'unrecorded'} with guard status "
+            f"{reading.get('guard_status') or 'unrecorded'}, which the engine "
             "writes when every finding it produced was quarantined by the "
             "evidence guards. A review that endorses none of its own findings is "
             "not a manuscript found sound, and publishing it would say so to the "
-            "authors. Read the quarantine reasons in the run, and re-run the "
+            "authors. Read the quarantined findings in the run, and re-run the "
             "engine or publish nothing."
         )
-    if status not in FINISHED_STATUSES:
-        cause = next((str(problem) for problem in _list(run.get("errors")) if problem), "")
+    if not reading.get("publishable"):
+        problems = [str(p).strip() for p in _list(reading.get("problems")) if str(p).strip()]
+        cause = str(reading.get("cause") or "").strip()
+        source = str(reading.get("findings_source") or "none")
+        guard = str(reading.get("guard_status") or "")
+        detail = [f"The engine read it as {status or 'unknown'}."]
+        if cause:
+            detail.append(f"It stopped because: {cause}")
+        if guard and guard != CLEAN_GUARD:
+            quarantined = _dict(reading.get("counts")).get("quarantined")
+            count = quarantined if isinstance(quarantined, int) else 0
+            detail.append(
+                f"Its evidence guard status is {guard}, with {count} finding(s) "
+                "quarantined. What the guards threw out is a judgement for a "
+                "person: read the quarantined findings in the run before "
+                "publishing anything built from it."
+            )
+        if source != "editor-package":
+            detail.append(
+                f"Its findings came from {source}, which is not the editor's own "
+                "placement of them."
+            )
+        if problems:
+            detail.append(
+                f"{len(problems)} run file(s) could not be read in full: "
+                + "; ".join(problems)
+            )
         raise CommandError(
-            f"This run ended in state {status} rather than "
-            f"{' or '.join(FINISHED_STATUSES)}, so it is not a review."
-            + (f" The run recorded: {cause}" if cause else "")
+            "The engine does not read this run as publishable, so it is not a "
+            "review this path can publish. "
+            + " ".join(detail)
             + " Re-run the engine, or drop --publish to keep the bundle as a "
             "rehearsal."
         )
@@ -1803,6 +1820,19 @@ def require_complete_run(run_dir: Path, run: dict) -> None:
     # says three core reviewers and six specialists over a run where two of them
     # never answered is a claim about a panel that did not sit.
     ledger = _dict(run.get("completeness"))
+    # No ledger at all is the same claim with nothing behind it. A folder whose
+    # progress.json was never written still reads as complete from the
+    # harness's own record of the session, and the engine calls it publishable,
+    # but nothing in it says which readers the arm asked for or which of them
+    # answered. That is a panel nobody can check, so it is refused here.
+    if not ledger:
+        raise CommandError(
+            "This run carries no stage ledger, so nothing in it says which "
+            "readers the arm asked for or which of them reported. A bundle "
+            "built from it would describe a panel that cannot be checked "
+            "against the run. Re-run the review, or drop --publish to keep the "
+            "bundle as a rehearsal."
+        )
     missing_stages = [str(s) for s in _list(ledger.get("missing"))]
     if missing_stages:
         raise CommandError(
@@ -1843,11 +1873,14 @@ def cmd_publish(args: argparse.Namespace) -> int:
             "--human-reviewed no to rehearse the bundle."
         )
 
-    run_dir = resolve_review_dir(Path(args.run))
-    package = editor_package(run_dir)
-    run = read_run(run_dir)
+    # One reading of the run folder, taken through the engine, and everything
+    # below is derived from it. Two readings were two status rules.
+    reading = engine_reading(Path(args.run))
+    run_dir = Path(str(reading["review"]))
+    package = review_package(reading)
+    run = run_record(reading)
     if args.publish:
-        require_complete_run(run_dir, run)
+        require_complete_run(run_dir, run, reading)
     workspace = resolve_workspace(run_dir, args.workspace)
     preprint_data = prepared.get("preprint")
     if preprint_data is None:
@@ -1885,15 +1918,14 @@ def cmd_publish(args: argparse.Namespace) -> int:
             installed.get(WORKFLOW_FILE) == plugin["workflow_sha256"]
         )
 
-    runtime = maybe_json(run_dir / "runtime.json")
-    agents = agent_rows(maybe_json(run_dir / "protocol.json"), package, runtime)
+    agents = agent_rows(reading)
     # The transport is the run's own, read from the start-up probe the engine ran
     # before it spent anything. A run on a transport this path cannot publish is
     # refused here even when the bundle is only a rehearsal.
     transport = transport_record(
         provider=str(run.get("provider") or ""),
-        runtime=runtime,
-        startup=maybe_json(run_dir / "startup.json"),
+        runtime=_dict(reading.get("runtime")),
+        startup=run_files(reading)["startup"],
     )
 
     dest = publish_destination(prepared, publishing=args.publish)
