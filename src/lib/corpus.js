@@ -111,11 +111,46 @@ const readDirs = (dir) => {
   }
 };
 
+/**
+ * What each specialist track reads the manuscript for.
+ *
+ * The plugin names its six tracks in file names, so a bundle arrives with
+ * `audit_figures-tables.md` in it and the generic title rule would publish
+ * that as "Figures-tables". These are the labels a reader should see. A track
+ * the engine adds later still appears, under its own file name, because the
+ * fallback below titles anything this table does not know.
+ */
+const TRACK_LABELS = {
+  stats: "Statistics",
+  "figures-tables": "Figures and tables",
+  "methods-reporting": "Methods and reporting",
+  citations: "Citations",
+  consistency: "Internal consistency",
+  field: "Field context",
+};
+
+/** What each track was asked to look for, shown beside its report. */
+const TRACK_BLURBS = {
+  stats: "Tests, estimates and the inferences drawn from them.",
+  "figures-tables": "Whether each figure and table shows what the text claims.",
+  "methods-reporting": "Whether the methods could be followed by someone else.",
+  citations: "Whether the works cited say what they are cited for.",
+  consistency: "Whether the manuscript agrees with itself throughout.",
+  field: "How the work sits against what the field already knows.",
+};
+
 /** Turn `review_data_analysis.md` into `Data analysis`. */
 export function titleFromFilename(name) {
   const stem = name.replace(/\.md$/, "").replace(/^(review|audit)_/, "");
+  if (Object.hasOwn(TRACK_LABELS, stem)) return TRACK_LABELS[stem];
   const words = stem.replace(/_/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/** The one line that says what a track report covers, or "" for an old audit. */
+export function blurbFromFilename(name) {
+  const stem = name.replace(/\.md$/, "").replace(/^(review|audit)_/, "");
+  return TRACK_BLURBS[stem] || "";
 }
 
 /**
@@ -154,6 +189,7 @@ function readDocuments(bundleDir) {
       .map((f) => ({
         file: f,
         label: titleFromFilename(f),
+        blurb: blurbFromFilename(f),
         slug: f.replace(/\.md$/, ""),
       }));
 
@@ -184,6 +220,15 @@ function readBundle(paperDir, versionName, attemptName = "") {
   const baselineEligible = typeof review.baseline_eligible === "boolean"
     ? review.baseline_eligible
     : graded
+  // Which panel produced this bundle. Version 4 is the plugin run: core
+  // reviewers, six specialist tracks and an editor, with no desk screen and
+  // no debate. Everything already published is version 2, the hosted panel,
+  // and its documents are described in its own words wherever they are shown.
+  const plugin = Number(provenance.schema_version) === 4
+  const runRecord = (provenance.generator || {}).run || {}
+  const tracksAsked = Array.isArray(runRecord.specialist_tracks)
+    ? runRecord.specialist_tracks.map(String)
+    : []
 
   return {
     version: versionName,
@@ -199,6 +244,8 @@ function readBundle(paperDir, versionName, attemptName = "") {
     revision,
     review,
     round: Number(provenance.round || 1),
+    plugin,
+    tracksAsked,
     decision: provenance.decision || "unknown",
     deskRejected: Boolean(provenance.desk_rejected),
     // An empty model table means every agent ran on one model, with nothing
