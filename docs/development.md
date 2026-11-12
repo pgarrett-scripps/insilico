@@ -275,10 +275,8 @@ local review is experimental unless an editor says otherwise.
   differs on its own and no flag is needed.
 - `--baseline-eligible` on `publish` lets a local review set the paper's
   editorial status. Off by default.
-- `--model` on `publish` records the model id the run requested. `publish` also
-  reads the run's own JSON for the model ids actually observed, and the page
-  says so if the two disagree.
-- `--offline` skips the CLI authentication probe. For tests, not for a real run.
+The model ids are not a flag. `publish` reads them from the JSON the run wrote,
+which is the only record of what actually answered.
 
 ### Checks
 
@@ -287,7 +285,9 @@ python scripts/smoke_test.py          # pipeline and site data contract
 python scripts/check_review_manifests.py
 npm run check:schema                  # published provenance against the schema
 npm run check:local                   # the local record validates, a paid one does not
-npm run check:markdown  npm run check:attempts  npm run build
+npm run check:markdown
+npm run check:attempts
+npm run build
 npm run check:punctuation             # after a build, over dist/
 ```
 
@@ -411,7 +411,7 @@ was 15 model calls, and a desk rejection ended the run before the other 14.
       subscription login and no paid API key. A Claude subscription reports its
       API provider as `firstParty`, which is the subscription route and not a
       paid key
-- [ ] Install an interpreter with `peerreviewagents` 0.8 or newer importable
+- [ ] Install an interpreter with `peerreviewagents` 0.9.0 importable
 - [ ] Settings, Pages, Source: **GitHub Actions**
 - [ ] Settings, Actions, Workflow permissions: **Read and write**, and allow PR
       creation

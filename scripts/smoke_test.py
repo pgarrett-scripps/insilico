@@ -23,6 +23,7 @@ from smoke_checks.local import (
     check_a_run_of_one_paper_cannot_be_published_as_another,
     check_an_attestation_needs_a_named_editor,
     check_an_unclaimed_review_is_labelled_an_experiment,
+    check_every_documented_command_runs_against_a_real_parser,
     check_every_published_file_is_hashed,
     check_nothing_reaches_into_the_engines_internals,
     check_ordinary_review_text_publishes_and_a_local_path_does_not,
@@ -137,6 +138,8 @@ def main() -> int:
     print("ok  the published attestation names the transport and the editor")
     check_the_skill_commands_match_the_engine_parser()
     print("ok  every engine command in the skill is one the engine's parser accepts")
+    check_every_documented_command_runs_against_a_real_parser()
+    print("ok  every command and flag the documents give is one a real parser accepts")
     check_a_run_of_one_paper_cannot_be_published_as_another()
     print("ok  a run is bound to the paper that was prepared")
     check_a_rehearsal_is_never_written_into_the_published_tree()

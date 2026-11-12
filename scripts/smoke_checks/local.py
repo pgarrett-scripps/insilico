@@ -1148,6 +1148,97 @@ def check_the_attestation_says_what_it_has_to_say() -> None:
     assert "—" not in statement and ";" not in statement, "the attestation is authored prose"
 
 
+def check_every_documented_command_runs_against_a_real_parser() -> None:
+    """A command or a flag in the documents has to be one something accepts.
+
+    The skill's engine commands were checked against the engine's parsers while
+    `docs/development.md` went on documenting `--model` and `--offline` on
+    `publish`, which this repository's own parser had stopped accepting. An
+    editor following the page got an argparse rejection. So the checker reads
+    every document a reader is handed and routes each command to whatever would
+    really run it, and this asserts that the routing bites: the live command
+    parses, the two dead flags do not, an npm target that is not in
+    package.json does not, and a program nothing here knows is a failure rather
+    than a silent pass.
+
+    The engine is not needed for any of it. These are this repository's own
+    parsers, `package.json`, and the documents.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    import check_skill_commands as checker
+
+    targets = checker.npm_targets()
+
+    def outcome(command: str) -> tuple[str, str | None]:
+        return checker.check_command(command, engine=None, targets=targets)
+
+    publish = (
+        "python scripts/local_review.py publish --prepared runs/p --run runs/r "
+        "--decision major --editor someone --human-reviewed yes --publish"
+    )
+    where, reason = outcome(publish)
+    assert reason is None, f"the documented publish command does not parse: {reason}"
+    assert where == "python local_review.py", f"publish was routed to {where!r}"
+
+    for dead in ("--model claude-sonnet-4", "--offline"):
+        _, reason = outcome(f"{publish} {dead}")
+        assert reason and "unrecognized arguments" in reason, (
+            f"publish {dead} is not a flag this repository has, and the check let it "
+            f"through: {reason!r}"
+        )
+
+    _, reason = outcome("npm run check:schema")
+    assert reason is None, f"a real npm target was rejected: {reason}"
+    _, reason = outcome("npm run check:everything")
+    assert reason and "package.json" in reason, f"an invented npm target passed: {reason!r}"
+    _, reason = outcome("npm run check:markdown  npm run build")
+    assert reason and "one script name" in reason, (
+        f"two npm commands on one line is not a command: {reason!r}"
+    )
+
+    _, reason = outcome("rustypaper review runs/example")
+    assert reason and "OUTSIDE_PROGRAMS" in reason, (
+        f"a program this check knows nothing about passed silently: {reason!r}"
+    )
+    _, reason = outcome("python scripts/check_review_manifests.py --everything")
+    assert reason and "no arguments" in reason, (
+        f"a script with no parser was given arguments: {reason!r}"
+    )
+    _, reason = outcome("python scripts/not_a_script.py")
+    assert reason and "not a file" in reason, f"a missing script passed: {reason!r}"
+
+    accepted = checker.accepted_flags(None)
+    for flag in ("--publish", "--editor", "--human-reviewed", "--replace", "--baseline-eligible"):
+        assert flag in accepted, f"{flag} is a flag this repository has, and was not found"
+    for flag in checker.ABSENT_FLAGS:
+        assert flag not in accepted, (
+            f"{flag} is listed as gone from these documents, but a parser accepts it"
+        )
+
+    found = dict(checker.documented_flags("Pass `--offline` to skip the probe.\n"))
+    assert "--offline" in found, f"a flag named in prose was not found: {found}"
+
+    # The documents themselves, read the way the checker reads them. Where the
+    # engine is installed its flags count too; where it is not, a flag that is
+    # not local can only be checked for being gone, and the checker says the
+    # same thing in its own note rather than failing on half a parser set.
+    try:
+        engine = checker.load_parsers()
+    except Exception:  # pragma: no cover - depends on the interpreter
+        engine = None
+    everything = checker.accepted_flags(engine)
+    for document in checker.published_documents():
+        for flag, context in checker.documented_flags(document.read_text(encoding="utf-8")):
+            if flag in checker.ABSENT_FLAGS:
+                assert flag not in everything, (
+                    f"{document.name} says {flag} is gone, but a parser accepts it: {context}"
+                )
+            elif engine is not None:
+                assert flag in everything, (
+                    f"{document.name} documents {flag}, which no parser accepts: {context}"
+                )
+
+
 def check_the_skill_commands_match_the_engine_parser() -> None:
     """Every engine command in the skill has to be one argparse accepts.
 
