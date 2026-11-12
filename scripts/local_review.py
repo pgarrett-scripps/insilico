@@ -1686,23 +1686,37 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 # Everything that names the machine a review was produced on rather than the
 # review itself. The scan has two tiers, and they are refused differently.
 #
-# Tier 1 is the machine facts: the home directory, this checkout, the run
-# folder, the working directory, the temporary directory, the host name and the
-# user name. Every one of them is looked up rather than recognised from the
-# shape of a string, so every one is exact, and each is refused wherever it
-# appears: in a record field, in rendered prose, or in a sentence quoted from
-# the manuscript. Nothing waives a tier 1 hit, not the paper and not a flag,
-# because a published page that repeats one of them names the operator whatever
-# the reason it got there.
+# Tier 1 is the specific machine facts: a detected path with two segments or
+# more (the home directory, this checkout, the run folder, and the working or
+# temporary directory when either is that deep) and a host name carrying a
+# digit, a hyphen or a dot. Each is refused wherever it appears, as a plain
+# case-insensitive substring: no lookbehind, no lookahead, no field it is not
+# read in, in every string and every dictionary key at any depth, in rendered
+# prose and in a sentence quoted from the manuscript. Nothing waives one, not
+# the paper and not a flag, because a published page that repeats one names the
+# operator whatever the reason it got there.
 #
-# Those are the real leak, so they have to be exact and they must not misfire,
-# which is why each is matched with a boundary on both sides rather than as a
-# bare substring. Matched loosely they misfired badly: a machine called `media`,
-# `review`, `core` or `localhost` refused every publish from it, because its own
-# name appears in the record's fixed vocabulary; a temporary directory of `/tmp`
-# refused `temperature/tmp ratio` and `https://doi.org/10.1000/tmp/abc`; a
-# working directory of `/data` refused `training/data/test`; and a user called
-# `pi` refused `$2\pi$` while one called `test` refused `train/test split`.
+# A substring, not a bounded match, because every boundary turned out to be a
+# hole. `/home/ty` with a boundary on the left published `file:/home/ty/x.pdf`,
+# `box:/home/ty/x`, `//home/ty/x`, `a~/home/ty/x` and
+# `http://localhost:8000/home/ty/x`; `ty-ms-7c80` with one published
+# `node.ty-ms-7c80` and `run_ty-ms-7c80_1`; and the fields a fact was not read
+# in published the host name as a JSON key and as an `id`. None of that needs
+# protecting from a substring test, because `/home/ty` and `ty-ms-7c80` cannot
+# occur in a review of a paper, in this repository's own vocabulary, or in
+# anything but a reference to this machine.
+#
+# What made the boundaries seem necessary was treating the generic facts as
+# tier 1 as well: a one-segment path (`/tmp`, `/data`, `/root`), a host that is
+# one plain alphabetic word (`media`, `core`, `editor`, `localhost`) and the
+# bare user name. Those are words. A word is not a leak, and an unwaivable rule
+# built on one refused `temperature/tmp ratio`, `training/data/test`, `$2\pi$`
+# from a user called `pi`, `train/test split` from one called `test`, and every
+# publish at all from a machine called `editor`, whose name is in the record's
+# own vocabulary. So they are not facts now. They are covered by tier 2, through
+# the shapes below: a path under a known root, a host after `@`, `//` or `\\` or
+# before `:/`, and a user name directly after a home root. Refused by default,
+# waivable when the refusal is wrong.
 #
 # Tier 2 is the patterns, which describe the shape of a path rather than any
 # known one. A pattern fires only on something hard to read as anything but a
@@ -1720,12 +1734,19 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 # A tier 2 hit is refused by default and can be allowed. Text printed in the
 # manuscript is allowed by itself, because publishing a review cannot be refused
 # for repeating the paper's own words, and any other tier 2 hit can be allowed
-# by the editor reading it and passing `--allow-text '<the exact text>'` to
-# publish, repeatable. Every allowance is written into the provenance record, so
-# a reader of the published page can see what was waived and judge it. That
-# valve is why tier 2 only has to be sensible rather than perfect: a pattern
-# that fires on `R:/G/B channel order` costs an editor one flag, where a tier 1
-# fact that fires on an ordinary word costs them every publish.
+# by the editor reading it and passing `--allow-text='<the exact text>'` to
+# publish, repeatable. Every allowance is written into the provenance record and
+# printed on the published page, so a reader can see what was waived and judge
+# it. That valve is why tier 2 only has to be sensible rather than perfect: a
+# pattern that fires on `R:/G/B channel order` costs an editor one flag, where a
+# tier 1 fact that fires on an ordinary word costs them every publish.
+#
+# No allowance reaches tier 1. A hit that contains a specific fact is reported
+# as tier 1 from the start, with no flag offered, and an `--allow-text` value
+# that contains one is refused by the same substring test rather than quietly
+# failing to waive anything: `--allow-text='file:///<checkout>/scripts/x.py'`
+# was an editor asking to publish this checkout's path by naming more of it
+# than the fact does.
 #
 # The roots are the directories a path on a machine of this kind starts with.
 # `home` and `Users` are where people keep their files, `mnt`, `media`, `data`,
@@ -1832,68 +1853,32 @@ LOCAL_REFERENCE_PATTERNS = (
     ),
 )
 
-# The fields whose values this repository and the engine choose from a fixed
-# list rather than writing from the run or copying off this disk: the
-# generator's kind, the transport's provider, an agent slot, a track, a schema
-# version, a review id, a status, a decision, a placement. A `prose_only` fact
-# is not looked for in one of these, nor in any field *name*, because a field
-# name is this repository's own vocabulary too. The tier 2 patterns still run
-# over every one of them: a fixed vocabulary never holds a path, so a path in
-# one is a leak like any other.
-VOCABULARY_FIELDS = frozenset({
-    "allowed_tools",
-    "arm",
-    "basis",
-    "billing_policy",
-    "decision",
-    "dimension",
-    "executable",
-    "finding_schema_version",
-    "id",
-    "kind",
-    "lifecycle",
-    "mode",
-    "placement",
-    "provider",
-    "review_guard_status",
-    "role",
-    "schema_version",
-    "severity",
-    "slot",
-    "specialists",
-    "status",
-    "synthesis_policy",
-    "tools_expected",
-    "track",
-    "tracks",
-    "verified_by",
-    "version",
-    "workflow_version",
-})
-
-
 class Fact(NamedTuple):
     """One string that names this machine, with the rule for finding it.
 
-    `prose_only` is for a fact that is also an ordinary word, which in practice
-    means the host name. A machine called `media`, `review`, `core` or
-    `localhost` has a name that turns up in `generator.kind`, in
-    `transport.provider`, in a slot name and in a review id, and a substring
-    test on it refused every publish from that machine. A `prose_only` fact is
-    read in authored text and in the artifacts copied out of the run, and not in
-    the fields listed in `VOCABULARY_FIELDS`.
+    `specific` is the tier. A specific fact is one that cannot be read as
+    anything but this machine, so it is matched as a plain substring everywhere
+    and nothing waives it. A generic fact is a word that happens to be this
+    machine's: a one-segment path, a one-word host name, a bare account name.
+    Those are matched only in the shapes where a word can only be a machine, and
+    they are waivable, because being wrong about a word has to be survivable.
+
+    There is no field a fact is skipped in any more. A list of vocabulary fields
+    existed to stop a host called `editor` refusing its own provenance record,
+    and it published `ty-MS-7C80` as a JSON key and as an `id`. Fixing which
+    facts are unwaivable is what removed the need for it.
     """
 
     why: str
     pattern: "re.Pattern[str]"
-    prose_only: bool = False
+    specific: bool = True
 
 
 class Leak(NamedTuple):
     """One hit: what it is, what it says, its tier, and where it was found.
 
-    `machine_fact` is the tier. True is tier 1, a looked-up fact about this
-    machine, which nothing waives. False is tier 2, a pattern, which the
+    `machine_fact` is the tier. True is tier 1, a specific fact about this
+    machine, which nothing waives. False is tier 2, a shape, which the
     manuscript or `--allow-text` can allow.
     """
 
@@ -1914,57 +1899,81 @@ class Leak(NamedTuple):
         return self._replace(where=f"{prefix}: {self.where}" if self.where else prefix)
 
 
+def is_specific(name: str) -> bool:
+    """Is this detected name one that can only be this machine.
+
+    A host name carrying a digit, a hyphen, a dot or an underscore is a machine
+    name and nothing else. A name that is one plain alphabetic word is a word:
+    machines here are called `claude`, `media`, `editor`, `core` and `stats`,
+    and every one of those appears in an ordinary review of an ordinary paper.
+    """
+    return not re.fullmatch(r"[A-Za-z]+", name)
+
+
 def host_pattern(name: str) -> "re.Pattern[str]":
     """How to find this machine's own name, which depends on what it is called.
 
-    A name with a digit, a dot, a hyphen or an underscore in it is a machine
-    name and nothing else, so it is matched whole wherever it appears, in either
-    case: `ty-ms-7c80` typed in a comment is this machine as surely as
-    `ty-MS-7C80` is, and the version that only matched the exact case published
-    it.
+    A specific name is matched as a plain substring, in either case and with no
+    boundary on either side. `ty-ms-7c80` typed in a comment is this machine as
+    surely as `ty-MS-7C80` is, and so are `node.ty-ms-7c80`, `run_ty-ms-7c80_1`
+    and a JSON key spelled with it, every one of which the bounded version
+    published. Nothing has to be protected from this test, because no review of
+    any paper contains this string.
 
-    A name that is one plain word is the hard case, and matching it whole is
-    what made this fact unusable. Machines here are called `claude`, `media`,
-    `review`, `editor` and `core`, and every one of those words appears in an
-    ordinary review of an ordinary paper. A tier 1 fact cannot be waived, so a
-    word-shaped host name matched whole refused every publish from that machine
-    with no flag to get past it, which is a worse failure than any leak it
-    prevents: the word `media` in a sentence identifies nobody.
-
-    So a word-shaped name is matched only where a bare word cannot be anything
-    but a machine: after an `@`, before a `:/`, after a `//`, or as the whole of
-    a field's value, which is how a `hostname` field reads. A path that contains
-    it is still caught, by the path facts and the path patterns, which is where
-    a host name actually reaches a bundle.
+    A generic name is matched only where a bare word cannot be anything but a
+    machine: after an `@`, after a `//` or a `\\\\`, or before a `:/`. It is a
+    tier 2 shape rather than a fact, so an editor can waive it. Matching such a
+    name as a fact is what refused every publish from a machine called `editor`,
+    whose name is in `generator.kind` and in a slot name, and the word `media`
+    in a sentence identifies nobody.
     """
     text = re.escape(name)
-    if not re.fullmatch(r"[A-Za-z]+", name):
-        return re.compile(rf"(?<![\w.-]){text}(?![\w-])", re.IGNORECASE)
+    if is_specific(name):
+        return re.compile(text, re.IGNORECASE)
     return re.compile(
-        rf"(?:(?<=@){text}(?![\w-])"
-        rf"|(?<=//){text}(?![\w-])"
-        rf"|(?<![\w.-]){text}(?=:[\\/])"
-        rf"|\A{text}\Z)",
+        rf"(?:(?:(?<=@)|(?<=//)|(?<=\\\\)){text}(?![\w-])"
+        rf"|(?<![\w.-]){text}(?=:[\\/]))",
         re.IGNORECASE,
     )
+
+
+def path_segments(text: str) -> int:
+    """How many named segments a detected path has.
+
+    `/home/ty` has two, `/tmp` has one, and that count is the whole of the
+    specific-or-generic decision for a path. Two segments is a place on one
+    disk. One segment is a word that happens to be a directory, and every
+    system has it.
+    """
+    return len([part for part in re.split(r"[\\/]+", text.strip("\\/")) if part])
 
 
 def machine_facts(*, run_dir: Path | str | None = None) -> tuple[Fact, ...]:
     """The strings that name this machine, looked up rather than recognised.
 
-    These are tier 1. All of it is known at publish time, so none of it has to
-    be guessed from the shape of a string: the home directory, this checkout,
-    the temporary directory, the working directory and the run folder are paths,
-    and the host name and the user name are names. A fact is refused wherever it
-    appears, which is the one rule the manuscript cannot waive. A paper that
-    happens to print this operator's home directory does not make it
-    publishable from here.
+    All of it is known at publish time, so none of it has to be guessed from the
+    shape of a string: the home directory, this checkout, the temporary
+    directory, the working directory and the run folder are paths, and the host
+    name and the user name are names. What each one is worth is the split above.
 
-    Being unwaivable is why every one of them is matched with a boundary on both
-    sides. A fact that misfires on an ordinary word refuses every publish from
-    this machine with no way around it, which is a worse failure than any
-    pattern's: `/tmp` as a bare substring refused `temperature/tmp ratio`, and a
-    host called `media` refused its own provenance record.
+    A path of two or more segments, and a host name carrying a digit, a hyphen
+    or a dot, are specific. They are matched as a plain case-insensitive
+    substring, with no boundary on either side, everywhere, and nothing waives
+    one. There is nothing to protect from that test: `/home/ty` and `ty-ms-7c80`
+    do not occur in a review of a paper or in this repository's own vocabulary,
+    which is why the boundaries that were there to protect ordinary text are
+    gone, and with them every hole they left. `file:/home/ty/x.pdf`,
+    `//home/ty/x`, `a~/home/ty/x`, `http://localhost:8000/home/ty/x`,
+    `node.ty-ms-7c80`, `run_ty-ms-7c80_1` and the host as a JSON key were all
+    published by the bounded version.
+
+    A one-segment path, a one-word host name and the bare account name are
+    generic. A word is not a leak. They are tier 2 shapes, found only where such
+    a word can only be a machine, and waivable, because being wrong about a word
+    has to be survivable: `/tmp` as a fact refused `temperature/tmp ratio`, a
+    working directory of `/data` refused `training/data/test`, a user called
+    `pi` refused `$2\\pi$`, and a host called `editor` refused every publish it
+    made with no flag to get past it.
     """
     paths: dict[str, str] = {}
 
@@ -1989,24 +1998,39 @@ def machine_facts(*, run_dir: Path | str | None = None) -> tuple[Fact, ...]:
         except (OSError, RuntimeError):
             pass
 
-    # A path fact needs a boundary on both sides. Without the left one, a
-    # temporary directory of `/tmp` refused `temperature/tmp ratio` and
-    # `https://doi.org/10.1000/tmp/abc`, and a working directory of `/data`
-    # refused `training/data/test`. Without the right one, a run folder of
-    # `/tmp/run1` would refuse a sentence about `/tmp/run10`. A path can still
-    # be found inside a longer path, which is the point: `/home/x` in
-    # `/home/x/papers/draft.pdf` is the leak, and the scan reports the longest
-    # form of it.
-    facts = [
-        Fact(why, re.compile(rf"(?<![\w.:/~-]){re.escape(text)}(?![\w-])"))
-        for text, why in paths.items()
-    ]
+    facts: list[Fact] = []
+    for text, why in paths.items():
+        if path_segments(text) > 1:
+            facts.append(Fact(why, re.compile(re.escape(text), re.IGNORECASE)))
+            continue
+        # One segment. `/tmp` and `/data` are on every machine, so the fact is
+        # the shape of something under them rather than the word itself, and it
+        # is waivable. When the root is one `LOCAL_REFERENCE_PATTERNS` already
+        # reads, which is true of every usual one, that pattern reports it and
+        # this fact would only add a second line about the same string.
+        root = text.strip("/").lower()
+        if root in {known.lower() for known in LOCAL_ROOTS}:
+            continue
+        facts.append(
+            Fact(
+                f"{why}, which is one directory on this machine",
+                re.compile(
+                    rf"(?<![\w.:/~-]){re.escape(text)}(?:/{_SEGMENT})+",
+                    re.IGNORECASE,
+                ),
+                specific=False,
+            )
+        )
 
     host = socket.gethostname()
     for name in dict.fromkeys((host, host.split(".")[0])):
         if len(str(name)) > 1:
             facts.append(
-                Fact("the host name", host_pattern(str(name)), prose_only=True)
+                Fact(
+                    "the host name",
+                    host_pattern(str(name)),
+                    specific=is_specific(str(name)),
+                )
             )
 
     try:
@@ -2017,17 +2041,18 @@ def machine_facts(*, run_dir: Path | str | None = None) -> tuple[Fact, ...]:
         except (OSError, RuntimeError):
             user = ""
     if len(user) > 1:
-        # Only directly after a home root, which is the one place a user name is
-        # this operator rather than a word. As any path segment it refused
-        # `$2\pi$` from a user called `pi`, `train/test split` from one called
-        # `test` and `and/or` from one called `or`, and a user name is also a
-        # common surname, so as a bare word it would refuse a citation.
+        # Generic, and only directly after a home root, which is the one place a
+        # user name is this operator rather than a word. As any path segment it
+        # refused `$2\pi$` from a user called `pi`, `train/test split` from one
+        # called `test` and `and/or` from one called `or`, and a user name is
+        # also a common surname, so as a bare word it would refuse a citation.
         facts.append(
             Fact(
                 "the user name under a home directory",
                 re.compile(
                     rf"(?i:/home/|/users/|\\users\\){re.escape(user)}(?![\w-])"
                 ),
+                specific=False,
             )
         )
     return tuple(facts)
@@ -2078,20 +2103,55 @@ def printed_in(text: str, document: str) -> bool:
     return re.search(rf"(?<![\w.+-]){re.escape(text)}(?![\w+/-])", document) is not None
 
 
+# The characters that are a slash to a reader and not to `re`. NFKC folds the
+# full width pair and nothing else: U+2215 DIVISION SLASH, U+2044 FRACTION
+# SLASH, U+29F8 BIG SOLIDUS, U+2216 SET MINUS and U+FF3C FULLWIDTH REVERSE
+# SOLIDUS all survive it, and `∕home∕pretend∕x` published because of it. A path
+# written with any of them is the path it reads as.
+_SLASH_LOOKALIKES = str.maketrans(
+    {
+        "∕": "/",
+        "⁄": "/",
+        "⧸": "/",
+        "／": "/",
+        "∖": "\\",
+        "＼": "\\",
+    }
+)
+
+
 def _scan_forms(text: str) -> tuple[str, ...]:
-    """The forms of one string the scan reads: as written, and decoded.
+    """The forms of one string the scan reads: as written, decoded, unfolded.
 
     `%2Fhome%2Fbob%2Fx.pdf` is a path with no slash in it, and a slash copied
-    out of a PDF or a word processor can arrive as the full width `／`, which no
-    pattern here matches. Percent-decoding once and normalising NFKC turns both
-    into the path they are. Once rather than repeatedly is deliberate: `%2525`
-    is text about encoding, not a second path.
+    out of a PDF or a word processor can arrive as `／`, `∕` or `⁄`, none of
+    which any pattern here matches. Percent-decoding once, normalising NFKC and
+    translating the look-alikes turns all of them into the path they are. Once
+    rather than repeatedly is deliberate: `%2525` is text about encoding, not a
+    second path.
     """
     forms = [text]
     decoded = unicodedata.normalize("NFKC", urllib.parse.unquote(text))
-    if decoded != text:
-        forms.append(decoded)
+    for form in (decoded, text.translate(_SLASH_LOOKALIKES), decoded.translate(_SLASH_LOOKALIKES)):
+        if form not in forms:
+            forms.append(form)
     return tuple(forms)
+
+
+def names_a_specific_fact(text: str, facts: Sequence[Fact]) -> bool:
+    """Does this string contain something that can only be this machine.
+
+    The test an allowance has to pass before it allows anything. An editor
+    reading `file:///<checkout>/scripts/local_review.py` in a refusal and
+    passing it back waived a tier 1 fact, because the flag matched the hit and
+    nothing looked at what the hit was made of.
+    """
+    return any(
+        fact.pattern.search(form)
+        for fact in facts
+        if fact.specific
+        for form in _scan_forms(text)
+    )
 
 
 def local_references(
@@ -2100,14 +2160,13 @@ def local_references(
     facts: tuple[Fact, ...] | None = None,
     manuscript: str = "",
     allowed: Sequence[str] = (),
-    vocabulary: bool = False,
 ) -> list[Leak]:
     """Every local path or address in one string, with the tier it belongs to.
 
     An allowance is a tier 2 decision only. `manuscript` allows what the paper
     prints, `allowed` is what the editor passed `--allow-text` for, and neither
-    touches a machine fact. `vocabulary` says this string is a value chosen from
-    a fixed list, where a `prose_only` fact is a false alarm by construction.
+    reaches a specific fact: a hit carrying one is tier 1 whatever it is wrapped
+    in, and is reported as tier 1 from the start rather than offered a flag.
 
     The longest form of each hit only. A home directory sitting inside a longer
     path is one leak and not two, and reporting it twice would make a refusal
@@ -2121,7 +2180,7 @@ def local_references(
     forms = _scan_forms(text)
     found: list[Leak] = []
     for fact in facts:
-        if fact.prose_only and vocabulary:
+        if not fact.specific:
             continue
         for form in forms:
             found += [
@@ -2129,11 +2188,12 @@ def local_references(
                 for match in fact.pattern.finditer(form)
             ]
     named = {leak.text for leak in found}
-    for why, pattern in LOCAL_REFERENCE_PATTERNS:
+    generic = [(fact.why, fact.pattern) for fact in facts if not fact.specific]
+    for why, pattern in (*generic, *LOCAL_REFERENCE_PATTERNS):
         for form in forms:
             for match in pattern.finditer(form):
                 hit = match.group(0)
-                if hit in named or hit in waived or printed_in(hit, manuscript):
+                if hit in named:
                     continue
                 found.append(Leak(why, hit, False))
                 named.add(hit)
@@ -2152,12 +2212,22 @@ def local_references(
         if inside and not leak.machine_fact:
             leak = leak._replace(why=inside[0].why, machine_fact=True)
         carrying.append(leak)
-    return [
+    longest = [
         leak
         for leak in carrying
         if not any(
             leak.text != other.text and leak.text in other.text for other in carrying
         )
+    ]
+    # Allowances are read last, against the hits as they will be reported. Read
+    # first, allowing `//media/share/x` left the `media` inside it refused on its
+    # own, because the longer hit the editor had read was gone before the shorter
+    # one was reduced into it and there was nothing left to allow.
+    return [
+        leak
+        for leak in longest
+        if leak.machine_fact
+        or not (leak.text in waived or printed_in(leak.text, manuscript))
     ]
 
 
@@ -2166,13 +2236,16 @@ def leak_refusal(leaks: Sequence[Leak]) -> str:
 
     The flag is printed ready to copy, because an editor reading a refusal has
     to be able to act on it without working out the quoting themselves, and
-    because the allowance has to name the matched text exactly.
+    because the allowance has to name the matched text exactly. It is printed in
+    the `--allow-text=<text>` form: a hit can begin with a hyphen, and as a
+    separate argument that reads as another option rather than as this one's
+    value.
     """
     said = ", ".join(leak.line for leak in leaks)
     waivable = list(dict.fromkeys(leak.text for leak in leaks if not leak.machine_fact))
     unwaivable = [leak for leak in leaks if leak.machine_fact]
     if waivable:
-        flags = " ".join(f"--allow-text {shlex.quote(text)}" for text in waivable)
+        flags = " ".join(f"--allow-text={shlex.quote(text)}" for text in waivable)
         said += (
             " A hit that is the review's own words rather than this machine can"
             " be published by reading it first and passing it back on the same"
@@ -2194,7 +2267,6 @@ def local_reference_fields(
     manuscript: str = "",
     allowed: Sequence[str] = (),
     trail: str = "",
-    vocabulary: bool = False,
 ) -> list[Leak]:
     """Where a record names the machine that wrote it rather than the review.
 
@@ -2209,10 +2281,13 @@ def local_reference_fields(
     Each hit names the field, what it is, and the text itself, so an editor
     reading a refusal can see which string in which field stopped it.
 
-    A field whose value comes from a fixed vocabulary is read with the host name
-    fact switched off, and so is every field *name*, because a field name is
-    this repository's vocabulary rather than anything about the machine. The
-    patterns still run over all of it.
+    Every string is read by the same rule, keys and values alike. The earlier
+    version switched the host name fact off in field names and in a list of
+    fields whose values come from a fixed vocabulary, because a host called
+    `editor` refused its own provenance record. That is what published
+    `ty-MS-7C80` as a JSON key and as an `id`, a `status` and a `basis`. The
+    tier split above is what makes a word-shaped host harmless, so nothing has
+    to be switched off anywhere.
     """
     facts = this_machine() if facts is None else facts
     scan = {"facts": facts, "manuscript": manuscript, "allowed": allowed}
@@ -2223,42 +2298,42 @@ def local_reference_fields(
             if isinstance(key, str):
                 found += [
                     leak._replace(where=f"{below} (the field name)")
-                    for leak in local_references(key, **scan, vocabulary=True)
+                    for leak in local_references(key, **scan)
                 ]
-            found += local_reference_fields(
-                child,
-                **scan,
-                trail=below,
-                vocabulary=isinstance(key, str) and key in VOCABULARY_FIELDS,
-            )
+            found += local_reference_fields(child, **scan, trail=below)
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            found += local_reference_fields(
-                child, **scan, trail=f"{trail}[{index}]", vocabulary=vocabulary
-            )
+            found += local_reference_fields(child, **scan, trail=f"{trail}[{index}]")
     elif isinstance(value, str):
         found += [
             leak._replace(where=trail or "(root)")
-            for leak in local_references(value, **scan, vocabulary=vocabulary)
+            for leak in local_references(value, **scan)
         ]
     return found
 
 
 _DROPPED = object()
 
-# The fields the engine fills with a path on the machine that ran the review.
-# The plugin server writes the manuscript's absolute path as `pdf` and the
-# loaded plugin's as `plugin_root`, both into the run manifest. The older names
-# are kept because a run folder written by an earlier engine may still be
-# published from.
+# The fields the engine fills with a path on the machine that ran the review,
+# and the only fields in a published artifact this script will alter. Read off
+# engine 0.9 rather than guessed: `peerreviewagents/plugin/server.py` writes the
+# manuscript's absolute path as `pdf` and the loaded plugin's as `plugin_root`
+# into the run manifest, `plugin/starter.py` and `runs.py` write `pdf` as well,
+# and no other engine field holds an absolute path. The remaining names are
+# fields earlier releases wrote, kept because a run folder from one may still be
+# published, and they are listed here so the list is one place rather than a
+# habit: nothing else in a bundle is a path field, whatever it looks like.
 #
 # This is a list of field names rather than a test on the value because the
 # first version tested the value: any string beginning with a slash was taken
 # for a path. A reviewer writing "/ 2 is the wrong denominator" had the comment
 # silently deleted from the published package, and a path written inside a
-# sentence was missed regardless. Review content is never rewritten now. What
-# catches a path the engine starts recording in a field nothing here knows about
-# is the leak scan over the written bundle, below.
+# sentence was missed regardless. The value is still tested, by
+# `looks_like_a_path` below, but only to decide whether one of these fields is
+# holding the path it is supposed to: a sentence in `memo_path` is left alone
+# and reported by the leak scan rather than deleted. Review content is never
+# rewritten. What catches a path the engine starts recording in a field nothing
+# here knows about is the leak scan over the written bundle, below.
 PATH_FIELDS = frozenset({
     "memo_path",
     "pdf",
@@ -2268,6 +2343,21 @@ PATH_FIELDS = frozenset({
     "source_review_path",
     "workspace",
 })
+
+
+def looks_like_a_path(text: str) -> bool:
+    """Is this value the path its field is supposed to hold.
+
+    A path has no whitespace in it and starts at a root: a slash, a `~`, a
+    `file://` URL or a drive letter. `"/ 2 is the wrong denominator"` starts
+    with a slash and is a sentence, and dropping it deleted a reviewer's comment
+    from a published package.
+    """
+    raw = text[len("file://") :] if text.startswith("file://") else text
+    raw = raw.strip()
+    if not raw or re.search(r"\s", raw):
+        return False
+    return re.fullmatch(r"(?:~|[\\/]|[A-Za-z]:[\\/])\S*", raw) is not None
 
 
 def readable_path(text: str) -> object:
@@ -2295,59 +2385,81 @@ def readable_path(text: str) -> object:
 
 
 def without_local_paths(
-    value: object, *, field: str = "", allowed: Sequence[str] = ()
+    value: object,
+    *,
+    field: str = "",
+    allowed: Sequence[str] = (),
+    projected: list[str] | None = None,
+    trail: str = "",
 ) -> object:
-    """The same JSON with the engine's path fields made repo relative or dropped.
+    """The same JSON with the engine's own path fields made relative or dropped.
 
     `editor-package.json` is the engine's own output copied into the bundle, and
-    a run folder records absolute paths in several places. Only the fields in
-    `PATH_FIELDS` and dictionary keys that are themselves absolute paths are
-    touched, so the review's own words reach the reader as the reviewer wrote
-    them.
+    a run folder records absolute paths in several places. Only a value in one
+    of `PATH_FIELDS` that is actually a path is touched, so the review's own
+    words reach the reader as the reviewer wrote them. Every change is appended
+    to `projected`, which the caller prints: a published artifact that differs
+    from the engine's own output says so on the command that published it, and
+    nothing is altered silently.
+
+    A key is never rewritten. A mapping keyed by a path leaks through the key
+    rather than the value, and the version that rewrote a key inside this
+    repository to a relative one turned `<checkout>/docs/figs/a.png` into
+    `docs/figs/a.png` with nothing said. Engine 0.9 writes no mapping keyed by
+    an absolute path at all, so there is no engine behaviour behind the rewrite
+    to preserve, and a path-shaped key is refused here instead.
     """
     if isinstance(value, dict):
         scrubbed = {}
         for key, child in value.items():
-            # A mapping keyed by a path, such as a per-file hash map, leaks
-            # through the key rather than the value. A key inside this
-            # repository is rewritten relative to it, which keeps the entry
-            # readable. One outside it used to be dropped, taking its value with
-            # it, so a published editor-package.json was quietly missing an
-            # entry the engine had written and nothing said so. A published
-            # artifact is never silently altered: an unreadable key is refused
-            # here, the way a value in one of these fields is, and the editor
-            # decides what to do about it.
-            name = key
-            if isinstance(key, str) and (key.startswith("/") or key.startswith("file://")):
-                relative = readable_path(key)
-                if relative is _DROPPED and key not in set(allowed):
-                    raise CommandError(
-                        f"{key!r} is a field name in the engine's own output and it"
-                        " names a path outside this repository. Dropping it would"
-                        " publish an artifact missing an entry the engine wrote,"
-                        " and keeping it would publish the path. Neither is this"
-                        " script's decision: read it, then either edit the run's"
-                        " own copy or publish it deliberately with"
-                        f" --allow-text {shlex.quote(key)}."
-                    )
-                name = key if relative is _DROPPED else relative
+            if isinstance(key, str) and looks_like_a_path(key) and key not in set(allowed):
+                raise CommandError(
+                    f"{key!r} is a field name in the engine's own output and it"
+                    " is shaped like a path. Dropping it would publish an"
+                    " artifact missing an entry the engine wrote, rewriting it"
+                    " would publish an artifact that differs from the engine's"
+                    " own output with nothing saying so, and keeping it would"
+                    " publish the path. None of the three is this script's"
+                    " decision: read it, then either edit the run's own copy or"
+                    " publish it deliberately with"
+                    f" --allow-text={shlex.quote(key)}."
+                )
+            below = f"{trail}.{key}" if trail else str(key)
             cleaned = without_local_paths(
-                child, field=key if isinstance(key, str) else "", allowed=allowed
+                child,
+                field=key if isinstance(key, str) else "",
+                allowed=allowed,
+                projected=projected,
+                trail=below,
             )
             if cleaned is not _DROPPED:
-                scrubbed[name] = cleaned
+                scrubbed[key] = cleaned
         return scrubbed
     if isinstance(value, list):
         return [
             cleaned
             for cleaned in (
-                without_local_paths(child, field=field, allowed=allowed)
-                for child in value
+                without_local_paths(
+                    child,
+                    field=field,
+                    allowed=allowed,
+                    projected=projected,
+                    trail=f"{trail}[{index}]",
+                )
+                for index, child in enumerate(value)
             )
             if cleaned is not _DROPPED
         ]
-    if isinstance(value, str) and field in PATH_FIELDS:
-        return readable_path(value)
+    if isinstance(value, str) and field in PATH_FIELDS and looks_like_a_path(value):
+        relative = readable_path(value)
+        if projected is not None and relative != value:
+            where = trail or field
+            projected.append(
+                f"{where} dropped"
+                if relative is _DROPPED
+                else f"{where} rewritten to {relative}"
+            )
+        return relative
     return value
 
 
@@ -2670,6 +2782,24 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # below is derived from it. Two readings were two status rules.
     reading = engine_reading(Path(args.run))
     run_dir = Path(str(reading["review"]))
+
+    # What counts as naming this machine, worked out once and used by everything
+    # below: the facts, with this run folder among them. It is worked out here
+    # rather than after the scrub because the allowances have to be checked
+    # against it first. An editor who read `file:///<checkout>/scripts/x.py` in
+    # a refusal and passed it back waived a specific fact, because the flag was
+    # taken at its word and nothing asked what the text it allowed was made of.
+    facts = machine_facts(run_dir=run_dir)
+    refused = [text for text in allowed if names_a_specific_fact(text, facts)]
+    if refused:
+        raise CommandError(
+            "An allowance may not contain anything that names this machine, and "
+            f"{', '.join(repr(text) for text in refused)} does. A hit that "
+            "carries a path on this disk or this host's own name is refused "
+            "whatever it is wrapped in, and no flag publishes it. Edit the run's "
+            "own copy instead."
+        )
+
     package = review_package(reading)
     run = run_record(reading)
     if args.publish:
@@ -2752,15 +2882,24 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # The engine's own output is copied into the bundle, and a run folder
     # records absolute paths in several places. Scrubbing happens before
     # anything is written, so the manifest hashes the file a reader will get.
+    projected: list[str] = []
     published_package = (
-        without_local_paths(package, allowed=allowed) if args.publish else package
+        without_local_paths(package, allowed=allowed, projected=projected)
+        if args.publish
+        else package
     )
+    # Said out loud, every time, because the published artifact now differs from
+    # the engine's own output and a reader comparing the two has to be able to
+    # find out why from the command that made it.
+    if args.publish:
+        print(
+            f"projected {', '.join(projected)}"
+            if projected
+            else "projected nothing: every engine path field published as written"
+        )
 
-    # What counts as naming this machine, worked out once for both scans: the
-    # tier 1 facts, this run folder among them, the manuscript whose own words
-    # neither scan may refuse the review for, and the tier 2 text the editor
-    # read and allowed on this command.
-    facts = machine_facts(run_dir=run_dir)
+    # The manuscript whose own words neither scan may refuse the review for. The
+    # tier 2 text the editor read and allowed is in `allowed`, checked above.
     manuscript = manuscript_text(workspace)
 
     if args.publish:
