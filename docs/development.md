@@ -153,19 +153,23 @@ replaced or edited.
 ## Running a review
 
 ```bash
-# Any interpreter with peerreviewagents 0.8 or newer importable.
+# Any interpreter with peerreviewagents 0.9.0 or newer importable. The
+# `peerreview` console script used below is the one beside it.
 PY=/path/to/.venv/bin/python
 
 $PY scripts/local_review.py fingerprint
 $PY scripts/local_review.py prepare --paper 10.1101/2026.03.12.711120 \
-    --out runs/prepared-example
+    --out runs/prepared-example --arm full-two-track --reviewers 3
 ```
 
 `fingerprint` is the preflight. It prints the engine version, a SHA-256 over the
-engine's own source tree, and the transport record including the authentication
-method and subscription type. It calls no model. If the `claude` CLI turns out
-to be authenticated against a paid API provider, it refuses to continue, which
-is the check that keeps this path free.
+engine's own source tree, the same over the plugin that does the reviewing, the
+hash of the review workflow, and the transport record. It calls no model. It
+reports no authentication status, because the engine exposes none: what keeps
+this path free is the plugin starter, which removes `ANTHROPIC_API_KEY` and
+`ANTHROPIC_AUTH_TOKEN` from the environment it hands the session, so no key in
+the operator's shell can pay for a review. If the `claude` CLI does not report
+a version it says so, because a review needs it on PATH and signed in.
 
 `prepare` resolves the identifier, downloads the exact PDF for that revision,
 hashes it, and writes `prepared.json` with the destination, the draft number and
@@ -178,16 +182,27 @@ either. `--pdf` supplies exact bytes for that identity. A `--pdf` with no
 does not.
 
 Then the engine itself, which is the only part that spends anything, and which
-the skill walks through: `import`, `review`, `report`. The provider is
-`claude-code` and the policy is `agentic-v1`, both named in the command rather
-than left to the default. Read `REVIEW.md` from the run, decide, and write the
-bundle:
+the skill walks through. One command imports the manuscript and runs the whole
+panel, and a second writes the readable reports:
+
+```bash
+peerreview review runs/prepared-example/<fetched>.pdf runs/example \
+    --arm full-two-track --reviewers 3 --literature-cutoff 2026-11-12
+peerreview report runs/example/review
+```
+
+Both positionals are required and in that order: the manuscript PDF, then the
+folder to write. The engine writes `runs/example/manuscript`, the imported
+paper, and `runs/example/review`, the run. There is no provider flag, no model
+flag and no policy flag. Claude Code is the only transport, each agent's model
+is pinned by its own agent file in the plugin, and `runtime.json` records what
+every agent actually ran on. Read `REVIEW.md` from the run, decide, and write
+the bundle:
 
 ```bash
 $PY scripts/local_review.py publish \
     --prepared runs/prepared-example \
-    --run runs/example/run \
-    --workspace runs/example/workspace \
+    --run runs/example \
     --decision major \
     --editor your-name \
     --human-reviewed yes \
@@ -201,10 +216,13 @@ under `runs/rehearsal/`, which is git-ignored: a run made to see what a prompt
 change did is a question about the pipeline, and answering it should not add a
 review to someone's paper.
 
-`--workspace` is what ties the three steps together. `prepare` hashes the PDF it
-fetched, the engine's importer hashes the bytes it was handed, and the run
-records the paper id it reviewed. `publish` compares all three and refuses when
-they disagree, so a run of one paper cannot be published as a review of another.
+The imported manuscript is what ties the steps together. `prepare` hashes the
+PDF it fetched, the engine's importer hashes the bytes it was handed into
+`paper.json`, and the run records the paper it reviewed. `publish` reads that
+`paper.json` from the manuscript folder beside the run, compares all three, and
+refuses when they disagree, so a run of one paper cannot be published as a
+review of another. `--workspace` points at that folder when it is somewhere
+else.
 
 `--editor` and `--human-reviewed` have no defaults. The published record carries
 an attestation that a named person read the run before it was merged, and that
