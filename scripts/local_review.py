@@ -33,6 +33,7 @@ import hashlib
 import importlib
 import importlib.metadata
 import json
+import re
 import shutil
 import sys
 import tempfile
@@ -1195,12 +1196,18 @@ def track_reports(run_dir: Path) -> dict[str, Path]:
     `src/lib/corpus.js` already lists any `audit_<track>.md` in a bundle as a
     report of its own, so copying them in is all that is needed to publish what
     each specialist read the manuscript for.
+
+    One file per known track, asked for by name. This used to glob `audit_*.md`,
+    which published whatever happened to sit in the run folder under that
+    prefix: a note somebody dropped there, a file an operator wrote while
+    debugging, or a report from a track this repository does not know and cannot
+    label. The page shows a report with no track as an unnamed one, so a file
+    this list does not name is left where it is.
     """
     run_dir = resolve_review_dir(run_dir)
+    candidates = ((f"audit_{track}.md", run_dir / f"audit_{track}.md") for track in SPECIALIST_TRACKS)
     return {
-        path.name: path
-        for path in sorted(run_dir.glob("audit_*.md"))
-        if path.is_file() and path.stat().st_size
+        name: path for name, path in candidates if path.is_file() and path.stat().st_size
     }
 
 
@@ -1542,22 +1549,58 @@ def cmd_prepare(args: argparse.Namespace) -> int:
     return 0
 
 
-def absolute_path_fields(value: object, trail: str = "") -> list[str]:
-    """Where a record carries a path that only exists on the machine that wrote it.
+# Everything that names the machine a review was produced on rather than the
+# review itself. The scan this feeds used to know two strings, the operator's
+# home directory and this checkout, which is narrow for a public site: a run
+# that wrote `~/papers/x.pdf`, a drive mounted somewhere else, a path under a
+# temporary directory or a mail address all passed it, in a record field nothing
+# here lists or in prose inside a bundled document.
+#
+# Each pattern is written to miss the three shapes that look like a path and are
+# not. A slash with a word character in front of it is prose, `and/or` or the
+# `p/n` in a reviewer's arithmetic. A slash with a colon or another slash in
+# front of it is inside a URL, so a DOI link survives. And a path of one
+# segment, `/mnt` or `/tmp`, names nothing about the operator, so two segments
+# are required before a string is treated as a local path.
+LOCAL_REFERENCE_PATTERNS = (
+    ("an absolute path", re.compile(r"(?<![\w~:/])/[A-Za-z0-9._][\w.+-]*(?:/[\w.+-]+)+/?")),
+    ("a file URL", re.compile(r"file://[^\s\"'<>)\]]+")),
+    ("a path in the home directory", re.compile(r"(?<![\w/])~/[\w.+-]+(?:/[\w.+-]+)*")),
+    ("a Windows path", re.compile(r"(?<!\w)[A-Za-z]:[\\/][\w.+-]+(?:[\\/][\w.+-]+)*")),
+    ("an email address", re.compile(r"[\w.+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+")),
+)
+
+
+def local_references(text: str) -> list[tuple[str, str]]:
+    """Every local path or address in one string, as (what it is, what it says)."""
+    return [
+        (why, match.group(0))
+        for why, pattern in LOCAL_REFERENCE_PATTERNS
+        for match in pattern.finditer(text)
+    ]
+
+
+def local_reference_fields(value: object, trail: str = "") -> list[str]:
+    """Where a record names the machine that wrote it rather than the review.
 
     A published provenance record is read by people with no access to this disk,
-    so an absolute path in it identifies the operator's filesystem rather than
-    the review.
+    so an absolute path, a home-relative path or a mail address in it identifies
+    the operator rather than the review. Every string in the record is read,
+    whatever field it sits in, because the scrubber works from a list of field
+    names and this is the guard on the field the engine has not written yet.
     """
     found: list[str] = []
     if isinstance(value, dict):
         for key, child in value.items():
-            found += absolute_path_fields(child, f"{trail}.{key}" if trail else str(key))
+            found += local_reference_fields(child, f"{trail}.{key}" if trail else str(key))
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            found += absolute_path_fields(child, f"{trail}[{index}]")
-    elif isinstance(value, str) and (value.startswith("/") or value.startswith("file://")):
-        found.append(trail or "(root)")
+            found += local_reference_fields(child, f"{trail}[{index}]")
+    elif isinstance(value, str):
+        found += [
+            f"{trail or '(root)'} names {why}, {text!r}"
+            for why, text in local_references(value)
+        ]
     return found
 
 
@@ -1648,15 +1691,12 @@ def without_local_paths(value: object, *, field: str = "") -> object:
 
 
 def local_path_needles() -> list[str]:
-    """The strings that reach a published file only by mistake.
+    """This machine's own two directories, named exactly.
 
-    The first version of this scan looked for a leading slash in a JSON value,
-    which both missed and over-matched: it read none of the Markdown, nothing
-    keyed by a path, no `~/` or Windows form, and no path written inside a
-    sentence, while flagging a reviewer's own arithmetic. These two strings are
-    the operator's home directory and this checkout, in whatever shape they take
-    on the machine doing the publishing. No review has a reason to contain
-    either, and prose does not contain them by accident.
+    The patterns above describe the shape of a local path. These two strings are
+    the operator's home directory and this checkout as they actually are on the
+    machine doing the publishing, so a leak of either is named for what it is
+    even in a form the patterns were not written for.
     """
     needles = {str(REPO.resolve())}
     try:
@@ -1666,15 +1706,29 @@ def local_path_needles() -> list[str]:
     return sorted(needle for needle in needles if needle not in ("", "/"))
 
 
+def text_local_references(text: str) -> list[str]:
+    """What one file's text says about the machine it was written on.
+
+    The longest form of each leak only. A home directory sitting inside a longer
+    path is one leak, not two, and reporting it twice would make a refusal read
+    as though more had escaped than did.
+    """
+    found = {text_found for _, text_found in local_references(text)}
+    found |= {needle for needle in local_path_needles() if needle in text}
+    return sorted(
+        hit for hit in found if not any(hit != other and hit in other for other in found)
+    )
+
+
 def bundle_local_path_leaks(dest: Path) -> list[str]:
     """Every file in a written bundle that names the machine that wrote it.
 
     This reads what is on disk rather than what the code meant to write, which
     is the point: it is the guard that catches a path the engine started
     recording in a field nothing here knows about, in any file of the bundle,
-    including the specialist reports copied in from the run.
+    including the specialist reports copied in from the run and the prose of a
+    document rendered from them.
     """
-    needles = local_path_needles()
     found: list[str] = []
     for path in sorted(Path(dest).rglob("*")):
         if not path.is_file() or path.suffix.lower() not in (".json", ".jsonl", ".md", ".txt"):
@@ -1683,9 +1737,10 @@ def bundle_local_path_leaks(dest: Path) -> list[str]:
             text = path.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        for needle in needles:
-            if needle in text:
-                found.append(f"{path.relative_to(dest).as_posix()} names {needle}")
+        found += [
+            f"{path.relative_to(dest).as_posix()} names {hit}"
+            for hit in text_local_references(text)
+        ]
     return found
 
 
@@ -1988,12 +2043,12 @@ def cmd_publish(args: argparse.Namespace) -> int:
     published_package = without_local_paths(package) if args.publish else package
 
     if args.publish:
-        leaked = absolute_path_fields(provenance)
+        leaked = local_reference_fields(provenance)
         if leaked:
             raise CommandError(
-                "This record would publish absolute local paths at "
+                "This record would publish the machine it was made on: "
                 f"{', '.join(leaked)}. A published record may not name the "
-                "operator's filesystem."
+                "operator's filesystem or anybody's address."
             )
 
     # Every document is rendered from the scrubbed package. Rendering from the

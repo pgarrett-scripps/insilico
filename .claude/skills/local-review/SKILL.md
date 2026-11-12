@@ -58,9 +58,10 @@ Run from the repository root:
 .venv/bin/python scripts/local_review.py fingerprint
 ```
 
-Use whichever interpreter has `peerreviewagents` 0.9.0 or newer importable. On
-this machine that is normally `/home/ty/Repos/paper-workbench/.venv/bin/python`,
-and the `peerreview` command used in step 3 is the console script beside it.
+Use whichever interpreter has `peerreviewagents` 0.9.0 or newer importable. It
+is often a virtual environment outside this checkout rather than the `.venv`
+here, and the `peerreview` command used in step 3 is the console script beside
+it. Ask the operator which interpreter that is rather than guessing.
 
 Read the output. It prints the engine version, the fingerprint of the installed
 engine, the fingerprint of the plugin and the hash of its review workflow, and
@@ -102,9 +103,8 @@ peerreview review \
   --literature-cutoff <today, YYYY-MM-DD>
 ```
 
-Use the `peerreview` console script from the environment in step 1. A path in
-front of it, such as `/home/ty/Repos/paper-workbench/.venv/bin/peerreview`, is
-the same command.
+Use the `peerreview` console script from the environment in step 1. Calling it
+by its full path, `<that environment>/bin/peerreview`, is the same command.
 
 Both positionals are required and in this order: the manuscript PDF, then the
 run folder to write. Every option belongs after `review`, because `peerreview`

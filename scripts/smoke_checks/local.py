@@ -2292,6 +2292,17 @@ def check_every_specialist_report_reaches_the_bundle() -> None:
         )
         (run / "audit_field.md").write_text("# field\n\nNothing found.\n", encoding="utf-8")
 
+        # A file under the same prefix that is not one of the six tracks stays
+        # in the run folder. The reports were globbed, so anything an operator
+        # or a later engine left beside them was copied into a public bundle
+        # and shown on the page as a report with no track.
+        for name in ("audit_notes.md", "audit_scratch-for-me.md", "audit_.md"):
+            (run / name).write_text(f"# {name}\n\nNot a track report.\n", encoding="utf-8")
+        published = local_review.track_reports(run)
+        assert sorted(published) == sorted(f"audit_{track}.md" for track in TRACKS), (
+            f"a file that is not a track report was published: {sorted(published)}"
+        )
+
         with _stub_engine(), _published_tree(Path(tmp) / "reviews") as reviews:
             destination = reviews / "2026" / "fixture-reports" / "v1" / "r1"
             out = io.StringIO()
@@ -2482,14 +2493,45 @@ def check_a_published_record_names_no_local_path() -> None:
             f"a run inside the repository is named relative to it: {here.get('directory')!r}"
         )
 
-    assert local_review.absolute_path_fields({"a": {"b": "/home/someone/run"}}) == ["a.b"]
-    assert local_review.absolute_path_fields({"u": "file:///home/someone"}) == ["u"]
-    assert local_review.absolute_path_fields(
-        {"ok": "docs/reviews/2026/p/v1/r1", "url": "https://arxiv.org/abs/1"}
-    ) == [], "a relative path and a URL are not local paths"
-    assert local_review.absolute_path_fields({"runs": [{"directory": "/tmp/x"}]}) == [
-        "runs[0].directory"
-    ], "a leak inside a list has to be named"
+    def fields(value: object) -> list[str]:
+        """The field trails only, so the assertions read as the shapes they test."""
+        return [line.split(" names ", 1)[0] for line in local_review.local_reference_fields(value)]
+
+    assert fields({"a": {"b": "/home/someone/run"}}) == ["a.b"]
+    assert fields({"u": "file:///home/someone"}) == ["u"]
+    assert fields({"runs": [{"directory": "/tmp/x"}]}) == ["runs[0].directory"], (
+        "a leak inside a list has to be named"
+    )
+
+    # Every shape a published record has leaked, each one in a field no list
+    # here names, because the field name is what the scrubber works from and
+    # this is the guard for the field it does not know.
+    leaks = {
+        "a mounted drive": "/mnt/data1/papers/draft.pdf",
+        "a temporary directory": "/tmp/claude-1000/session/run",
+        "a home-relative path": "~/papers/x.pdf",
+        "a Windows path": r"C:\Users\someone\papers\x.pdf",
+        "a Windows path with forward slashes": "D:/papers/x.pdf",
+        "an email address": "someone@example.org",
+    }
+    for why, value in leaks.items():
+        assert fields({"generator": {"note_the_engine_just_added": value}}) == [
+            "generator.note_the_engine_just_added"
+        ], f"{why} reached a published record: {value}"
+
+    # And the shapes that are not leaks. A DOI link and an archive URL are the
+    # record's own content, a relative path names something a reader has, and a
+    # reviewer's arithmetic is a sentence rather than a path.
+    kept = {
+        "a relative path": "docs/reviews/2026/p/v1/r1",
+        "an archive URL": "https://arxiv.org/abs/2501.01234",
+        "a DOI URL": "https://www.biorxiv.org/content/10.1101/2026.03.12.711120v1.full.pdf",
+        "a DOI": "10.1101/2026.03.12.711120",
+        "arithmetic": "the denominator should be n/2 and/or the paired count",
+        "a version range": "0.9.0/0.9.1",
+    }
+    for why, value in kept.items():
+        assert fields({"field": value}) == [], f"{why} was refused as a local path: {value}"
 
     # The whole record, built from a run whose manifest carries the absolute
     # manuscript path and plugin root the plugin server writes into it.
@@ -2497,9 +2539,9 @@ def check_a_published_record_names_no_local_path() -> None:
         record = local_review.build_provenance(
             **_build_arguments(editor="fixture-editor", human_reviewed=True)
         )
-    assert local_review.absolute_path_fields(record) == [], (
+    assert local_review.local_reference_fields(record) == [], (
         f"the record names the machine that wrote it: "
-        f"{local_review.absolute_path_fields(record)}"
+        f"{local_review.local_reference_fields(record)}"
     )
 
     inside = local_review.REVIEWS / "2026" / "fixture-paper" / "v1" / "r1"
@@ -2730,8 +2772,9 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
         f"a repository path should be made relative: {inside}"
     )
 
-    # And the bundle is scanned as a bundle, in every text file, for the two
-    # strings that reach a published review only by mistake.
+    # And the bundle is scanned as a bundle, in every text file, for anything
+    # that names the machine rather than the review. This machine's own two
+    # directories are named exactly, on top of the shapes.
     needles = local_review.local_path_needles()
     assert str(local_review.REPO.resolve()) in needles, "the checkout has to be one of the needles"
     assert home in needles, "the operator's home directory has to be one of the needles"
@@ -2739,10 +2782,34 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         dest = Path(tmp)
         (dest / "provenance.json").write_text(json.dumps({"review": {"id": "p/v1/r1"}}), encoding="utf-8")
-        (dest / "summary.md").write_text("# Review Summary\n\nSee /dev/null.\n", encoding="utf-8")
+        (dest / "summary.md").write_text(
+            "# Review Summary\n\nThe denominator should be n/2, and the DOI is "
+            "https://doi.org/10.1101/2026.03.12.711120.\n",
+            encoding="utf-8",
+        )
         assert local_review.bundle_local_path_leaks(dest) == [], (
             "a clean bundle must not be reported as leaking"
         )
+
+        # Each shape on its own, in a file of its own, because the scan knowing
+        # this machine's home directory is not the same as the scan knowing
+        # what a path looks like. All of these published in a reviewer's probe.
+        shapes = {
+            "letter_mount.md": "The figures are in /mnt/data1/papers/draft.pdf.\n",
+            "letter_tmp.md": "Run written to /tmp/claude-1000/session/run.\n",
+            "letter_home.md": "The manuscript is ~/papers/x.pdf.\n",
+            "letter_windows.md": "Copied from C:\\Users\\someone\\papers.\n",
+            "letter_email.md": "Correspondence to someone@example.org.\n",
+        }
+        for name, text in shapes.items():
+            (dest / name).write_text(text, encoding="utf-8")
+        shaped = local_review.bundle_local_path_leaks(dest)
+        for name in shapes:
+            assert any(line.startswith(name) for line in shaped), (
+                f"{name} published something that names the machine: {shaped}"
+            )
+        for name in shapes:
+            (dest / name).unlink()
 
         # The forms the old scan could not see: a path inside a sentence in the
         # Markdown, a path used as a key, a path in a specialist report copied
