@@ -10,7 +10,7 @@ Half of them need the engine. A run folder is read in 0.9 only through
 thing that decides whether a run is publishable, so a check of the publish path
 is a check against the real reader rather than against a second one written
 here. `ENGINE_BACKED` names those checks and `engine_is_importable` says whether
-this interpreter can run them; smoke_test.py skips them on a laptop with no
+this interpreter can run them. smoke_test.py skips them on a laptop with no
 engine and refuses to skip them in CI. The rest run anywhere.
 
 Everything here is written against the run folder engine 0.9's plugin writes:
@@ -840,6 +840,29 @@ def _schema_run_requires() -> list[str]:
     )
 
 
+def _schema_guard_verdicts() -> list[str]:
+    """The guard verdicts the published schema accepts, read from the schema.
+
+    The engine writes `clean` or `quarantined` and nothing else. Reading the
+    enum here rather than repeating it keeps a fixture from publishing a verdict
+    `npm run check:schema` would reject at the site build instead.
+    """
+    run = _schema()["properties"]["generator"]["properties"]["run"]["properties"]
+    return list(run["review_guard_status"]["enum"])
+
+
+def _provenance_component_fields() -> str:
+    """The provenance component's source, so a published field is not orphaned.
+
+    The page is Astro and is rendered by the site build, not by this suite. What
+    this check can still prove offline is that the component reads the field the
+    bundle carries, so a record that counts held-back findings is not published
+    into a page that never mentions them.
+    """
+    page = Path(__file__).resolve().parents[2] / "src" / "components" / "Provenance.astro"
+    return page.read_text(encoding="utf-8")
+
+
 def check_severity_is_read_from_the_engine_not_guessed() -> None:
     """An unknown severity must not be silently counted as the mildest one.
 
@@ -1224,8 +1247,8 @@ def check_provenance_is_read_from_the_run() -> None:
             raise AssertionError(f"{why} was read as a run")
 
         # And what went wrong is read rather than assumed to be nothing. The
-        # engine decides the status and the cause; what the record adds is the
-        # harm a run can carry past them.
+        # engine decides the status and the cause, and what the record adds is
+        # the harm a run can carry past them.
         broken = _run_directory(
             Path(tmp) / "broken",
             **{
@@ -1238,7 +1261,7 @@ def check_provenance_is_read_from_the_run() -> None:
                 "editor-package.json": dict(
                     PACKAGE,
                     stages=_stages(TRACKS),
-                    review_guard_status="partially-quarantined",
+                    review_guard_status="quarantined",
                 ),
             },
         )
@@ -1643,21 +1666,25 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 "the decision is still a person's on a review that found nothing"
             )
 
-        # Every finding quarantined is a different claim. The guard says so in
-        # the record it reads, and the publish guard refuses the run.
+        # Every finding quarantined is a different claim, and the engine makes
+        # it on the status rather than on the guard. There is no guard word for
+        # it: the verdict is `quarantined`, exactly as it is for a run that lost
+        # one finding, and `complete-without-findings` is what says the editor
+        # was left with nothing to deliver. So the status is what the fixture
+        # turns, and the status is what the refusal has to rest on.
         quarantined = _run_directory(
             Path(tmp) / "quarantined",
             **{
                 "progress.json": {
                     "status": "complete-without-findings",
-                    "review_guard_status": "all-findings-quarantined",
+                    "review_guard_status": "quarantined",
                     "stages": _stages(TRACKS),
                     "quarantined_findings_count": 4,
                 },
                 "editor-package.json": dict(
                     sound_package,
                     summary="Every finding the reviewers raised failed the guards.",
-                    review_guard_status="all-findings-quarantined",
+                    review_guard_status="quarantined",
                     quarantined_findings_count=4,
                 ),
             },
@@ -1704,53 +1731,58 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             )
             assert not destination.exists(), f"a bundle was written to {destination}"
 
-        # Neither field alone carries the gate, and the guard verdict is read
-        # out of the editor package rather than progress.json, so each case
-        # writes it where the engine looks. A run that says `complete` and
-        # reports every finding quarantined is refused on the guard, and one
-        # that says `complete-without-findings` is refused on the status,
-        # whatever guard value sits beside it.
+        # The status carries the gate, not the guard. The engine writes only
+        # `clean` or `quarantined`, and it writes `quarantined` whether the
+        # guards took one finding or the lot, so a `quarantined` verdict cannot
+        # be a refusal on its own. A run the guards emptied is
+        # `complete-without-findings`, and that is what is refused, whatever
+        # guard verdict sits beside it.
         refusals = {
-            "the guard alone": {
-                "progress.json": {"status": "complete", "stages": _stages(TRACKS)},
-                "editor-package.json": dict(
-                    PACKAGE,
-                    stages=_stages(TRACKS),
-                    review_guard_status="all-findings-quarantined",
-                ),
-            },
-            "the status alone": {
-                "progress.json": {
-                    "status": "complete-without-findings",
-                    "stages": _stages(TRACKS),
-                },
-            },
+            f"a {verdict} guard": verdict for verdict in local_review.GUARD_VERDICTS
         }
-        for index, (why, files) in enumerate(refusals.items()):
-            run_dir = _run_directory(Path(tmp) / f"refused-{index}", **files)
+        assert set(refusals) == {"a clean guard", "a quarantined guard"}, (
+            f"the engine writes two guard verdicts and no more: {local_review.GUARD_VERDICTS}"
+        )
+        for index, (why, verdict) in enumerate(refusals.items()):
+            run_dir = _run_directory(
+                Path(tmp) / f"refused-{index}",
+                **{
+                    "progress.json": {
+                        "status": "complete-without-findings",
+                        "stages": _stages(TRACKS),
+                    },
+                    "editor-package.json": dict(
+                        PACKAGE, stages=_stages(TRACKS), review_guard_status=verdict
+                    ),
+                },
+            )
             try:
                 local_review.require_complete_run(run_dir, local_review.read_run(run_dir))
             except local_review.CommandError:
                 continue
-            raise AssertionError(f"a quarantined run was published on {why}")
+            raise AssertionError(f"a run that delivered no finding published on {why}")
 
         # A run that kept some findings and lost others does publish, and the
         # count of what was held back travels with it. A guard that cannot
         # anchor a finding and drops it is the guard working, so the review that
-        # survives it is still a review; refusing it would have thrown away a
+        # survives it is still a review. Refusing it would have thrown away a
         # finished panel over one unquotable row. What a reader needs is the
-        # number, which the record carries and the page prints.
+        # number, which the record carries and the page prints. The fixture
+        # writes what the engine writes, `quarantined`, in both places the
+        # reading looks.
         partial = _run_directory(
             Path(tmp) / "partial",
             **{
                 "progress.json": {
                     "status": "complete",
-                    "review_guard_status": "partially-quarantined",
+                    "review_guard_status": local_review.QUARANTINED_GUARD,
                     "stages": _stages(TRACKS),
                     "quarantined_findings_count": 1,
                 },
                 "editor-package.json": dict(
-                    PACKAGE, stages=_stages(TRACKS), review_guard_status="partially-quarantined"
+                    PACKAGE,
+                    stages=_stages(TRACKS),
+                    review_guard_status=local_review.QUARANTINED_GUARD,
                 ),
             },
         )
@@ -1765,12 +1797,53 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
         assert local_review.run_errors(partial_record) == [], (
             f"a guard catch is not a run error: {local_review.run_errors(partial_record)}"
         )
-        assert partial_record["review_guard_status"] == "partially-quarantined", (
+        assert partial_record["review_guard_status"] == local_review.QUARANTINED_GUARD, (
             f"the guard verdict has to travel with the record: {partial_record}"
         )
         assert partial_record["quarantined_findings_count"] == 1, (
             f"the held-back count has to travel with the record: {partial_record}"
         )
+
+        # The whole way through, because the gate is only half the job. A partly
+        # quarantined run has to publish, the written provenance has to validate
+        # against the schema the site checks, and the held-back count has to be
+        # in the record the page reads, since that is the field the provenance
+        # component prints the sentence from.
+        with _stub_engine(), _published_tree(Path(tmp) / "reviews-partial") as reviews:
+            destination = reviews / "2026" / "fixture-partial-paper" / "v1" / "r1"
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared-partial", destination),
+                    partial,
+                    _workspace(Path(tmp) / "workspace-partial"),
+                    "--publish",
+                    "--decision", "major",
+                )
+            assert code == 0, (
+                f"a partly quarantined run has to publish, got exit {code}: {out.getvalue()}"
+            )
+            assert (destination / "provenance.json").exists(), (
+                f"no bundle was written to {destination}"
+            )
+            published = json.loads((destination / "provenance.json").read_text(encoding="utf-8"))
+            run_record = published["generator"]["run"]
+            assert run_record["review_guard_status"] == local_review.QUARANTINED_GUARD, (
+                f"the published record lost the guard verdict: {run_record}"
+            )
+            assert run_record["review_guard_status"] in _schema_guard_verdicts(), (
+                "the published guard verdict has to be one the schema accepts: "
+                f"{run_record['review_guard_status']} not in {_schema_guard_verdicts()}"
+            )
+            # The page reads this field and no other to say how many findings
+            # the guards held back, so a bundle that drops it publishes a review
+            # that quietly understates itself.
+            assert run_record["quarantined_findings_count"] == 1, (
+                f"the page gets the held-back count from the record: {run_record}"
+            )
+            assert "quarantined_findings_count" in _provenance_component_fields(), (
+                "the provenance page has to read the held-back count it is given"
+            )
 
 
 def check_a_run_on_another_transport_is_not_published() -> None:

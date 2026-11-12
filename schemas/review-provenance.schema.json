@@ -207,8 +207,8 @@
               "const": "editor-package"
             },
             "review_guard_status": {
-              "$comment": "The engine's verdict on its own findings. clean and partially-quarantined are publishable: a review that raised nothing is clean with no findings, and one that lost some findings to the guards still endorses the rest. all-findings-quarantined is not, because such a review endorses none of its own work, which is a different claim from a manuscript found sound and must not be published as one.",
-              "enum": ["clean", "partially-quarantined"]
+              "$comment": "The engine's verdict on its own findings, and it writes exactly two words. clean is a run the guards took nothing from, and quarantined is one they took something from, however much. Both publish: a review that raised nothing is clean with no findings, and one that lost a finding whose quote could not be anchored still endorses the rest, with quarantined_findings_count saying how many were held back. A run the editor delivered nothing from is not marked on the guard at all. The engine gives it the status complete-without-findings, which the status field refuses.",
+              "enum": ["clean", "quarantined"]
             },
             "completeness": {
               "$comment": "The stage ledger, which is the only thing that says whether the review is whole. The server records the stages the arm requires and the ones that reported, and a run can reach complete with a stage that never reported when the editor agent accepted the pool without it. Publishing refuses a run with anything in missing, so a published record carries an empty list there; the ledger is still written out, because a reader should be able to see it rather than read the absence of a complaint as proof. none_found is the stages that reported nothing to report, which is an answer and not a gap, and retried names the slots that needed more than one attempt.",

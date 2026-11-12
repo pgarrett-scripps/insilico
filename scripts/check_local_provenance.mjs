@@ -439,23 +439,29 @@ foundNothing.generator.run.findings = 0;
 foundNothing.generator.run.findings_delivered = 0;
 assertValidProvenance(foundNothing, "fixture");
 
+// `quarantined` is the engine's other guard word, and it means the guards took
+// something, however much. A review that lost a finding whose quote could not
+// be anchored still endorses the rest, so it validates and carries the count of
+// what was held back.
 const someLost = localRecord();
-someLost.generator.run.review_guard_status = "partially-quarantined";
+someLost.generator.run.review_guard_status = "quarantined";
 someLost.generator.run.quarantined_findings_count = 3;
 assertValidProvenance(someLost, "fixture");
 
-// The engine's other finished state is not that. It writes
-// `complete-without-findings` in one case only, when every finding the
-// reviewers raised failed the evidence guards, and such a review endorses none
-// of its own work. Published as a clean result it would tell the authors the
-// reviewers recorded nothing, which is false.
+// There is no third guard word. The two the engine writes are the whole enum,
+// so a record carrying any other verdict was not written from a run this
+// engine produced, whatever the word claims.
+const inventedGuard = localRecord();
+inventedGuard.generator.run.review_guard_status = "partially-quarantined";
+rejects(inventedGuard, "a guard verdict the engine never writes must not validate");
+
+// The engine's other finished state is not a review. It writes
+// `complete-without-findings` when the editor delivered nothing, and such a
+// record published as a clean result would tell the authors the reviewers
+// recorded nothing against their paper, which is a different claim.
 const everythingQuarantined = localRecord();
 everythingQuarantined.generator.run.status = "complete-without-findings";
 rejects(everythingQuarantined, "the quarantined outcome is not a review of a sound paper");
-
-const quarantinedGuard = localRecord();
-quarantinedGuard.generator.run.review_guard_status = "all-findings-quarantined";
-rejects(quarantinedGuard, "a run that endorses none of its own findings must not publish");
 
 // Whether the reviewed bytes were fetched from the identifier or handed over
 // from a local disk decides whether the hash means anything to a reader.
