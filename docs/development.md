@@ -216,6 +216,55 @@ under `runs/rehearsal/`, which is git-ignored: a run made to see what a prompt
 change did is a question about the pipeline, and answering it should not add a
 review to someone's paper.
 
+### What a published bundle may not name
+
+A review is generated on an editor's own machine, so `publish` scans everything
+it is about to write, both the Markdown it renders and every artifact it copies
+out of the run, for text that names the machine rather than the review. The scan
+has two tiers, and they are not the same kind of claim.
+
+**Tier 1 is a machine fact.** The home directory, this checkout's path, the run
+folder, the working directory, the temporary directory, the host name and the
+user name are looked up at publish time rather than recognised by shape. A hit
+on one of them is the real leak, so it is always refused. No flag waives it, and
+finding the same text in the manuscript does not excuse it either: a paper that
+happens to contain the operator's home directory is not permission to publish
+it. Because these are exact, they are matched with word boundaries, so
+`/data/sets/x` is a hit when the working directory is `/data` while "the
+training/data/test split" is not, and a user named `pi` does not make `$2\pi$` a
+leak.
+
+**Tier 2 is a shape.** A path, a drive letter, a `~` reference, a UNC share, an
+`$HOME` expansion and an email address are refused on pattern alone, because
+most of the time a string shaped like a path is a path. Shapes misjudge, though:
+"R:/G/B channel order" is a reviewer writing about channels, not a drive. So a
+tier 2 refusal is a default, not a verdict. The refusal prints the exact flag to
+copy, and the editor who has read it publishes the text deliberately:
+
+```bash
+$PY scripts/local_review.py publish \
+    --prepared runs/prepared-example \
+    --run runs/example \
+    --decision major \
+    --editor your-name \
+    --human-reviewed yes \
+    --allow-text 'R:/G/B' \
+    --publish
+```
+
+`--allow-text` is repeatable, matches the text exactly, and is recorded in the
+bundle as `provenance.review.allowed_text`, so every waiver is visible to a
+reader of the record rather than invisible in a shell history. It never applies
+to tier 1. With that valve in place tier 2 only has to be sensible: a shape that
+occasionally over-refuses costs an editor one flag, while a shape that
+under-refuses publishes a path.
+
+One case is neither scrubbed nor refused by value: a path used as a JSON *field
+name* in the engine's own output, such as the figure map keyed by each figure's
+absolute path. Dropping the key would publish an artifact missing an entry the
+engine wrote, and keeping it would publish the path, so `publish` refuses and
+names the key. Nothing silently alters a published artifact.
+
 The imported manuscript is what ties the steps together. `prepare` hashes the
 PDF it fetched, the engine's importer hashes the bytes it was handed into
 `paper.json`, and the run records the paper it reviewed. `publish` reads that
