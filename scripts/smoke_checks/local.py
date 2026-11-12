@@ -1254,9 +1254,19 @@ def check_provenance_is_read_from_the_run() -> None:
             f"the starter's own reason was dropped: {errors}"
         )
         assert any("blocked" in e for e in errors), f"a run that stopped should say so: {errors}"
-        assert any("quarantined" in e for e in errors), f"quarantined findings are errors: {errors}"
         assert any("spec-stats" in e for e in errors), (
             f"a stage that never reported is an error: {errors}"
+        )
+        # What the guards threw out is counted and carried, and it is not filed
+        # under what went wrong. The engine publishes a run that lost a finding
+        # it could not anchor, because that is the guard doing its job, so
+        # listing it as an error would describe a working review as a damaged
+        # one.
+        assert record["quarantined_findings_count"] == 2, (
+            f"the quarantined rows were not counted: {record}"
+        )
+        assert not any("quarantined" in error for error in errors), (
+            f"a guard catch is not an error: {errors}"
         )
 
 
@@ -1515,6 +1525,21 @@ def check_an_unfinished_run_cannot_be_published() -> None:
             assert "No Claude Code login" in str(error), (
                 f"the refusal has to carry the cause the run recorded: {error}"
             )
+            # The engine keeps its own list of why it holds a run back, one
+            # sentence each, never empty while the flag is false. The refusal
+            # repeats those sentences rather than a second copy of the rule
+            # behind them, so the two cannot drift apart as the engine's rule
+            # changes.
+            reading = local_review.engine_reading(cases["a blocked run"])
+            reasons = [
+                str(reason).strip()
+                for reason in reading.get("not_publishable_reasons") or []
+                if str(reason).strip()
+            ]
+            assert reasons, f"the engine held the run back without saying why: {reading}"
+            assert all(reason.rstrip(".") in str(error) for reason in reasons), (
+                f"the refusal dropped the engine's reasons {reasons}: {error}"
+            )
         else:
             raise AssertionError("a blocked run was published")
 
@@ -1709,12 +1734,12 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
                 continue
             raise AssertionError(f"a quarantined run was published on {why}")
 
-        # A run that kept some findings and lost others is not published either,
-        # and that is a change from 0.8, which published it with a note. The
-        # engine calls any run with something in quarantine unpublishable:
-        # which findings the guards threw out is a judgement for a person. The
-        # refusal has to say how many and where to read them, or the operator
-        # is sent back to the run folder to find out why it was refused.
+        # A run that kept some findings and lost others does publish, and the
+        # count of what was held back travels with it. A guard that cannot
+        # anchor a finding and drops it is the guard working, so the review that
+        # survives it is still a review; refusing it would have thrown away a
+        # finished panel over one unquotable row. What a reader needs is the
+        # number, which the record carries and the page prints.
         partial = _run_directory(
             Path(tmp) / "partial",
             **{
@@ -1733,20 +1758,19 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             partial, {"finding_uid": "f-040", "severity": "moderate", "title": "Unquotable"}
         )
         partial_record = local_review.read_run(partial)
-        assert partial_record["publishable"] is False, (
-            f"a run with a finding in quarantine is not publishable: {partial_record}"
+        assert partial_record["publishable"] is True, (
+            f"a run that kept findings is publishable: {partial_record}"
         )
-        try:
-            local_review.require_complete_run(partial, partial_record)
-        except local_review.CommandError as error:
-            assert "partially-quarantined" in str(error), (
-                f"the refusal has to name the guard verdict: {error}"
-            )
-            assert "1 finding(s)" in str(error), (
-                f"the refusal has to say how much was thrown out: {error}"
-            )
-        else:
-            raise AssertionError("a run with a finding in quarantine was published")
+        local_review.require_complete_run(partial, partial_record)
+        assert local_review.run_errors(partial_record) == [], (
+            f"a guard catch is not a run error: {local_review.run_errors(partial_record)}"
+        )
+        assert partial_record["review_guard_status"] == "partially-quarantined", (
+            f"the guard verdict has to travel with the record: {partial_record}"
+        )
+        assert partial_record["quarantined_findings_count"] == 1, (
+            f"the held-back count has to travel with the record: {partial_record}"
+        )
 
 
 def check_a_run_on_another_transport_is_not_published() -> None:

@@ -111,11 +111,14 @@ REQUIRED_SEVERITIES = ("major", "moderate")
 # work, and publishing it under the same words would tell authors their paper
 # drew no findings when every finding was thrown away.
 FINISHED_STATUSES = ("complete",)
-# The one guard verdict the engine publishes from. A run that kept some
-# findings and lost others reads as `partially-quarantined`, and the engine
-# does not call it publishable: what the guards threw out is a judgement for a
-# person, who can read the quarantined findings in the run and decide.
+# The two guard verdicts a published review can carry. `clean` is a run the
+# guards took nothing from, and `partially-quarantined` is one that kept some
+# findings and lost others, which still endorses what is left: the guards
+# throwing out a finding they could not anchor is the guards working, and the
+# bundle says how many were held back. `all-findings-quarantined` is the
+# opposite claim and is refused by name below.
 CLEAN_GUARD = "clean"
+PARTLY_QUARANTINED = "partially-quarantined"
 ALL_FINDINGS_QUARANTINED = "all-findings-quarantined"
 WITHOUT_FINDINGS_STATUS = "complete-without-findings"
 
@@ -656,8 +659,8 @@ def run_errors(reading: dict) -> list[str]:
 
     `read_run` already decides why a run that is not complete stopped, so the
     cause is taken from it rather than re-derived. What this adds is the harm a
-    finished run can still carry: findings the evidence guards threw out, a
-    reader that never reported, an editor that did not accept the pool, and a
+    finished run can still carry: a review that endorses none of its own work,
+    a reader that never reported, an editor that did not accept the pool, and a
     file the engine could not read in full.
 
     Finishing with no findings is not one of these. A run that read the
@@ -665,6 +668,13 @@ def run_errors(reading: dict) -> list[str]:
     and listing that as an error told a reader a review of a sound manuscript
     had gone wrong. A reviewer that reported no findings on its track is the
     same, which is why `none_found` is recorded and not listed here.
+
+    Nor is a finding the guards quarantined. The guard exists to throw out a
+    finding whose quote it could not match to the manuscript, and doing so is
+    the guard working rather than the run failing, which is why the engine
+    publishes such a run. The count is carried in the record and shown on the
+    page as what was held back, so a reader sees it without it being filed
+    under what went wrong.
     """
     errors: list[str] = []
     for value in (reading.get("cause"), reading.get("note")):
@@ -680,12 +690,6 @@ def run_errors(reading: dict) -> list[str]:
         errors.append(
             "Every finding this run produced was quarantined by the engine's "
             "evidence guards, so the review endorses none of them."
-        )
-    quarantined = _dict(reading.get("counts")).get("quarantined")
-    if isinstance(quarantined, int) and quarantined > 0:
-        errors.append(
-            f"{quarantined} finding(s) failed the evidence guards and were "
-            "quarantined out of this review."
         )
     stages = _dict(reading.get("stages"))
     missing = [str(s) for s in _list(stages.get("missing"))]
@@ -1731,11 +1735,19 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
 
     The engine answers the question now. `read_run` sets `publishable` only
     when the status is `complete`, the findings came from a readable
-    `editor-package.json` rather than the ledger, the evidence guard is clean,
+    `editor-package.json` rather than the ledger, a guard verdict was recorded,
     and every run file could be read in full. That is the gate, and it is the
-    engine's own rule rather than a second copy of it here.
+    engine's own rule rather than a second copy of it here, down to the words
+    the refusal prints, which are the engine's `not_publishable_reasons`.
 
-    What this adds to it is the three things the flag does not cover. The
+    A finding the guards quarantined is not one of those reasons. The guard
+    exists to throw out a finding whose quote it could not match, and a review
+    that lost one still endorses the rest, so such a run publishes and the
+    bundle says how many were held back. A run that lost every finding does not
+    publish, because a review that endorses none of its own work is not a
+    manuscript found sound.
+
+    What this adds to the flag is the three things it does not cover. The
     transport has to be one this path can publish, because every claim a bundle
     makes about how the review was paid for is a claim about a Claude
     subscription. Every stage the arm asked for has to have reported, because a
@@ -1781,32 +1793,36 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             "engine or publish nothing."
         )
     if not reading.get("publishable"):
+        # The engine names its own reasons, one sentence each, and that list is
+        # never empty while the flag is false. Printing its words rather than a
+        # second copy of its rules is the only way the refusal here and the
+        # rule there cannot drift apart. The fallback covers an engine old
+        # enough to set the flag without carrying the list.
+        reasons = [
+            str(reason).strip()
+            for reason in _list(reading.get("not_publishable_reasons"))
+            if str(reason).strip()
+        ]
         problems = [str(p).strip() for p in _list(reading.get("problems")) if str(p).strip()]
         cause = str(reading.get("cause") or "").strip()
         source = str(reading.get("findings_source") or "none")
-        guard = str(reading.get("guard_status") or "")
         detail = [f"The engine read it as {status or 'unknown'}."]
         if cause:
             detail.append(f"It stopped because: {cause}")
-        if guard and guard != CLEAN_GUARD:
-            quarantined = _dict(reading.get("counts")).get("quarantined")
-            count = quarantined if isinstance(quarantined, int) else 0
-            detail.append(
-                f"Its evidence guard status is {guard}, with {count} finding(s) "
-                "quarantined. What the guards threw out is a judgement for a "
-                "person: read the quarantined findings in the run before "
-                "publishing anything built from it."
-            )
-        if source != "editor-package":
-            detail.append(
-                f"Its findings came from {source}, which is not the editor's own "
-                "placement of them."
-            )
-        if problems:
-            detail.append(
-                f"{len(problems)} run file(s) could not be read in full: "
-                + "; ".join(problems)
-            )
+        if reasons:
+            detail.append("The engine holds it back because:")
+            detail += [f"({n}) {reason}." for n, reason in enumerate(reasons, start=1)]
+        else:
+            if source != "editor-package":
+                detail.append(
+                    f"Its findings came from {source}, which is not the editor's "
+                    "own placement of them."
+                )
+            if problems:
+                detail.append(
+                    f"{len(problems)} run file(s) could not be read in full: "
+                    + ", ".join(problems)
+                )
         raise CommandError(
             "The engine does not read this run as publishable, so it is not a "
             "review this path can publish. "
