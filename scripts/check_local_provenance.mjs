@@ -528,18 +528,38 @@ visit(path.resolve("docs/reviews"));
 // This is the standing rule underneath it, applied to every published record
 // whatever shape it is: nothing in the corpus names a path on anybody's
 // machine. It passes today and exists so that it stops being true loudly.
-function localPaths(value, trail = "") {
+//
+// An editor may waive a tier 2 hit at publish time with --allow-text, and the
+// waiver is recorded in review.allowed_text. The waived string is then a value
+// in the record like any other, so a scan that only asked whether a string
+// starts with a slash rejected the very record the waiver was designed to
+// produce. The allowances are taken out of each string first, and what remains
+// has to be clean. The list can never hold a machine fact, because the publish
+// path rejects an allowance naming one before the scan runs, so honouring it
+// here cannot wave through a path on anybody's disk.
+function waivers(record) {
+  const allowed = record && record.review && record.review.allowed_text;
+  return Array.isArray(allowed) ? allowed.filter((text) => typeof text === "string" && text) : [];
+}
+function localPaths(value, trail = "", allowed = []) {
   if (typeof value === "string") {
-    return value.startsWith("/") || value.startsWith("file://") ? [`${trail} = ${value}`] : [];
+    let rest = value;
+    for (const waived of allowed) rest = rest.split(waived).join("");
+    const leaks = rest.startsWith("/") || rest.startsWith("file://");
+    return leaks ? [`${trail} = ${value}`] : [];
   }
-  if (Array.isArray(value)) return value.flatMap((item, index) => localPaths(item, `${trail}[${index}]`));
+  if (Array.isArray(value)) {
+    return value.flatMap((item, index) => localPaths(item, `${trail}[${index}]`, allowed));
+  }
   if (value && typeof value === "object") {
-    return Object.entries(value).flatMap(([key, item]) => localPaths(item, trail ? `${trail}.${key}` : key));
+    return Object.entries(value).flatMap(([key, item]) =>
+      localPaths(item, trail ? `${trail}.${key}` : key, allowed),
+    );
   }
   return [];
 }
 for (const [index, record] of published.entries()) {
-  const leaks = localPaths(record);
+  const leaks = localPaths(record, "", waivers(record));
   assert.equal(
     leaks.length,
     0,
@@ -549,6 +569,31 @@ for (const [index, record] of published.entries()) {
 assert.ok(
   localPaths(localRecord({ review: { id: "/home/someone/r1" } })).length === 1,
   "the path scan should see an absolute value when there is one",
+);
+
+// The waiver, both ways. The same record is a leak without the allowance and
+// clean with it, and it validates against the schema either way, so a publish
+// that recorded an allowance cannot be rejected by this gate for recording it.
+const quoted = "/srv/public/osteosarcoma-cohort";
+const waived = localRecord({
+  review: { ...localRecord().review, allowed_text: [quoted] },
+  journal_profile: { deposited: quoted },
+});
+assert.equal(
+  localPaths(waived).length,
+  2,
+  "with the allowances ignored the waived path reads as a leak twice over, in the field the editor allowed and in the list recording that they allowed it, which is the record this gate used to reject",
+);
+assert.deepEqual(
+  localPaths(waived, "", waivers(waived)),
+  [],
+  "a path the editor allowed with --allow-text may be published, and recording the allowance is not itself a leak",
+);
+assertValidProvenance(waived, "fixture");
+assert.equal(
+  localPaths({ pdf: "/home/someone/draft.pdf" }, "", [quoted]).length,
+  1,
+  "an allowance waives the text it names and nothing else",
 );
 
 const versionTwo = published.filter((p) => p.schema_version === 2);
