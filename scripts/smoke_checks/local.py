@@ -161,7 +161,23 @@ PACKAGE = {
     "appendix": APPENDIX,
     "limitations": ["Did not re-run the analysis."],
     "verdict": VERDICT,
-    "decisions": ["Kept the stats finding in the body."],
+    # One row per finding the editor placed, the way the engine's own
+    # `_editor_package` writes them: the finding's uid, where it was placed, and
+    # why. This fixture used to hold a list of sentences, which no engine
+    # writes, so anything reading it was reading a shape the publish path never
+    # meets.
+    "decisions": [
+        {
+            "finding_uid": "f-001",
+            "placement": "body",
+            "reason": "Make-or-break for the central claim.",
+        },
+        {
+            "finding_uid": "f-011",
+            "placement": "appendix",
+            "reason": "Worth recording, not worth a revision round.",
+        },
+    ],
     "escalation_rulings": [
         {
             "finding_uid": "f-001",
@@ -448,9 +464,66 @@ def _plan(tracks: tuple[str, ...]) -> dict:
         "specialists": list(tracks),
         "editor": True,
         "revision": False,
-        "summary": "Three core reviewers, six specialists, one editor.",
-        "execution": "parallel",
+        # Both strings are the engine's own. `summary` is copied verbatim out of
+        # the arm table (`ARMS['full-two-track']['summary']`) and `execution` is
+        # one fixed sentence the manifest writer always writes. The fixture used
+        # to paraphrase both, so a generator could have invented any wording
+        # here and still passed.
+        "summary": "N core reviewers plus all six specialists, then the editor",
+        "execution": (
+            "Claude Code plugin workflow; agents in parallel, server-owned ledger."
+        ),
     }
+
+
+def _protocol(**overrides) -> dict:
+    """What the engine was asked for, as `write_protocol` records it."""
+    record = {
+        "provider": "claude-code",
+        # One sentence, written into both fields, and it is the engine's
+        # own: `write_protocol` says the same thing twice because no run
+        # picks a single model or a single effort for the whole panel. The
+        # fixture used to say `high`, a value no engine writes.
+        "model": "per-agent, pinned in the plugin agent files",
+        "effort": "per-agent, pinned in the plugin agent files",
+        # The engine writes the arm here, twice: `mode` and `arm` are the
+        # same word. The fixture used to say `plugin`, which the engine
+        # never writes, and the publish path reads `mode` to say which arm
+        # ran, so the one value a reader of the page sees was a word no run
+        # could have produced.
+        "mode": "full-two-track",
+        "arm": "full-two-track",
+        "reviewers": 3,
+        "paper_id": "paper-abc",
+        "literature_cutoff": None,
+        "version": WORKFLOW_VERSION,
+        "finding_schema_version": FINDING_SCHEMA,
+        "body_finding_limit": 8,
+        "agents": _protocol_agents(TRACKS),
+        "plan": _plan(TRACKS),
+    }
+    record.update(overrides)
+    return record
+
+
+def _progress(**overrides) -> dict:
+    """The stage ledger the plugin server keeps as the run goes."""
+    record = {
+        "status": "complete",
+        "error": "",
+        "reviewers": 3,
+        "arm": "full-two-track",
+        "stages": _stages(TRACKS),
+        "findings_delivered": 6,
+        "quarantined_findings_count": 0,
+        "review_guard_status": "clean",
+        "tool_calls": _tool_calls(TRACKS),
+        "tool_calls_total": sum(_tool_calls(TRACKS).values()),
+        "started": STARTED_AT,
+        "updated": "2026-11-11T12:31:00+00:00",
+    }
+    record.update(overrides)
+    return record
 
 
 def _startup(**overrides) -> dict:
@@ -464,7 +537,12 @@ def _startup(**overrides) -> dict:
     record = {
         "at": STARTED_AT,
         "probe": {
-            "plugins": ["pra"],
+            # Claude Code's own `system`/`init` event, copied through by the
+            # engine's probe: each plugin is an object with a name and the path
+            # it was loaded from, never a bare string. The path is why this
+            # matters here — it is a machine path in a copied artifact, and the
+            # publish path has to see it.
+            "plugins": [{"name": "pra", "path": "/plugins/pra"}],
             "mcp_servers": [
                 {"name": "plugin:pra:peerreview", "status": "connected", "source": "plugin"}
             ],
@@ -532,26 +610,7 @@ def _run_directory(
     run.mkdir(parents=True, exist_ok=True)
     home = str(Path.home().resolve())
     files = {
-        "protocol.json": {
-            "provider": "claude-code",
-            "model": "Each agent runs on the model its agent file pins.",
-            "effort": "high",
-            # The engine writes the arm here, twice: `mode` and `arm` are the
-            # same word. The fixture used to say `plugin`, which the engine
-            # never writes, and the publish path reads `mode` to say which arm
-            # ran, so the one value a reader of the page sees was a word no run
-            # could have produced.
-            "mode": "full-two-track",
-            "arm": "full-two-track",
-            "reviewers": 3,
-            "paper_id": "paper-abc",
-            "literature_cutoff": None,
-            "version": WORKFLOW_VERSION,
-            "finding_schema_version": FINDING_SCHEMA,
-            "body_finding_limit": 8,
-            "agents": _protocol_agents(TRACKS),
-            "plan": _plan(TRACKS),
-        },
+        "protocol.json": _protocol(),
         "manifest.json": {
             "paper_id": "paper-abc",
             "source_sha256": "b" * 64,
@@ -563,20 +622,7 @@ def _run_directory(
             "plugin_root": f"{home}/Repos/PeerReviewAgents/plugins/pra",
             "plan": _plan(TRACKS),
         },
-        "progress.json": {
-            "status": "complete",
-            "error": "",
-            "reviewers": 3,
-            "arm": "full-two-track",
-            "stages": _stages(TRACKS),
-            "findings_delivered": 6,
-            "quarantined_findings_count": 0,
-            "review_guard_status": "clean",
-            "tool_calls": _tool_calls(TRACKS),
-            "tool_calls_total": sum(_tool_calls(TRACKS).values()),
-            "started": STARTED_AT,
-            "updated": "2026-11-11T12:31:00+00:00",
-        },
+        "progress.json": _progress(),
         "runtime.json": _runtime(TRACKS),
         "startup.json": _startup(),
         "editor-package.json": dict(PACKAGE, stages=_stages(TRACKS)),
@@ -2211,7 +2257,12 @@ def check_the_transport_claim_rests_on_the_runs_own_probe() -> None:
         },
         "no MCP server": {
             "provider": "claude-code",
-            "startup": _startup(probe={"plugins": ["pra"], "mcp_servers": []}),
+            "startup": _startup(
+                probe={
+                    "plugins": [{"name": "pra", "path": "/plugins/pra"}],
+                    "mcp_servers": [],
+                }
+            ),
         },
         "an MCP server that never connected": {
             "provider": "claude-code",
@@ -2720,7 +2771,7 @@ def check_a_published_record_names_no_local_path() -> None:
 
     def fields(value: object) -> list[str]:
         """The field trails only, so the assertions read as the shapes they test."""
-        return [line.split(" names ", 1)[0] for line in local_review.local_reference_fields(value)]
+        return [leak.where for leak in local_review.local_reference_fields(value)]
 
     assert fields({"a": {"b": "/home/someone/run"}}) == ["a.b"]
     assert fields({"u": "file:///home/someone"}) == ["u"]
@@ -2958,7 +3009,22 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
         "notes": "Section 3 of the manuscript",
     }
 
-    scrubbed = local_review.without_local_paths(leaky)
+    # The figure map is keyed by the absolute path of every figure, and that key
+    # is refused rather than dropped: publishing an artifact missing an entry the
+    # engine wrote is not this script's call to make. The refusal names the key,
+    # and check_a_path_shaped_key_is_refused_rather_than_published_without_it
+    # covers the flag that publishes such a key deliberately.
+    figure_key = f"{home}/runs/fig1.png"
+    try:
+        local_review.without_local_paths(leaky)
+    except local_review.CommandError as refusal:
+        assert figure_key in str(refusal), f"the refusal did not name the key: {refusal}"
+    else:
+        raise AssertionError("a path used as a field name was dropped with its value")
+
+    scrubbed = local_review.without_local_paths(
+        {name: value for name, value in leaky.items() if name != "synthesis_provenance"}
+    )
 
     # The review's own words, first. Scrubbing by value rather than by field
     # deleted a finding whose comment opened with a slash, and aborted the
@@ -2970,8 +3036,7 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
     assert scrubbed["reference"] == leaky["reference"], "a URL is not a local path"
     assert scrubbed["notes"] == leaky["notes"], "ordinary prose was altered"
 
-    # Then the fields the engine really fills with a path, including the one
-    # where the path is the dictionary key.
+    # Then the fields the engine really fills with a path.
     flat = json.dumps(scrubbed)
     assert home not in flat, f"a local path survived the scrub: {flat}"
     assert "pdf" not in scrubbed, f"the manuscript's own path was published: {scrubbed}"
@@ -2982,10 +3047,6 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
     assert scrubbed["reviewer_provenance"][0]["slot"] == "core-1", "a sibling field was dropped"
     assert scrubbed["focused_evidence_provenance"][0]["memo_sha256"] == "a" * 64, (
         "the hash that tied the memo to its bytes was dropped with the path"
-    )
-    assert scrubbed["synthesis_provenance"]["shared_images"] == {}, (
-        "a figure keyed by its absolute path published that path as a key: "
-        f"{scrubbed['synthesis_provenance']['shared_images']}"
     )
 
     # A path inside this repository is still a path, but it names something a
@@ -3006,7 +3067,7 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
         ("the home directory", home),
         ("the run folder", f"{home}/runs/local/review"),
     ):
-        assert any(pattern.search(value) for _, pattern in facts), (
+        assert any(fact.pattern.search(value) for fact in facts), (
             f"{why} has to be one of the facts this machine is known by: {value}"
         )
 
@@ -3036,8 +3097,9 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
             (dest / name).write_text(text, encoding="utf-8")
         shaped = local_review.bundle_local_path_leaks(dest)
         for name in shapes:
-            assert any(line.startswith(name) for line in shaped), (
-                f"{name} published something that names the machine: {shaped}"
+            assert any(leak.where.startswith(name) for leak in shaped), (
+                f"{name} published something that names the machine: "
+                f"{[leak.line for leak in shaped]}"
             )
         for name in shapes:
             (dest / name).unlink()
@@ -3060,19 +3122,15 @@ def check_no_published_file_in_a_bundle_names_a_local_path() -> None:
             json.dumps({"cwd": f"{home}/Repos"}) + "\n", encoding="utf-8"
         )
         found = local_review.bundle_local_path_leaks(dest)
-        assert len(found) == 4, f"every text file in the bundle has to be read: {found}"
-        assert any(line.startswith("decision_letter.md") for line in found), (
-            f"the rendered Markdown was not scanned: {found}"
-        )
-        assert any(line.startswith("editor-package.json") for line in found), (
-            f"a path used as a key was not seen: {found}"
-        )
-        assert any(line.startswith("audit_stats.md") for line in found), (
-            f"a specialist report copied out of the run was not scanned: {found}"
-        )
-        assert any(line.startswith("attachments/runtime.json") for line in found), (
-            f"a nested receipt was not scanned: {found}"
-        )
+        lines = [leak.line for leak in found]
+        assert len(found) == 4, f"every text file in the bundle has to be read: {lines}"
+        for name, why in (
+            ("decision_letter.md", "the rendered Markdown was not scanned"),
+            ("editor-package.json", "a path used as a key was not seen"),
+            ("audit_stats.md", "a specialist report copied out of the run was not scanned"),
+            ("attachments/runtime.json", "a nested receipt was not scanned"),
+        ):
+            assert any(leak.where.startswith(name) for leak in found), f"{why}: {lines}"
 
 
 def check_an_empty_protocol_file_is_not_a_record_of_the_run() -> None:
@@ -3514,6 +3572,154 @@ def check_a_review_of_a_detection_paper_publishes() -> None:
             )
 
 
+def check_an_editor_can_publish_a_hit_the_review_meant_and_never_a_fact() -> None:
+    """Round after round, a reviewer's own words were refused as a path.
+
+    `R:/G/B channel order` and `E:/I/G ratio` are a drive letter followed by
+    path segments and there is no rule that tells them from one. Every earlier
+    answer was a narrower regular expression, and the next review found another
+    sentence it refused. So tier 2 has a valve: the editor reads the refusal,
+    sees the matched text and the flag to copy, and publishes it deliberately.
+    The allowance is recorded in the provenance record, where a reader of the
+    page can see what was allowed and decide what to make of it.
+
+    The valve never reaches tier 1. A fact about this machine is looked up
+    rather than recognised, so there is nothing for an editor to judge: it is
+    the operator's home directory either way.
+    """
+    home = str(Path.home().resolve())
+    package = dict(
+        PACKAGE,
+        stages=_stages(TRACKS),
+        findings=[
+            dict(
+                PACKAGE["findings"][0],
+                comment="The R:/G/B channel order is never stated, so panel c cannot be read.",
+            ),
+            *PACKAGE["findings"][1:],
+        ],
+    )
+
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            run = _run_directory(Path(tmp) / "run", **{"editor-package.json": package})
+            workspace = _workspace(Path(tmp) / "workspace")
+            refused_at = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", refused_at), run, workspace, "--publish"
+                )
+            message = stderr.getvalue()
+            assert code == 2, f"a path-shaped phrase is refused first, got exit {code}"
+            assert not refused_at.exists(), f"a refused publish left a bundle at {refused_at}"
+            assert "--allow-text R:/G/B" in message, (
+                f"the refusal has to print the flag to copy: {message!r}"
+            )
+            assert "recorded in the provenance record" in message, (
+                f"the refusal has to say the allowance is published: {message!r}"
+            )
+
+            # The same run, published with the allowance. The text reaches the
+            # bundle as the reviewer wrote it and the record says it was allowed.
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r2"
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared-2", destination, attempt=2),
+                    run,
+                    workspace,
+                    "--publish",
+                    "--allow-text",
+                    "R:/G/B",
+                )
+            assert code == 0, (
+                f"an allowed hit has to publish, got exit {code}: {out.getvalue()}"
+            )
+            letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
+            assert "R:/G/B channel order" in letter, (
+                "the allowed text has to reach the letter as the reviewer wrote it"
+            )
+            record = json.loads((destination / "provenance.json").read_text(encoding="utf-8"))
+            assert record["review"].get("allowed_text") == ["R:/G/B"], (
+                f"the allowance is not in the record: {record['review'].get('allowed_text')!r}"
+            )
+            review_schema.assert_valid_provenance(record, source="allowed")
+
+            # And the fact, with the flag that names it exactly. It is refused
+            # on the same terms as it was without the flag.
+            leaking = dict(
+                package,
+                findings=[
+                    dict(
+                        package["findings"][0],
+                        comment=f"The reviewer read the draft at {home}/papers/draft.pdf.",
+                    ),
+                    *package["findings"][1:],
+                ],
+            )
+            nested = reviews / "2026" / "fixture-paper" / "v1" / "r3"
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared-3", nested, attempt=3),
+                    _run_directory(Path(tmp) / "run-3", **{"editor-package.json": leaking}),
+                    workspace,
+                    "--publish",
+                    "--allow-text",
+                    f"{home}/papers/draft.pdf",
+                )
+            message = stderr.getvalue()
+            assert code == 2, f"no flag waives this machine's own home directory, got {code}"
+            assert not nested.exists(), f"a refused publish left a bundle at {nested}"
+            assert "name this machine itself" in message, (
+                f"the refusal has to say why the flag did not apply: {message!r}"
+            )
+
+
+def check_a_draft_check_run_is_refused_as_the_arm_it_is() -> None:
+    """A draft check published as a peer review, and nothing said otherwise.
+
+    `draft-check` is what the engine runs on a draft of your own: chosen
+    specialists, no core track, no editor, and nobody outside the authorship
+    reads the paper. The engine does not call it unpublishable, because it is a
+    perfectly good run of that arm, so the only thing standing between it and
+    docs/reviews was the reviewer count, which refused it as a thin review
+    rather than as the wrong kind of run. A reader of that refusal would have
+    gone looking for a missing reviewer.
+    """
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            run = _run_directory(
+                Path(tmp) / "run",
+                **{
+                    "protocol.json": _protocol(
+                        mode="draft-check", arm="draft-check", reviewers=0
+                    ),
+                    "progress.json": _progress(arm="draft-check", reviewers=0),
+                },
+            )
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    run,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                )
+            message = stderr.getvalue()
+            assert code == 2, f"a draft check must not publish as a review, got exit {code}"
+            assert not destination.exists(), f"a refused publish left a bundle at {destination}"
+            assert "draft-check" in message, (
+                f"the refusal has to name the arm that ran: {message!r}"
+            )
+            assert "reviewers" not in message.split("draft-check")[0], (
+                f"the arm is refused before the reviewer count, not through it: {message!r}"
+            )
+
+
 def check_a_record_the_schema_refuses_is_never_written() -> None:
     """A guard value the engine cannot write published with exit 0.
 
@@ -3615,6 +3821,17 @@ REVIEW_TEXT = (
     "https://home/x resolves, so that URL is not a path",
     "docs/reviews/2026/paper/v1/r1 is where the last attempt sits",
     "the denominator should be n/2 and/or the paired count",
+    # Round 3: each of these was refused by the boundaries the round-2 scan
+    # used. A fraction after a tilde read as a home path, LaTeX environment
+    # delimiters read as a Windows share, and a word ending in a letter before
+    # `/tmp`, `/data` or a user name read as this machine's own directories.
+    "~1/3 of the cohort responded to the second dose",
+    r"the matrix \begin{pmatrix}1\\0\end{pmatrix} is never defined",
+    r"\begin{matrix}a\\b\end{matrix} appears twice in section 3",
+    "the temperature/tmp ratio in figure 2 is unlabelled",
+    "the training/data/test split is never stated",
+    r"the rotation is $2\pi$ radians rather than degrees",
+    "the dataset they cite is https://doi.org/10.1000/tmp/abc",
 )
 
 # And the strings that are a leak whatever file they sit in.
@@ -3631,7 +3848,34 @@ LEAKING_TEXT = (
     "D:/papers/drafts/x.pdf",
     "//home/someone/papers/x.pdf",
     "someone@example.org",
+    # Round 3: each of these published. A lower-case drive letter, a drive
+    # letter with forward slashes, the doubled backslashes a JSON file holds, a
+    # path after a colon rather than at the start of the value, three roots the
+    # list did not have, and an address with no domain name to look up.
+    r"c:\Users\bob\x.pdf",
+    "c:/Users/bob/x.pdf",
+    r"C:\\Users\\bob\\x.pdf",
+    "PATH=/usr/bin:/home/bob/bin",
+    "host:/home/bob/x",
+    "file:/home/bob/x.pdf",
+    "/Volumes/Data/bob/x.pdf",
+    "/scratch/bob/run1/x",
+    "/users/bob/x",
+    "/workspace/bob/x",
+    "/nfs/bob/x",
+    "bob@localhost",
+    "bob@192.168.1.4",
+    # And the two ways of writing a path that no longer look like one: percent
+    # encoding, which a URL in a record carries, and the full-width slash,
+    # which a copy through a document can leave behind.
+    "%2Fhome%2Fbob%2Fx.pdf",
+    "\uff0fhome\uff0fbob\uff0fx.pdf",
 )
+
+# The two tier-2 hits the editor is expected to allow rather than reword: a
+# channel order and a ratio of two one-letter variables, which are a path shape
+# and cannot be told apart from one by any rule.
+OVERRIDDEN_TEXT = ("R:/G/B channel order", "E:/I/G ratio")
 
 
 def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
@@ -3658,11 +3902,45 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
 
     for text in REVIEW_TEXT:
         hits = local_review.local_references(text, facts=facts, manuscript=manuscript)
-        assert hits == [], f"ordinary review text was refused as a leak: {text!r} -> {hits}"
+        assert hits == [], (
+            f"ordinary review text was refused as a leak: {text!r} -> "
+            f"{[leak.line for leak in hits]}"
+        )
 
     for text in LEAKING_TEXT:
         hits = local_review.local_references(text, facts=facts, manuscript=manuscript)
         assert hits, f"a local path published: {text!r}"
+
+    # The two hits an editor is meant to allow rather than reword. They are
+    # refused by default and `--allow-text` is what lets them through, which is
+    # the whole reason tier 2 only has to be sensible.
+    for text in OVERRIDDEN_TEXT:
+        assert local_review.local_references(text, facts=facts, manuscript=manuscript), (
+            f"a path-shaped phrase has to be refused before it can be allowed: {text!r}"
+        )
+        hits = local_review.local_references(
+            text, facts=facts, manuscript=manuscript, allowed=(text.split(" ")[0],)
+        )
+        assert hits == [], (
+            f"--allow-text did not allow the text it names: {text!r} -> "
+            f"{[leak.line for leak in hits]}"
+        )
+
+    # The refusal says the flag to copy, with the matched text quoted for a
+    # shell, and says how many hits no flag can waive.
+    refusal = local_review.leak_refusal(
+        local_review.local_references("R:/G/B channel order", facts=facts)
+        + local_review.local_references(f"{Path.home().resolve()}/x.pdf", facts=facts)
+    )
+    assert "--allow-text R:/G/B" in refusal, (
+        f"the refusal has to print the flag an editor can copy: {refusal!r}"
+    )
+    assert f"--allow-text {Path.home().resolve()}/x.pdf" not in refusal, (
+        f"the refusal must not offer a flag for a fact about this machine: {refusal!r}"
+    )
+    assert "1 of these name this machine itself" in refusal, (
+        f"the refusal has to say how many hits nothing waives: {refusal!r}"
+    )
 
     # The manuscript's own words, both ways round. The address printed in the
     # paper is allowed, the same shape that is not in the paper is not, and
@@ -3707,7 +3985,7 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
         # a backslash, so the text scan this replaced saw nothing here and a
         # published bundle carried the path.
         (dest / "editor-package.json").write_text(
-            json.dumps({"extra": {"deep": [{"where": ["ok", "C:\\Users\\ty\\x.pdf"]}]}}),
+            json.dumps({"extra": {"deep": [{"where": ["ok", "C:\\Users\\reviewer\\x.pdf"]}]}}),
             encoding="utf-8",
         )
         # A path keyed by itself, and a path in one row of a JSONL file.
@@ -3717,17 +3995,18 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
             encoding="utf-8",
         )
         found = local_review.bundle_local_path_leaks(dest, facts=facts, manuscript=manuscript)
-        windows = [line for line in found if line.startswith("editor-package.json:")]
+        lines = [leak.line for leak in found]
+        windows = [leak.line for leak in found if leak.where.startswith("editor-package.json:")]
         assert windows == [
             "editor-package.json: extra.deep[0].where[1] names a Windows path, "
-            "'C:\\\\Users\\\\ty\\\\x.pdf'"
-        ], f"a Windows path inside a JSON value was not seen as a value: {found}"
-        rows = [line for line in found if line.startswith("findings.jsonl:")]
+            "'C:\\\\Users\\\\reviewer\\\\x.pdf'"
+        ], f"a Windows path inside a JSON value was not seen as a value: {lines}"
+        rows = [leak.line for leak in found if leak.where.startswith("findings.jsonl:")]
         assert rows == [
             "findings.jsonl: line 2.memo names an absolute path, "
             "'/mnt/data1/papers/draft.pdf'"
-        ], f"a leak in one row of a JSONL file has to name the row: {found}"
-        assert len(found) == 2, f"nothing else in this bundle is a leak: {found}"
+        ], f"a leak in one row of a JSONL file has to name the row: {lines}"
+        assert len(found) == 2, f"nothing else in this bundle is a leak: {lines}"
 
         # A JSON file that will not parse is read as text rather than skipped,
         # because a half-written record is exactly when a scan matters.
@@ -3737,8 +4016,237 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
         damaged = local_review.file_local_references(
             dest / "editor-package.json", facts=facts, manuscript=manuscript
         )
-        assert damaged and "unparsed JSON" in damaged[0], (
-            f"a damaged JSON file has to be scanned as text: {damaged}"
+        assert damaged and "unparsed JSON" in damaged[0].line, (
+            f"a damaged JSON file has to be scanned as text: "
+            f"{[leak.line for leak in damaged]}"
+        )
+
+
+def _detected_facts(
+    *,
+    home: str = "/home/pretend",
+    host: str = "claude",
+    user: str = "pretend",
+    tmp: str = "/tmp",
+    cwd: str = "/data",
+) -> tuple:
+    """The tier-1 facts `machine_facts` detects on a machine described here.
+
+    Tier 1 is looked up, so the only way to check that it is bounded is to say
+    what was looked up. Each of these is a real machine someone publishes from:
+    a host called `claude` or `media`, a user called `pi` or `test`, a working
+    directory of `/data`. The patching lasts exactly one call and the sources
+    are put back, because a fact detected from the wrong machine would be wrong
+    for every other check in this file.
+    """
+    saved = {name: Path.__dict__.get(name) for name in ("home", "cwd")}
+    saved_host = local_review.socket.gethostname
+    saved_user = local_review.getpass.getuser
+    saved_tmp = local_review.tempfile.gettempdir
+    Path.home = classmethod(lambda cls: Path(home))  # type: ignore[method-assign]
+    Path.cwd = classmethod(lambda cls: Path(cwd))  # type: ignore[method-assign]
+    local_review.socket.gethostname = lambda: host
+    local_review.getpass.getuser = lambda: user
+    local_review.tempfile.gettempdir = lambda: tmp
+    try:
+        return local_review.machine_facts()
+    finally:
+        for name, value in saved.items():
+            if value is None:
+                delattr(Path, name)
+            else:
+                setattr(Path, name, value)
+        local_review.socket.gethostname = saved_host
+        local_review.getpass.getuser = saved_user
+        local_review.tempfile.gettempdir = saved_tmp
+
+
+# What this machine is called is refused wherever it appears, and nothing waives
+# it. That is why each of these ordinary sentences has to publish: a tier-1
+# misfire refuses every publish from the machine it misfires on, with no flag
+# and no manuscript to get around it.
+TIER_ONE_ALLOWED = (
+    ("the temperature/tmp ratio is unlabelled", {}),
+    ("the dataset is at https://doi.org/10.1000/tmp/abc", {}),
+    ("the training/data/test split is never stated", {"cwd": "/data"}),
+    (r"the rotation is $2\pi$ radians", {"user": "pi"}),
+    ("the train/test split is stratified", {"user": "test"}),
+    ("claude-code ran the panel", {"host": "claude"}),
+    ("the media files are not deposited", {"host": "media"}),
+    ("a review of the core claim", {"host": "core"}),
+    ("localhosting the server is enough to reproduce it", {"host": "localhost"}),
+)
+
+# And the forms that are this machine, in either case, however they are written.
+TIER_ONE_REFUSED = (
+    ("the run wrote /tmp/claude-1000/x", {}),
+    ("under /home/pretend/papers/x.pdf", {}),
+    ("under /home/pretend", {}),
+    ("/data/sets/x is where it ran", {"cwd": "/data"}),
+    (r"copied from C:\Users\pretend\x.pdf", {}),
+    ("ty-MS-7C80 wrote it", {"host": "ty-ms-7c80"}),
+    ("ty-ms-7c80 wrote it", {"host": "ty-MS-7C80"}),
+    ("media:/srv/x holds the figures", {"host": "media"}),
+    ("mail to bob@media about it", {"host": "media"}),
+)
+
+
+def check_only_this_machines_own_names_are_refused_as_this_machine() -> None:
+    """Tier 1 refused prose, and prose is most of what a review is.
+
+    The host name was a bare case-sensitive substring, so a machine called
+    `claude`, `media`, `review` or `core` refused every publish from itself: the
+    word appears in the provenance record and in any letter that says `the media
+    files`. The user name, the temporary directory and the working directory had
+    no left boundary, so `/tmp` refused `temperature/tmp ratio`, a user called
+    `pi` refused `$2\\pi$` and a working directory of `/data` refused
+    `training/data/test`.
+
+    None of that could be waived, which is what made it the serious half. A
+    tier-2 pattern that misfires costs an editor one flag; a fact that misfires
+    stops publishing from that machine altogether.
+
+    A name that is only letters is still this machine where a bare word cannot
+    be anything else: after `@`, after `//`, before `:/`, or as a whole field
+    value. A name with a digit, a dot, a hyphen or an underscore in it is a
+    machine name and nothing else, so it is matched whole, in either case.
+    """
+    for text, machine in TIER_ONE_ALLOWED:
+        facts = _detected_facts(**machine)
+        hits = [
+            leak for leak in local_review.local_references(text, facts=facts)
+            if leak.machine_fact
+        ]
+        assert hits == [], (
+            f"a machine described by {machine} cannot publish {text!r}: "
+            f"{[leak.line for leak in hits]}"
+        )
+
+    for text, machine in TIER_ONE_REFUSED:
+        facts = _detected_facts(**machine)
+        hits = local_review.local_references(text, facts=facts)
+        assert any(leak.machine_fact for leak in hits), (
+            f"a machine described by {machine} published its own name in {text!r}: "
+            f"{[leak.line for leak in hits]}"
+        )
+
+    # A fact inside a longer path is reported at the length of the path and
+    # stays a fact: the pattern hit must not demote it into something a flag
+    # could waive.
+    facts = _detected_facts()
+    hits = local_review.local_references(
+        "the run wrote /home/pretend/papers/draft.pdf", facts=facts
+    )
+    assert [leak.text for leak in hits] == ["/home/pretend/papers/draft.pdf"], (
+        f"the leak has to be reported whole: {[leak.line for leak in hits]}"
+    )
+    assert hits[0].machine_fact, (
+        f"a path that contains a fact is still a fact: {hits[0].line}"
+    )
+
+    # Neither the manuscript nor the flag waives one.
+    for waiver in ({"manuscript": "under /home/pretend/x\n"}, {"allowed": ("/home/pretend/x",)}):
+        assert local_review.local_references("under /home/pretend/x", facts=facts, **waiver), (
+            f"{waiver} waived a fact about this machine"
+        )
+
+    # The record's own fixed vocabulary is not prose. `generator.kind` says
+    # `claude-code` and `transport.provider` says the same, so a host called
+    # `claude` would otherwise refuse its own provenance record.
+    vocabulary = local_review.local_references(
+        "claude-code", facts=_detected_facts(host="claude"), vocabulary=True
+    )
+    assert vocabulary == [], (
+        f"a value out of the record's own vocabulary was read as prose: "
+        f"{[leak.line for leak in vocabulary]}"
+    )
+    assert local_review.local_references("/home/bob/x", facts=(), vocabulary=True), (
+        "a path is a path wherever it is written, vocabulary field or not"
+    )
+
+
+def check_a_path_shaped_key_is_refused_rather_than_published_without_it() -> None:
+    """A published artifact was quietly missing an entry the engine wrote.
+
+    `editor-package.json` is the engine's own output, copied into the bundle. A
+    mapping keyed by a path leaks through the key, and a key outside this
+    repository used to be dropped with its value: the bundle then carried a
+    hash map one entry short, with nothing in the bundle or the record to say
+    so. Dropping it publishes a false artifact and keeping it publishes the
+    path, so neither is this script's decision to make quietly.
+    """
+    home = str(Path.home().resolve())
+    package = {"summary": "One reading.", "shared_images": {f"{home}/fig1.png": "a" * 64}}
+    try:
+        local_review.without_local_paths(package)
+    except local_review.CommandError as exc:
+        message = str(exc)
+    else:
+        raise AssertionError("a path used as a field name published without a word about it")
+    assert f"{home}/fig1.png" in message, f"the refusal has to name the key: {message!r}"
+    assert "--allow-text" in message, (
+        f"the refusal has to say how to publish it deliberately: {message!r}"
+    )
+
+    # Named back on the command line, it is published as it stands, value and
+    # all, rather than edited on the way out.
+    allowed = local_review.without_local_paths(package, allowed=(f"{home}/fig1.png",))
+    assert allowed == package, f"an allowed key has to be published verbatim: {allowed}"
+
+    # A key inside this repository is still rewritten relative to it, which is
+    # the case that was never a leak.
+    inside = {"files": {str(local_review.REPO / "docs" / "x.md"): "b" * 64}}
+    assert local_review.without_local_paths(inside) == {"files": {"docs/x.md": "b" * 64}}, (
+        "a key inside this repository is named relative to it"
+    )
+
+
+def check_a_schema_pattern_means_what_the_repositorys_own_gate_means() -> None:
+    """A sha256 with a newline on the end passed here and failed the gate.
+
+    JSON Schema patterns are ECMAScript, and Ajv runs them that way. Python's
+    `$` also matches just before a trailing newline, so `^[0-9a-f]{64}$`
+    accepted `"<sha>\\n"`, the record was written, and `npm run check:schema`
+    refused it afterwards: a bundle in docs/reviews to delete by hand, holding a
+    hash nothing will ever match.
+    """
+    pattern = {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    clean = "a" * 64
+    assert review_schema.provenance_problems(clean, pattern) == [], (
+        "a clean sha256 still has to validate"
+    )
+    assert review_schema.provenance_problems(clean + "\n", pattern), (
+        "a sha256 with a trailing newline is not a sha256"
+    )
+    for value in (f"{clean}\n ", f" {clean}", f"{clean}\r\n"):
+        assert review_schema.provenance_problems(value, pattern), (
+            f"{value!r} must not validate as a sha256"
+        )
+
+    # The translation is of the anchor only: a `$` inside a character class or
+    # escaped is the character itself and still matches it.
+    assert review_schema.provenance_problems("a$b", {"type": "string", "pattern": "^a[$]b$"}) == []
+    assert review_schema.provenance_problems("a$b", {"type": "string", "pattern": r"^a\$b$"}) == []
+    assert review_schema.provenance_problems(
+        "a$b\n", {"type": "string", "pattern": r"^a\$b$"}
+    ), "an escaped dollar does not make the anchor loose again"
+
+    # And the schema this repository publishes is read the same way, through
+    # its own hash fields rather than a pattern written here.
+    schema = review_schema.provenance_schema()["properties"]
+    for trail in (
+        ("environment", "lock_sha256"),
+        ("generator", "engine_fingerprint", "sha256"),
+        ("generator", "input", "sha256"),
+    ):
+        field = schema
+        for name in trail:
+            field = field["properties"][name] if "properties" in field else field[name]
+        assert review_schema.provenance_problems(clean, field) == [], (
+            f"{'.'.join(trail)} has to accept a clean hash: {field}"
+        )
+        assert review_schema.provenance_problems(clean + "\n", field), (
+            f"{'.'.join(trail)} accepted a hash with a newline on the end"
         )
 
 
@@ -3913,6 +4421,14 @@ ENGINE_BACKED = (
     (
         check_a_record_the_schema_refuses_is_never_written,
         "a record the provenance schema refuses is never written",
+    ),
+    (
+        check_an_editor_can_publish_a_hit_the_review_meant_and_never_a_fact,
+        "the editor can allow a hit the review meant, and never one about this machine",
+    ),
+    (
+        check_a_draft_check_run_is_refused_as_the_arm_it_is,
+        "a draft check is refused as the arm it is, not as a thin review",
     ),
 )
 

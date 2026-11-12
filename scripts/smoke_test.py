@@ -17,6 +17,8 @@ from smoke_checks.local import (
     check_a_destination_outside_its_tree_is_refused,
     check_a_minor_finding_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
+    check_a_path_shaped_key_is_refused_rather_than_published_without_it,
+    check_a_schema_pattern_means_what_the_repositorys_own_gate_means,
     check_a_rehearsal_claims_no_reading,
     check_a_version_is_only_recorded_when_it_looks_like_one,
     check_a_rehearsal_is_never_written_into_the_published_tree,
@@ -26,6 +28,7 @@ from smoke_checks.local import (
     check_every_documented_command_runs_against_a_real_parser,
     check_every_published_file_is_hashed,
     check_nothing_reaches_into_the_engines_internals,
+    check_only_this_machines_own_names_are_refused_as_this_machine,
     check_ordinary_review_text_publishes_and_a_local_path_does_not,
     check_severity_is_read_from_the_engine_not_guessed,
     check_the_advisory_verdict_is_labelled_advisory,
@@ -160,6 +163,12 @@ def main() -> int:
     print("ok  every engine name these scripts use is on the package's own surface")
     check_ordinary_review_text_publishes_and_a_local_path_does_not()
     print("ok  ordinary review notation publishes and a local path is refused by name")
+    check_only_this_machines_own_names_are_refused_as_this_machine()
+    print("ok  this machine's own names are refused and ordinary prose is not")
+    check_a_path_shaped_key_is_refused_rather_than_published_without_it()
+    print("ok  a path used as a field name is refused, not dropped with its value")
+    check_a_schema_pattern_means_what_the_repositorys_own_gate_means()
+    print("ok  a schema pattern is read the way the repository's own gate reads it")
     check_the_run_fixture_is_a_run_the_engine_could_have_written()
     print("ok  the run fixtures are shaped the way the engine writes a run")
     check_a_version_is_only_recorded_when_it_looks_like_one()
