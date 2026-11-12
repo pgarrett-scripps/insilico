@@ -101,6 +101,43 @@ def provenance_schema() -> dict:
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
 
+@lru_cache(maxsize=None)
+def _compiled(pattern: str) -> "re.Pattern[str]":
+    """One schema pattern, compiled to mean what Ajv means by it.
+
+    JSON Schema patterns are ECMAScript regular expressions, and Ajv runs them
+    as such. Python's `$` is the one place the two disagree: it also matches
+    just before a trailing newline, so `^[0-9a-f]{64}$` accepted a sha256 with a
+    newline stuck on the end here and was refused by the repository's own gate
+    afterwards. Worse, the record had already been written, and a hash with a
+    newline in it is a hash nothing will ever match.
+
+    So every `$` that is a real anchor, outside a character class and not
+    escaped, is translated to `\\Z`, which means end of input and nothing else.
+    `^` needs no translation: without the multiline flag, neither language lets
+    it match anywhere but the start.
+    """
+    out: list[str] = []
+    in_class = False
+    index = 0
+    while index < len(pattern):
+        char = pattern[index]
+        if char == "\\" and index + 1 < len(pattern):
+            out.append(pattern[index : index + 2])
+            index += 2
+            continue
+        if char == "[":
+            in_class = True
+        elif char == "]":
+            in_class = False
+        if char == "$" and not in_class:
+            out.append(r"\Z")
+        else:
+            out.append(char)
+        index += 1
+    return re.compile("".join(out))
+
+
 def _is_type(value: object, name: str) -> bool:
     if name == "integer":
         return isinstance(value, int) and not isinstance(value, bool)
@@ -151,7 +188,7 @@ def _problems(value: object, schema: object, path: str) -> list[str]:
         found.append(f"{here} must be one of {allowed}")
 
     if isinstance(value, str):
-        if "pattern" in schema and not re.search(schema["pattern"], value):
+        if "pattern" in schema and not _compiled(schema["pattern"]).search(value):
             found.append(f"{here} must match {schema['pattern']}")
         if "minLength" in schema and len(value) < schema["minLength"]:
             found.append(f"{here} must be at least {schema['minLength']} character(s)")
