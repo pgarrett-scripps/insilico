@@ -571,6 +571,25 @@ assert.deepEqual(
   ["audit_stats.md"],
   "a specialist report in the bundle should be listed as a report of its own",
 );
+
+// A track report is named by the question its specialist was asked, not by its
+// filename with the underscore taken out. `Stats` would have been the label and
+// it says nothing, so the mapping is asserted rather than left to a reader of
+// the page to notice.
+const stats = paper.bundles[0].documents.audits[0];
+assert.equal(stats.label, "Statistics", `a track report carries its track's name: ${stats.label}`);
+assert.ok(stats.blurb, "a track report says what its specialist read for");
+assert.equal(paper.bundles[0].plugin, true, "a version 4 record is read as a plugin run");
+
+// The arm asked for six tracks and the bundle holds one, so the page has five
+// gaps to name. A reader cannot be expected to find them by counting headings.
+assert.deepEqual(
+  (paper.bundles[0].tracksAsked || []).filter(
+    (track) => !paper.bundles[0].documents.audits.some((d) => d.file === `audit_${track}.md`),
+  ),
+  ["figures-tables", "methods-reporting", "citations", "consistency", "field"],
+  "a track the arm asked for with no report in the bundle is a gap the page names",
+);
 fs.rmSync(root, { recursive: true, force: true });
 
 console.log("ok  plugin provenance validates, the paid and retired paths cannot, and older records still read");
