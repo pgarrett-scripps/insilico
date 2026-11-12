@@ -3572,6 +3572,37 @@ def check_a_review_of_a_detection_paper_publishes() -> None:
             )
 
 
+def _corpus_gate_leaks(record: object, waived: tuple[str, ...], trail: str = "") -> list[str]:
+    """The rule scripts/check_local_provenance.mjs applies to docs/reviews.
+
+    That gate walks every published provenance.json and refuses a string value
+    that begins with a slash or with `file://`, whatever key it sits under. A
+    recorded allowance is such a string by definition, so a publish with
+    `--allow-text` wrote a bundle the repository's own gate rejected. The gate
+    now takes the allowances out of each string before it looks, and this is the
+    same rule in Python, applied to the record a publish just wrote, so the two
+    cannot drift apart without one of them failing.
+    """
+    if isinstance(record, str):
+        rest = record
+        for text in waived:
+            rest = rest.replace(text, "")
+        return [f"{trail} = {record}"] if rest.startswith(("/", "file://")) else []
+    if isinstance(record, list):
+        return [
+            leak
+            for index, item in enumerate(record)
+            for leak in _corpus_gate_leaks(item, waived, f"{trail}[{index}]")
+        ]
+    if isinstance(record, dict):
+        return [
+            leak
+            for key, item in record.items()
+            for leak in _corpus_gate_leaks(item, waived, f"{trail}.{key}" if trail else str(key))
+        ]
+    return []
+
+
 def check_an_editor_can_publish_a_hit_the_review_meant_and_never_a_fact() -> None:
     """Round after round, a reviewer's own words were refused as a path.
 
@@ -3646,6 +3677,18 @@ def check_an_editor_can_publish_a_hit_the_review_meant_and_never_a_fact() -> Non
                 f"the allowance is not in the record: {record['review'].get('allowed_text')!r}"
             )
             review_schema.assert_valid_provenance(record, source="allowed")
+            # A record this path writes has to survive the gate that reads the
+            # published corpus, allowance and all.
+            allowance = tuple(record["review"]["allowed_text"])
+            assert not _corpus_gate_leaks(record, allowance), (
+                "a published record carrying an allowance must pass "
+                "scripts/check_local_provenance.mjs: "
+                f"{_corpus_gate_leaks(record, allowance)}"
+            )
+            assert _corpus_gate_leaks({"deposited": "/srv/public/set"}, allowance), (
+                "the mirrored rule has to see a path the allowance does not name, "
+                "or it is asserting nothing"
+            )
 
             # And the fact, with the flag that names it exactly. The flag is
             # read before the scan runs, so what is refused is the allowance,
@@ -4073,18 +4116,33 @@ def _detected_facts(
     `/data`. The patching lasts exactly one call and the sources are put back,
     because a fact detected from the wrong machine would be wrong for every
     other check in this file.
+
+    The environment is patched along with the callables. `machine_facts` reads
+    HOME, PWD and TMPDIR as well, because a shell that exports a home directory
+    the resolved one does not match is the ordinary case on a machine reached
+    through a symbolic link. Leaving the real environment in place meant the
+    facts of the machine running the suite were mixed into every described
+    machine, and a case written about `/home/ty` passed here for the wrong
+    reason on this machine and failed on anybody else's.
     """
     saved = {name: Path.__dict__.get(name) for name in ("home", "cwd")}
     saved_host = local_review.socket.gethostname
     saved_user = local_review.getpass.getuser
     saved_tmp = local_review.tempfile.gettempdir
     saved_repo = local_review.REPO
+    named = ("HOME", "USERPROFILE", "PWD", "TMPDIR", "TMP", "TEMP")
+    saved_env = {name: os.environ.get(name) for name in named}
     Path.home = classmethod(lambda cls: Path(home))  # type: ignore[method-assign]
     Path.cwd = classmethod(lambda cls: Path(cwd))  # type: ignore[method-assign]
     local_review.socket.gethostname = lambda: host
     local_review.getpass.getuser = lambda: user
     local_review.tempfile.gettempdir = lambda: tmp
     local_review.REPO = Path(checkout)
+    for name in named:
+        os.environ.pop(name, None)
+    os.environ["HOME"] = home
+    os.environ["PWD"] = cwd
+    os.environ["TMPDIR"] = tmp
     try:
         return local_review.machine_facts(run_dir=run_dir)
     finally:
@@ -4097,6 +4155,11 @@ def _detected_facts(
         local_review.getpass.getuser = saved_user
         local_review.tempfile.gettempdir = saved_tmp
         local_review.REPO = saved_repo
+        for name, value in saved_env.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
 
 
 # A generic fact is a word that happens to be this machine's: a one-segment
@@ -4174,6 +4237,72 @@ def _specific_forms(home: str, checkout: str, host: str) -> tuple[str, ...]:
         f"bob@{host}",
         f"//{host}/share",
         f"the panel ran on {host} overnight",
+    )
+
+
+def _path_spellings(path: str) -> tuple[tuple[str, str], ...]:
+    """Every way one absolute path has been written past a scan.
+
+    Each entry is one encoding, named, so a failure says which spelling got
+    through rather than printing a string whose characters are invisible. The
+    list is not a list of patterns the scan carries: one canonical function runs
+    these in reverse until the text stops changing, and this says what that
+    function has to cover.
+    """
+    inner = [segment for segment in path.split("/") if segment]
+    return (
+        ("a decimal HTML entity", path.replace("/", "&#47;")),
+        ("a hexadecimal HTML entity", path.replace("/", "&#x2F;")),
+        ("the named solidus entity", path.replace("/", "&sol;")),
+        ("a percent sign written as an entity", path.replace("/", "&#37;2F")),
+        ("percent-encoding", path.replace("/", "%2F")),
+        ("percent-encoding twice over", path.replace("/", "%252F")),
+        ("percent-encoding three times over", path.replace("/", "%25252F")),
+        ("a zero-width space", path.replace("/", "/​")),
+        ("a zero-width non-joiner", path.replace("/", "/‌")),
+        ("a zero-width joiner", path.replace("/", "/‍")),
+        ("a word joiner", path.replace("/", "/⁠")),
+        ("a byte order mark", path.replace("/", "/﻿")),
+        ("a soft hyphen", path.replace("/", "/­")),
+        ("a division slash", path.replace("/", "∕")),
+        ("a fraction slash", path.replace("/", "⁄")),
+        ("a big solidus", path.replace("/", "⧸")),
+        ("a full-width solidus", path.replace("/", "／")),
+        ("a mathematical rising diagonal", path.replace("/", "⟋")),
+        ("a box drawing diagonal", path.replace("/", "╱")),
+        ("a kana vertical repeat mark", path.replace("/", "〳")),
+        ("a backslash", path.replace("/", "\\")),
+        ("a set minus", path.replace("/", "∖")),
+        ("a full-width backslash", path.replace("/", "＼")),
+        ("a backslash escaping each slash", path.replace("/", "\\/")),
+        ("a doubled slash", path.replace("/", "//")),
+        ("a tripled slash", path.replace("/", "///")),
+        ("a dot segment between each pair", "/" + "/./".join(inner)),
+        ("a dot segment and a doubled slash", "//" + "/./".join(inner)),
+    )
+
+
+def _name_spellings(name: str) -> tuple[tuple[str, str], ...]:
+    """Every way one hyphenated host name has been written past a scan."""
+    return (
+        ("a hyphen", name),
+        ("a hyphen in the other case", name.swapcase()),
+        ("a hyphen written as a decimal entity", name.replace("-", "&#45;")),
+        ("a hyphen written as a hex entity", name.replace("-", "&#x2D;")),
+        ("a percent-encoded hyphen", name.replace("-", "%2D")),
+        ("a percent-encoded hyphen twice over", name.replace("-", "%252D")),
+        ("a hyphen escaped with a backslash", name.replace("-", "\\-")),
+        ("a hyphen followed by a zero-width space", name.replace("-", "-​")),
+        ("a non-breaking hyphen", name.replace("-", "‑")),
+        ("a figure dash", name.replace("-", "‒")),
+        ("an en dash", name.replace("-", "–")),
+        ("an em dash", name.replace("-", "—")),
+        ("a horizontal bar", name.replace("-", "―")),
+        ("a hyphen from the general punctuation block", name.replace("-", "‐")),
+        ("a minus sign", name.replace("-", "−")),
+        ("a small em dash", name.replace("-", "﹘")),
+        ("a small hyphen-minus", name.replace("-", "﹣")),
+        ("a full-width hyphen-minus", name.replace("-", "－")),
     )
 
 
@@ -4337,14 +4466,168 @@ def check_only_this_machines_own_names_are_refused_as_this_machine() -> None:
             f"{separator!r} written for a slash published a home directory: "
             f"{[leak.line for leak in hits]}"
         )
-    for separator in ("\uff3c", "\u2216"):
+    # A backslash and its look-alikes fold to a plain slash rather than to a
+    # backslash, because one canonical form cannot hold both and the slash is
+    # the form a path fact is written in. `C:\Users\bob` and `C:/Users/bob` are
+    # the same path to Windows and the drive-letter shape reads either, so the
+    # pair is still refused with one spelling between them.
+    for separator in ("\\", "\uff3c", "\u2216"):
         folded = f"C:{separator}Users{separator}bob{separator}x.pdf"
-        assert "C:\\Users\\bob\\x.pdf" in local_review._scan_forms(folded), (
-            f"{separator!r} was not read as a backslash"
+        assert local_review.canonical_text(folded) == "C:/Users/bob/x.pdf", (
+            f"{separator!r} did not fold to a slash: "
+            f"{local_review.canonical_text(folded)!r}"
         )
         assert local_review.local_references(folded, facts=()), (
             f"a Windows path written with {separator!r} published"
         )
+
+
+def check_every_spelling_of_a_machine_fact_is_the_same_fact() -> None:
+    """The scan read four look-alike slashes, and the next round found a fifth.
+
+    Each round of review found another encoding that published a path: a
+    division slash, then a full-width solidus, then `&#47;`, then `%252F`, then
+    a zero-width space inside the path. Every answer was another entry in a list
+    inside the scan, which is a race nobody wins, because the list only ever
+    holds the spellings somebody has already thought of.
+
+    There is one canonical function now, applied to the scanned text and to the
+    facts alike and run until the string stops changing: NFKC, HTML entities,
+    percent-decoding, format characters removed, slash and hyphen look-alikes
+    folded, a backslash in front of punctuation dropped, repeated slashes and
+    `/./` collapsed. The loop is the part that matters. One pass turns `%252F`
+    into `%2F` and stops, and an entity can hide a percent sign from the
+    decoder that ran before it. The raw text is still scanned beside the
+    canonical form, so folding never loses a hit it would have found as
+    written.
+
+    Every case here is a tier 1 refusal: unwaivable by the flag and by the
+    manuscript, refused as an allowance, and through a real publish it leaves
+    nothing on disk.
+    """
+    described = (
+        {"home": "/home/pretend", "user": "pretend",
+         "checkout": "/home/pretend/insilico", "host": "box-7.lab"},
+        {"home": "/export/people/pretend", "user": "pretend",
+         "checkout": "/export/people/pretend/insilico", "host": "ty-MS-7C80"},
+    )
+    for machine in described:
+        facts = _detected_facts(**machine)
+        cases = (
+            *_path_spellings(machine["home"]),
+            *_path_spellings(machine["checkout"]),
+            *_name_spellings(machine["host"]),
+        )
+        for why, text in cases:
+            hits = local_review.local_references(text, facts=facts)
+            assert any(leak.machine_fact for leak in hits), (
+                f"a machine described by {machine} published its own name "
+                f"written with {why}: {text!r} -> {[leak.line for leak in hits]}"
+            )
+            for waiver in ({"manuscript": f"{text}\n"}, {"allowed": (text,)}):
+                again = local_review.local_references(text, facts=facts, **waiver)
+                assert any(leak.machine_fact for leak in again), (
+                    f"{list(waiver)[0]} waived a fact written with {why}: {text!r}"
+                )
+            assert local_review.names_a_specific_fact(text, facts), (
+                f"an allowance written with {why} has to be refused as a flag: {text!r}"
+            )
+            # The canonical form has to be a fixed point, or the loop that
+            # produced it stopped early and a longer chain would still get past.
+            once = local_review.canonical_text(text)
+            assert local_review.canonical_text(once) == once, (
+                f"the canonical form of {why} keeps changing: {once!r} then "
+                f"{local_review.canonical_text(once)!r}"
+            )
+            # And through a record, as a value at depth and as a field name.
+            record = {text: "a value", "generator": {"id": text, "status": "ok"}}
+            found = local_review.local_reference_fields(record, facts=facts)
+            assert len([leak for leak in found if leak.machine_fact]) >= 2, (
+                f"a record naming this machine with {why} published: {text!r} -> "
+                f"{[leak.line for leak in found]}"
+            )
+
+    # A machine reached through a symbolic link, which is the ordinary case for
+    # a home on a network mount or a run folder under a linked scratch
+    # directory. The shell's HOME, PWD and TMPDIR hold the link and the resolved
+    # path is what every file operation reports, so a fact registered in one
+    # spelling published the other.
+    with tempfile.TemporaryDirectory() as tmp:
+        real = Path(tmp) / "real-place"
+        link = Path(tmp) / "linked-place"
+        real.mkdir()
+        link.symlink_to(real, target_is_directory=True)
+        for role in ("home", "cwd", "tmp", "run"):
+            machine = {"home": "/export/people/pretend", "user": "pretend",
+                       "checkout": "/export/people/pretend/insilico"}
+            if role == "run":
+                facts = _detected_facts(**machine, run_dir=str(link / "runs" / "one"))
+                spellings = (str(link / "runs" / "one"), str(real / "runs" / "one"))
+            else:
+                machine[role] = str(link)
+                facts = _detected_facts(**machine)
+                spellings = (str(link), str(real))
+            for spelling in spellings:
+                text = f"the run wrote {spelling}/x"
+                hits = local_review.local_references(text, facts=facts)
+                assert any(leak.machine_fact for leak in hits), (
+                    f"a symbolically linked {role} published as {spelling}: "
+                    f"{[leak.line for leak in hits]}"
+                )
+
+
+def check_a_machine_fact_in_any_spelling_leaves_no_bundle_behind() -> None:
+    """The same spellings through a real publish, which has to write nothing.
+
+    A scan that finds the hit is half the claim. The other half is that the
+    publish stops before anything reaches the published tree, because a bundle
+    half written and then refused is worse than either outcome. The fact used
+    here is this checkout, which is two segments or more on any machine that can
+    run this suite, and the refusal has to say the hit is one no flag waives.
+    """
+    checkout = str(local_review.REPO)
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            workspace = _workspace(Path(tmp) / "workspace")
+            for index, (why, text) in enumerate(_path_spellings(checkout), start=1):
+                package = dict(
+                    PACKAGE,
+                    stages=_stages(TRACKS),
+                    findings=[
+                        dict(
+                            PACKAGE["findings"][0],
+                            comment=f"The reviewer read the draft at {text}/x.pdf.",
+                        ),
+                        *PACKAGE["findings"][1:],
+                    ],
+                )
+                run = _run_directory(
+                    Path(tmp) / f"run-{index}", **{"editor-package.json": package}
+                )
+                destination = reviews / "2026" / "fixture-paper" / "v1" / f"r{index}"
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                    code = _publish(
+                        _prepared(
+                            Path(tmp) / f"prepared-{index}", destination, attempt=index
+                        ),
+                        run,
+                        workspace,
+                        "--publish",
+                    )
+                message = stderr.getvalue()
+                assert code == 2, (
+                    f"this checkout written with {why} published, exit {code}: {text!r}"
+                )
+                assert not destination.exists(), (
+                    f"a refused publish left a bundle at {destination}"
+                )
+                assert "name this machine itself" in message, (
+                    f"{why} was refused as something a flag could waive: {message!r}"
+                )
+                assert "Nothing was written" in message, (
+                    f"the refusal has to say the tree was left alone: {message!r}"
+                )
 
 
 def check_a_path_shaped_key_is_refused_rather_than_published_without_it() -> None:
@@ -4642,6 +4925,10 @@ ENGINE_BACKED = (
     (
         check_a_draft_check_run_is_refused_as_the_arm_it_is,
         "a draft check is refused as the arm it is, not as a thin review",
+    ),
+    (
+        check_a_machine_fact_in_any_spelling_leaves_no_bundle_behind,
+        "a fact in any spelling refuses the publish and leaves nothing on disk",
     ),
 )
 

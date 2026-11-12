@@ -31,9 +31,11 @@ import argparse
 import datetime as dt
 import getpass
 import hashlib
+import html
 import importlib
 import importlib.metadata
 import json
+import os
 import re
 import shlex
 import shutil
@@ -1982,26 +1984,67 @@ def machine_facts(*, run_dir: Path | str | None = None) -> tuple[Fact, ...]:
         if len(text) > 1 and text not in ("~", "/"):
             paths.setdefault(text, why)
 
+    def both_spellings(why: str, value: object) -> None:
+        """A path as it is written and as the filesystem resolves it.
+
+        Only the resolved spelling was registered, so on a machine where the
+        home directory, the temporary directory or the run folder is a symlink,
+        the name every tool prints was not a fact at all. `/home/ty` resolving
+        to `/export/people/ty` meant a run under `/home/ty` published `/home/ty`
+        and refused only the target nobody ever types.
+        """
+        text = str(value or "")
+        if not text.strip():
+            return
+        path_fact(why, text)
+        try:
+            path_fact(why, Path(text).resolve())
+        except (OSError, RuntimeError, ValueError):
+            pass
+
     for why, source in (
         ("the home directory", Path.home),
         ("the working directory", Path.cwd),
     ):
         try:
-            path_fact(why, source().resolve())
+            both_spellings(why, source())
         except (OSError, RuntimeError):
             pass
-    path_fact("this checkout", REPO.resolve())
-    path_fact("the temporary directory", Path(tempfile.gettempdir()).resolve())
+    # The environment's own answer, which is what a shell, a log line and most
+    # of the engine's own output are written from. `Path.home()` reads the
+    # password database when HOME is unset and `Path.cwd()` resolves symlinks,
+    # so neither is necessarily the spelling the operator sees.
+    for why, name in (
+        ("the home directory", "HOME"),
+        ("the home directory", "USERPROFILE"),
+        ("the working directory", "PWD"),
+        ("the temporary directory", "TMPDIR"),
+        ("the temporary directory", "TMP"),
+        ("the temporary directory", "TEMP"),
+    ):
+        both_spellings(why, os.environ.get(name, ""))
+    both_spellings("this checkout", REPO)
+    both_spellings("the temporary directory", tempfile.gettempdir())
     if run_dir is not None:
+        both_spellings("the run folder", run_dir)
+        # The folder the runs live in, which is the home directory or the
+        # checkout on most machines and a scratch disk on some. It is in every
+        # run path the engine writes, so a run folder named relative to it still
+        # names the machine.
         try:
-            path_fact("the run folder", Path(run_dir).resolve())
-        except (OSError, RuntimeError):
+            both_spellings("the folder the runs live in", Path(str(run_dir)).parent)
+        except (OSError, RuntimeError, ValueError):
             pass
 
     facts: list[Fact] = []
     for text, why in paths.items():
         if path_segments(text) > 1:
-            facts.append(Fact(why, re.compile(re.escape(text), re.IGNORECASE)))
+            # Both spellings of the fact itself. The scan reads the raw string
+            # and the canonical one, so a fact that canonicalises to something
+            # else has to be looked for in both: HOME written `/home//ty/.` is
+            # the same machine as HOME written `/home/ty`.
+            for spelling in dict.fromkeys((text, canonical_text(text))):
+                facts.append(Fact(why, re.compile(re.escape(spelling), re.IGNORECASE)))
             continue
         # One segment. `/tmp` and `/data` are on every machine, so the fact is
         # the shape of something under them rather than the word itself, and it
@@ -2103,39 +2146,103 @@ def printed_in(text: str, document: str) -> bool:
     return re.search(rf"(?<![\w.+-]){re.escape(text)}(?![\w+/-])", document) is not None
 
 
-# The characters that are a slash to a reader and not to `re`. NFKC folds the
-# full width pair and nothing else: U+2215 DIVISION SLASH, U+2044 FRACTION
-# SLASH, U+29F8 BIG SOLIDUS, U+2216 SET MINUS and U+FF3C FULLWIDTH REVERSE
-# SOLIDUS all survive it, and `∕home∕pretend∕x` published because of it. A path
-# written with any of them is the path it reads as.
-_SLASH_LOOKALIKES = str.maketrans(
+# Everything a reader reads as a slash or as a hyphen and `re` does not. NFKC
+# folds the full width pair and nothing else, so U+2215 DIVISION SLASH, U+2044
+# FRACTION SLASH, U+29F8 BIG SOLIDUS, U+2216 SET MINUS, U+27CB MATHEMATICAL
+# RISING DIAGONAL, U+2571 BOX DRAWINGS LIGHT DIAGONAL and U+3033 VERTICAL KANA
+# REPEAT MARK all survive it. A backslash is a slash here too: `C:\Users\bob`
+# and `\home\ty\x` are the paths they read as, and the shapes that need the
+# backslash itself still see it, because the raw string is scanned as well. The
+# hyphens matter for the host name, which is the one fact with a hyphen in it:
+# `ty‑MS‑7C80` written with U+2011 is this machine.
+_LOOKALIKES = str.maketrans(
     {
-        "∕": "/",
-        "⁄": "/",
-        "⧸": "/",
-        "／": "/",
-        "∖": "\\",
-        "＼": "\\",
+        "\\": "/",
+        "\u2216": "/",
+        "\uff3c": "/",
+        "\u2215": "/",
+        "\u2044": "/",
+        "\u29f8": "/",
+        "\uff0f": "/",
+        "\u27cb": "/",
+        "\u2571": "/",
+        "\u3033": "/",
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2015": "-",
+        "\u2212": "-",
+        "\ufe58": "-",
+        "\ufe63": "-",
+        "\uff0d": "-",
     }
 )
+# A backslash in front of ASCII punctuation is an escape, not a path separator:
+# `\/home\/ty` out of a JSON string and `ty\-MS\-7C80` out of a regular
+# expression are both this machine, written by something that quoted them.
+# Dropped before the look-alikes are folded, so that `\home\ty\x` still becomes
+# `/home/ty/x` while `\/home` does not become `//home`.
+_ESCAPED_PUNCTUATION = re.compile(r"\\([!-\/:-@\[-`{-~])")
+_DOT_SEGMENT = re.compile(r"/\.(?=/)")
+# Repeated slashes are one slash, except the pair that follows a scheme.
+# `https://home/x` is a URL and `//home/x` is a path, and the patterns tell them
+# apart by the colon in front, so collapsing `://` to `:/` would turn every URL
+# whose host is a word like `home` or `data` into an absolute path.
+_REPEATED_SLASH = re.compile(r"(?<!:)/{2,}")
+
+
+def canonical_text(text: str) -> str:
+    """One string reduced to the characters it reads as, to a fixed point.
+
+    Every encoding this scan has been got past is undone here rather than in a
+    list of special cases, and undone repeatedly, because each layer can reveal
+    another: `%252Fhome%252Fty` is a percent sign that decodes to a percent
+    sign, and `&#37;2Fhome` is an HTML entity hiding one. The steps are NFKC,
+    HTML entities, percent-decoding, dropping the format characters that print
+    as nothing (U+200B through U+200D, U+2060, U+FEFF and the soft hyphen are
+    all Cf), dropping a backslash that is escaping punctuation, folding the
+    slash and hyphen look-alikes, and reducing `//` and `/./` to `/`. The loop
+    stops when the string stops changing, which it always does, because every
+    step either shortens the string or replaces a character with an ASCII one.
+
+    The case of the result is the case of the input. Every fact and every
+    pattern matches case-insensitively already, so folding the case here would
+    buy nothing and would cost the one thing a hit has to keep: the text as the
+    author wrote it, which is what `--allow-text` is compared against and what
+    the refusal prints back. Both the text being scanned and the facts being
+    looked for go through this, so the comparison happens in one spelling, and
+    the raw string is scanned too, so a shape that needs a real backslash or a
+    real `%` still matches.
+    """
+    current = text
+    for _ in range(12):
+        step = unicodedata.normalize("NFKC", current)
+        step = html.unescape(step)
+        step = urllib.parse.unquote(step)
+        step = "".join(ch for ch in step if unicodedata.category(ch) != "Cf")
+        step = _ESCAPED_PUNCTUATION.sub(r"\1", step)
+        step = step.translate(_LOOKALIKES)
+        step = _DOT_SEGMENT.sub("", step)
+        step = _REPEATED_SLASH.sub("/", step)
+        if step == current:
+            break
+        current = step
+    return current
 
 
 def _scan_forms(text: str) -> tuple[str, ...]:
-    """The forms of one string the scan reads: as written, decoded, unfolded.
+    """The forms of one string the scan reads: as written, and canonical.
 
-    `%2Fhome%2Fbob%2Fx.pdf` is a path with no slash in it, and a slash copied
-    out of a PDF or a word processor can arrive as `／`, `∕` or `⁄`, none of
-    which any pattern here matches. Percent-decoding once, normalising NFKC and
-    translating the look-alikes turns all of them into the path they are. Once
-    rather than repeatedly is deliberate: `%2525` is text about encoding, not a
-    second path.
+    Two forms rather than a list of encodings. The raw string is read because
+    the Windows share and the percent-encoded path are shapes in their own
+    right, and the canonical form is read because `%2Fhome%2Fbob`,
+    `&#47;home&#47;ty`, `/home/./ty`, `\\/home\\/ty` and `∕home∕ty` are all the
+    same path and none of them matches a pattern written in slashes.
     """
-    forms = [text]
-    decoded = unicodedata.normalize("NFKC", urllib.parse.unquote(text))
-    for form in (decoded, text.translate(_SLASH_LOOKALIKES), decoded.translate(_SLASH_LOOKALIKES)):
-        if form not in forms:
-            forms.append(form)
-    return tuple(forms)
+    reduced = canonical_text(text)
+    return (text,) if reduced == text else (text, reduced)
 
 
 def names_a_specific_fact(text: str, facts: Sequence[Fact]) -> bool:
@@ -2178,30 +2285,35 @@ def local_references(
     facts = this_machine() if facts is None else facts
     waived = set(allowed)
     forms = _scan_forms(text)
-    found: list[Leak] = []
+    # Which form each hit came out of is kept, because the raw form is scanned
+    # first and a hit that only the canonical form found is a different kind of
+    # hit: it is the same disk written in an encoding, not a second one.
+    found: list[tuple[Leak, bool]] = []
     for fact in facts:
         if not fact.specific:
             continue
-        for form in forms:
+        for index, form in enumerate(forms):
             found += [
-                Leak(fact.why, match.group(0), True)
+                (Leak(fact.why, match.group(0), True), index > 0)
                 for match in fact.pattern.finditer(form)
             ]
-    named = {leak.text for leak in found}
+    named = {leak.text for leak, _ in found}
     generic = [(fact.why, fact.pattern) for fact in facts if not fact.specific]
     for why, pattern in (*generic, *LOCAL_REFERENCE_PATTERNS):
-        for form in forms:
+        for index, form in enumerate(forms):
             for match in pattern.finditer(form):
                 hit = match.group(0)
                 if hit in named:
                     continue
-                found.append(Leak(why, hit, False))
+                found.append((Leak(why, hit, False), index > 0))
                 named.add(hit)
 
     unique: list[Leak] = []
-    for leak in found:
+    only_folded: dict[str, bool] = {}
+    for leak, folded in found:
         if leak not in unique:
             unique.append(leak)
+        only_folded[leak.text] = only_folded.get(leak.text, True) and folded
     carrying: list[Leak] = []
     for leak in unique:
         inside = [
@@ -2212,11 +2324,37 @@ def local_references(
         if inside and not leak.machine_fact:
             leak = leak._replace(why=inside[0].why, machine_fact=True)
         carrying.append(leak)
+    # One string is one leak, whichever form it was found in. The scan reads the
+    # text as written and its canonical form, so a path that survives the
+    # folding is found twice over: `C:\\Users\\bob\\x.pdf` is reported beside
+    # `C:/Users/bob/x.pdf` and `/Users/bob/x.pdf` out of the folded copy, which
+    # reads as three paths escaping where one did. A hit the folded copy found
+    # inside the folded form of a hit already reported as written is dropped,
+    # and its tier is carried onto that one first, so folding can raise a tier
+    # and never hide a path. The line then names the spelling the file holds,
+    # which is the one an editor can search for and the one `--allow-text` has
+    # to match. A folded hit that no written hit covers is the whole point of
+    # folding, `%2Fhome%2Fty` being a path only once decoded, and it stays, in
+    # the only spelling that shows what it is.
+    written = [leak for leak in carrying if not only_folded.get(leak.text, False)]
+    covers = [canonical_text(leak.text) for leak in written]
+    echoes = [leak for leak in carrying if only_folded.get(leak.text, False)]
+    spellings: list[Leak] = []
+    for leak, cover in zip(written, covers):
+        hidden = [
+            echo for echo in echoes if echo.machine_fact and echo.text in cover
+        ]
+        if hidden and not leak.machine_fact:
+            leak = leak._replace(why=hidden[0].why, machine_fact=True)
+        spellings.append(leak)
+    spellings += [
+        echo for echo in echoes if not any(echo.text in cover for cover in covers)
+    ]
     longest = [
         leak
-        for leak in carrying
+        for leak in spellings
         if not any(
-            leak.text != other.text and leak.text in other.text for other in carrying
+            leak.text != other.text and leak.text in other.text for other in spellings
         )
     ]
     # Allowances are read last, against the hits as they will be reported. Read
@@ -2461,6 +2599,44 @@ def without_local_paths(
             )
         return relative
     return value
+
+
+def projection_report(
+    *,
+    engine_package: dict,
+    published: dict,
+    projected: Sequence[str] = (),
+) -> str:
+    """How the published editor-package.json differs from the engine's own.
+
+    The bundle's copy is not the engine's file with a few strings scrubbed. It
+    is rebuilt by `review_package` from the same reading, and the rebuild is the
+    intended projection: the engine's package carries the whole run, and the
+    bundle publishes the parts a reader of the review needs. Saying "projected
+    nothing" because no path field was touched described a file that leaves out
+    a dozen of the engine's top-level keys, so the line names them instead, and
+    names them by comparing the two key sets rather than from a list in this
+    file that the next engine release would make wrong.
+    """
+    engine_keys = list(engine_package)
+    published_keys = list(published)
+    left_out = [key for key in engine_keys if key not in published_keys]
+    added = [key for key in published_keys if key not in engine_keys]
+    parts: list[str] = []
+    if not engine_keys:
+        parts.append(
+            "the engine's own editor-package.json could not be read, so the "
+            "keys carried into the bundle were not compared with it"
+        )
+    if left_out:
+        parts.append(f"not carried: {', '.join(left_out)}")
+    if added:
+        parts.append(f"added by this bundle: {', '.join(added)}")
+    if projected:
+        parts.append(f"path fields projected: {', '.join(projected)}")
+    if engine_keys and not left_out and not added and not projected:
+        parts.append("every key the engine wrote, published as written")
+    return "editor-package.json, " + ". ".join(parts)
 
 
 # Every file in a bundle is scanned. The two JSON forms are parsed first, the
@@ -2888,14 +3064,20 @@ def cmd_publish(args: argparse.Namespace) -> int:
         if args.publish
         else package
     )
-    # Said out loud, every time, because the published artifact now differs from
-    # the engine's own output and a reader comparing the two has to be able to
-    # find out why from the command that made it.
+    # Said out loud, every time, because the published artifact differs from the
+    # engine's own output and a reader comparing the two has to be able to find
+    # out why from the command that made it. The engine's own file is read back
+    # off the run folder for the comparison rather than described from memory.
     if args.publish:
+        engine_package = maybe_json(
+            Path(str(_dict(reading.get("files")).get("editor-package.json") or ""))
+        )
         print(
-            f"projected {', '.join(projected)}"
-            if projected
-            else "projected nothing: every engine path field published as written"
+            projection_report(
+                engine_package=engine_package,
+                published=published_package if isinstance(published_package, dict) else {},
+                projected=projected,
+            )
         )
 
     # The manuscript whose own words neither scan may refuse the review for. The

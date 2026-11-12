@@ -27,6 +27,7 @@ from smoke_checks.local import (
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_every_documented_command_runs_against_a_real_parser,
     check_every_published_file_is_hashed,
+    check_every_spelling_of_a_machine_fact_is_the_same_fact,
     check_nothing_reaches_into_the_engines_internals,
     check_only_this_machines_own_names_are_refused_as_this_machine,
     check_ordinary_review_text_publishes_and_a_local_path_does_not,
@@ -165,6 +166,8 @@ def main() -> int:
     print("ok  ordinary review notation publishes and a local path is refused by name")
     check_only_this_machines_own_names_are_refused_as_this_machine()
     print("ok  this machine's own names are refused and ordinary prose is not")
+    check_every_spelling_of_a_machine_fact_is_the_same_fact()
+    print("ok  every encoding of a machine fact reduces to the same fact")
     check_a_path_shaped_key_is_refused_rather_than_published_without_it()
     print("ok  a path used as a field name is refused, not dropped with its value")
     check_a_schema_pattern_means_what_the_repositorys_own_gate_means()
