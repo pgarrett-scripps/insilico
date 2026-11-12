@@ -193,10 +193,27 @@ peerreview report runs/example/review
 
 Both positionals are required and in that order: the manuscript PDF, then the
 folder to write. The engine writes `runs/example/manuscript`, the imported
-paper, and `runs/example/review`, the run. There is no provider flag, no model
-flag and no policy flag. Claude Code is the only transport, each agent's model
-is pinned by its own agent file in the plugin, and `runtime.json` records what
-every agent actually ran on. Read `REVIEW.md` from the run, decide, and write
+paper, and `runs/example/review`, the run. There is no provider flag and no
+policy flag, and Claude Code is the only transport. There is no single model
+flag either, because engine 0.9 gives every slot a model of its own. Four flags
+on `peerreview review` move that plan, and each has a default the engine prints
+in its own `--help`:
+
+- `--reviewer-models` takes `A,B,C`, the list the core reviewers are drawn from
+  in order, reviewer `i` taking the `i`-th and wrapping round. It defaults to
+  `claude-sonnet-5-5,claude-opus-5-5,claude-haiku-5-5`.
+- `--specialist-model` takes one id, the model every specialist runs. It
+  defaults to `claude-sonnet-5-5`.
+- `--editor-model` takes one id. It defaults to `claude-fable-5-2`.
+- `--recorder-model` takes one id, for ingest, the ledger and the write-up. It
+  defaults to `claude-haiku-5-5`.
+
+A model this login cannot run is refused before anything is spent rather than
+swapped for another.
+
+`protocol.json` records that plan slot by slot and `runtime.json` records what
+the harness observed in each slot. They are two different facts and nothing
+here fills one from the other. Read `REVIEW.md` from the run, decide, and write
 the bundle:
 
 ```bash
@@ -350,8 +367,9 @@ Everything in the record about the run itself comes from what the run wrote, and
 it is read back through the engine's own `read_run` rather than parsed out of the
 files by hand: the arm and the workflow the run was asked for, the paper id and
 the hash of each plugin and workflow file taken when the call started, the
-reviewer count, one row per agent with the model the transport actually served
-it, which stages reported and which were retried, the guards' verdict and how
+reviewer count, one row per agent carrying both the model that slot was asked
+for and the model something in the run was observed serving it, which stages
+reported and which were retried, the guards' verdict and how
 many findings they held back, and the status the run ended in. One field is read
 out of the run folder by hand, because the reading does not carry it: the moment
 the starter wrote `startup.json`, which the record publishes as when the
@@ -380,9 +398,10 @@ second independent read of draft 3 is `v3/r2`, while the first review of draft
 4 is `v4/r1`.
 
 The newest eligible editorial attempt on the newest earlier draft is the
-baseline for a revision. A single-model experiment stays public but cannot set
-the paper's status or become the baseline for the next draft, which is why a
-local review is experimental unless an editor says otherwise.
+baseline for a revision. A review published without `--baseline-eligible` stays
+public but cannot set the paper's status or become the baseline for the next
+draft, which is why a local review is experimental unless an editor says
+otherwise.
 
 - `--replace` on `prepare` allows a new attempt on a draft this repository has
   already reviewed. It creates the next immutable attempt and keeps every
@@ -391,8 +410,15 @@ local review is experimental unless an editor says otherwise.
   differs on its own and no flag is needed.
 - `--baseline-eligible` on `publish` lets a local review set the paper's
   editorial status. Off by default.
-The model ids are not a flag. `publish` reads them from the JSON the run wrote,
-which is the only record of what actually answered.
+The model ids are not a flag on `publish`. It reads them from the JSON the run
+wrote, which is the only record of what was asked for and of what answered. The
+record publishes the two as separate maps, `assigned_models` for the plan and
+`models` for what was observed, and the review page shows both per report. A
+slot nobody was observed running is published as unrecorded and named in
+`models_unverified`, which the page says in one sentence, rather than being
+filled in from the plan. A slot observed running a different model family from
+the one it was asked for makes the whole run unpublishable, and the refusal
+prints the engine's own reason for it.
 
 ### Checks
 
@@ -417,14 +443,16 @@ alongside a build that fails if a published bundle goes unrendered.
 
 A local run has very little to configure, which is the point. The transport is
 `claude-code`, the arm names which readers run, and `--reviewers` says how many
-core reviewers to send in. There is no model setting: the plugin pins a model per
-agent file, and the record reports the model each agent actually ran on.
+core reviewers to send in. The models are per slot rather than per review, with
+defaults the engine owns and four flags on `peerreview review` to move them, and
+the record reports the plan and the observation side by side.
 Everything else that used to be a setting is now a property of the engine
 release, and the release is identified in the record rather than described.
 
 Each review records the engine package name and version, the hash of every
 plugin and workflow file that did the work, the In Silico commit, the transport
-and its authentication method, one row per agent with its model, and a hash of
+and its authentication method, one row per agent with the model it was asked
+for and the model it was observed running, and a hash of
 the exact PDF bytes reviewed. The
 [DOI](https://doi.org/10.5281/zenodo.21781895) identifies the software and the
 hashes identify the run.

@@ -37,6 +37,7 @@ from smoke_checks.local import (
     check_the_decision_is_attributed_to_a_person,
     check_the_locked_engine_release_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
+    check_the_page_keeps_the_model_asked_apart_from_the_model_that_ran,
     check_the_run_fixture_is_a_run_the_engine_could_have_written,
     check_the_skill_commands_match_the_engine_parser,
     run_engine_backed_checks,
@@ -150,6 +151,8 @@ def main() -> int:
     print("ok  a run without --publish stays out of docs/reviews")
     check_the_method_paragraph_describes_the_run_that_happened()
     print("ok  the summary describes the run that was recorded")
+    check_the_page_keeps_the_model_asked_apart_from_the_model_that_ran()
+    print("ok  the page shows each slot's model asked and model ran, from two fields")
     check_an_attestation_needs_a_named_editor()
     print("ok  a true attestation needs a named editor and an actual reading")
     check_a_rehearsal_claims_no_reading()

@@ -481,11 +481,19 @@ def agent_rows(reading: dict) -> list[dict]:
     """One row per agent that ran, as the engine read them back.
 
     `read_run` merges the protocol's slots with what the harness observed and
-    gives each one a `slot`, `role`, `track`, `model`, `attempt`, `tool_calls`,
-    `session_calls`, `tokens`, `state` and `labels`. Two facts the published
-    record wants are not in those rows and are counted here: how many findings a
-    slot delivered, which the findings themselves say, and whether it reported
-    nothing, which the stage ledger says.
+    gives each one a `slot`, `role`, `track`, `model`, `assigned_model`,
+    `attempt`, `tool_calls`, `session_calls`, `tokens`, `state` and `labels`.
+    Two facts the published record wants are not in those rows and are counted
+    here: how many findings a slot delivered, which the findings themselves say,
+    and whether it reported nothing, which the stage ledger says.
+
+    `model` and `assigned_model` are two facts and one is never written in the
+    other's place. `assigned_model` is the model the run asked that slot to run,
+    which the plugin server writes into protocol.json before anything runs.
+    `model` is what was observed running, from the harness stream and the
+    agent's own report, and a slot that reported none has no `model` at all.
+    Filling that gap from the plan would hide the one thing the pair exists to
+    show, which is a slot that ran something other than what it was asked for.
 
     One agent is one row in 0.9, and nothing is filtered out here. The engine
     merges the tasks one agent ran into that agent's own row, with `labels`
@@ -516,6 +524,7 @@ def agent_rows(reading: dict) -> list[dict]:
             # session's larger count only when the server recorded none.
             "tool_calls": observed.get("tool_calls") or observed.get("session_calls"),
             "model": observed.get("model"),
+            "assigned_model": observed.get("assigned_model"),
             "state": observed.get("state"),
             "tokens": observed.get("tokens"),
             "findings": delivered.get(slot, 0),
@@ -528,14 +537,35 @@ def agent_rows(reading: dict) -> list[dict]:
 def model_map(agents: list[dict]) -> dict[str, str]:
     """Which model wrote which report, keyed by the slot that wrote it.
 
-    This is the site's model table. A run on this path has a real per-agent
-    split, because the plugin pins a model in each agent file, so the table says
-    something rather than repeating one id down a column.
+    This is the site's model table, and every entry in it was observed: it is
+    what each slot reported running, never what the run asked it to run. A slot
+    nobody observed is absent rather than filled in from the plan, because the
+    plan is a different fact and lives in `assigned_map`.
+
+    A run on this path has a real per-slot split, because 0.9 gives each slot
+    its own model, so the table says something rather than repeating one id down
+    a column.
     """
     return {
         str(row["slot"]): str(row["model"])
         for row in agents
         if row.get("slot") and row.get("model")
+    }
+
+
+def assigned_map(agents: list[dict]) -> dict[str, str]:
+    """Which model each slot was asked to run, keyed by slot.
+
+    The plan, written down before anything ran. It is published beside the
+    observed map rather than merged into it, because the two disagreeing is the
+    most important thing a reader of the panel can be told, and a record that
+    carried one number for both could not say it. Empty for a run written before
+    0.9, which recorded no plan at all.
+    """
+    return {
+        str(row["slot"]): str(row["assigned_model"])
+        for row in agents
+        if row.get("slot") and row.get("assigned_model")
     }
 
 
@@ -694,6 +724,14 @@ def run_record(reading: dict) -> dict:
     if isinstance(identity.get("reviewers"), int):
         record["reviewers"] = identity["reviewers"]
     put("specialist_tracks", [str(t) for t in _list(identity.get("specialists"))])
+    # The ordered list the core reviewers were drawn from, and the slots whose
+    # assigned model nothing ever observed. Both are the engine's own answers
+    # rather than a second copy of its rules here: `models_unverified` decides
+    # which slots the page has to admit it cannot vouch for, and getting that
+    # rule subtly different here would have the page and the engine's own
+    # REVIEW.md say different things about the same folder.
+    put("reviewer_models", [str(m) for m in _list(identity.get("reviewer_models"))])
+    put("models_unverified", [str(s) for s in _list(identity.get("models_unverified"))])
     put("paper_id", identity.get("paper_id"))
     put("literature_cutoff", identity.get("literature_cutoff"))
     put("claude_code_version", identity.get("claude_code_version")
@@ -927,8 +965,13 @@ def method_paragraph(run: dict, models: dict[str, str]) -> str:
 
     Every clause is conditional on a recorded value, and an unrecorded one is
     admitted rather than assumed. There is no debate stage to describe in 0.9
-    and no single model: the plugin pins a model per agent file, and the record
-    carries the map.
+    and no single model: each slot is assigned its own, and the record carries
+    both that plan and what was observed to run.
+
+    `models` is the observed map, which is the only thing this paragraph is
+    allowed to describe as having written the review. Where a slot's model was
+    never observed, the paragraph says so rather than quoting the plan as though
+    somebody had watched it hold.
     """
     reviewers = run.get("reviewers")
     tracks = [str(t) for t in _list(run.get("specialist_tracks"))]
@@ -961,12 +1004,25 @@ def method_paragraph(run: dict, models: dict[str, str]) -> str:
     elif arm:
         shape += f" The run used the {arm} arm, which convened no specialist readers."
 
+    ran = (
+        f"and the models observed running were {model_phrase(models)}"
+        if models
+        else "and no slot's model was observed, so the record cannot say what ran"
+    )
+    unverified = [str(slot) for slot in _list(run.get("models_unverified"))]
+    gap = ""
+    if unverified:
+        one = len(unverified) == 1
+        gap = (
+            f" The model that ran was not recorded for {len(unverified)} "
+            f"{'slot' if one else 'slots'} ({', '.join(unverified)}), so for "
+            f"{'it' if one else 'those'} the plan is all this record has."
+        )
     return (
         f"{shape} Every agent ran inside one Claude Code session on the editor's "
-        "own machine, on a subscription, each on the model its plugin agent file "
-        f"pins: {model_phrase(models)}. There was no desk screen and no debate "
-        "stage, and agents sharing a model are not independent corroboration of "
-        "one another."
+        "own machine, on a subscription. The run assigned each slot a model of "
+        f"its own, {ran}.{gap} There was no desk screen and no debate stage, and "
+        "agents sharing a model are not independent corroboration of one another."
     )
 
 
@@ -1409,12 +1465,14 @@ def build_provenance(
             "transports describes neither run."
         )
     models = model_map(agents)
+    assigned = assigned_map(agents)
     if not models:
         raise CommandError(
-            "This run records no model for any agent, so the record cannot say "
-            "what wrote the review. The plugin server writes one per slot into "
-            "protocol.json, and the starter records what the harness served "
-            "into runtime.json."
+            "No agent in this run was observed running a model, so the record "
+            "cannot say what wrote the review. The plan is not an answer to "
+            "that: the models the run asked for are in protocol.json and what "
+            "each slot reported running is in runtime.json, and only the second "
+            "of those says anything about the review that exists."
         )
     generator = {
         "kind": GENERATOR_KIND,
@@ -1467,11 +1525,16 @@ def build_provenance(
         "generator": generator,
         "review": review,
         "provider": provider,
-        # Which model wrote which report, keyed by the slot that wrote it. The
-        # plugin pins a model per agent file, so this is a real split rather
-        # than one id repeated down a column, and the site reads exactly this
-        # field when it says what checked the reviewers.
+        # Which model wrote which report, keyed by the slot that wrote it, and
+        # beside it the model each slot was asked to run. Two fields because
+        # they are two facts: `models` was observed and `assigned_models` is the
+        # plan, a slot can be missing from the first while the plan for it
+        # stands in the second, and a slot that ran a different family is a run
+        # the engine refuses rather than a record that quietly reconciles them.
+        # The site reads exactly these fields when it says what wrote each
+        # report and what was asked for.
         "models": models,
+        "assigned_models": assigned,
         "decision": decision,
         "desk_rejected": False,
         "round": 1,
@@ -2876,8 +2939,11 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
     reading = reading if reading is not None else engine_reading(run_dir)
     status = str(reading.get("status") or "")
     # The arm replaces 0.8's mode and policy, and there is no single model to
-    # require: the plugin pins one per agent file. What has to be recorded is
-    # which arm ran, on which transport, under which workflow.
+    # require: 0.9 assigns one per slot and records the plan beside what ran.
+    # What has to be recorded is which arm ran, on which transport, under which
+    # workflow. A slot that ran a different model family from the one it was
+    # assigned is not checked here either, and deliberately so: the engine puts
+    # that in `not_publishable_reasons`, and the refusal below prints its words.
     missing = [field for field in ("arm", "provider", "workflow_version") if not run.get(field)]
     if missing:
         raise CommandError(
@@ -3233,7 +3299,11 @@ def cmd_publish(args: argparse.Namespace) -> int:
     print(
         f"baseline {'eligible' if provenance['review']['baseline_eligible'] else 'experimental only'}"
     )
-    print(f"models   {model_phrase(provenance['models'])}")
+    print(f"asked    {model_phrase(provenance['assigned_models'])}")
+    print(f"ran      {model_phrase(provenance['models'])}")
+    unverified = [str(slot) for slot in _list(run.get("models_unverified"))]
+    if unverified:
+        print(f"warning  no model was observed for: {', '.join(unverified)}")
     if run.get("specialist_tracks"):
         absent = [track for track in SPECIALIST_TRACKS if f"audit_{track}.md" not in reports]
         if absent:

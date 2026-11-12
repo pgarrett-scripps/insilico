@@ -121,10 +121,44 @@ roughly how long it will take. Do not run it twice on the same output folder:
 the engine refuses an existing run folder on purpose, so a retry needs a new
 one.
 
-There is no `--provider`, no `--model` and no policy flag. Each agent's model is
-pinned by its agent file in the plugin, the run records what every agent
-actually ran on in `runtime.json`, and the published record names them from
-there.
+There is no `--provider`, no single `--model` and no policy flag. Engine 0.9
+gives every slot a model of its own, and four flags move that plan:
+
+- `--reviewer-models` takes `A,B,C`, the list the core reviewers are drawn
+  from, in order, with reviewer `i` taking the `i`-th and wrapping round. The
+  default is `claude-sonnet-5-5,claude-opus-5-5,claude-haiku-5-5`.
+- `--specialist-model` takes one id, the model every specialist runs. The
+  default is `claude-sonnet-5-5`.
+- `--editor-model` takes one id, the model the editor runs. The default is
+  `claude-fable-5-2`.
+- `--recorder-model` takes one id, the model the recorder runs for ingest, the
+  ledger and the write-up. The default is `claude-haiku-5-5`.
+
+Pass them only when the user asks for a panel other than the default one:
+
+```bash
+peerreview review \
+  runs/prepared-<slug>/<fetched>.pdf \
+  runs/<work> \
+  --arm full-two-track \
+  --reviewers 3 \
+  --reviewer-models claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5 \
+  --specialist-model claude-sonnet-5-5 \
+  --editor-model claude-fable-5-2 \
+  --recorder-model claude-haiku-5-5
+```
+
+A model this login cannot run is refused before the run starts rather than
+quietly swapped, and nothing is spent on it.
+
+What a slot was asked to run and what it was seen running are two different
+facts, and they stay apart the whole way through. `protocol.json` records the
+plan slot by slot, `runtime.json` records what the harness observed, and the
+published record and the review page carry both, per report. A slot nobody was
+observed running reads as unrecorded, never as the model it was assigned. If a
+slot ran a different model family from the one it was asked for, the engine
+reads the run as not publishable, and the publish step refuses it in the
+engine's own words.
 
 Then write the readable reports, which costs nothing:
 

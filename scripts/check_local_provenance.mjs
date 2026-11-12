@@ -78,6 +78,7 @@ function localRecord(overrides = {}) {
           attempt: 1,
           tool_calls: 18,
           model: "claude-sonnet-5-5",
+          assigned_model: "claude-sonnet-5-5",
           state: "complete",
           tokens: 142000,
           findings: 12,
@@ -90,6 +91,7 @@ function localRecord(overrides = {}) {
           attempt: 1,
           tool_calls: 9,
           model: "claude-sonnet-5-5",
+          assigned_model: "claude-sonnet-5-5",
           findings: 4,
           none_found: false,
         },
@@ -99,12 +101,14 @@ function localRecord(overrides = {}) {
           attempt: 1,
           tool_calls: 6,
           model: "claude-sonnet-5-5",
+          assigned_model: "claude-sonnet-5-5",
         },
         {
           slot: "recorder",
           role: "recorder",
           attempt: 1,
           model: "claude-haiku-5-5",
+          assigned_model: "claude-haiku-5-5",
         },
       ],
       input: {
@@ -123,6 +127,8 @@ function localRecord(overrides = {}) {
         finding_schema_version: "review-finding-v3",
         reviewers: 3,
         specialist_tracks: TRACKS,
+        reviewer_models: ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"],
+        models_unverified: [],
         paper_id: "fixture-paper",
         claude_code_version: "2.1.322",
         status: "complete",
@@ -180,6 +186,12 @@ function localRecord(overrides = {}) {
       editor: "claude-sonnet-5-5",
       recorder: "claude-haiku-5-5",
     },
+    assigned_models: {
+      "reviewer-1": "claude-sonnet-5-5",
+      "audit-stats": "claude-sonnet-5-5",
+      editor: "claude-sonnet-5-5",
+      recorder: "claude-haiku-5-5",
+    },
     decision: "major",
     desk_rejected: false,
     round: 1,
@@ -198,6 +210,10 @@ function localRecord(overrides = {}) {
 
 function rejects(record, why) {
   assert.throws(() => assertValidProvenance(record, "fixture"), /invalid review provenance/, why);
+}
+
+function accepts(record, why) {
+  assert.doesNotThrow(() => assertValidProvenance(record, "fixture"), why);
 }
 
 // The shape the local generator writes is publishable.
@@ -292,9 +308,9 @@ const unsourcedPlugin = localRecord();
 delete unsourcedPlugin.generator.plugin.fingerprint.source;
 rejects(unsourcedPlugin, "the plugin fingerprint must say where it was measured");
 
-// The plugin pins a model inside each agent file, so the panel is a list of
-// slots with their own models. One id at the top would describe a panel that did
-// not sit, and an empty table would say nothing wrote the review.
+// The run gives each slot a model of its own, so the panel is a list of slots
+// with their own models. One id at the top would describe a panel that did not
+// sit, and an empty table would say nothing wrote the review.
 const singleModel = localRecord();
 singleModel.model = "claude-sonnet-5-5";
 rejects(singleModel, "a plugin run must not name one model for the whole panel");
@@ -302,6 +318,41 @@ rejects(singleModel, "a plugin run must not name one model for the whole panel")
 const noModels = localRecord();
 noModels.models = {};
 rejects(noModels, "a record naming no model does not say what wrote the review");
+
+// The plan is a second fact and the record has to carry it. An empty map is
+// allowed, because a run that assigned nothing has to be able to say so, but
+// leaving the key out says neither.
+const noPlan = localRecord();
+delete noPlan.assigned_models;
+rejects(noPlan, "a record must say which model each slot was asked to run");
+
+const emptyPlan = localRecord();
+emptyPlan.assigned_models = {};
+accepts(emptyPlan, "a run that assigned no models may say so with an empty map");
+
+// A plan with nothing but a blank id in it is not a plan. The engine writes the
+// id or writes no entry at all.
+const blankPlan = localRecord();
+blankPlan.assigned_models = { editor: "" };
+rejects(blankPlan, "an empty string is not a model the slot was asked to run");
+
+// Both facts live on the agent row too, and neither is allowed to be blank
+// there either.
+const blankRowPlan = localRecord();
+blankRowPlan.generator.agents[0].assigned_model = "";
+rejects(blankRowPlan, "an agent row must not carry an empty assigned model");
+
+// A row may carry the plan with no observation. That is the gap the page
+// reports, not a record to refuse.
+const unobserved = localRecord();
+delete unobserved.generator.agents[1].model;
+accepts(unobserved, "a slot nobody observed still records what it was asked to run");
+
+// models_unverified is published even when it is not empty, because the engine
+// does not withhold a review for it.
+const unverified = localRecord();
+unverified.generator.run.models_unverified = ["audit-stats"];
+accepts(unverified, "a run with an unobserved slot is still publishable");
 
 const noAgents = localRecord();
 noAgents.generator.agents = [];

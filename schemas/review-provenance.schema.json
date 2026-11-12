@@ -124,7 +124,7 @@
           }
         },
         "agents": {
-          "$comment":"One row per agent that actually ran. The plugin pins a model inside each agent file, so the panel is a list of slots with their own models rather than one requested id repeated down a column, which is what version 3 recorded. A slot the harness reserved and never filled is left out: an agent with no model, no state and no usage reviewed nothing, and five of those would overstate the panel.",
+          "$comment":"One row per agent that actually ran. 0.9 gives every slot a model of its own, so the panel is a list of slots with their own models rather than one requested id repeated down a column, which is what version 3 recorded. A row carries two separate facts about that: assigned_model is the model the run asked the slot to use, and model is the model something in the run observed it running. Neither is ever written in the other's place, and a row can carry the plan with no observation, which is a gap a reader should be able to see rather than a hole filled in from the plan. A slot the harness reserved and never filled is left out: an agent with no model, no state and no usage reviewed nothing, and five of those would overstate the panel.",
           "type": "array",
           "minItems": 1,
           "items": {
@@ -137,6 +137,7 @@
               "attempt": { "type": "integer", "minimum": 1 },
               "tool_calls": { "type": "integer", "minimum": 0 },
               "model": { "type": "string", "minLength": 1 },
+              "assigned_model": { "type": "string", "minLength": 1 },
               "agent_type": { "type": "string" },
               "state": { "type": "string" },
               "tokens": { "type": "integer", "minimum": 0 },
@@ -190,6 +191,16 @@
               "$comment": "The audit tracks the arm asked for, as the run's own plan recorded them. The six in 0.9 are stats, figures-tables, methods-reporting, citations, consistency and field. A track listed here with no audit report in the bundle is a gap a reader can see.",
               "type": "array",
               "items": { "type": "string" }
+            },
+            "reviewer_models": {
+              "$comment": "The models the run asked its core reviewers to use, in the order it handed them out, as the engine's own reading reports them. Recorded because the plan is what a reader needs in order to tell a panel of three models apart from three slots that happened to land on one, and the order is part of the plan rather than decoration.",
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "models_unverified": {
+              "$comment": "The slots the run gave a model and nobody observed running one. It is published even when it is not empty, because the engine does not treat it as a reason to withhold a review and a reader is owed the gap rather than a column that looks measured. An empty list is the ordinary case and says every slot with a plan was also observed.",
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
             },
             "paper_id": { "type": "string" },
             "literature_cutoff": { "type": "string" },
@@ -332,6 +343,7 @@
     "provider": { "type": "string", "minLength": 1 },
     "model": { "type": "string" },
     "models": { "type": "object" },
+    "assigned_models": { "type": "object" },
     "agent_models": { "type": "object" },
     "debate_rounds": { "type": "integer", "minimum": 0 },
     "decision": { "enum": ["accept", "minor", "major", "reject"] },
@@ -431,17 +443,22 @@
         "properties": { "schema_version": { "const": 4 } }
       },
       "then": {
-        "required": ["generator", "models"],
+        "required": ["generator", "models", "assigned_models"],
         "properties": {
           "model": {
-            "$comment":"Refused outright rather than merely left out of the required list. Every version 2 record carries a single model id, and a reader of this file should not have to infer that a plugin run must not: the plugin pins a model per agent file, so one id at the top would describe a panel that did not sit. An empty not matches nothing, so a record carrying this key cannot validate.",
+            "$comment":"Refused outright rather than merely left out of the required list. Every version 2 record carries a single model id, and a reader of this file should not have to infer that a plugin run must not: 0.9 gives each slot a model of its own, so one id at the top would describe a panel that did not sit. The engine's own protocol file writes a sentence there rather than an id for the same reason, and a sentence is not an id either. An empty not matches nothing, so a record carrying this key cannot validate.",
             "not": {}
           },
           "generator": {},
           "models": {
-            "$comment":"The model each agent slot ran on, keyed by slot. At least one entry, because a record naming no model does not say what wrote the review, and the site reads exactly this field when it says what produced each report.",
+            "$comment":"The model each agent slot was observed running, keyed by slot. At least one entry, because a record naming no observed model does not say what wrote the review, and the site reads exactly this field when it says what produced each report. The plan is never copied in here to make the count up.",
             "type": "object",
             "minProperties": 1,
+            "additionalProperties": { "type": "string", "minLength": 1 }
+          },
+          "assigned_models": {
+            "$comment":"The model each slot was asked to run, keyed by slot, which is the plan rather than an observation. Required and allowed to be empty: a record has to say what the run asked for or say plainly that it asked for nothing, and a run from before 0.9 assigned no models at all. Where a slot appears in both maps and they disagree on the model family, the engine calls the run unpublishable and publish refuses it, so no published record here can hold a mismatch.",
+            "type": "object",
             "additionalProperties": { "type": "string", "minLength": 1 }
           },
           "panel": {

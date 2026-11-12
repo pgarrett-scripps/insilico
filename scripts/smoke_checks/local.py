@@ -57,6 +57,16 @@ CORE_SLOTS = ("core-1", "core-2", "core-3")
 SONNET = "claude-sonnet-5-5"
 OPUS = "claude-opus-5-5"
 HAIKU = "claude-haiku-5-5"
+FABLE = "claude-fable-5-2"
+# The models 0.9 hands out when nothing asks for anything else: the core
+# reviewers take this list in order, every specialist runs sonnet, the editor
+# runs fable and the recorder haiku. The fixture runs the defaults because a
+# panel where every reviewer shared one model is the shape 0.9 exists to stop,
+# and a fixture in that shape would let code that still assumes it pass.
+REVIEWER_MODELS = (SONNET, OPUS, HAIKU)
+SPECIALIST_MODEL = SONNET
+EDITOR_MODEL = FABLE
+RECORDER_MODEL = HAIKU
 CLAUDE_CODE_VERSION = "2.1.322"
 STARTED_AT = "2026-11-11T12:00:00+00:00"
 WORKFLOW_VERSION = "plugin-two-track-v1"
@@ -191,11 +201,16 @@ PACKAGE = {
     "escalated_count": 2,
     "findings_by_track": FINDINGS_BY_TRACK,
     "reviewer_count": 3,
+    # Each row carries both model facts, as 0.9 writes them: the model the slot
+    # was asked to run and the one it reported running. The three core reviewers
+    # are three different models on purpose, which is the whole reason the
+    # engine stopped recording one model for the panel.
     "reviewer_provenance": [
         {
             "slot": "core-1",
             "track": "core",
-            "model": SONNET,
+            "model": REVIEWER_MODELS[0],
+            "assigned_model": REVIEWER_MODELS[0],
             "attempt": 1,
             "tool_calls": 12,
             "findings": 3,
@@ -204,7 +219,8 @@ PACKAGE = {
         {
             "slot": "core-2",
             "track": "core",
-            "model": SONNET,
+            "model": REVIEWER_MODELS[1],
+            "assigned_model": REVIEWER_MODELS[1],
             "attempt": 2,
             "tool_calls": 14,
             "findings": 2,
@@ -213,7 +229,8 @@ PACKAGE = {
         {
             "slot": "core-3",
             "track": "core",
-            "model": SONNET,
+            "model": REVIEWER_MODELS[2],
+            "assigned_model": REVIEWER_MODELS[2],
             "attempt": 1,
             "tool_calls": 9,
             "findings": 0,
@@ -284,22 +301,44 @@ def _counted_by_track() -> dict[str, int]:
 COUNTED_BY_TRACK = _counted_by_track()
 
 
-def _slot_model(slot: str) -> str | None:
-    """The model the plugin's agent file pins for one slot.
+def _assigned_model(slot: str) -> str:
+    """The model the run asked one slot to use, by 0.9's own rule.
 
-    The recorder is the one slot with no model of its own in protocol.json. The
-    harness reports what it actually ran it on, which is how the record ends up
-    naming three models for a run whose protocol names two.
+    Core reviewer `i` takes `REVIEWER_MODELS[(i - 1) % len(REVIEWER_MODELS)]`,
+    every specialist takes one model, and the editor and the recorder take one
+    each. This is the plan, so every slot has one, the recorder included.
     """
     if slot == "editor":
-        return OPUS
+        return EDITOR_MODEL
+    if slot == "recorder":
+        return RECORDER_MODEL
+    if slot.startswith("spec-"):
+        return SPECIALIST_MODEL
+    index = int(slot.rsplit("-", 1)[1])
+    return REVIEWER_MODELS[(index - 1) % len(REVIEWER_MODELS)]
+
+
+def _slot_model(slot: str) -> str | None:
+    """The model one slot reported running, as protocol.json carries it.
+
+    This is an observation rather than the plan: the server writes what the
+    agent itself said it ran on, which is why the recorder, the one slot that
+    reported nothing, has no model here. The harness saw it anyway, which is
+    how the record ends up naming a model for a slot the protocol left blank.
+    """
     if slot == "recorder":
         return None
-    return SONNET
+    return _assigned_model(slot)
 
 
 def _protocol_agents(tracks: tuple[str, ...]) -> dict:
-    """One entry per agent slot, as the plugin server writes them."""
+    """One entry per agent slot, as the plugin server writes them.
+
+    `model` and `assigned_model` are two facts: what the slot reported running
+    and what the run asked it to run. The fixture keeps them equal everywhere
+    they are both known, because a substitution is a run the engine refuses to
+    publish, and the checks that want one build it from here.
+    """
     agents: dict[str, dict] = {}
     for slot in CORE_SLOTS:
         agents[slot] = {
@@ -307,7 +346,8 @@ def _protocol_agents(tracks: tuple[str, ...]) -> dict:
             "track": "core",
             "attempt": 2 if slot == "core-2" else 1,
             "tool_calls": 12,
-            "model": SONNET,
+            "model": _slot_model(slot),
+            "assigned_model": _assigned_model(slot),
             "allowed_tools": ["Read", "Grep"],
         }
     for track in tracks:
@@ -316,14 +356,16 @@ def _protocol_agents(tracks: tuple[str, ...]) -> dict:
             "track": track,
             "attempt": 1,
             "tool_calls": 7,
-            "model": SONNET,
+            "model": _slot_model(f"spec-{track}"),
+            "assigned_model": _assigned_model(f"spec-{track}"),
             "allowed_tools": ["Read", "Grep"],
         }
     agents["editor"] = {
         "role": "editor",
         "attempt": 1,
         "tool_calls": 4,
-        "model": OPUS,
+        "model": _slot_model("editor"),
+        "assigned_model": _assigned_model("editor"),
         "allowed_tools": ["Read"],
     }
     agents["recorder"] = {
@@ -331,6 +373,7 @@ def _protocol_agents(tracks: tuple[str, ...]) -> dict:
         "attempt": 1,
         "tool_calls": 2,
         "model": None,
+        "assigned_model": _assigned_model("recorder"),
         "allowed_tools": ["Read"],
     }
     return agents
@@ -381,7 +424,7 @@ def _runtime_agents(tracks: tuple[str, ...]) -> list[dict]:
                 "state": "complete",
                 "attempt": 2 if slot == "core-2" else 1,
                 "agentType": "pra:core-reviewer",
-                "model": SONNET,
+                "model": _assigned_model(slot),
                 "tokens": 48000,
                 "toolCalls": 12,
                 "durationMs": 210000,
@@ -394,7 +437,7 @@ def _runtime_agents(tracks: tuple[str, ...]) -> list[dict]:
                 "state": "complete",
                 "attempt": 1,
                 "agentType": f"pra:{track}",
-                "model": SONNET,
+                "model": SPECIALIST_MODEL,
                 "tokens": 21000,
                 "toolCalls": 7,
                 "durationMs": 90000,
@@ -406,21 +449,23 @@ def _runtime_agents(tracks: tuple[str, ...]) -> list[dict]:
             "state": "complete",
             "attempt": 1,
             "agentType": "pra:editor",
-            "model": OPUS,
+            "model": EDITOR_MODEL,
             "tokens": 32000,
             "toolCalls": 4,
             "durationMs": 120000,
         }
     )
-    # The recorder slot runs on haiku, which protocol.json does not say, so the
-    # published model map has a model in it that the protocol never named.
+    # The recorder reported no model of its own, so protocol.json carries none
+    # for it and the harness is the only thing that saw one. The published map
+    # has a model in it for a slot the protocol left blank, and it is an
+    # observation rather than the recorder's share of the plan.
     rows.append(
         {
             "label": "ingest",
             "state": "complete",
             "attempt": 1,
             "agentType": "pra:recorder",
-            "model": HAIKU,
+            "model": RECORDER_MODEL,
             "tokens": 9000,
             "toolCalls": 2,
             "durationMs": 30000,
@@ -430,19 +475,30 @@ def _runtime_agents(tracks: tuple[str, ...]) -> list[dict]:
 
 
 def _expected_models() -> dict[str, str]:
-    """The model map the fixture run has to produce, slot by slot."""
-    models = {slot: SONNET for slot in CORE_SLOTS}
-    models.update({f"spec-{track}": SONNET for track in TRACKS})
-    models["editor"] = OPUS
+    """The observed model map the fixture run has to produce, slot by slot."""
+    models = {slot: _assigned_model(slot) for slot in CORE_SLOTS}
+    models.update({f"spec-{track}": SPECIALIST_MODEL for track in TRACKS})
+    models["editor"] = EDITOR_MODEL
     # Keyed by the slot, not by the label the harness ran it under. The run's
     # own record calls that agent `ingest`, and 0.9 merges it into the
     # protocol's `recorder` slot, which is what a reader can match to a report.
-    models["recorder"] = HAIKU
+    models["recorder"] = RECORDER_MODEL
     return models
 
 
+def _expected_assigned() -> dict[str, str]:
+    """The plan the fixture run has to publish beside it, slot by slot.
+
+    Every slot is in here, the recorder included, because the plan is written
+    before anything runs. The observed map can be shorter, and the gap between
+    the two is what `models_unverified` names.
+    """
+    slots = [*CORE_SLOTS, *(f"spec-{track}" for track in TRACKS), "editor", "recorder"]
+    return {slot: _assigned_model(slot) for slot in slots}
+
+
 EXPECTED_MODEL_PHRASE = (
-    f"{SONNET} (9 agents), {HAIKU} (1 agent), {OPUS} (1 agent)"
+    f"{SONNET} (7 agents), {HAIKU} (2 agents), {FABLE} (1 agent), {OPUS} (1 agent)"
 )
 
 # The plugin and engine files the run loaded, hashed at the moment it started.
@@ -470,6 +526,10 @@ def _plan(tracks: tuple[str, ...]) -> dict:
         # to paraphrase both, so a generator could have invented any wording
         # here and still passed.
         "summary": "N core reviewers plus all six specialists, then the editor",
+        # The plan carries the models too, and the manifest is where `read_run`
+        # looks for them when the protocol has none.
+        "models": _expected_assigned(),
+        "reviewer_models": list(REVIEWER_MODELS),
         "execution": (
             "Claude Code plugin workflow; agents in parallel, server-owned ledger."
         ),
@@ -480,12 +540,18 @@ def _protocol(**overrides) -> dict:
     """What the engine was asked for, as `write_protocol` records it."""
     record = {
         "provider": "claude-code",
-        # One sentence, written into both fields, and it is the engine's
-        # own: `write_protocol` says the same thing twice because no run
-        # picks a single model or a single effort for the whole panel. The
-        # fixture used to say `high`, a value no engine writes.
-        "model": "per-agent, pinned in the plugin agent files",
+        # `model` is a sentence rather than an id, because no run picks one
+        # model for the whole panel and every existing consumer of this file
+        # reads a string here. It is `models.describe` of the plan, and the
+        # per-slot answer is in `models` beside it. `effort` is still the one
+        # fixed sentence the server always writes. The fixture used to say
+        # `high`, a value no engine writes.
+        "model": ", ".join(
+            dict.fromkeys(_expected_assigned().values())
+        ) + " (per slot; see models)",
         "effort": "per-agent, pinned in the plugin agent files",
+        "models": _expected_assigned(),
+        "reviewer_models": list(REVIEWER_MODELS),
         # The engine writes the arm here, twice: `mode` and `arm` are the
         # same word. The fixture used to say `plugin`, which the engine
         # never writes, and the publish path reads `mode` to say which arm
@@ -769,6 +835,11 @@ def _run_record(**overrides) -> dict:
         "finding_schema_version": FINDING_SCHEMA,
         "reviewers": 3,
         "specialist_tracks": list(TRACKS),
+        # The engine's own two answers about the plan: the ordered list the core
+        # reviewers were drawn from, and the slots it assigned a model and
+        # nothing observed. Empty here, which is what a fully observed run says.
+        "reviewer_models": list(REVIEWER_MODELS),
+        "models_unverified": [],
         "paper_id": "paper-abc",
         "claude_code_version": CLAUDE_CODE_VERSION,
         "status": "complete",
@@ -798,6 +869,7 @@ def provenance_fixture() -> dict:
         "decision": "major",
         "provider": "claude-code",
         "models": _expected_models(),
+        "assigned_models": _expected_assigned(),
         "ingest": {
             "format": "markdown",
             "tool": "peerreviewagents import_paper",
@@ -826,9 +898,25 @@ def provenance_fixture() -> dict:
             },
             "transport": _run_transport(),
             "agents": [
-                {"slot": "core-1", "role": "core-reviewer", "model": SONNET, "findings": 3},
-                {"slot": "editor", "role": "editor", "model": OPUS},
-                {"slot": "ingest", "agent_type": "pra:recorder", "model": HAIKU},
+                {
+                    "slot": "core-1",
+                    "role": "core-reviewer",
+                    "model": SONNET,
+                    "assigned_model": SONNET,
+                    "findings": 3,
+                },
+                {
+                    "slot": "editor",
+                    "role": "editor",
+                    "model": EDITOR_MODEL,
+                    "assigned_model": EDITOR_MODEL,
+                },
+                {
+                    "slot": "ingest",
+                    "agent_type": "pra:recorder",
+                    "model": RECORDER_MODEL,
+                    "assigned_model": RECORDER_MODEL,
+                },
             ],
             "input": {
                 "kind": "doi",
@@ -1547,9 +1635,12 @@ def check_a_rehearsal_is_never_written_into_the_published_tree() -> None:
 def check_the_method_paragraph_describes_the_run_that_happened() -> None:
     """The fixed wording described a workflow nobody ran.
 
-    In 0.9 there is no debate stage to describe and no single model: the plugin
-    pins a model per agent file, so the paragraph counts agents per model and
-    says outright that agents sharing one are not corroborating each other.
+    In 0.9 there is no debate stage to describe and no single model: every slot
+    is assigned one of its own, so the paragraph counts agents per model and
+    says outright that agents sharing one are not corroborating each other. It
+    counts the models that were observed running, never the ones the run asked
+    for, and when a slot's model went unobserved it says that in a sentence of
+    its own rather than letting the plan stand in for the measurement.
     """
     models = _expected_models()
     full = local_review.method_paragraph(
@@ -1575,10 +1666,37 @@ def check_the_method_paragraph_describes_the_run_that_happened() -> None:
     assert "did not record" in unrecorded, (
         f"an unmeasured run must say so rather than claim a shape: {unrecorded}"
     )
-    assert "models the run did not record" in unrecorded, (
-        f"a run with no model map must say so: {unrecorded}"
+    assert "no slot's model was observed" in unrecorded, (
+        f"a run with no observed model must say so: {unrecorded}"
     )
-    for text in (full, single, unrecorded):
+    for named in _expected_assigned().values():
+        assert named not in unrecorded, (
+            f"the plan was named as the models that ran: {unrecorded}"
+        )
+
+    # A run where some slots were observed and others were not says both: the
+    # count over what ran, and one sentence naming the slots nobody saw.
+    partial = local_review.method_paragraph(
+        {
+            "arm": "full-two-track",
+            "reviewers": 3,
+            "specialist_tracks": list(TRACKS),
+            "models_unverified": ["spec-field", "recorder"],
+        },
+        {slot: model for slot, model in models.items() if slot not in ("spec-field", "recorder")},
+    )
+    assert "not recorded for 2 slots (spec-field, recorder)" in partial, (
+        f"the slots nobody observed are not named: {partial}"
+    )
+    assert "the plan is all this record has" in partial, (
+        f"the paragraph must say what is left when nothing was observed: {partial}"
+    )
+    one = local_review.method_paragraph(
+        {"arm": "single", "reviewers": 1, "models_unverified": ["core-1"]}, {"editor": OPUS}
+    )
+    assert "1 slot (core-1)" in one, f"one slot is one slot: {one}"
+
+    for text in (full, single, unrecorded, partial, one):
         assert "—" not in text and ";" not in text, "the paragraph is authored prose"
 
 
@@ -2369,20 +2487,34 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
         assert by_slot["core-2"]["attempt"] == 2, (
             f"a retried slot lost its attempt: {by_slot['core-2']}"
         )
-        assert by_slot["editor"]["model"] == OPUS, (
+        assert by_slot["editor"]["model"] == EDITOR_MODEL, (
             f"the editor's model was lost: {by_slot['editor']}"
         )
+        # The three core reviewers are three different models, which is the
+        # reason 0.9 records a model per slot at all. A row that lost its own
+        # model and took a neighbour's would read as a panel that did not sit.
+        for index, slot in enumerate(CORE_SLOTS):
+            assert by_slot[slot]["model"] == REVIEWER_MODELS[index], (
+                f"a core reviewer's own model was lost: {by_slot[slot]}"
+            )
         # The harness ran the recorder under the label `ingest`, and 0.9 merges
         # that work into the protocol's own `recorder` slot rather than
-        # publishing a twelfth agent beside it. So the model protocol.json never
-        # pinned reaches the record through the slot that ran it, which is the
-        # row a reader can match to a report.
-        assert by_slot["recorder"]["model"] == HAIKU, (
+        # publishing a twelfth agent beside it. So the one model protocol.json
+        # carries for nobody reaches the record through the slot that ran it,
+        # which is the row a reader can match to a report.
+        assert by_slot["recorder"]["model"] == RECORDER_MODEL, (
             "the recorder's work was observed under another label and belongs to "
             f"its slot: {by_slot['recorder']}"
         )
         assert "ingest" not in by_slot, (
             f"a label the harness used was published as an agent of its own: {slots}"
+        )
+
+        # Every row carries the plan beside the observation, and the two are
+        # kept apart: the plan says what the slot was asked for and the
+        # observation says what was seen.
+        assert local_review.assigned_map(rows) == _expected_assigned(), (
+            f"the plan was lost: {local_review.assigned_map(rows)}"
         )
 
         models = local_review.model_map(rows)
@@ -2396,7 +2528,10 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
 
         # A run whose harness record is nothing but placeholders still has the
         # protocol's own slots, and the one model only the harness knew is gone
-        # from the map, so a record built from it cannot name haiku.
+        # from the map, so a record built from it says nothing about the slot
+        # that never reported one. The plan for that slot survives, because the
+        # plan was written before anything ran, and it is never promoted into
+        # the observed map to fill the hole.
         unnamed = _run_directory(
             Path(tmp) / "unnamed",
             **{
@@ -2409,8 +2544,13 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
         assert len(placeholders) == 11, (
             f"the protocol's own slots are still agents: {placeholders}"
         )
-        assert HAIKU not in local_review.model_map(placeholders).values(), (
-            "the recorder's model is only known from the harness"
+        observed = local_review.model_map(placeholders)
+        assert "recorder" not in observed, (
+            f"the recorder's model is only known from the harness: {observed}"
+        )
+        assert local_review.assigned_map(placeholders)["recorder"] == RECORDER_MODEL, (
+            "the plan is written before the run and survives a harness record "
+            f"that observed nothing: {local_review.assigned_map(placeholders)}"
         )
     with _stub_engine():
         try:
@@ -5093,6 +5233,142 @@ def check_a_version_is_only_recorded_when_it_looks_like_one() -> None:
     )
 
 
+def check_the_page_keeps_the_model_asked_apart_from_the_model_that_ran() -> None:
+    """The page named one model for the whole panel, and 0.9 gives each slot one.
+
+    A reader who sees a single model under a panel of eleven agents reads it as
+    the model that wrote every report. Worse is a page that fills the column for
+    what ran out of the plan: that tells the reader a slot was seen running what
+    it was told to run, which is a claim nobody made. The component has to carry
+    both facts per row, each from its own field, and it has to say in a sentence
+    when the run recorded no model for a slot.
+
+    The page is Astro and is rendered by the site build rather than here, so
+    what this proves offline is that the component reads the two published
+    fields and never writes one in the other's place.
+    """
+    component = _provenance_component_fields()
+
+    for heading in ("<th>Model asked</th>", "<th>Model ran</th>"):
+        assert heading in component, f"the per-agent table needs the column {heading}"
+    assert 'String(row.assigned_model || "")' in component, (
+        "the asked column has to be read from the run's own assigned_model field"
+    )
+    assert 'String(row.model || "")' in component, (
+        "the ran column has to be read from the run's own model field"
+    )
+    assert '{row.model || "unrecorded"}' in component, (
+        "a slot nobody observed reads unrecorded rather than borrowing the plan"
+    )
+    # Neither field may ever stand in for the other. A fallback from one to the
+    # next publishes the plan as an observation, and a substituted model is
+    # exactly what that would hide.
+    for fallback in (
+        "row.model || row.assignedModel",
+        "row.assignedModel || row.model",
+        "row.model || row.assigned_model",
+        "row.assigned_model || row.model",
+    ):
+        assert fallback not in component, (
+            f"the page must not fill one model fact out of the other: {fallback}"
+        )
+
+    assert "runRecord.models_unverified" in component, (
+        "the page has to read the slots whose assigned model nothing observed"
+    )
+    assert "unverifiedModels.length > 0" in component, (
+        "reading the unverified slots is only worth doing if the page says when "
+        "there are any"
+    )
+    assert 'unverifiedModels.join(", ")' in component, (
+        "the sentence has to name the slots, so a reader can see which reports it is about"
+    )
+    assert "the plan is all this record has" in component, (
+        "a slot whose model went unrecorded gets one sentence saying so"
+    )
+
+
+def check_a_slot_that_ran_another_model_family_cannot_be_published() -> None:
+    """A substituted model would attribute a report to a model that never wrote it.
+
+    Claude Code answers a model it may not run with a different one rather than
+    refusing, and it does that inside the session, after every check that can be
+    made before a run starts. The engine is what notices, by reading each slot's
+    plan against what was observed in it, and it holds the run back. There is no
+    second copy of that rule here: what this path has to do is refuse, and print
+    the engine's own sentence naming the slot, what it was asked for and what
+    ran.
+
+    A different version of the same family is not a substitution. It is which
+    version that family resolved to on this login, so such a run publishes, and
+    the record still keeps the version observed apart from the one assigned.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        clean = _run_directory(Path(tmp) / "clean")
+        clean_reading = local_review.engine_reading(clean)
+        assert clean_reading["publishable"], (
+            "the fixture run has to be publishable before a swap is read into it: "
+            f"{clean_reading['not_publishable_reasons']}"
+        )
+
+        def _one_slot_ran(observed: str, where: Path) -> Path:
+            """The same run, with core-1 observed running `observed` instead."""
+            protocol = _protocol()
+            protocol["agents"]["core-1"]["model"] = observed
+            runtime = _runtime(TRACKS)
+            for row in runtime["agents"]:
+                if row.get("label") == "core-1":
+                    row["model"] = observed
+            return _run_directory(
+                where, **{"protocol.json": protocol, "runtime.json": runtime}
+            )
+
+        assert _assigned_model("core-1") == SONNET, (
+            "this check reads core-1's plan, so the plan has to be the one it names"
+        )
+        swapped = _one_slot_ran(OPUS, Path(tmp) / "swapped")
+        reading = local_review.engine_reading(swapped)
+        assert not reading["publishable"], (
+            "the engine has to hold back a run whose slot ran another model family"
+        )
+        reasons = [str(reason).strip() for reason in reading["not_publishable_reasons"]]
+        named = [reason for reason in reasons if "core-1" in reason]
+        assert named, f"the engine's reasons have to name the slot: {reasons}"
+        assert SONNET in named[0] and OPUS in named[0], (
+            f"the reason has to say what was asked for and what ran: {named[0]}"
+        )
+
+        try:
+            local_review.require_complete_run(swapped, local_review.read_run(swapped))
+        except local_review.CommandError as error:
+            for reason in reasons:
+                assert reason.rstrip(".") in str(error), (
+                    f"the refusal has to print the engine's own reason: {error}"
+                )
+        else:
+            raise AssertionError(
+                "a run whose slot ran a different model family was published"
+            )
+
+        # The same family at another version, which the engine does not call a
+        # substitution. It publishes, and the two fields stay apart in the
+        # record: what ran is the id that was observed, never the planned one.
+        resolved = _one_slot_ran("claude-sonnet-4-5", Path(tmp) / "resolved")
+        resolved_reading = local_review.engine_reading(resolved)
+        assert resolved_reading["publishable"], (
+            "another version of the family a slot was assigned is the version that "
+            f"family resolved to: {resolved_reading['not_publishable_reasons']}"
+        )
+        local_review.require_complete_run(resolved, local_review.read_run(resolved))
+        rows = {row["slot"]: row for row in local_review.agent_rows(resolved_reading)}
+        assert rows["core-1"]["assigned_model"] == SONNET, (
+            f"the plan for core-1 was lost: {rows['core-1']}"
+        )
+        assert rows["core-1"]["model"] == "claude-sonnet-4-5", (
+            f"what core-1 was observed running was replaced by its plan: {rows['core-1']}"
+        )
+
+
 # The checks that read a run folder, which in 0.9 means the engine reads it.
 # They write a fixture run to disk and hand it to `peerreviewagents.read_run`,
 # so they are checks against the real reader, and there is nothing for them to
@@ -5178,6 +5454,10 @@ ENGINE_BACKED = (
     (
         check_a_machine_fact_in_any_spelling_leaves_no_bundle_behind,
         "a fact in any spelling refuses the publish and leaves nothing on disk",
+    ),
+    (
+        check_a_slot_that_ran_another_model_family_cannot_be_published,
+        "a slot that ran another model family is refused in the engine's own words",
     ),
 )
 

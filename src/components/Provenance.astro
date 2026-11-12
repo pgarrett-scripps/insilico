@@ -131,27 +131,42 @@ const runRecord = generator?.run || {};
 const attestation = generator?.attestation || {};
 const advisory = generator?.advisory_verdict || {};
 
-// One row per agent that ran, with the model its plugin agent file pinned. The
-// plugin pins a model per agent rather than per stage, so this is the table
-// that says what wrote which part of the review. The harness's unfilled
-// placeholder rows are dropped where the record is built, not here.
+// One row per agent that ran. The run gives every slot a model of its own
+// rather than one model per stage, so this is the table that says what wrote
+// which part of the review. Each row keeps the two model facts apart: assigned
+// is what the run asked that slot to use and ran is what something observed it
+// on. A slot with a plan and no observation shows the gap, because writing the
+// plan into the ran column would turn an unanswered question into an answer.
+// The harness's unfilled placeholder rows are dropped where the record is
+// built, not here.
 const agentRows = (Array.isArray(generator?.agents) ? generator.agents : []).map((row) => ({
   slot: String(row.slot || ""),
   role: String(row.role || row.agent_type || "").replace(/^pra:/, "").replace(/[_-]/g, " "),
   track: String(row.track || ""),
   model: String(row.model || ""),
+  assignedModel: String(row.assigned_model || ""),
   toolCalls: typeof row.tool_calls === "number" ? row.tool_calls : null,
   attempt: typeof row.attempt === "number" ? row.attempt : null,
   findings: typeof row.findings === "number" ? row.findings : null,
   noneFound: row.none_found === true,
 }));
 
-// Agents pinned to the same model are not independent of one another, however
+// The slots the run gave a model and nothing observed running one. The engine
+// publishes a review with this list non-empty, so the page says so rather than
+// letting the table's blanks pass for a formatting choice.
+const unverifiedModels = (Array.isArray(runRecord.models_unverified) ? runRecord.models_unverified : [])
+  .map((slot) => String(slot))
+  .filter(Boolean);
+
+// Agents running the same model are not independent of one another, however
 // many of them read the manuscript. When one model ran the whole panel, that is
 // the heaviest caveat on the page and it goes above the tables rather than in
-// one.
+// one. It is claimed only when every row was observed: one observed model and
+// four unobserved slots is not a panel that shared a model, it is a panel
+// nobody watched.
 const agentModels = [...new Set(agentRows.map((row) => row.model).filter(Boolean))];
-const oneModelRan = agentRows.length > 1 && agentModels.length === 1
+const everyAgentObserved = agentRows.length > 0 && agentRows.every((row) => row.model);
+const oneModelRan = agentRows.length > 1 && everyAgentObserved && agentModels.length === 1
   ? agentModels[0]
   : null;
 
@@ -449,6 +464,14 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     </p>
   )}
 
+  {generator && unverifiedModels.length > 0 && (
+    <p class="prov__warn prov__warn--block">
+      <strong>Some of this panel was not observed running the model it was
+      asked for.</strong>{" "}
+      {`The model that ran went unrecorded for ${unverifiedModels.length} slot${unverifiedModels.length === 1 ? "" : "s"} (${unverifiedModels.join(", ")}), so for ${unverifiedModels.length === 1 ? "it" : "those"} the plan is all this record has.`}
+    </p>
+  )}
+
   {generator && retried.length > 0 && (
     <p class="prov__warn prov__warn--block">
       <strong>A reader had to be run more than once.</strong>{" "}
@@ -488,7 +511,7 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         <table class="prov__table">
           <thead>
             <tr>
-              <th>Agent</th><th>Track</th><th>Model</th><th>Findings</th><th>Tool calls</th>
+              <th>Agent</th><th>Track</th><th>Model asked</th><th>Model ran</th><th>Findings</th><th>Tool calls</th>
             </tr>
           </thead>
           <tbody>
@@ -496,6 +519,7 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
               <tr>
                 <td>{row.role || row.slot}</td>
                 <td class="mono">{row.track || "N/A"}</td>
+                <td class="mono">{row.assignedModel || "N/A"}</td>
                 <td class="mono">{row.model || "unrecorded"}</td>
                 <td class="mono">
                   {row.noneFound
@@ -509,9 +533,11 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         </table>
       </div>
       <p class="prov__note">
-        Each agent's model is pinned by its own file in the plugin, not chosen at
-        run time. These are the models the run reported having used, read back
-        out of the harness record rather than out of the request.
+        The run assigns each slot a model of its own. Model asked is what it was
+        told to use and Model ran is what the harness record says it was seen
+        using, and the second column is never filled in from the first: a slot
+        reading unrecorded is one nobody observed, not one that ran what it was
+        asked for.
       </p>
     </details>
   )}
