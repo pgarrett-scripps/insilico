@@ -430,13 +430,17 @@ const noneFound = localRecord();
 noneFound.generator.run.completeness.none_found = TRACKS;
 assertValidProvenance(noneFound, "a track that reported nothing to report answered");
 
-// A review that read the manuscript end to end and raised nothing is a result,
-// and the record of it is `complete` with `review_guard_status: clean` and no
-// findings. It has to validate, or the corpus can never hold a sound paper.
+// A review that read the manuscript end to end and raised nothing is a result.
+// The engine finishes it as `complete-without-findings` with
+// `review_guard_status: clean`, nothing quarantined and no findings, and calls
+// it publishable. It has to validate, or the corpus can never hold a paper the
+// reviewers raised nothing make-or-break about.
 const foundNothing = localRecord();
+foundNothing.generator.run.status = "complete-without-findings";
 foundNothing.generator.run.review_guard_status = "clean";
 foundNothing.generator.run.findings = 0;
 foundNothing.generator.run.findings_delivered = 0;
+foundNothing.generator.run.quarantined_findings_count = 0;
 assertValidProvenance(foundNothing, "fixture");
 
 // `quarantined` is the engine's other guard word, and it means the guards took
@@ -455,13 +459,24 @@ const inventedGuard = localRecord();
 inventedGuard.generator.run.review_guard_status = "partially-quarantined";
 rejects(inventedGuard, "a guard verdict the engine never writes must not validate");
 
-// The engine's other finished state is not a review. It writes
-// `complete-without-findings` when the editor delivered nothing, and such a
-// record published as a clean result would tell the authors the reviewers
-// recorded nothing against their paper, which is a different claim.
-const everythingQuarantined = localRecord();
-everythingQuarantined.generator.run.status = "complete-without-findings";
-rejects(everythingQuarantined, "the quarantined outcome is not a review of a sound paper");
+// A review the guards emptied ends in that same state and means the opposite,
+// and nothing in the record's own words tells the two apart: the status is the
+// same, the guard verdict is the same word a published review carries, and the
+// count is the only difference. So the schema does not try to. The engine
+// refuses such a run in `publishable`, naming how many it held, and this is the
+// record that admits the refusal.
+const emptiedByTheGuards = localRecord();
+emptiedByTheGuards.generator.run.status = "complete-without-findings";
+emptiedByTheGuards.generator.run.publishable = false;
+emptiedByTheGuards.generator.run.findings = 0;
+emptiedByTheGuards.generator.run.quarantined_findings_count = 4;
+rejects(emptiedByTheGuards, "a review the guards emptied is not a review of a sound paper");
+
+// And the status is still not a free field. A word the engine does not write is
+// a record nothing this pipeline produced could have written.
+const inventedStatus = localRecord();
+inventedStatus.generator.run.status = "complete-with-caveats";
+rejects(inventedStatus, "a run state the engine never writes must not validate");
 
 // Whether the reviewed bytes were fetched from the identifier or handed over
 // from a local disk decides whether the hash means anything to a reader.

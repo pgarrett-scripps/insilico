@@ -195,11 +195,11 @@
             "literature_cutoff": { "type": "string" },
             "claude_code_version": { "type": "string" },
             "status": {
-              "$comment": "The engine writes running, blocked, complete or complete-without-findings. Only complete is a review here, so a bundle written from a run that stopped part way cannot validate even if its folder is moved into place by hand, and neither can one written from the quarantined outcome, which the engine spells complete-without-findings.",
-              "const": "complete"
+              "$comment": "The engine writes running, blocked, complete or complete-without-findings, and the last two are its finished states. complete is a review with findings in it. complete-without-findings is a review written with none, which is what the reviewers raising nothing make-or-break looks like, and it publishes: the engine refuses the other run that ends there, the one whose findings the guards all quarantined, and it refuses it on publishable rather than on the status. A bundle written from a run that stopped part way still cannot validate even if its folder is moved into place by hand.",
+              "enum": ["complete", "complete-without-findings"]
             },
             "publishable": {
-              "$comment": "The engine's own answer, from read_run, to the only question the publish gate asks: the status is complete, the findings came from a readable editor package rather than the ledger, the evidence guard is clean and every run file could be read in full. It is recorded rather than inferred so a reader of the bundle sees the same flag the gate saw, and it is a const because a record written from a run the engine refused has no business on the site.",
+              "$comment": "The engine's own answer, from read_run, to the only question the publish gate asks: the run finished, the findings came from a readable editor package rather than the ledger, a guard verdict was recorded, the guards did not empty the review, and every run file could be read in full. It is recorded rather than inferred so a reader of the bundle sees the same flag the gate saw, and it is a const because a record written from a run the engine refused has no business on the site.",
               "const": true
             },
             "findings_source": {
@@ -207,7 +207,7 @@
               "const": "editor-package"
             },
             "review_guard_status": {
-              "$comment": "The engine's verdict on its own findings, and it writes exactly two words. clean is a run the guards took nothing from, and quarantined is one they took something from, however much. Both publish: a review that raised nothing is clean with no findings, and one that lost a finding whose quote could not be anchored still endorses the rest, with quarantined_findings_count saying how many were held back. A run the editor delivered nothing from is not marked on the guard at all. The engine gives it the status complete-without-findings, which the status field refuses.",
+              "$comment": "The engine's verdict on its own findings, and it writes exactly two words. clean is a run the guards took nothing from, and quarantined is one they took something from, however much. Both publish: a review that raised nothing is clean with no findings, and one that lost a finding whose quote could not be anchored still endorses the rest, with quarantined_findings_count saying how many were held back. The one run neither word excuses is a review the guards emptied, and the engine refuses that on publishable, naming how many it held.",
               "enum": ["clean", "quarantined"]
             },
             "completeness": {
