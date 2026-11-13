@@ -69,12 +69,12 @@ function citations(overrides = {}) {
       unreadable_rows: 0,
     },
     problems: [
-      "1 reference(s) could not be checked because the lookups did not answer; this says nothing about whether they exist",
-      "1 reference(s) are listed in neither Crossref nor Europe PMC; much of the literature is in neither, so this is not evidence that they do not exist",
+      "1 reference(s) could not be checked because the lookups did not answer, which says nothing about whether they exist",
+      "1 reference(s) are listed in neither Crossref nor Europe PMC, and much of the literature is in neither, so this is weak evidence about the references themselves",
       "1 of 4 in-text citation uses were never judged against the source",
     ],
     summary:
-      "4 references: 1 resolved, 0 with a metadata mismatch, 1 with an unregistered DOI, 1 not located in either index, 1 could not be checked, 0 retracted. 4 in-text uses, 3 judged (1 supported, 0 partly, 0 not supported, 2 cannot tell).",
+      "4 references: 1 resolved, 0 with a metadata mismatch, 1 with an unregistered DOI, 1 not located in either index, 1 could not be checked, 0 never looked up, 0 retracted. 4 in-text uses, 3 judged (1 supported, 0 partly, 0 not supported, 2 cannot tell).",
     workers: [...CITATION_WORKERS],
     ...overrides,
   };
@@ -213,7 +213,7 @@ function localRecord(overrides = {}) {
         tokens_total: 636299,
         errors: [],
         problems: [
-          "1 reference(s) could not be checked because the lookups did not answer; this says nothing about whether they exist",
+          "1 reference(s) could not be checked because the lookups did not answer, which says nothing about whether they exist",
         ],
         citations: citations(),
       },

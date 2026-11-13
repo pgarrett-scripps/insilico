@@ -711,30 +711,40 @@ def _run_transport() -> dict:
     )
 
 
-def _citation_lane(run: Path) -> dict | None:
-    """Write the citation lane a 0.9 run writes, with the engine's own writer.
+def _citation_lane(run: Path) -> bool:
+    """Write the citation lane a 0.9 run writes, under `citations/`.
 
-    `scripts/fixtures/make_citation_ledger.py` fills, resolves and judges a
-    tiny synthetic manuscript through the engine, from canned lookup bodies and
-    with no network, so the rows under `citations/` here are the engine's rows
-    rather than this repository's idea of them. It returns the counts the
-    ledger holds.
+    `scripts/fixtures/make_citation_ledger.py` holds the rows of a tiny
+    synthetic manuscript as JSON lines, in the shape `docs/INTEGRATIONS.md`
+    documents, along with the stage record and the lookups cache beside them.
 
-    None means the engine is not importable, which is the bare suite. A lane
-    the engine cannot write is a lane no record can carry either, so the
-    fixture leaves it out rather than typing one in.
+    False means the engine is not importable, which is the bare suite. The rows
+    need no engine to write, but their tallies are read back off them by the
+    engine's own reader, and a lane nothing can count is a lane no record can
+    carry, so the fixture leaves it out rather than typing the numbers in.
     """
-    try:
-        from fixtures import make_citation_ledger
-    except ImportError:
-        return None
+    if not engine_is_importable():
+        return False
+    from fixtures import make_citation_ledger
+
     run = Path(run)
     # A run writes its ledger once. Some checks build the same run folder twice
-    # over, and filling it again would append a second copy of every row, which
-    # is a ledger no run could have written.
-    if (run / CITATION_LEDGER_PATH).exists():
-        return make_citation_ledger.counts(run)
-    return make_citation_ledger.fill(run, slot=CITATION_WORKERS[0])
+    # over, and writing it again is harmless only because the rows are the same
+    # rows: a ledger is append only, and a second pass must not double it.
+    if not (run / CITATION_LEDGER_PATH).exists():
+        make_citation_ledger.fill(run, slot=CITATION_WORKERS[0])
+    return True
+
+
+def _citation_counts(run: Path) -> dict:
+    """What the engine's own reader counts off the ledger in this run folder.
+
+    Through `read_citation_ledger`, which wants a run folder rather than a bare
+    directory, so this is called once the run's own files are on disk.
+    """
+    from fixtures import make_citation_ledger
+
+    return make_citation_ledger.counts(Path(run))
 
 
 CITATION_LEDGER_PATH = "citations/ledger.jsonl"
@@ -780,18 +790,20 @@ CITATION_COUNTS = {
 # carries a count of uses the citations specialist did not confirm.
 CITATION_SUMMARY = (
     "4 references: 1 resolved, 0 with a metadata mismatch, 1 with an unregistered DOI, "
-    "1 not located in either index, 1 could not be checked, 0 retracted. 4 in-text uses, "
-    "3 judged (1 supported, 0 partly, 0 not supported, 2 cannot tell)."
+    "1 not located in either index, 1 could not be checked, 0 never looked up, "
+    "0 retracted. 4 in-text uses, 3 judged (1 supported, 0 partly, 0 not supported, "
+    "2 cannot tell)."
 )
 
 # What the engine says the lane did not settle. These are carried through word
 # for word, because the engine wrote each of them to stop a reader turning a
 # lookup that failed into a claim about the work.
 CITATION_PROBLEMS = [
-    "1 reference(s) could not be checked because the lookups did not answer; "
-    "this says nothing about whether they exist",
-    "1 reference(s) are listed in neither Crossref nor Europe PMC; much of the "
-    "literature is in neither, so this is not evidence that they do not exist",
+    "1 reference(s) could not be checked because the lookups did not answer, "
+    "which says nothing about whether they exist",
+    "1 reference(s) are listed in neither Crossref nor Europe PMC, and much of "
+    "the literature is in neither, so this is weak evidence about the references "
+    "themselves",
     "1 of 4 in-text citation uses were never judged against the source",
 ]
 
@@ -838,37 +850,46 @@ def _run_directory(
     """
     run = Path(root)
     run.mkdir(parents=True, exist_ok=True)
-    totals = _citation_lane(run) if citations else None
+    lane = _citation_lane(run) if citations else False
     home = str(Path.home().resolve())
     files = {
         "protocol.json": _protocol(),
-        "manifest.json": {
-            "paper_id": "paper-abc",
-            "source_sha256": "b" * 64,
-            "pdf": f"{home}/runs/local/paper.pdf",
-            "code": dict(CODE),
-            "workflow_version": WORKFLOW_VERSION,
-            "finding_schema_version": FINDING_SCHEMA,
-            "claude_code_version": CLAUDE_CODE_VERSION,
-            "plugin_root": f"{home}/Repos/PeerReviewAgents/plugins/pra",
-            "plan": _plan(TRACKS),
-            # The manifest names the ledger and repeats its tallies. Relative,
-            # because the engine writes it relative to the run folder, and the
-            # record drops it either way: the bundle carries no ledger file,
-            # so a path in a published record points at nothing.
-            "citation_ledger": CITATION_LEDGER_PATH if totals else None,
-            "citations": dict(totals) if totals else None,
-        },
         "progress.json": _progress(),
         "runtime.json": _runtime(TRACKS),
         "startup.json": _startup(),
         "editor-package.json": dict(PACKAGE, stages=_stages(TRACKS)),
     }
-    files.update(overrides)
+    files.update({
+        name: payload for name, payload in overrides.items() if name != "manifest.json"
+    })
     for name, payload in files.items():
         if payload is None:
             continue
         (run / name).write_text(json.dumps(payload), encoding="utf-8")
+
+    # The manifest goes last because it repeats the ledger's tallies, and those
+    # are read off the run by the engine's own reader rather than typed in here.
+    # That reader wants a run folder, and the files above are what make this one.
+    totals = _citation_counts(run) if lane else None
+    manifest = overrides.get("manifest.json", {
+        "paper_id": "paper-abc",
+        "source_sha256": "b" * 64,
+        "pdf": f"{home}/runs/local/paper.pdf",
+        "code": dict(CODE),
+        "workflow_version": WORKFLOW_VERSION,
+        "finding_schema_version": FINDING_SCHEMA,
+        "claude_code_version": CLAUDE_CODE_VERSION,
+        "plugin_root": f"{home}/Repos/PeerReviewAgents/plugins/pra",
+        "plan": _plan(TRACKS),
+        # The manifest names the ledger and repeats its tallies. Relative,
+        # because the engine writes it relative to the run folder, and the
+        # record drops it either way: the bundle carries no ledger file,
+        # so a path in a published record points at nothing.
+        "citation_ledger": CITATION_LEDGER_PATH if totals else None,
+        "citations": dict(totals) if totals else None,
+    })
+    if manifest is not None:
+        (run / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
 
     for track in TRACKS if report_tracks is None else report_tracks:
         (run / f"audit_{track}.md").write_text(
@@ -3777,14 +3798,14 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
     exports, which is checked against the real `__all__` when the engine is
     importable here.
 
-    One allowance, named here rather than inferred: the citation ledger fixture
-    generator imports `peerreviewagents.engine.citation_ledger`. 0.9.0 writes a
-    ledger and publishes no reader or writer for one, so a fixture that looked
-    like a run's own ledger could not be built off the public surface at all,
-    and a hand typed one would only ever agree with what this repository
-    believed the engine writes. Nothing on the publish path may import it: the
-    record reads the lane through `read_run`, which hands back the counts. The
-    allowance goes away the day the engine exports a ledger writer.
+    There is no allowance left. The citation ledger fixture generator held the
+    only one: it drove the engine's own ledger writer, because 0.9.0 published
+    no reader or writer for the table and a hand typed fixture would only ever
+    have agreed with what this repository believed the engine writes. The engine
+    now documents the rows as a consumer surface and exports
+    `read_citation_ledger`, so the fixture writes the rows itself and reads
+    their tallies back off the public reader, and nothing here imports a private
+    module at all.
     """
     root = Path(local_review.__file__).resolve().parent
     package = local_review.ENGINE_PACKAGE
@@ -3795,23 +3816,14 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
     )
     assert len(sources) > 10, f"the scripts were not found under {root}"
     assert root / "fixtures" / "make_citation_ledger.py" in sources, (
-        "the fixture generators are scripts too, and the one allowance below is "
-        "about a file this scan has to be reading"
+        "the fixture generators are scripts too, and the generator that used to "
+        "hold the one allowance is a file this scan has to be reading"
     )
-    # The whole allowance, written as the one import it covers: this file, this
-    # module, this name. Anything else, anywhere, is still a reach inside.
-    allowance = ("make_citation_ledger.py", f"{package}.engine", "citation_ledger")
 
     private = {}
     names: set[str] = set()
     for path in sources:
         for module, taken in _engine_imports(path):
-            if (path.name, module) == allowance[:2]:
-                assert set(taken) <= {allowance[2]}, (
-                    f"the fixture generator took {sorted(taken)} out of {module}, and "
-                    f"the allowance is for {allowance[2]} alone"
-                )
-                continue
             if module != package:
                 private.setdefault(path.name, []).append(module)
             names.update(taken)
@@ -3824,6 +3836,7 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
         "CLI_COMMANDS",
         "claude_code_version",
         "plugin_directory",
+        "read_citation_ledger",
         "read_run",
         "report_parser",
         "review_parser",
@@ -5736,8 +5749,8 @@ def check_the_citation_lane_is_read_from_the_runs_own_ledger() -> None:
     """The lane's numbers come off the ledger the run wrote, through the engine.
 
     `read_run` fills `citations` by reading `citations/ledger.jsonl` itself, so
-    the fixture here is a run folder with a real ledger in it, filled by the
-    engine's own writer from canned lookups and no network.
+    the fixture here is a run folder with a real ledger in it, written row by
+    row in the shape `docs/INTEGRATIONS.md` documents.
 
     Three things have to hold. The counts in the record are the engine's own
     counts, so the constants this suite compares pages against cannot drift
