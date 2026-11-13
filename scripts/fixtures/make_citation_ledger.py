@@ -58,6 +58,14 @@ LEDGER_PATH = "citations/ledger.jsonl"
 STATE_PATH = "citations/stages.json"
 CACHE_PATH = "citations/lookups"
 
+# The two sentinels the engine locks the table and the stage record on. They are
+# opened and never written, so they are empty here as they are in a run. They
+# are in the fixture because they are files a real lane leaves in `citations/`,
+# and the check that publishes this run and proves the lane's folder never
+# travels should be reading every file the folder holds and not only the ones
+# this repository knows how to read.
+LOCK_PATHS = ("citations/rows.lock", "citations/stages.lock")
+
 # The one timestamp every row in the fixture carries. A run stamps each row as
 # it writes it, and a fixture regenerated an hour later would differ in every
 # line while saying the same thing.
@@ -569,9 +577,11 @@ def fill(review: Path, slot: str = WORKER) -> tuple[dict, ...]:
     """Write one fixture ledger inside a review directory, and hand back the rows.
 
     Everything lands where a run puts it: `citations/ledger.jsonl`,
-    `citations/stages.json` and the lookups cache beside them. A caller that
-    wants a run folder with a citation lane in it points this at the folder, and
-    a caller that wants the two files on their own goes through `build`.
+    `citations/stages.json`, the lookups cache beside them and the two empty
+    lock sentinels the engine holds the table and the stage record on. A caller
+    that wants a run folder with a citation lane in it points this at the
+    folder, and a caller that wants the two files on their own goes through
+    `build`.
 
     The rows go in the order a run wrote them, references before uses, because
     the file is append only and reading it back has to be reading a table a run
@@ -590,6 +600,8 @@ def fill(review: Path, slot: str = WORKER) -> tuple[dict, ...]:
     (review / STATE_PATH).write_text(
         json.dumps(stages(slot), indent=2) + "\n", encoding="utf-8"
     )
+    for lock in LOCK_PATHS:
+        (review / lock).touch()
     _write_cache(review)
     return rows
 

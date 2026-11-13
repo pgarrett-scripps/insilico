@@ -716,7 +716,8 @@ def _citation_lane(run: Path) -> bool:
 
     `scripts/fixtures/make_citation_ledger.py` holds the rows of a tiny
     synthetic manuscript as JSON lines, in the shape `docs/INTEGRATIONS.md`
-    documents, along with the stage record and the lookups cache beside them.
+    documents, along with the stage record, the lookups cache and the two empty
+    lock sentinels a real lane leaves beside them.
 
     False means the engine is not importable, which is the bare suite. The rows
     need no engine to write, but their tallies are read back off them by the
