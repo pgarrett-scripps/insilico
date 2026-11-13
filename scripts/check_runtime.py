@@ -15,17 +15,30 @@ def main() -> None:
         if actual != expected:
             raise RuntimeError(f"{name}: expected {expected}, installed {actual}")
 
+    import peerreviewagents
     import rustypaper
 
-    # The engine is the whole pipeline now, so this imports what the reviews
-    # actually run through. It used to import the LangGraph panel and assert the
-    # role-specific models in peerreview.toml, both of which engine 0.8.0
-    # deletes, and a lock naming a release with no engine package in it is
-    # exactly what this check exists to catch.
-    from peerreviewagents.engine.__main__ import build_parser
-    from peerreviewagents.engine.bundle import plan_review
+    # What a review actually goes through in 0.9. The engine runs as a Claude
+    # Code plugin, so the installed package's job is to start that run and to
+    # read what it wrote: `review` runs one, `import_paper` ingests the
+    # manuscript, `write_reports` renders the run folder. Those three are the
+    # package's own public surface, and a lock naming a release that ships none
+    # of them is exactly what this check exists to catch. It used to import
+    # `peerreviewagents.engine`, which 0.9.0 deletes with no shim.
+    for name in ("review", "import_paper", "write_reports"):
+        assert callable(getattr(peerreviewagents, name)), f"{name} is not importable"
 
-    assert callable(build_parser) and callable(plan_review)
+    # And the two commands the local-review skill tells an editor to run have to
+    # be the two the installed console script offers. check_skill_commands.py
+    # parses every command on that page against these same parsers. This only
+    # asserts that the locked release has them, and it asks for them by their
+    # public names: 0.9 exports both parsers and the command list, so nothing
+    # here imports `peerreviewagents.cli` or `peerreviewagents.plugin`, which
+    # are the engine's own internals and free to move between releases.
+    from peerreviewagents import CLI_COMMANDS, report_parser, review_parser
+
+    assert CLI_COMMANDS == ("review", "report"), f"unexpected engine commands: {CLI_COMMANDS}"
+    assert callable(review_parser) and callable(report_parser)
     assert callable(rustypaper.convert)
     print(f"Verified {len(locked)} locked packages and the review runtime imports")
 

@@ -21,6 +21,7 @@ import Citation from "../../components/Citation.astro";
 import {
   corpus,
   legacyScore100,
+  titleFromFilename,
   VERDICT,
   STATUS,
 } from "../../lib/corpus.js";
@@ -91,6 +92,14 @@ const scoreDescription = (b: Bundle) => {
   if (b.meanScore !== null) return `legacy scaled score ${legacyScore100(b.meanScore)}/100`
   return ""
 }
+
+// A plugin run records the specialist tracks its arm asked for. A track in
+// that list with no report in the bundle is a gap, and it is named here rather
+// than left for a reader to notice by counting headings.
+const absentTracks: string[] = (bundle?.tracksAsked || []).filter(
+  (track: string) =>
+    !bundle.documents.audits.some((d: Document) => d.file === `audit_${track}.md`),
+);
 
 // --- page metadata ---------------------------------------------------------
 let pageTitle = paper.title;
@@ -380,21 +389,38 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
 
           {bundle.documents.audits.length > 0 && (
             <>
-              <h3 class="section__sub">Editorial audits</h3>
+              <h3 class="section__sub">
+                {bundle.plugin ? "Specialist reports" : "Editorial audits"}
+              </h3>
               <p class="docs__note">
-                Factual checklists, not opinions. They skip the debate and go
-                straight to the editor.
+                {bundle.plugin
+                  ? `Each specialist read the whole manuscript for one thing and
+                     reported what it found. The editor read every report
+                     directly, and the findings it kept carry the track that
+                     raised them.`
+                  : `Factual checklists, not opinions. They skip the debate and
+                     go straight to the editor.`}
               </p>
               <ul class="docs__grid">
                 {bundle.documents.audits.map((d) => (
                   <li>
                     <a class="chip" href={`${paperHref}${bundle.route}/${d.slug}/`}>
                       <span class="chip__label">{d.label}</span>
+                      {d.blurb && <span class="chip__blurb">{d.blurb}</span>}
                     </a>
                   </li>
                 ))}
               </ul>
             </>
+          )}
+
+          {absentTracks.length > 0 && (
+            <p class="docs__note docs__note--gap">
+              The run asked for {absentTracks.map(
+                (track) => titleFromFilename(`audit_${track}.md`),
+              ).join(", ")} as well, and no report was written for{" "}
+              {absentTracks.length === 1 ? "it" : "them"}.
+            </p>
           )}
         </section>
 
@@ -694,6 +720,25 @@ const next = at >= 0 && at < flat.length - 1 ? flat[at + 1] : null;
     color: var(--muted);
     padding-left: 0.55rem;
     border-left: 1px solid var(--rule);
+  }
+
+  /* What the track was asked to look for. Hidden on a narrow screen, where
+     six chips with a sentence each would push the documents off the fold. */
+  .chip__blurb {
+    font-size: var(--t--2);
+    color: var(--muted);
+    padding-left: 0.55rem;
+    border-left: 1px solid var(--rule);
+  }
+
+  @media (max-width: 40rem) {
+    .chip__blurb {
+      display: none;
+    }
+  }
+
+  .docs__note--gap {
+    color: var(--ink-dim);
   }
 
   .doc__prose {

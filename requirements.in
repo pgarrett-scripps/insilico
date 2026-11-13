@@ -1,8 +1,9 @@
 # Production review environment on Linux with Python 3.12.
 # Regenerate requirements.txt with the command recorded in its header.
 #
-# The `research` extra is gone from peerreviewagents 0.8.0 along with the
-# LangGraph panel it existed for, so the plain package is the whole dependency.
-peerreviewagents==0.8.0
+# peerreviewagents 0.9.0 runs the review as a Claude Code plugin, so the
+# package carries no model client and the plain package is the whole
+# dependency. There are no extras to ask for.
+peerreviewagents==0.9.0
 rustypaper==0.2.2
 pyyaml>=6.0

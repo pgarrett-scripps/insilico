@@ -18,8 +18,10 @@ docs/                     # the record, written by the pipeline
     ├── manifest.json     # SHA-256 for every published artifact
     ├── round.json        # machine-readable record a later round rules on
     ├── summary.md  decision_letter.md  manuscript_stats.md
-    └── (hosted panel only) desk_screen.md  debate_transcript.md
-        journal_recommendations.md  review_*.md  audit_*.md
+    ├── review_*.md       # one per core reviewer
+    ├── audit_*.md        # one per specialist track
+    └── (retired panel)   desk_screen.md  debate_transcript.md
+        debate_synthesis.md  journal_recommendations.md
 
 src/                      # the site
 ├── lib/corpus.js         # walks docs/reviews/ into what pages render
@@ -68,12 +70,14 @@ belongs, and `publish` turns a finished run into a bundle the site can render.
 Two things about this route are deliberate and show up on every page it
 produces.
 
-One model writes the whole review. There is no desk screen, no five-reviewer
-panel and no debate round, so nothing checks the reviewer that is any better
-than the reviewer. A local review is therefore published as an experiment by
-default: public, citable, and unable to set the paper's editorial status or
-become the baseline for the next draft. `--baseline-eligible` opts one in, and
-that is a decision taken per review.
+Every agent in the run reads the same manuscript through the same transport, and
+the only thing that distinguishes one reader from another is the prompt it was
+given. Three core reviewers in isolation and six specialist tracks are six
+questions asked once each, not an independent replication of the review, so a
+local review is published as an experiment by default: public, citable, and
+unable to set the paper's editorial status or become the baseline for the next
+draft. `--baseline-eligible` opts one in, and that is a decision taken per
+review.
 
 The decision is a person's. The engine grades findings by severity and
 deliberately recommends no verdict, so `--decision` is an operator input that the
@@ -149,19 +153,23 @@ replaced or edited.
 ## Running a review
 
 ```bash
-# Any interpreter with peerreviewagents 0.8 or newer importable.
+# Any interpreter with peerreviewagents 0.9.0 or newer importable. The
+# `peerreview` console script used below is the one beside it.
 PY=/path/to/.venv/bin/python
 
 $PY scripts/local_review.py fingerprint
 $PY scripts/local_review.py prepare --paper 10.1101/2026.03.12.711120 \
-    --out runs/prepared-example
+    --out runs/prepared-example --arm full-two-track --reviewers 3
 ```
 
 `fingerprint` is the preflight. It prints the engine version, a SHA-256 over the
-engine's own source tree, and the transport record including the authentication
-method and subscription type. It calls no model. If the `claude` CLI turns out
-to be authenticated against a paid API provider, it refuses to continue, which
-is the check that keeps this path free.
+engine's own source tree, the same over the plugin that does the reviewing, the
+hash of the review workflow, and the transport record. It calls no model. It
+reports no authentication status, because the engine exposes none: what keeps
+this path free is the plugin starter, which removes `ANTHROPIC_API_KEY` and
+`ANTHROPIC_AUTH_TOKEN` from the environment it hands the session, so no key in
+the operator's shell can pay for a review. If the `claude` CLI does not report
+a version it says so, because a review needs it on PATH and signed in.
 
 `prepare` resolves the identifier, downloads the exact PDF for that revision,
 hashes it, and writes `prepared.json` with the destination, the draft number and
@@ -174,33 +182,219 @@ either. `--pdf` supplies exact bytes for that identity. A `--pdf` with no
 does not.
 
 Then the engine itself, which is the only part that spends anything, and which
-the skill walks through: `import`, `review`, `report`. The provider is
-`claude-code` and the policy is `agentic-v1`, both named in the command rather
-than left to the default. Read `REVIEW.md` from the run, decide, and write the
-bundle:
+the skill walks through. One command imports the manuscript and runs the whole
+panel, and a second writes the readable reports:
+
+```bash
+peerreview review runs/prepared-example/<fetched>.pdf runs/example \
+    --arm full-two-track --reviewers 3 --literature-cutoff 2026-11-12
+peerreview report runs/example/review
+```
+
+Both positionals are required and in that order: the manuscript PDF, then the
+folder to write. The engine writes `runs/example/manuscript`, the imported
+paper, and `runs/example/review`, the run. There is no provider flag and no
+policy flag, and Claude Code is the only transport. There is no single model
+flag either, because engine 0.9 gives every slot a model of its own. Five flags
+on `peerreview review` move that plan, and each has a default the engine prints
+in its own `--help`:
+
+- `--reviewer-models` takes `A,B,C`, the list the core reviewers are drawn from
+  in order, reviewer `i` taking the `i`-th and wrapping round. It defaults to
+  `claude-sonnet-5-5,claude-opus-5-5,claude-haiku-5-5`.
+- `--specialist-model` takes one id, the model every specialist runs. It
+  defaults to `claude-sonnet-5-5`.
+- `--editor-model` takes one id. It defaults to `claude-fable-5-2`.
+- `--recorder-model` takes one id, for ingest, the ledger and the write-up. It
+  defaults to `claude-haiku-5-5`.
+- `--citation-worker-model` takes one id, the model every citation worker runs.
+  It defaults to `claude-haiku-5-5`, and the environment variable
+  `PEERREVIEW_CITATION_WORKER_MODEL` sets the same thing.
+
+A model this login cannot run is refused before anything is spent rather than
+swapped for another.
+
+One more flag sizes the citation lane. `--citation-workers` takes a whole number
+from 0 to 12, how many worker slots look the reference list up in parallel, and
+it defaults to 4. The workers are slots `cite-1` upward and they write no part
+of the review: they read the reference list, look each entry up, and record what
+they found in `review/citations/ledger.jsonl`, with the fetched pages cached
+under `review/citations/lookups/`. Two consequences follow for anything that
+reads a run. A worker slot is never counted as a reviewer, which is why
+`models` and `assigned_models` in the published record leave the `cite-N` slots
+out while `generator.agents` keeps their rows. And a worker observed running a
+model family other than the one it was assigned is recorded as a problem rather
+than a reason to withhold the review, because nothing a worker wrote is quoted
+in the review. A reviewer slot in the same position still makes the run
+unpublishable.
+
+Passing `--citation-workers 0` is a run that checked no reference against an
+index. The page says that in those words, because no lane at all is a different
+claim from a lane that looked and found nothing.
+
+`protocol.json` records that plan slot by slot and `runtime.json` records what
+the harness observed in each slot. They are two different facts and nothing
+here fills one from the other. Read `REVIEW.md` from the run, decide, and write
+the bundle:
 
 ```bash
 $PY scripts/local_review.py publish \
     --prepared runs/prepared-example \
-    --run runs/example/run \
-    --workspace runs/example/workspace \
+    --run runs/example \
     --decision major \
     --editor your-name \
     --human-reviewed yes \
     --publish
 ```
 
-`publish` writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`,
-`editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. It
-refuses to overwrite an existing bundle. Without `--publish` the bundle lands
+`publish` writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`, one
+`audit_<track>.md` for each of the six specialist tracks the run reported on,
+`editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. A
+track the arm asked for with no report in the run is named as a gap on the
+rendered page rather than quietly left out. It refuses to overwrite an existing
+bundle.
+
+What it does not copy out is the citation lane's own files. The ledger stays in
+the run folder and so does the lookups cache beside it, and `provenance.json`
+carries the lane's tallies instead, under `generator.run.citations`. Two reasons,
+and they are different. The cache is article text fetched from publishers, and
+the review rests on it only through the short passage a confirmed verdict
+quotes, so republishing it would make this site a redistributor of other
+people's articles for no gain to a reader. The ledger is a row per reference
+with a state on it, written by a worker and not read by any specialist unless
+the specialist chose to, and a row nobody wrote up is not a finding. Publishing
+the rows would put a verdict about a named author's paper on the site that no
+reader of this project ever endorsed. What the page shows instead is each state
+with its own count and a caption saying what that state does and does not mean,
+and the counts for `not_found`, `not_located` and `could_not_check` are never
+added together into one figure, because no single reading of such a total is
+true of all three.
+
+Without `--publish` the bundle lands
 under `runs/rehearsal/`, which is git-ignored: a run made to see what a prompt
 change did is a question about the pipeline, and answering it should not add a
 review to someone's paper.
 
-`--workspace` is what ties the three steps together. `prepare` hashes the PDF it
-fetched, the engine's importer hashes the bytes it was handed, and the run
-records the paper id it reviewed. `publish` compares all three and refuses when
-they disagree, so a run of one paper cannot be published as a review of another.
+### What a published bundle may not name
+
+A review is generated on an editor's own machine, so `publish` scans everything
+it is about to write, both the Markdown it renders and every artifact it copies
+out of the run, for text that names the machine rather than the review. The scan
+has two tiers. What decides the tier is not where the text sits but how specific
+the thing it names is.
+
+**Tier 1 is a specific machine fact.** Looked up at publish time, not recognised
+by shape: any detected path of two or more segments, which is the home
+directory, this checkout, the run folder, and the working or temporary directory
+when either is deeper than one level, plus a host name that carries a digit, a
+hyphen or a dot. Each fact is registered in both the spelling it was given in
+and the spelling it resolves to, so a home directory or a run folder reached
+through a symbolic link is the same fact under either name. The run folder is
+registered twice over for the same reason: once as the engine resolved it and
+once as it was typed on the command line, together with the folder each of
+those sits in, because a reviewer who was handed a link has only the typed
+spelling to paste into a comment.
+
+Each one is matched as a plain case-insensitive substring, in every string and
+every JSON field name at any depth. The text is scanned as written and again in
+one canonical form, built by a single function that applies the same steps over
+and over until the string stops changing: NFKC normalisation, HTML entity
+decoding, percent-decoding, removal of the format characters that print as
+nothing such as U+200B and U+FEFF, folding of look-alike slashes such as U+2215
+and U+FF0F and of look-alike hyphens such as U+2010 and U+2212, removal of a
+backslash placed in front of ASCII punctuation, and collapsing of repeated
+slashes and `/./` segments. The loop is what matters: one pass would decode
+`%252F` to `%2F` and stop, and HTML entities can hide a percent sign from the
+decoder that runs before them, so the steps repeat until the text is stable. A
+scheme's `//` survives the collapse, because `https://home/x` is a URL and
+`//home/x` is a path and the colon in front is what tells them apart.
+
+A backslash is two characters at once and nothing in the text says which one it
+is, so the canonical form is built twice and a hit from either counts. In one
+reading the escape is dropped first, which is what `\/home\/ty\/x` and
+`ty\-MS\-7C80` need. In the other the backslash is folded to a separator first,
+which is what `\opt\.cache\insilico` needs, since dropping the escape first
+would eat the separator in front of a segment that starts with `.`, `-` or `_`
+and turn the path into `/opt.cache/insilico`. Neither reading is the right one
+and the scan does not try to pick.
+
+There is
+no left or right boundary on the match, no
+vocabulary that is exempt and no prose-only mode, because a string like
+`/home/ty` or `ty-ms-7c80` cannot turn up in a review of a paper or in this
+repository's own vocabulary. Nothing waives one. No flag reaches it, an
+allowance that merely contains one is itself refused before the scan runs, and
+finding the same text in the manuscript does not excuse it either, because a
+paper that happens to contain the operator's home directory is not permission to
+publish it.
+
+**Tier 2 is a shape.** A word is not a leak, so the generic facts belong here
+rather than in tier 1: a detected directory that is one segment long such as
+`/tmp`, `/data` or `/root`, a host name that is only letters such as `media`,
+`core` or `editor`, and the bare account name. None of those is refused on its
+own. They are caught only in the shapes where a bare word can be nothing but a
+machine, which are a path written under such a root, a host after `@` or `//` or
+`\\` or before `:/`, and the user name after a home root. The same tier holds
+the shapes that need no detection at all: a path, a drive letter, a `~`
+reference, a UNC share, an `$HOME` expansion and an email address, refused on
+pattern alone because most of the time a string shaped like a path is a path.
+
+Shapes misjudge. "R:/G/B channel order" is a reviewer writing about channels and
+not a drive, and a machine called `editor` has to be able to publish its own
+provenance record. So a tier 2 refusal is a default rather than a verdict. The
+refusal prints the exact flag to copy, and the editor who has read it publishes
+the text deliberately:
+
+```bash
+$PY scripts/local_review.py publish \
+    --prepared runs/prepared-example \
+    --run runs/example \
+    --decision major \
+    --editor your-name \
+    --human-reviewed yes \
+    --allow-text='R:/G/B' \
+    --publish
+```
+
+`--allow-text` is repeatable and matches the text exactly. It is printed in the
+`=` form so that a hit starting with a hyphen can be copied straight back. Each
+allowance is recorded in the bundle as `provenance.review.allowed_text` and
+shown on the rendered review page beside the provenance block, so a reader sees
+that a waiver was used rather than having to take the record's word for it. With
+that valve in place tier 2 only has to be sensible: a shape that over-refuses
+costs an editor one flag, while a shape that under-refuses publishes a path.
+
+Two things are rewritten rather than refused, and both are reported. A value in
+one of the engine's own path fields, which are `pdf`, `plugin_dir`,
+`plugin_root`, `run_directory`, `source_review_path`, `workspace` and
+`memo_path`, is made relative to this checkout when it lies inside it and
+dropped when it does not. That happens only when the value is actually shaped
+like a path, so a reviewer's `/ 2 is the wrong denominator` in such a field is
+published as written.
+
+Every publish prints one line about `editor-package.json`, because the bundle's
+copy is not the engine's file with a few strings scrubbed. It is rebuilt from the
+same reading by `review_package`, and that rebuild is the intended projection:
+the engine's package carries the whole run and the bundle publishes the parts a
+reader of the review needs. The line compares the two sets of top-level keys and
+names what the bundle does not carry, such as `stages` and `reviewer_provenance`,
+what it adds, which today is `findings_source`, and any path field that was
+rewritten or dropped. It is computed from the engine's own file read back off the
+run folder rather than from a list in this repository, so the next engine release
+changes the line instead of making it wrong. A path used as a JSON
+*field name* is refused outright, inside this checkout or outside it. Engine
+0.9 writes no mapping keyed by a path, so a rewrite there would be faithful to
+nothing, and dropping the key would publish an artifact missing an entry the
+engine wrote. `publish` names the key and the flag that publishes it as it
+stands.
+
+The imported manuscript is what ties the steps together. `prepare` hashes the
+PDF it fetched, the engine's importer hashes the bytes it was handed into
+`paper.json`, and the run records the paper it reviewed. `publish` reads that
+`paper.json` from the manuscript folder beside the run, compares all three, and
+refuses when they disagree, so a run of one paper cannot be published as a
+review of another. `--workspace` points at that folder when it is somewhere
+else.
 
 `--editor` and `--human-reviewed` have no defaults. The published record carries
 an attestation that a named person read the run before it was merged, and that
@@ -208,13 +402,25 @@ claim is the operator's to make rather than the script's. Answering
 `--human-reviewed no` writes a rehearsal that records the absence instead, and
 refuses `--publish`.
 
-Everything in the record about the run itself comes from what the run wrote:
-`protocol.json` for the model and the mode, `manifest.json` for the paper id and
-the engine's own source fingerprint taken when the call started,
-`editor-package.json` for the reviewer count and the synthesis policy,
-`progress.json` and the usage receipts for the status and the model ids the
-transport actually served. A value the run did not record is left out of the
-record rather than filled in from a flag.
+Everything in the record about the run itself comes from what the run wrote, and
+it is read back through the engine's own `read_run` rather than parsed out of the
+files by hand: the arm and the workflow the run was asked for, the paper id and
+the hash of each plugin and workflow file taken when the call started, the
+reviewer count, one row per agent carrying both the model that slot was asked
+for and the model something in the run was observed serving it, which stages
+reported and which were retried, the guards' verdict and how
+many findings they held back, and the status the run ended in. One field is read
+out of the run folder by hand, because the reading does not carry it: the moment
+the starter wrote `startup.json`, which the record publishes as when the
+transport evidence was gathered. A value the run did not record is left out of
+the record rather than filled in from a flag.
+
+Whether a run can be published is the engine's answer too. `read_run` sets a
+`publishable` flag and lists its reasons beside it, and publish gates on the
+flag and prints those reasons. No status word is special-cased, which is what
+lets a review that raised nothing publish while a review the guards emptied of
+every finding does not, although the engine finishes both as
+`complete-without-findings`.
 
 Nothing in `publish` writes prose. Every document is rendered from the engine's
 saved output, and the reviewer's own words are quoted rather than rewritten.
@@ -231,9 +437,10 @@ second independent read of draft 3 is `v3/r2`, while the first review of draft
 4 is `v4/r1`.
 
 The newest eligible editorial attempt on the newest earlier draft is the
-baseline for a revision. A single-model experiment stays public but cannot set
-the paper's status or become the baseline for the next draft, which is why a
-local review is experimental unless an editor says otherwise.
+baseline for a revision. A review published without `--baseline-eligible` stays
+public but cannot set the paper's status or become the baseline for the next
+draft, which is why a local review is experimental unless an editor says
+otherwise.
 
 - `--replace` on `prepare` allows a new attempt on a draft this repository has
   already reviewed. It creates the next immutable attempt and keeps every
@@ -242,10 +449,15 @@ local review is experimental unless an editor says otherwise.
   differs on its own and no flag is needed.
 - `--baseline-eligible` on `publish` lets a local review set the paper's
   editorial status. Off by default.
-- `--model` on `publish` records the model id the run requested. `publish` also
-  reads the run's own JSON for the model ids actually observed, and the page
-  says so if the two disagree.
-- `--offline` skips the CLI authentication probe. For tests, not for a real run.
+The model ids are not a flag on `publish`. It reads them from the JSON the run
+wrote, which is the only record of what was asked for and of what answered. The
+record publishes the two as separate maps, `assigned_models` for the plan and
+`models` for what was observed, and the review page shows both per report. A
+slot nobody was observed running is published as unrecorded and named in
+`models_unverified`, which the page says in one sentence, rather than being
+filled in from the plan. A slot observed running a different model family from
+the one it was asked for makes the whole run unpublishable, and the refusal
+prints the engine's own reason for it.
 
 ### Checks
 
@@ -254,7 +466,9 @@ python scripts/smoke_test.py          # pipeline and site data contract
 python scripts/check_review_manifests.py
 npm run check:schema                  # published provenance against the schema
 npm run check:local                   # the local record validates, a paid one does not
-npm run check:markdown  npm run check:attempts  npm run build
+npm run check:markdown
+npm run check:attempts
+npm run build
 npm run check:punctuation             # after a build, over dist/
 ```
 
@@ -267,23 +481,26 @@ alongside a build that fails if a published bundle goes unrendered.
 ## Configuration
 
 A local run has very little to configure, which is the point. The transport is
-`claude-code`, the model is `claude-sonnet-5-5` or `claude-opus-5-5`, and the
-workflow is the engine's own ensemble mode with a reviewer count. Everything
-else that used to be a setting is now a property of the engine release, and the
-release is identified in the record rather than described.
+`claude-code`, the arm names which readers run, and `--reviewers` says how many
+core reviewers to send in. The models are per slot rather than per review, with
+defaults the engine owns and four flags on `peerreview review` to move them, and
+the record reports the plan and the observation side by side.
+Everything else that used to be a setting is now a property of the engine
+release, and the release is identified in the record rather than described.
 
-Each review records the engine package name and version, a SHA-256 over the
-engine's source tree, the In Silico commit, the transport and its
-authentication method, the model requested, the model ids observed in the run,
-and a hash of the exact PDF bytes reviewed. The
+Each review records the engine package name and version, the hash of every
+plugin and workflow file that did the work, the In Silico commit, the transport
+and its authentication method, one row per agent with the model it was asked
+for and the model it was observed running, and a hash of
+the exact PDF bytes reviewed. The
 [DOI](https://doi.org/10.5281/zenodo.21781895) identifies the software and the
 hashes identify the run.
 
-`schemas/review-provenance.schema.json` is the contract. A locally generated
-record is `schema_version: 3` and carries a `generator` block. The retired
-panel's records are `schema_version: 2`, and records written before versioning
-existed are read as they are. All three keep rendering, which is why no
-published bundle had to be rewritten for any of this.
+`schemas/review-provenance.schema.json` is the contract. A record from a plugin
+run is `schema_version: 4` and carries a `generator` block. The retired panel's
+records are `schema_version: 2`, and records written before versioning existed
+are read as they are. All of them keep rendering, which is why no published
+bundle had to be rewritten for any of this.
 
 ### Retired: configuration of the hosted panel
 
@@ -347,11 +564,11 @@ path the workflow exited 3, posted a note on the issue, and opened no pull
 request. On the current path the engine command fails, and there is nothing to
 hand over.
 
-`PEERREVIEW_CAVEMAN` controls telegraphic compression and defaults to `off`. It
-saves under a cent a review and it is not free. Under `light`, the old
-eight-role panel's clarity reviewer reported grammatical errors three times on
-a paper where the uncompressed run reported none, having read the compressor's
-work as the authors' writing.
+The prompt compression the hosted panel could switch on is gone from the engine.
+It saved under a cent a review and it was not free: with compression on, that
+panel's clarity reviewer reported grammatical errors three times on a paper
+where the uncompressed run reported none, having read the compressor's work as
+the authors' writing.
 
 ## Cost
 
@@ -361,9 +578,10 @@ and the editor's own time rather than a dollar figure. A local record therefore
 reports no cost at all. `total_cost_usd` is `null`, and the schema requires it to
 be `null` rather than zero, because a zero would read as a measured free run.
 
-The real limit is the subscription's rate and usage limits. Two reviewers in
-ensemble mode is the default for that reason. The engine refuses an existing run
-directory, so a retry needs a new folder and never silently doubles a run.
+The real limit is the subscription's rate and usage limits. Three core reviewers
+is the default for that reason, and `--reviewers` is the knob that costs
+capacity. The engine refuses an existing run directory, so a retry needs a new
+folder and never silently doubles a run.
 
 Reviews published on the retired hosted path do carry a per-agent dollar
 breakdown in their `provenance.json`, measured at the time. A full round there
@@ -376,7 +594,7 @@ was 15 model calls, and a desk rejection ended the run before the other 14.
       subscription login and no paid API key. A Claude subscription reports its
       API provider as `firstParty`, which is the subscription route and not a
       paid key
-- [ ] Install an interpreter with `peerreviewagents` 0.8 or newer importable
+- [ ] Install an interpreter with `peerreviewagents` 0.9.0 importable
 - [ ] Settings, Pages, Source: **GitHub Actions**
 - [ ] Settings, Actions, Workflow permissions: **Read and write**, and allow PR
       creation
