@@ -78,7 +78,7 @@ this", and to say which they mean.
 | Stage | Agents | Produces |
 |---|---|---|
 | Review | Three core reviewers, each reading the whole manuscript in isolation | 3 reports, one per reviewer |
-| Specialists | Statistics, Figures and tables, Methods and reporting, Citations, Internal consistency, Field context | 6 track reports, straight to the editor |
+| Specialists | Statistics, Figures and tables, Methods and reporting, Citations, Numbers, Field context | 6 track reports, straight to the editor |
 | Guards | The evidence guards, over every finding | A quote check per finding, and a count of what they held back |
 | Editor | Editor | The decision letter, and the findings it kept |
 

@@ -83,7 +83,7 @@ SPECIALIST_TRACKS = (
     "figures-tables",
     "methods-reporting",
     "citations",
-    "consistency",
+    "numbers",
     "field",
 )
 
@@ -534,6 +534,99 @@ def agent_rows(reading: dict) -> list[dict]:
     return sorted(rows, key=lambda row: str(row["slot"]))
 
 
+# The role engine 0.9.0 gives the `cite-1..cite-N` slots of its citation lane.
+# A worker looks references up and writes rows into the citation ledger. It
+# writes no finding, no track report and no part of the letter, so it is never
+# counted among the agents that reviewed the manuscript, and a worker observed
+# running a model family other than its assigned one does not make the run
+# unpublishable. Both facts follow from the same thing: nothing a worker did is
+# quoted in the review.
+CITATION_WORKER_ROLE = "citation-worker"
+
+
+def is_citation_worker(row: dict) -> bool:
+    """Whether this agent row is a citation lane worker rather than a reviewer."""
+    return str(_dict(row).get("role") or "") == CITATION_WORKER_ROLE
+
+
+def citation_workers(agents: list[dict]) -> list[str]:
+    """The slots of the citation lane, named so no count can mistake them.
+
+    Returned as a list of slot names rather than a count, because the thing a
+    reader needs is the ability to find those rows in the model table and see
+    that they are not reviewers. The role is read off the row the engine wrote
+    rather than matched against the `cite-` prefix, so a lane the engine renames
+    keeps working as long as it keeps writing the role.
+    """
+    return sorted(
+        str(row.get("slot"))
+        for row in _list(agents)
+        if is_citation_worker(row) and _dict(row).get("slot")
+    )
+
+
+def reviewing_agents(agents: list[dict]) -> list[dict]:
+    """The rows that wrote some part of the review, workers left out.
+
+    Every statement about who read the manuscript is counted over this rather
+    than over every row: how many agents ran, which models wrote the review, and
+    whether one model wrote all of it. Four citation workers on a cheaper model
+    would otherwise make a panel look more varied than it was, which is the
+    wrong answer in the one direction that matters.
+    """
+    return [row for row in _list(agents) if not is_citation_worker(row)]
+
+
+def citation_record(reading: dict) -> dict:
+    """The state of the run's citation lane, for the published record.
+
+    The engine hands back `citations` with `enabled`, `ledger`, `counts`,
+    `complete`, `summary` and `problems`. Three of those are reshaped here.
+
+    The ledger path is dropped, both the absolute one in `citations['ledger']`
+    and the relative one in `counts['ledger']`. The bundle does not carry the
+    ledger file, so a path in a published record points at nothing a reader can
+    open, and the absolute form names the machine that wrote the record.
+
+    `counts['stages']` is dropped too. It is the lane's own stage record, which
+    is useful while a run is going and says nothing a reader of a finished
+    review can act on, and leaving it in would put a nested object inside a map
+    of tallies where every other value is a number.
+
+    `complete` and `stages_done` are promoted out of the counts, because they
+    are answers rather than tallies, and they answer different questions: every
+    stage ran to the end, against the table actually checked something. An
+    empty ledger satisfies the first and fails the second.
+
+    Nothing here decides whether the lane finished well. An unfinished ledger
+    does not hold a review back, the engine says so, and the lines it wrote
+    about what was not checked are carried through word for word.
+    """
+    citations = _dict(reading.get("citations"))
+    if not citations:
+        return {}
+    counts = _dict(citations.get("counts"))
+    record: dict = {
+        "enabled": bool(citations.get("enabled")),
+        "complete": bool(citations.get("complete")),
+        "counts": {
+            str(key): int(value)
+            for key, value in counts.items()
+            if isinstance(value, int) and not isinstance(value, bool)
+        },
+        "problems": [str(p).strip() for p in _list(citations.get("problems")) if str(p).strip()],
+    }
+    if isinstance(counts.get("stages_done"), bool):
+        record["stages_done"] = counts["stages_done"]
+    summary = str(citations.get("summary") or "").strip()
+    if summary:
+        record["summary"] = summary
+    workers = citation_workers(reading.get("agents"))
+    if workers:
+        record["workers"] = workers
+    return record
+
+
 def model_map(agents: list[dict]) -> dict[str, str]:
     """Which model wrote which report, keyed by the slot that wrote it.
 
@@ -768,8 +861,41 @@ def run_record(reading: dict) -> dict:
         if isinstance(runtime.get(key), (int, float)):
             record[key] = runtime[key]
     put("completeness", completeness(reading.get("stages")))
+    put("citations", citation_record(reading))
     record["errors"] = run_errors(reading)
     return record
+
+
+def unfinished_lane_lines(reading: dict) -> set[str]:
+    """The problems lines that are unfinished work rather than harm.
+
+    Engine 0.9.0 appends two kinds of line to `problems` after it has already
+    decided `publishable`, so a run it publishes can carry them: the citation
+    lane's own account of what it did not check, and a citation worker slot
+    observed running a model family other than the one it was assigned. Neither
+    is a thing that went wrong with the review, and the engine's own
+    instruction is to show them beside the findings and not to gate on them.
+
+    The citation lines are taken from `citations['problems']`, where the engine
+    repeats them. The worker lines are found by their slot: the engine writes
+    each one as `<slot> was assigned ... but ran ...`, so a line whose first
+    word is one of this run's citation worker slots is one of them. Matching the
+    slot rather than the sentence means a reworded engine message is still
+    recognised, and a reviewer slot's substitution line is still an error here,
+    which it has to be: that one does make the run unpublishable.
+    """
+    lines = {
+        str(p).strip()
+        for p in _list(_dict(reading.get("citations")).get("problems"))
+        if str(p).strip()
+    }
+    workers = set(citation_workers(reading.get("agents")))
+    if workers:
+        for problem in _list(reading.get("problems")):
+            text = str(problem).strip()
+            if text and text.split(" ", 1)[0] in workers:
+                lines.add(text)
+    return lines
 
 
 def run_errors(reading: dict) -> list[str]:
@@ -799,6 +925,16 @@ def run_errors(reading: dict) -> list[str]:
     emptied, and that is not decided here either: the engine refuses such a run
     in `not_publishable_reasons`, naming how many it held, and those sentences
     are copied in whenever the engine holds a run back for any reason at all.
+
+    Nor is the citation lane's unfinished work. Engine 0.9.0 appends a line to
+    `problems` for each citation stage that did not answer and for each
+    citation worker that ran another model family, and it appends them after it
+    has decided the run publishable, which says plainly that it does not read
+    them as harm. Filing them here would publish "4 references could not be
+    checked because the lookups did not answer" as something that went wrong
+    with the review, when what it describes is work the lane did not get to.
+    They are published as the lane's own state instead, in `citations`, and
+    `unfinished_lane_lines` is what keeps the two apart.
     """
     errors: list[str] = []
     for value in (reading.get("cause"), reading.get("note")):
@@ -826,10 +962,14 @@ def run_errors(reading: dict) -> list[str]:
     if stages and not stages.get("editor_accepted"):
         errors.append("The editor stage did not accept the pooled findings.")
     # A file the engine read only in part is a number nobody should quote, so
-    # the record carries the engine's own list of them.
+    # the record carries the engine's own list of them. The lane lines the
+    # engine appends to the same list after it has called the run publishable
+    # are not those, and they are left out here and published as the lane's own
+    # state instead.
+    lane = unfinished_lane_lines(reading)
     for problem in _list(reading.get("problems")):
         text = str(problem).strip()
-        if text and text not in errors:
+        if text and text not in errors and text not in lane:
             errors.append(text)
     return errors
 
@@ -960,6 +1100,99 @@ def basis_note(finding: dict) -> list[str]:
     return [f"**What it rests on:** {basis}" + (f". {reason}" if reason else ""), ""]
 
 
+def citation_lane_clause(run: dict) -> str:
+    """What the citation lane did, for the method paragraph, or nothing.
+
+    Only a run that planned the lane gets a sentence. A run whose arm convened
+    no lane is not a run whose references went unexamined: the citations
+    specialist reads the works cited either way, and the tracks clause above
+    has already said so, so claiming here that no citation was checked would be
+    false in the direction that matters.
+
+    What the sentence says is how much the lane got through and that it did not
+    get through all of it. It gives no bucket its own number, because this is a
+    paragraph of prose and three numbers that must never be added together do
+    not belong in one. They are on the record and on the page, each labelled
+    with what it does and does not mean.
+    """
+    citations = _dict(run.get("citations"))
+    if not citations.get("enabled"):
+        return ""
+    counts = _dict(citations.get("counts"))
+    references = counts.get("references")
+    if not isinstance(references, int) or references <= 0:
+        return (
+            " The run planned a citation lane and left no table behind, so that "
+            "lane checked no reference and no in-text use."
+        )
+    judged = counts.get("uses_judged") if isinstance(counts.get("uses_judged"), int) else 0
+    uses = counts.get("uses") if isinstance(counts.get("uses"), int) else 0
+    clause = (
+        f" A citation lane ran beside the panel, looking up the {references} works "
+        f"in the reference list and checking {judged} of {uses} in-text uses "
+        "against the source each one names."
+    )
+    if citations.get("problems"):
+        clause += (
+            " It did not get through all of that, and what it did not check is "
+            "listed with the record rather than left to read as checked."
+        )
+    return clause
+
+
+def citation_lane_report(run: dict) -> list[str]:
+    """What publish prints about the citation lane, one line at a time.
+
+    The editor reading this is about to decide whether to publish, so the three
+    states that are not a clean resolution each get their own line with their
+    own number and are never summed. A reference nobody could look up and a
+    reference two indexes do not list are different facts, and a single
+    "unverified: 7" would invite the one reading neither of them supports.
+    """
+    citations = _dict(run.get("citations"))
+    workers = [str(slot) for slot in _list(citations.get("workers"))]
+    if not citations.get("enabled"):
+        if workers:
+            return [
+                f"note     {len(workers)} citation worker slot(s) ran and this arm "
+                f"planned no citation lane: {', '.join(workers)}"
+            ]
+        return []
+    counts = _dict(citations.get("counts"))
+    lines: list[str] = []
+
+    def tally(key: str) -> int:
+        value = counts.get(key)
+        return value if isinstance(value, int) and not isinstance(value, bool) else 0
+
+    references = tally("references")
+    if references:
+        lines.append(
+            f"cites    {references} reference(s) in the list, {tally('resolved')} confirmed "
+            f"against an index, {tally('uses_judged')} of {tally('uses')} in-text use(s) judged"
+        )
+        states = [
+            ("not_found", "with a DOI the registry has no record of"),
+            ("not_located", "not listed in either index checked"),
+            ("could_not_check", "the lookups could not answer for"),
+        ]
+        for key, says in states:
+            if tally(key):
+                lines.append(f"cites    {tally(key)} reference(s) {says}")
+        if not citations.get("complete"):
+            lines.append("cites    the ledger is unfinished, which does not hold the review back")
+    for problem in _list(citations.get("problems")):
+        text = str(problem).strip()
+        if text:
+            lines.append(f"cites    {text}")
+    if workers:
+        lines.append(
+            f"note     {len(workers)} citation worker slot(s) fetched the lookups and wrote "
+            f"no part of the review: {', '.join(workers)}"
+        )
+    return lines
+
+
 def method_paragraph(run: dict, models: dict[str, str]) -> str:
     """Describe the run that happened, from what the run recorded.
 
@@ -1003,6 +1236,7 @@ def method_paragraph(run: dict, models: dict[str, str]) -> str:
         )
     elif arm:
         shape += f" The run used the {arm} arm, which convened no specialist readers."
+    shape += citation_lane_clause(run)
 
     ran = (
         f"and the models observed running were {model_phrase(models)}"
@@ -1464,8 +1698,14 @@ def build_provenance(
             f"names {transport.get('provider')}. A record that names two "
             "transports describes neither run."
         )
-    models = model_map(agents)
-    assigned = assigned_map(agents)
+    # Both maps say which model wrote which report, so the citation lane's
+    # workers are left out of them: a worker writes no report. Their rows stay
+    # in `agents` above, with their own models beside them, which is where a
+    # reader can see what the lane ran without it being counted as a reading of
+    # the manuscript.
+    reviewers_only = reviewing_agents(agents)
+    models = model_map(reviewers_only)
+    assigned = assigned_map(reviewers_only)
     if not models:
         raise CommandError(
             "No agent in this run was observed running a model, so the record "
@@ -2981,7 +3221,15 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             for reason in _list(reading.get("not_publishable_reasons"))
             if str(reason).strip()
         ]
-        problems = [str(p).strip() for p in _list(reading.get("problems")) if str(p).strip()]
+        # The lane lines are left out: a citation stage that did not answer is
+        # not a run file the engine could not read, and this fallback names
+        # them as exactly that.
+        lane = unfinished_lane_lines(reading)
+        problems = [
+            str(p).strip()
+            for p in _list(reading.get("problems"))
+            if str(p).strip() and str(p).strip() not in lane
+        ]
         cause = str(reading.get("cause") or "").strip()
         source = str(reading.get("findings_source") or "none")
         detail = [f"The engine read it as {status or 'unknown'}."]
@@ -3308,6 +3556,8 @@ def cmd_publish(args: argparse.Namespace) -> int:
         absent = [track for track in SPECIALIST_TRACKS if f"audit_{track}.md" not in reports]
         if absent:
             print(f"warning  no specialist report written for: {', '.join(absent)}")
+    for line in citation_lane_report(run):
+        print(line)
     if not args.publish:
         print("rehearsal, written outside docs/reviews. Re-run with --publish to publish.")
     return 0

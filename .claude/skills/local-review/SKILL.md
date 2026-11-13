@@ -26,9 +26,15 @@ agent file in the plugin:
 - N core reviewers, three by default, reading the whole manuscript
   independently and writing up their findings separately
 - six specialist readers, one dimension each: `stats`, `figures-tables`,
-  `methods-reporting`, `citations`, `consistency`, `field`
+  `methods-reporting`, `citations`, `numbers`, `field`
 - one editor agent, which pools every finding, rules on the ones a reviewer
   escalated, and chooses which belong in the body of the letter
+- a citation lane of worker slots, `cite-1` upward, which reads the reference
+  list, looks each entry up and checks in-text uses against the source each one
+  names. The workers write a ledger and no part of the review, so they are
+  never counted among the readers, and a worker that ran a different model
+  family is recorded as a problem rather than treated as a reason to withhold
+  the review
 
 There is no desk screen and no debate stage. Agents that share a model are not
 independent corroboration of one another, and the published summary says so.
@@ -133,6 +139,17 @@ gives every slot a model of its own, and four flags move that plan:
   `claude-fable-5-2`.
 - `--recorder-model` takes one id, the model the recorder runs for ingest, the
   ledger and the write-up. The default is `claude-haiku-5-5`.
+- `--citation-worker-model` takes one id, the model every citation worker runs.
+  The default is `claude-haiku-5-5`, and
+  `PEERREVIEW_CITATION_WORKER_MODEL` sets the same thing from the environment.
+
+One more flag sizes the citation lane rather than moving a model:
+
+- `--citation-workers` takes a whole number from 0 to 12, how many worker slots
+  look the reference list up in parallel. The default is 4, and 0 turns the
+  lane off, which is a run that checked no reference against an index. The
+  published page says so in those words, because no lane is not the same claim
+  as a lane that found nothing.
 
 Pass them only when the user asks for a panel other than the default one:
 
@@ -145,7 +162,9 @@ peerreview review \
   --reviewer-models claude-opus-5-5,claude-sonnet-5-5,claude-haiku-5-5 \
   --specialist-model claude-sonnet-5-5 \
   --editor-model claude-fable-5-2 \
-  --recorder-model claude-haiku-5-5
+  --recorder-model claude-haiku-5-5 \
+  --citation-workers 4 \
+  --citation-worker-model claude-haiku-5-5
 ```
 
 A model this login cannot run is refused before the run starts rather than
@@ -253,6 +272,15 @@ This writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`, one
 `editor-package.json`, `round.json`, `provenance.json` (schema version 4) and
 `manifest.json` into the destination from step 2. It refuses to overwrite an
 existing bundle, and it prints which specialist readers wrote no report.
+
+It also prints what the citation lane checked, each state with a number of its
+own, and anything the lane did not finish, in the engine's own words. An
+unfinished ledger does not hold the review back. The ledger itself stays in the
+run folder and is not copied into the bundle, and neither is the lookups cache
+under `citations/lookups/`: that cache is article text fetched from publishers,
+the review rests on it only through the short passage quoted inside a verdict,
+and a ledger row the citations specialist never wrote up is not a finding and
+must not be published looking like one.
 
 ## Step 6. Check it builds
 

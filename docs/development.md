@@ -195,7 +195,7 @@ Both positionals are required and in that order: the manuscript PDF, then the
 folder to write. The engine writes `runs/example/manuscript`, the imported
 paper, and `runs/example/review`, the run. There is no provider flag and no
 policy flag, and Claude Code is the only transport. There is no single model
-flag either, because engine 0.9 gives every slot a model of its own. Four flags
+flag either, because engine 0.9 gives every slot a model of its own. Five flags
 on `peerreview review` move that plan, and each has a default the engine prints
 in its own `--help`:
 
@@ -207,9 +207,30 @@ in its own `--help`:
 - `--editor-model` takes one id. It defaults to `claude-fable-5-2`.
 - `--recorder-model` takes one id, for ingest, the ledger and the write-up. It
   defaults to `claude-haiku-5-5`.
+- `--citation-worker-model` takes one id, the model every citation worker runs.
+  It defaults to `claude-haiku-5-5`, and the environment variable
+  `PEERREVIEW_CITATION_WORKER_MODEL` sets the same thing.
 
 A model this login cannot run is refused before anything is spent rather than
 swapped for another.
+
+One more flag sizes the citation lane. `--citation-workers` takes a whole number
+from 0 to 12, how many worker slots look the reference list up in parallel, and
+it defaults to 4. The workers are slots `cite-1` upward and they write no part
+of the review: they read the reference list, look each entry up, and record what
+they found in `review/citations/ledger.jsonl`, with the fetched pages cached
+under `review/citations/lookups/`. Two consequences follow for anything that
+reads a run. A worker slot is never counted as a reviewer, which is why
+`models` and `assigned_models` in the published record leave the `cite-N` slots
+out while `generator.agents` keeps their rows. And a worker observed running a
+model family other than the one it was assigned is recorded as a problem rather
+than a reason to withhold the review, because nothing a worker wrote is quoted
+in the review. A reviewer slot in the same position still makes the run
+unpublishable.
+
+Passing `--citation-workers 0` is a run that checked no reference against an
+index. The page says that in those words, because no lane at all is a different
+claim from a lane that looked and found nothing.
 
 `protocol.json` records that plan slot by slot and `runtime.json` records what
 the harness observed in each slot. They are two different facts and nothing
@@ -231,7 +252,25 @@ $PY scripts/local_review.py publish \
 `editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. A
 track the arm asked for with no report in the run is named as a gap on the
 rendered page rather than quietly left out. It refuses to overwrite an existing
-bundle. Without `--publish` the bundle lands
+bundle.
+
+What it does not copy out is the citation lane's own files. The ledger stays in
+the run folder and so does the lookups cache beside it, and `provenance.json`
+carries the lane's tallies instead, under `generator.run.citations`. Two reasons,
+and they are different. The cache is article text fetched from publishers, and
+the review rests on it only through the short passage a confirmed verdict
+quotes, so republishing it would make this site a redistributor of other
+people's articles for no gain to a reader. The ledger is a row per reference
+with a state on it, written by a worker and not read by any specialist unless
+the specialist chose to, and a row nobody wrote up is not a finding. Publishing
+the rows would put a verdict about a named author's paper on the site that no
+reader of this project ever endorsed. What the page shows instead is each state
+with its own count and a caption saying what that state does and does not mean,
+and the counts for `not_found`, `not_located` and `could_not_check` are never
+added together into one figure, because no single reading of such a total is
+true of all three.
+
+Without `--publish` the bundle lands
 under `runs/rehearsal/`, which is git-ignored: a run made to see what a prompt
 change did is a question about the pipeline, and answering it should not add a
 review to someone's paper.

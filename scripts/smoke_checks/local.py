@@ -54,6 +54,12 @@ PAPER = Preprint(
 
 TRACKS = local_review.SPECIALIST_TRACKS
 CORE_SLOTS = ("core-1", "core-2", "core-3")
+# The citation lane's workers. They look up references and judge in-text uses
+# against the source text, and they write no part of the review, so every
+# reviewer count and every published model map here has to leave them out
+# while the identity still lists them. Two is enough to prove a map that
+# counts reviewers does not grow when the lane does.
+CITATION_WORKERS = ("cite-1", "cite-2")
 SONNET = "claude-sonnet-5-5"
 OPUS = "claude-opus-5-5"
 HAIKU = "claude-haiku-5-5"
@@ -67,6 +73,9 @@ REVIEWER_MODELS = (SONNET, OPUS, HAIKU)
 SPECIALIST_MODEL = SONNET
 EDITOR_MODEL = FABLE
 RECORDER_MODEL = HAIKU
+# 0.9's own default for a citation worker, which is the cheap model: a worker
+# reads a stored abstract and answers one question about one sentence.
+CITATION_WORKER_MODEL = HAIKU
 CLAUDE_CODE_VERSION = "2.1.322"
 STARTED_AT = "2026-11-11T12:00:00+00:00"
 WORKFLOW_VERSION = "plugin-two-track-v1"
@@ -136,7 +145,7 @@ APPENDIX = [
         "comment": "The abstract and table 1 disagree.",
         "finding_uid": "f-011",
         "slot": "core-3",
-        "track": "consistency",
+        "track": "numbers",
         "basis": "two-quotes",
         "escalate": True,
         "block_id": "b11",
@@ -161,7 +170,7 @@ FINDINGS_BY_TRACK = {
     "figures-tables": 1,
     "methods-reporting": 1,
     "citations": 1,
-    "consistency": 1,
+    "numbers": 1,
     "field": 0,
 }
 
@@ -305,8 +314,9 @@ def _assigned_model(slot: str) -> str:
     """The model the run asked one slot to use, by 0.9's own rule.
 
     Core reviewer `i` takes `REVIEWER_MODELS[(i - 1) % len(REVIEWER_MODELS)]`,
-    every specialist takes one model, and the editor and the recorder take one
-    each. This is the plan, so every slot has one, the recorder included.
+    every specialist takes one model, and the editor, the recorder and each
+    citation worker take one each. This is the plan, so every slot has one,
+    the recorder included.
     """
     if slot == "editor":
         return EDITOR_MODEL
@@ -314,6 +324,10 @@ def _assigned_model(slot: str) -> str:
         return RECORDER_MODEL
     if slot.startswith("spec-"):
         return SPECIALIST_MODEL
+    # Before the trailing-integer rule below, because `cite-1` would otherwise
+    # be read as the first entry of the reviewer list.
+    if slot.startswith("cite-"):
+        return CITATION_WORKER_MODEL
     index = int(slot.rsplit("-", 1)[1])
     return REVIEWER_MODELS[(index - 1) % len(REVIEWER_MODELS)]
 
@@ -376,6 +390,21 @@ def _protocol_agents(tracks: tuple[str, ...]) -> dict:
         "assigned_model": _assigned_model("recorder"),
         "allowed_tools": ["Read"],
     }
+    # The citation workers sit in the same map as the readers, with a role and
+    # a track of their own. They are agents of the run and the identity has to
+    # name them, and they wrote no finding, so anything that counts reviewers
+    # or publishes a panel has to tell them apart by role rather than by being
+    # given a shorter list.
+    for slot in CITATION_WORKERS:
+        agents[slot] = {
+            "role": "citation-worker",
+            "track": "citation-worker",
+            "attempt": 1,
+            "tool_calls": 5,
+            "model": _slot_model(slot),
+            "assigned_model": _assigned_model(slot),
+            "allowed_tools": ["Read"],
+        }
     return agents
 
 
@@ -471,6 +500,19 @@ def _runtime_agents(tracks: tuple[str, ...]) -> list[dict]:
             "durationMs": 30000,
         }
     )
+    for slot in CITATION_WORKERS:
+        rows.append(
+            {
+                "label": slot,
+                "state": "complete",
+                "attempt": 1,
+                "agentType": "pra:citation-worker",
+                "model": CITATION_WORKER_MODEL,
+                "tokens": 6000,
+                "toolCalls": 5,
+                "durationMs": 40000,
+            }
+        )
     return rows
 
 
@@ -495,6 +537,20 @@ def _expected_assigned() -> dict[str, str]:
     """
     slots = [*CORE_SLOTS, *(f"spec-{track}" for track in TRACKS), "editor", "recorder"]
     return {slot: _assigned_model(slot) for slot in slots}
+
+
+def _planned_models() -> dict[str, str]:
+    """Every slot the run assigned a model to, citation workers included.
+
+    This is what `protocol.json` and the manifest plan carry, and it is wider
+    than the map a record publishes: 0.9 assigns a worker a model like any
+    other slot, and the published panel is the agents that wrote the review.
+    The two maps differ by exactly the workers, which is the point of having
+    both here.
+    """
+    planned = _expected_assigned()
+    planned.update({slot: _assigned_model(slot) for slot in CITATION_WORKERS})
+    return planned
 
 
 EXPECTED_MODEL_PHRASE = (
@@ -527,8 +583,10 @@ def _plan(tracks: tuple[str, ...]) -> dict:
         # here and still passed.
         "summary": "N core reviewers plus all six specialists, then the editor",
         # The plan carries the models too, and the manifest is where `read_run`
-        # looks for them when the protocol has none.
-        "models": _expected_assigned(),
+        # looks for them when the protocol has none. Workers and all: the plan
+        # is what the run assigned, and the record decides who is on the panel.
+        "models": _planned_models(),
+        "citation_workers": list(CITATION_WORKERS),
         "reviewer_models": list(REVIEWER_MODELS),
         "execution": (
             "Claude Code plugin workflow; agents in parallel, server-owned ledger."
@@ -547,10 +605,10 @@ def _protocol(**overrides) -> dict:
         # fixed sentence the server always writes. The fixture used to say
         # `high`, a value no engine writes.
         "model": ", ".join(
-            dict.fromkeys(_expected_assigned().values())
+            dict.fromkeys(_planned_models().values())
         ) + " (per slot; see models)",
         "effort": "per-agent, pinned in the plugin agent files",
-        "models": _expected_assigned(),
+        "models": _planned_models(),
         "reviewer_models": list(REVIEWER_MODELS),
         # The engine writes the arm here, twice: `mode` and `arm` are the
         # same word. The fixture used to say `plugin`, which the engine
@@ -653,8 +711,110 @@ def _run_transport() -> dict:
     )
 
 
+def _citation_lane(run: Path) -> dict | None:
+    """Write the citation lane a 0.9 run writes, with the engine's own writer.
+
+    `scripts/fixtures/make_citation_ledger.py` fills, resolves and judges a
+    tiny synthetic manuscript through the engine, from canned lookup bodies and
+    with no network, so the rows under `citations/` here are the engine's rows
+    rather than this repository's idea of them. It returns the counts the
+    ledger holds.
+
+    None means the engine is not importable, which is the bare suite. A lane
+    the engine cannot write is a lane no record can carry either, so the
+    fixture leaves it out rather than typing one in.
+    """
+    try:
+        from fixtures import make_citation_ledger
+    except ImportError:
+        return None
+    run = Path(run)
+    # A run writes its ledger once. Some checks build the same run folder twice
+    # over, and filling it again would append a second copy of every row, which
+    # is a ledger no run could have written.
+    if (run / CITATION_LEDGER_PATH).exists():
+        return make_citation_ledger.counts(run)
+    return make_citation_ledger.fill(run, slot=CITATION_WORKERS[0])
+
+
+CITATION_LEDGER_PATH = "citations/ledger.jsonl"
+
+# What the fixture ledger holds, counted by the engine's own reader. Written
+# out rather than computed because the bare suite has no engine to run the
+# writer with, and `check_the_citation_counts_are_the_engines_own` fills a
+# ledger with the engine and compares every number here against it, so nothing
+# in this block can drift away from what 0.9 would really report.
+#
+# One reference of each state the table can hold: one resolved against
+# Crossref, one whose printed DOI no agency registered, one neither index
+# lists, and one whose lookups never answered. Four in-text uses, three judged
+# and one left owed, so the lane is reported unfinished and the review is
+# published anyway.
+CITATION_COUNTS = {
+    "references": 4,
+    "resolved": 1,
+    "not_found": 1,
+    "not_located": 1,
+    "could_not_check": 1,
+    "candidates": 0,
+    "errors": 0,
+    "unresolved": 0,
+    "mismatched": 0,
+    "retracted": 0,
+    "with_source_text": 1,
+    "uses": 4,
+    "uses_unmatched": 0,
+    "uses_judged": 3,
+    "supported": 1,
+    "partly_supported": 0,
+    "not_supported": 0,
+    "cannot_tell": 2,
+    "uses_unjudged": 1,
+    "lookups": 15,
+    "unreadable_rows": 0,
+}
+
+# The engine's own one-sentence summary of the lane. The record carries it word
+# for word and the published page never prints it: it bundles the three states
+# that are not findings about a reference in with the one that is, and it
+# carries a count of uses the citations specialist did not confirm.
+CITATION_SUMMARY = (
+    "4 references: 1 resolved, 0 with a metadata mismatch, 1 with an unregistered DOI, "
+    "1 not located in either index, 1 could not be checked, 0 retracted. 4 in-text uses, "
+    "3 judged (1 supported, 0 partly, 0 not supported, 2 cannot tell)."
+)
+
+# What the engine says the lane did not settle. These are carried through word
+# for word, because the engine wrote each of them to stop a reader turning a
+# lookup that failed into a claim about the work.
+CITATION_PROBLEMS = [
+    "1 reference(s) could not be checked because the lookups did not answer; "
+    "this says nothing about whether they exist",
+    "1 reference(s) are listed in neither Crossref nor Europe PMC; much of the "
+    "literature is in neither, so this is not evidence that they do not exist",
+    "1 of 4 in-text citation uses were never judged against the source",
+]
+
+
+def _citation_record() -> dict:
+    """The citations block of a published record, as citation_record writes one."""
+    return {
+        "enabled": True,
+        "complete": False,
+        "stages_done": False,
+        "counts": dict(CITATION_COUNTS),
+        "problems": list(CITATION_PROBLEMS),
+        "summary": CITATION_SUMMARY,
+        "workers": list(CITATION_WORKERS),
+    }
+
+
 def _run_directory(
-    root: Path, *, report_tracks: tuple[str, ...] | None = None, **overrides
+    root: Path,
+    *,
+    report_tracks: tuple[str, ...] | None = None,
+    citations: bool = True,
+    **overrides,
 ) -> Path:
     """A run directory holding the files engine 0.9's plugin really writes.
 
@@ -671,9 +831,14 @@ def _run_directory(
 
     An override value of None leaves that file out, which is how the refusals
     for a run missing one of them are tested.
+
+    `citations=False` writes the run without a citation ledger while the plan
+    still declares the lane, which is the shape the engine reports as a lane
+    that checked nothing.
     """
     run = Path(root)
     run.mkdir(parents=True, exist_ok=True)
+    totals = _citation_lane(run) if citations else None
     home = str(Path.home().resolve())
     files = {
         "protocol.json": _protocol(),
@@ -687,6 +852,12 @@ def _run_directory(
             "claude_code_version": CLAUDE_CODE_VERSION,
             "plugin_root": f"{home}/Repos/PeerReviewAgents/plugins/pra",
             "plan": _plan(TRACKS),
+            # The manifest names the ledger and repeats its tallies. Relative,
+            # because the engine writes it relative to the run folder, and the
+            # record drops it either way: the bundle carries no ledger file,
+            # so a path in a published record points at nothing.
+            "citation_ledger": CITATION_LEDGER_PATH if totals else None,
+            "citations": dict(totals) if totals else None,
         },
         "progress.json": _progress(),
         "runtime.json": _runtime(TRACKS),
@@ -857,6 +1028,10 @@ def _run_record(**overrides) -> dict:
         "appendix_findings": len(APPENDIX),
         "escalated_in_bundle": 2,
         "errors": [],
+        # The citation lane, as the engine reports it. It is beside `errors`
+        # rather than in it: a lane with rows still owed is a lane that has
+        # more to do, and 0.9 publishes the review regardless.
+        "citations": _citation_record(),
     }
     record.update(overrides)
     return record
@@ -2464,13 +2639,31 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
         assert not [slot for slot in slots if slot.startswith("agent-")], (
             f"a placeholder row was published as an agent that ran: {slots}"
         )
-        assert len(rows) == 11, (
-            "expected three core reviewers, six specialists, an editor and a "
-            f"recorder, one row each: {slots}"
+        assert len(rows) == 13, (
+            "expected three core reviewers, six specialists, an editor, a "
+            f"recorder and two citation workers, one row each: {slots}"
         )
         assert all("slot" in row for row in rows), f"a row with no slot: {rows}"
 
+        # The citation workers are agents of the run and the identity names
+        # them, and they wrote no part of the review. So they are here, and
+        # every count and map below is taken over the agents that reviewed.
+        reviewers = local_review.reviewing_agents(rows)
+        assert [row["slot"] for row in reviewers] == [
+            slot for slot in slots if slot not in CITATION_WORKERS
+        ], f"the panel is the agents that reviewed: {[r['slot'] for r in reviewers]}"
+        assert len(reviewers) == 11, (
+            f"a citation worker was counted as a reviewer: {[r['slot'] for r in reviewers]}"
+        )
+
         by_slot = {row["slot"]: row for row in rows}
+        for slot in CITATION_WORKERS:
+            assert by_slot[slot]["role"] == "citation-worker", (
+                f"a worker's own role was lost: {by_slot[slot]}"
+            )
+            assert by_slot[slot]["findings"] == 0, (
+                f"a citation worker delivered a finding: {by_slot[slot]}"
+            )
         assert by_slot["core-1"]["role"] == "core-reviewer", (
             f"the protocol's own role for a core reviewer was lost: {by_slot['core-1']}"
         )
@@ -2513,11 +2706,17 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
         # Every row carries the plan beside the observation, and the two are
         # kept apart: the plan says what the slot was asked for and the
         # observation says what was seen.
-        assert local_review.assigned_map(rows) == _expected_assigned(), (
-            f"the plan was lost: {local_review.assigned_map(rows)}"
+        assert local_review.assigned_map(reviewers) == _expected_assigned(), (
+            f"the plan was lost: {local_review.assigned_map(reviewers)}"
+        )
+        # The run assigned the workers a model too, and that is the plan rather
+        # than the panel. A published map that grew by two would say the review
+        # was written by thirteen agents.
+        assert local_review.assigned_map(rows) == _planned_models(), (
+            f"a worker's assignment was lost from the run's own plan: {rows}"
         )
 
-        models = local_review.model_map(rows)
+        models = local_review.model_map(reviewers)
         assert models == _expected_models(), f"the model map is wrong: {models}"
         assert local_review.model_phrase(models) == EXPECTED_MODEL_PHRASE, (
             f"the model counts are wrong: {local_review.model_phrase(models)}"
@@ -2541,10 +2740,10 @@ def check_a_placeholder_agent_row_is_not_a_reviewer() -> None:
             },
         )
         placeholders = local_review.agent_rows(local_review.engine_reading(unnamed))
-        assert len(placeholders) == 11, (
+        assert len(placeholders) == 13, (
             f"the protocol's own slots are still agents: {placeholders}"
         )
-        observed = local_review.model_map(placeholders)
+        observed = local_review.model_map(local_review.reviewing_agents(placeholders))
         assert "recorder" not in observed, (
             f"the recorder's model is only known from the harness: {observed}"
         )
@@ -3577,16 +3776,42 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
     itself, and each name taken from it has to be one the installed engine
     exports, which is checked against the real `__all__` when the engine is
     importable here.
+
+    One allowance, named here rather than inferred: the citation ledger fixture
+    generator imports `peerreviewagents.engine.citation_ledger`. 0.9.0 writes a
+    ledger and publishes no reader or writer for one, so a fixture that looked
+    like a run's own ledger could not be built off the public surface at all,
+    and a hand typed one would only ever agree with what this repository
+    believed the engine writes. Nothing on the publish path may import it: the
+    record reads the lane through `read_run`, which hands back the counts. The
+    allowance goes away the day the engine exports a ledger writer.
     """
     root = Path(local_review.__file__).resolve().parent
     package = local_review.ENGINE_PACKAGE
-    sources = sorted(root.glob("*.py")) + sorted((root / "smoke_checks").glob("*.py"))
+    sources = (
+        sorted(root.glob("*.py"))
+        + sorted((root / "smoke_checks").glob("*.py"))
+        + sorted((root / "fixtures").glob("*.py"))
+    )
     assert len(sources) > 10, f"the scripts were not found under {root}"
+    assert root / "fixtures" / "make_citation_ledger.py" in sources, (
+        "the fixture generators are scripts too, and the one allowance below is "
+        "about a file this scan has to be reading"
+    )
+    # The whole allowance, written as the one import it covers: this file, this
+    # module, this name. Anything else, anywhere, is still a reach inside.
+    allowance = ("make_citation_ledger.py", f"{package}.engine", "citation_ledger")
 
     private = {}
     names: set[str] = set()
     for path in sources:
         for module, taken in _engine_imports(path):
+            if (path.name, module) == allowance[:2]:
+                assert set(taken) <= {allowance[2]}, (
+                    f"the fixture generator took {sorted(taken)} out of {module}, and "
+                    f"the allowance is for {allowance[2]} alone"
+                )
+                continue
             if module != package:
                 private.setdefault(path.name, []).append(module)
             names.update(taken)
@@ -5369,6 +5594,325 @@ def check_a_slot_that_ran_another_model_family_cannot_be_published() -> None:
         )
 
 
+def check_the_citation_section_prints_no_charge_nobody_made() -> None:
+    """The citations section of a public page about named authors' own papers.
+
+    A reference the lookups could not reach, and a reference two indexes do not
+    list, are both states of a lookup rather than facts about a work. Printed
+    without their own caption, or added into one total, they read as a count of
+    references that do not exist, which is a charge no part of this run made.
+
+    So the page builds its own labelled rows out of the counts: how many works
+    the reference list holds, and each state with its own number and its own
+    sentence saying what it does and does not mean. The three states that are
+    not a clean resolution are never summed.
+
+    What stays out of the page is the engine's one-sentence summary and the
+    per-use verdict tallies inside it. Those count in-text uses a citation
+    worker judged as not supported, a worker writes no part of the review, and
+    an aggregate of unconfirmed verdicts is a numeric accusation against
+    references nobody names. They are published in provenance.json, beside the
+    counts that qualify them.
+
+    The page is Astro and the site build renders it, so what this proves
+    offline is which fields the component reads and which wordings it carries.
+    """
+    component = _provenance_component_fields()
+
+    assert "runRecord.citations" in component, (
+        "the page has to read the citation lane from the record's own field"
+    )
+    for key in ("references", "resolved", "not_found", "not_located", "could_not_check"):
+        assert f'citeCount("{key}")' in component, (
+            f"the lane's {key} count has to be read by name and printed on its own"
+        )
+    # Each of the three states that is not a clean resolution carries the
+    # sentence that stops it being read as a missing work.
+    for caveat in (
+        "usually a typo in the reference rather than anything about the work",
+        "while being perfectly real",
+        "no evidence at all that the work does not exist",
+        "says nothing whatever about the reference",
+    ):
+        assert caveat in component, f"a state of a lookup needs its own caption: {caveat}"
+
+    # The engine's summary sentence is not printed. It bundles the three states
+    # in with the one clean one and carries the verdict tallies besides.
+    for printed in ("citations.summary", "citations?.summary", "citeSummary"):
+        assert printed not in component, (
+            f"the engine's own summary sentence must not reach the page: {printed}"
+        )
+    # Nor is any use-level verdict tally read at all, so none of them can be
+    # printed by a later edit without this check noticing.
+    for verdict in ("supported", "partly_supported", "not_supported", "cannot_tell"):
+        assert f'citeCount("{verdict}")' not in component, (
+            f"a use-level verdict tally belongs in the record and not on the page: {verdict}"
+        )
+    # And nothing adds the states together. Any arithmetic over two counts is
+    # the aggregate this section exists to avoid.
+    for summed in (
+        'citeCount("not_found") +',
+        'citeCount("not_located") +',
+        'citeCount("could_not_check") +',
+        '+ citeCount(',
+    ):
+        assert summed not in component, (
+            f"the states are never added into one figure: {summed}"
+        )
+
+    # The lane's own account of what it did not finish is carried word for
+    # word, under a sentence saying none of it is a finding.
+    assert "citeProblems.map" in component, (
+        "the engine's lines about what the lane did not settle have to be printed"
+    )
+    assert "Nothing in this section is a finding" in component, (
+        "a reader has to be told that a row no specialist wrote up is not a finding"
+    )
+    assert "the citations specialist read the row, judged it and" in component, (
+        "the page has to say what turns a row into a finding"
+    )
+    # A lane that was planned and left no table, and an arm that convened no
+    # lane at all, each say so rather than reading as a clean result.
+    assert "citeEnabled && !citeTable" in component, (
+        "a planned lane with no ledger behind it needs its own wording"
+    )
+    assert "convened no citation lane" in component, (
+        "an arm with no lane has to say so, because absent is not zero"
+    )
+    assert "so the absence is not read as a clean result" in component, (
+        "the no-lane wording has to say what it is not"
+    )
+
+
+def check_the_citation_lane_is_read_from_the_runs_own_ledger() -> None:
+    """The lane's numbers come off the ledger the run wrote, through the engine.
+
+    `read_run` fills `citations` by reading `citations/ledger.jsonl` itself, so
+    the fixture here is a run folder with a real ledger in it, filled by the
+    engine's own writer from canned lookups and no network.
+
+    Three things have to hold. The counts in the record are the engine's own
+    counts, so the constants this suite compares pages against cannot drift
+    from what 0.9 reports. The ledger path is gone, both the absolute one and
+    the relative one, because the bundle carries no ledger file and a path in a
+    published record points at nothing a reader can open. And a lane with rows
+    still owed does not hold the review back: the engine appends its lines
+    after it has decided the run publishable, and this path keeps them out of
+    what went wrong.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        run = _run_directory(Path(tmp) / "run")
+        assert (run / CITATION_LEDGER_PATH).exists(), (
+            "the fixture run has to carry a ledger for this to be reading one"
+        )
+        reading = local_review.engine_reading(run)
+        citations = reading["citations"]
+
+        assert citations["enabled"] is True, f"the lane was planned: {citations}"
+        assert citations["complete"] is False, (
+            f"a ledger with a use still owed is not complete: {citations}"
+        )
+        counts = {
+            key: value
+            for key, value in citations["counts"].items()
+            if isinstance(value, int) and not isinstance(value, bool)
+        }
+        assert counts == CITATION_COUNTS, (
+            "the engine counts this ledger differently from the constants this "
+            f"suite checks pages against: {counts}"
+        )
+        assert citations["summary"] == CITATION_SUMMARY, (
+            f"the engine's summary sentence changed: {citations['summary']}"
+        )
+        assert [str(line) for line in citations["problems"]] == CITATION_PROBLEMS, (
+            f"the engine's own lines changed: {citations['problems']}"
+        )
+
+        # A lane with work still owed is published work rather than harm.
+        assert reading["publishable"] is True, (
+            f"an unfinished citation lane held the review back: {reading}"
+        )
+        assert reading["problems"], (
+            "this run is the case where a publishable run carries problems, and a "
+            "reading with none of them proves nothing"
+        )
+        record = local_review.read_run(run)
+        assert record["errors"] == [], (
+            f"the lane's unfinished work was filed as something that went wrong: {record}"
+        )
+        assert record["citations"] == _citation_record(), (
+            f"the published lane is not the one the engine read: {record['citations']}"
+        )
+        published = record["citations"]
+        assert "ledger" not in published and "ledger" not in published["counts"], (
+            f"the bundle carries no ledger file, so no record may name one: {published}"
+        )
+        assert "stages" not in published["counts"], (
+            f"the lane's stage record is not a tally: {published['counts']}"
+        )
+        assert str(run) not in json.dumps(record), (
+            "the absolute ledger path reached the record"
+        )
+
+        # A planned lane that wrote no ledger says that, and still publishes.
+        none = _run_directory(Path(tmp) / "none", citations=False)
+        assert not (none / CITATION_LEDGER_PATH).exists(), "this run has no ledger"
+        empty = local_review.read_run(none)["citations"]
+        assert empty["enabled"] is True and empty["counts"] == {}, (
+            f"a planned lane with no table is enabled and holds no counts: {empty}"
+        )
+        assert len(empty["problems"]) == 1 and "no citation ledger" in empty["problems"][0], (
+            f"the engine's one line about an empty lane was lost: {empty}"
+        )
+        assert local_review.read_run(none)["errors"] == [], (
+            "a lane that checked nothing is work the lane did not get to"
+        )
+        assert local_review.read_run(none)["publishable"] is True, (
+            "an empty citation lane cannot hold a finished review back"
+        )
+
+
+def check_a_citation_worker_on_another_model_is_not_an_error() -> None:
+    """A worker that ran another family is a line beside the review, not a gate.
+
+    A reviewer slot observed running a model family other than the one it was
+    assigned makes the run unpublishable, because a report would be attributed
+    to a model that did not write it. A citation worker writes no report: it
+    looks a reference up and answers one question about one sentence, and the
+    engine's own answer is to publish the run and say so in `problems`.
+
+    So this path has to carry that line and must not file it under what went
+    wrong, and the run has to publish.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        protocol = _protocol()
+        protocol["agents"]["cite-1"]["model"] = OPUS
+        runtime = _runtime(TRACKS)
+        for row in runtime["agents"]:
+            if row.get("label") == "cite-1":
+                row["model"] = OPUS
+        assert _assigned_model("cite-1") == HAIKU, (
+            "this check reads cite-1's plan, so the plan has to be the one it names"
+        )
+        swapped = _run_directory(
+            Path(tmp) / "swapped",
+            **{"protocol.json": protocol, "runtime.json": runtime},
+        )
+        reading = local_review.engine_reading(swapped)
+        assert reading["publishable"] is True, (
+            f"a worker on another model family held the review back: {reading}"
+        )
+        assert reading["not_publishable_reasons"] == [], (
+            f"the engine gated on a slot that wrote nothing: {reading}"
+        )
+        named = [
+            str(line) for line in reading["problems"] if str(line).split(" ", 1)[0] == "cite-1"
+        ]
+        assert named, f"the engine's line about the worker was lost: {reading['problems']}"
+        assert HAIKU in named[0] and OPUS in named[0], (
+            f"the line has to say what was asked for and what ran: {named[0]}"
+        )
+
+        record = local_review.read_run(swapped)
+        assert record["errors"] == [], (
+            f"a worker's substitution was published as an error: {record['errors']}"
+        )
+        # And the publish path agrees: the run goes out.
+        local_review.require_complete_run(swapped, record)
+        # The same swap in a reviewer slot still refuses, which is what keeps
+        # this allowance about the slots that write nothing.
+        protocol = _protocol()
+        protocol["agents"]["core-1"]["model"] = OPUS
+        runtime = _runtime(TRACKS)
+        for row in runtime["agents"]:
+            if row.get("label") == "core-1":
+                row["model"] = OPUS
+        reviewer = _run_directory(
+            Path(tmp) / "reviewer",
+            **{"protocol.json": protocol, "runtime.json": runtime},
+        )
+        assert not local_review.engine_reading(reviewer)["publishable"], (
+            "a reviewer slot that ran another model family is still refused"
+        )
+
+
+def check_a_published_bundle_carries_no_ledger_and_no_fetched_text() -> None:
+    """Publish a run with a citation lane, and read the whole bundle back.
+
+    Two things must not travel. The ledger rows are not published, because a
+    row the citations specialist did not read and write up is not a finding and
+    printing one would make it look like one. The lookups cache is not
+    published either: it holds abstracts and passages fetched from publishers,
+    the review rests on that text only through the short passage quoted inside
+    a confirmed verdict, and republishing the rest would make this site a
+    mirror of other people's copy.
+
+    The counts and the engine's own lines about what the lane did not settle do
+    travel, in provenance.json, which is what a reader can act on.
+    """
+    from fixtures import make_citation_ledger
+
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            run = _run_directory(Path(tmp) / "run")
+            cache = run / "citations" / "lookups"
+            assert any(cache.iterdir()), "the fixture run has to have fetched something"
+            assert make_citation_ledger.FETCHED_PHRASE in "".join(
+                path.read_text(encoding="utf-8", errors="replace")
+                for path in sorted(cache.iterdir())
+                if path.is_file()
+            ), "the phrase this check looks for has to be in the run's own cache"
+
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    run,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                )
+            assert code == 0, f"this bundle should publish, got exit {code}: {out.getvalue()}"
+
+            written = sorted(
+                str(path.relative_to(destination))
+                for path in destination.rglob("*")
+                if path.is_file()
+            )
+            assert "manifest.json" in written, f"the bundle was not finished: {written}"
+            # The citations specialist's own report is published like every
+            # other track report. What may not travel is the run's
+            # `citations/` folder, which is the rows and the fetched text.
+            assert "audit_citations.md" in written, (
+                f"the citations specialist's report belongs in the bundle: {written}"
+            )
+            assert not [name for name in written if name.startswith("citations/")], (
+                f"the citation lane's own folder reached the bundle: {written}"
+            )
+            assert not [name for name in written if "ledger" in name], (
+                f"a ledger was published: {written}"
+            )
+            assert not [name for name in written if name.endswith(".jsonl")], (
+                f"a row file was published: {written}"
+            )
+            for path in sorted(destination.rglob("*")):
+                if path.is_file():
+                    text = path.read_text(encoding="utf-8", errors="replace")
+                    assert make_citation_ledger.FETCHED_PHRASE not in text, (
+                        f"{path.name} carries text fetched from a publisher"
+                    )
+                    assert "ledger.jsonl" not in text, (
+                        f"{path.name} names a ledger the bundle does not carry"
+                    )
+
+            # What does travel is the lane's state, where a reader can use it.
+            record = json.loads((destination / "provenance.json").read_text())
+            published = record["generator"]["run"]["citations"]
+            assert published == _citation_record(), (
+                f"the lane's own state did not reach the record: {published}"
+            )
+
+
 # The checks that read a run folder, which in 0.9 means the engine reads it.
 # They write a fixture run to disk and hand it to `peerreviewagents.read_run`,
 # so they are checks against the real reader, and there is nothing for them to
@@ -5458,6 +6002,18 @@ ENGINE_BACKED = (
     (
         check_a_slot_that_ran_another_model_family_cannot_be_published,
         "a slot that ran another model family is refused in the engine's own words",
+    ),
+    (
+        check_the_citation_lane_is_read_from_the_runs_own_ledger,
+        "the citation lane is counted off the ledger the run wrote",
+    ),
+    (
+        check_a_citation_worker_on_another_model_is_not_an_error,
+        "a citation worker on another model is a line beside the review, not a gate",
+    ),
+    (
+        check_a_published_bundle_carries_no_ledger_and_no_fetched_text,
+        "a published bundle carries no ledger row and no fetched publisher text",
     ),
 )
 

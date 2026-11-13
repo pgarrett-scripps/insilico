@@ -28,9 +28,57 @@ const TRACKS = [
   "figures-tables",
   "methods-reporting",
   "citations",
-  "consistency",
+  "numbers",
   "field",
 ];
+
+// The cite-N slots the citation lane runs. They fetch lookups and record rows,
+// they write no part of the review, and they are deliberately absent from the
+// model tables below: those tables answer who read the manuscript.
+const CITATION_WORKERS = ["cite-1", "cite-2"];
+
+// One reference of each state the ledger can hold, and four in-text uses with
+// one left unjudged. The numbers are the engine's own, taken from a ledger its
+// writer filled, and the Python suite asserts them against a real run.
+function citations(overrides = {}) {
+  return {
+    enabled: true,
+    complete: false,
+    stages_done: false,
+    counts: {
+      references: 4,
+      resolved: 1,
+      not_found: 1,
+      not_located: 1,
+      could_not_check: 1,
+      candidates: 0,
+      errors: 0,
+      unresolved: 0,
+      mismatched: 0,
+      retracted: 0,
+      with_source_text: 1,
+      uses: 4,
+      uses_unmatched: 0,
+      uses_judged: 3,
+      supported: 1,
+      partly_supported: 0,
+      not_supported: 0,
+      cannot_tell: 2,
+      uses_unjudged: 1,
+      lookups: 15,
+      unreadable_rows: 0,
+    },
+    problems: [
+      "1 reference(s) could not be checked because the lookups did not answer; this says nothing about whether they exist",
+      "1 reference(s) are listed in neither Crossref nor Europe PMC; much of the literature is in neither, so this is not evidence that they do not exist",
+      "1 of 4 in-text citation uses were never judged against the source",
+    ],
+    summary:
+      "4 references: 1 resolved, 0 with a metadata mismatch, 1 with an unregistered DOI, 1 not located in either index, 1 could not be checked, 0 retracted. 4 in-text uses, 3 judged (1 supported, 0 partly, 0 not supported, 2 cannot tell).",
+    workers: [...CITATION_WORKERS],
+    ...overrides,
+  };
+}
 
 function localRecord(overrides = {}) {
   return {
@@ -110,6 +158,15 @@ function localRecord(overrides = {}) {
           model: "claude-haiku-5-5",
           assigned_model: "claude-haiku-5-5",
         },
+        {
+          slot: "cite-1",
+          role: "citation-worker",
+          track: "citation-worker",
+          attempt: 1,
+          tool_calls: 5,
+          model: "claude-haiku-5-5",
+          assigned_model: "claude-haiku-5-5",
+        },
       ],
       input: {
         kind: "doi",
@@ -139,7 +196,7 @@ function localRecord(overrides = {}) {
           required: ["reviewer-1", "reviewer-2", "reviewer-3", ...TRACKS, "editor"],
           reported: ["reviewer-1", "reviewer-2", "reviewer-3", ...TRACKS, "editor"],
           missing: [],
-          none_found: ["consistency"],
+          none_found: ["numbers"],
           editor_accepted: true,
           attempts: { "reviewer-1": 1, "audit-stats": 2 },
           retried: ["audit-stats"],
@@ -155,6 +212,10 @@ function localRecord(overrides = {}) {
         wall_seconds: 246.5,
         tokens_total: 636299,
         errors: [],
+        problems: [
+          "1 reference(s) could not be checked because the lookups did not answer; this says nothing about whether they exist",
+        ],
+        citations: citations(),
       },
       advisory_verdict: {
         significance: "moderate",
@@ -443,16 +504,142 @@ noteworthy.generator.run.note =
   "the review was written and the run was marked blocked afterwards: the token ceiling was reached";
 assertValidProvenance(noteworthy, "a run blocked after the review was written still publishes");
 
-// The two fields the engine sets for a run it could not read as a whole. Neither
-// can be true of a run it calls publishable, so a record carrying one is a
+// The field the engine sets for a run it could not read as a whole. It cannot be
+// true of a run the engine calls publishable, so a record carrying it is a
 // record whose own explanation of its failure travelled with it.
 const excused = localRecord();
 excused.generator.run.cause = "the session ended before the editor wrote the review";
 rejects(excused, "a published record must not carry the reason the run stopped");
 
-const damaged = localRecord();
-damaged.generator.run.problems = ["editor-package.json: truncated"];
-rejects(damaged, "a published record must not carry a run file the engine could not read");
+// `problems` used to mean the same thing and was refused with it. In 0.9.0 the
+// engine appends to that list after it has already decided the run publishable,
+// so a clean review carries lines about what a lane did not finish: a citation
+// stage the lookups never answered, a worker slot observed on another model
+// family. Refusing them now would refuse the ordinary record, and dropping them
+// would publish a review whose gaps only the generator ever saw.
+const unfinishedLane = localRecord();
+unfinishedLane.generator.run.problems = [
+  "1 of 4 in-text citation uses were never judged against the source",
+  "cite-1 was assigned claude-haiku-5-5 but ran claude-opus-5-5: a different model family ran in that slot, so this run did not run the models it records",
+];
+accepts(unfinishedLane, "what a lane did not finish is published beside the review, not refused");
+
+const blankProblem = localRecord();
+blankProblem.generator.run.problems = [""];
+rejects(blankProblem, "an empty line says nothing about what the run left undone");
+
+// The citation lane. A reference the lookups could not answer for, one no index
+// lists, and one whose printed DOI no agency registered are three different
+// facts about a reference, and none of them is a finding about the paper. The
+// record carries each count separately so that nothing downstream can add them
+// up into one number that would read as a charge the specialist never made.
+const noLane = localRecord();
+delete noLane.generator.run.citations;
+accepts(noLane, "a run from before the lane existed still reads");
+
+const laneOff = localRecord();
+laneOff.generator.run.citations = {
+  enabled: false,
+  complete: false,
+  counts: {},
+  problems: [],
+};
+accepts(laneOff, "an arm that convened no citation lane says so rather than reporting zeroes");
+
+const lanePlannedEmpty = localRecord();
+lanePlannedEmpty.generator.run.citations = citations({
+  counts: {},
+  problems: [
+    "this run planned a citations lane and wrote no citation ledger, so not one reference or in-text use was checked",
+  ],
+  summary: "No citation ledger was filled for this run.",
+});
+accepts(lanePlannedEmpty, "a planned lane that wrote no table is published as an empty table with its reason");
+
+// An unfinished ledger does not hold a review back, and the record says plainly
+// that it is unfinished rather than letting a reader take the table for the
+// whole reference list.
+const laneUnfinished = localRecord();
+assert.equal(laneUnfinished.generator.run.citations.complete, false);
+accepts(laneUnfinished, "an unfinished citation ledger is published and labelled, not withheld");
+
+const laneSilentAboutCompletion = localRecord();
+delete laneSilentAboutCompletion.generator.run.citations.complete;
+rejects(laneSilentAboutCompletion, "the lane must say whether its table checked anything");
+
+const laneSilentAboutItself = localRecord();
+delete laneSilentAboutItself.generator.run.citations.enabled;
+rejects(laneSilentAboutItself, "the lane must say whether it was convened at all");
+
+const laneWithoutCounts = localRecord();
+delete laneWithoutCounts.generator.run.citations.counts;
+rejects(laneWithoutCounts, "a lane without its tallies reports a table nobody can read");
+
+const laneWithoutProblems = localRecord();
+delete laneWithoutProblems.generator.run.citations.problems;
+rejects(laneWithoutProblems, "the lane must carry its own unfinished-work lines");
+
+// The bundle does not ship the ledger file, so a path to it in the record points
+// at nothing a reader can open, and the lookups cache is third-party publisher
+// text this site does not republish. Neither has a key here to travel in.
+const laneNamesItsLedger = localRecord();
+laneNamesItsLedger.generator.run.citations.ledger = "citations/ledger.jsonl";
+rejects(laneNamesItsLedger, "a published record must not point at a ledger the bundle does not carry");
+
+const laneCarriesItsLookups = localRecord();
+laneCarriesItsLookups.generator.run.citations.lookups_dir = "citations/lookups";
+rejects(laneCarriesItsLookups, "the fetched lookups cache is not part of a published record");
+
+// The stage record is a map, not a count, and it is the one entry of the
+// engine's own counts block that is not an integer. Keeping the tallies to
+// integers is what lets the page read any of them by name without checking what
+// kind of thing came back.
+const laneCountsItsStages = localRecord();
+laneCountsItsStages.generator.run.citations.counts.stages = { resolve: "done" };
+rejects(laneCountsItsStages, "the stage record is not a tally and does not belong in the counts");
+
+const laneCountsAString = localRecord();
+laneCountsAString.generator.run.citations.counts.references = "4";
+rejects(laneCountsAString, "a count written as text is not a number the page can state");
+
+const laneCountsBelowZero = localRecord();
+laneCountsBelowZero.generator.run.citations.counts.not_located = -1;
+rejects(laneCountsBelowZero, "no state of a reference can be held by fewer than none of them");
+
+// The workers are named so the page can keep them out of the panel. A blank
+// slot name would be a worker nothing can be attributed to.
+const laneBlankWorker = localRecord();
+laneBlankWorker.generator.run.citations.workers = [""];
+rejects(laneBlankWorker, "a worker slot with no name is not a slot");
+
+// The two tables that say who read the manuscript leave the workers out, and
+// the agent rows keep them. That split is the whole point: a reader counting
+// the panel from the model table must not find two more readers who read
+// nothing, and a reader auditing what ran must still find every slot.
+const panelRecord = localRecord();
+assert.ok(
+  panelRecord.generator.agents.some((row) => row.slot === "cite-1"),
+  "a citation worker that ran is recorded as an agent row",
+);
+assert.ok(
+  !Object.keys(panelRecord.models).some((slot) => slot.startsWith("cite-")),
+  "a citation worker is not named among the models that wrote the review",
+);
+assert.ok(
+  !Object.keys(panelRecord.assigned_models).some((slot) => slot.startsWith("cite-")),
+  "a citation worker is not named among the models the panel was asked to run",
+);
+
+// And a worker observed on another model family is a line beside the review,
+// which the engine itself decides: it leaves the run publishable and says so in
+// `problems`. The record of such a run has to validate, or this repository
+// would refuse a review the engine released.
+const substitutedWorker = localRecord();
+substitutedWorker.generator.agents.at(-1).model = "claude-opus-5-5";
+substitutedWorker.generator.run.problems = [
+  "cite-1 was assigned claude-haiku-5-5 but ran claude-opus-5-5: a different model family ran in that slot, so this run did not run the models it records",
+];
+accepts(substitutedWorker, "a citation worker on another model does not make a review unpublishable");
 
 // The arm replaces 0.8's mode and review policy, and it is the single name for
 // what the run was asked to do. A record without it cannot say whether three
@@ -704,7 +891,7 @@ assert.deepEqual(
   (paper.bundles[0].tracksAsked || []).filter(
     (track) => !paper.bundles[0].documents.audits.some((d) => d.file === `audit_${track}.md`),
   ),
-  ["figures-tables", "methods-reporting", "citations", "consistency", "field"],
+  ["figures-tables", "methods-reporting", "citations", "numbers", "field"],
   "a track the arm asked for with no report in the bundle is a gap the page names",
 );
 fs.rmSync(root, { recursive: true, force: true });

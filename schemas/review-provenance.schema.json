@@ -160,7 +160,7 @@
           }
         },
         "run": {
-          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the findings came from, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose: the engine's reading also carries `cause` for a run that stopped and `problems` for a run file it could not read in full, and neither can be true of a run it calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it.",
+          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the findings came from, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose, and `cause` is not on it: the engine writes a cause only for a run that stopped, which it never calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it. `problems` is a different matter and is allowed, because engine 0.9.0 appends lines there after it has decided publishable: an unfinished citation ledger and a citation worker that ran another model family are both recorded as problems and neither withholds the review. They are published as what the run did not finish, beside the findings, and never folded into errors, which is the list of what went wrong.",
           "type": "object",
           "required": [
             "arm",
@@ -188,7 +188,7 @@
             "finding_schema_version": { "type": "string" },
             "reviewers": { "type": "integer", "minimum": 1 },
             "specialist_tracks": {
-              "$comment": "The audit tracks the arm asked for, as the run's own plan recorded them. The six in 0.9 are stats, figures-tables, methods-reporting, citations, consistency and field. A track listed here with no audit report in the bundle is a gap a reader can see.",
+              "$comment": "The audit tracks the arm asked for, as the run's own plan recorded them. The six in 0.9 are stats, figures-tables, methods-reporting, citations, numbers and field. The numbers track was called consistency before engine 0.9.0 and the engine keeps no alias for the old name, so a record written by an older run names a track this repository no longer labels and the page titles it from its file name instead. A track listed here with no audit report in the bundle is a gap a reader can see.",
               "type": "array",
               "items": { "type": "string" }
             },
@@ -259,7 +259,45 @@
               "$comment": "What the engine records when a review was written and the session was blocked afterwards, by a rate limit or a token ceiling that fired after the review was saved. Such a run is complete and publishable, and the note is the one thing that says the session did not end cleanly, so it is published rather than dropped.",
               "type": "string"
             },
-            "errors": { "type": "array", "items": { "type": "string" } }
+            "errors": { "type": "array", "items": { "type": "string" } },
+            "problems": {
+              "$comment": "What the run did not finish, in the engine's own words, for a run it still calls publishable. Engine 0.9.0 appends these after it has decided publishable, so a clean review can carry them: a citation stage that did not answer, and a citation worker slot observed running a model family other than the one it was assigned. They are published beside the findings and they are not errors, because nothing here went wrong with the review. The engine's wording is kept verbatim rather than rephrased, since each of these lines is carefully worded about what it does and does not claim.",
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "citations": {
+              "$comment": "The state of the run's citation lane, read from the engine's `citations` block. `enabled` false means this arm checked no citations at all, which is not the same as checking some and finding none, and the page says so. `enabled` true with an empty `counts` is a run that planned the lane and left no table, and the reason is in `problems`. The lookups cache the lane fetched is deliberately not published and not hashed: it is third-party publisher text, the review rests on it only through the passage quoted inside a verdict the specialist confirmed, and republishing it would make this site a redistributor of other people's articles.",
+              "type": "object",
+              "required": ["enabled", "complete", "counts", "problems"],
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "complete": {
+                  "$comment": "The engine's own answer to whether the table actually checked something, which is stricter than whether every stage ran: a ledger of nothing but rows the lookups never answered is not complete. False is published plainly rather than hidden, because an unfinished ledger does not hold a review back and a reader is owed the difference.",
+                  "type": "boolean"
+                },
+                "stages_done": { "type": "boolean" },
+                "summary": {
+                  "$comment": "The engine's one-sentence summary of the ledger, carried in the downloadable record and deliberately not printed on the public page. It bundles every bucket into one sentence, including a count of in-text uses a worker judged as not supported, and an aggregate of that kind reads as a numeric accusation against references nobody names and no specialist confirmed. The page builds its own labelled rows from `counts` instead.",
+                  "type": "string"
+                },
+                "counts": {
+                  "$comment": "The ledger's tallies, integers only. The engine's own reading also carries the ledger's relative path and its stage record, and neither is kept here: the bundle does not carry the ledger file, so a path in the record points at nothing a reader can open. `not_found`, `not_located` and `could_not_check` are three different facts and are never added together: an unregistered DOI the reference list gave itself, a title two indexes do not list, and a lookup that did not answer.",
+                  "type": "object",
+                  "additionalProperties": { "type": "integer", "minimum": 0 }
+                },
+                "problems": {
+                  "$comment": "The lane's own unfinished-work lines, verbatim from the engine, repeated here so the citations section of the page can print them without reading the whole run's problems list.",
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                },
+                "workers": {
+                  "$comment": "The cite-N slots the run gave the citation lane. They fetch and record lookups and they write no part of the review, so they are named here rather than counted among the reviewers, and the page keeps them out of every count of who read the manuscript.",
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              },
+              "additionalProperties": false
+            }
           },
           "additionalProperties": false
         },

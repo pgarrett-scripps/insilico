@@ -125,7 +125,7 @@ const TRACK_LABELS = {
   "figures-tables": "Figures and tables",
   "methods-reporting": "Methods and reporting",
   citations: "Citations",
-  consistency: "Internal consistency",
+  numbers: "Numbers",
   field: "Field context",
 };
 
@@ -135,7 +135,7 @@ const TRACK_BLURBS = {
   "figures-tables": "Whether each figure and table shows what the text claims.",
   "methods-reporting": "Whether the methods could be followed by someone else.",
   citations: "Whether the works cited say what they are cited for.",
-  consistency: "Whether the manuscript agrees with itself throughout.",
+  numbers: "Whether the paper's own printed numbers agree with each other and add up.",
   field: "How the work sits against what the field already knows.",
 };
 

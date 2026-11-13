@@ -149,7 +149,20 @@ const agentRows = (Array.isArray(generator?.agents) ? generator.agents : []).map
   attempt: typeof row.attempt === "number" ? row.attempt : null,
   findings: typeof row.findings === "number" ? row.findings : null,
   noneFound: row.none_found === true,
+  // The citation lane's workers look references up and write rows into a
+  // ledger. They write no finding, no track report and no part of the letter,
+  // so they are shown in this table and left out of every count of who read
+  // the manuscript. Read off the role the run recorded, before the display
+  // rewrite below turns its hyphen into a space.
+  worker: String(row.role || "") === "citation-worker",
 }));
+
+// The rows that wrote some part of the review. Every claim on this page about
+// who read the paper, how varied the panel was, and whether one model wrote
+// all of it is counted over these, because four citation workers on a cheaper
+// model would otherwise make a panel look more varied than it was.
+const reviewerRows = agentRows.filter((row) => !row.worker);
+const workerRows = agentRows.filter((row) => row.worker);
 
 // The slots the run gave a model and nothing observed running one. The engine
 // publishes a review with this list non-empty, so the page says so rather than
@@ -164,9 +177,9 @@ const unverifiedModels = (Array.isArray(runRecord.models_unverified) ? runRecord
 // one. It is claimed only when every row was observed: one observed model and
 // four unobserved slots is not a panel that shared a model, it is a panel
 // nobody watched.
-const agentModels = [...new Set(agentRows.map((row) => row.model).filter(Boolean))];
-const everyAgentObserved = agentRows.length > 0 && agentRows.every((row) => row.model);
-const oneModelRan = agentRows.length > 1 && everyAgentObserved && agentModels.length === 1
+const agentModels = [...new Set(reviewerRows.map((row) => row.model).filter(Boolean))];
+const everyAgentObserved = reviewerRows.length > 0 && reviewerRows.every((row) => row.model);
+const oneModelRan = reviewerRows.length > 1 && everyAgentObserved && agentModels.length === 1
   ? agentModels[0]
   : null;
 
@@ -200,6 +213,64 @@ const sourceOfBytes = input.local_file === undefined
   : localFile
     ? "supplied locally"
     : "fetched from the identifier";
+
+// The citation lane. It reads the reference list, looks each entry up in
+// Crossref and Europe PMC, and checks in-text uses against the source each one
+// names. What goes on this page and what stays in the downloadable record was
+// decided on one rule: this page is about named authors' real papers, so a
+// number here must be one that cannot be read as a charge nobody made.
+//
+// On the page: how many references were in the list, and each state with its
+// own count and its own caption saying what that state does and does not mean.
+// The three states that are not a clean resolution are never added together and
+// never shown as one figure, because "9 references unverified" is a sentence
+// about the authors that none of the three supports.
+//
+// Not on the page: the engine's own one-sentence summary and the per-use
+// verdict tallies it contains. The verdict counts include in-text uses a
+// citation worker judged as not supported, and an aggregate of those is a
+// numeric accusation against references nobody names and no specialist
+// confirmed. They stay in provenance.json, where they sit beside the counts
+// that qualify them. The ledger rows themselves are not published at all: a row
+// the citations specialist did not write up is not a finding, and printing one
+// would make it look like one.
+const citations = runRecord.citations || null;
+const citeEnabled = citations?.enabled === true;
+const citeCounts = citations?.counts || {};
+const citeCount = (key) => (typeof citeCounts[key] === "number" ? citeCounts[key] : 0);
+const citeReferences = citeCount("references");
+const citeTable = citeEnabled && citeReferences > 0;
+const citeStates = (citeTable
+  ? [
+      {
+        label: "Confirmed against an index",
+        count: citeCount("resolved"),
+        says: "An index holds a record matching the reference as it is printed.",
+      },
+      {
+        label: "Printed DOI the registry has no record of",
+        count: citeCount("not_found"),
+        says: "The reference list gave a DOI of its own and the DOI registry does not hold it. This is usually a typo in the reference rather than anything about the work.",
+      },
+      {
+        label: "Not listed in either index checked",
+        count: citeCount("not_located"),
+        says: "Neither Crossref nor Europe PMC lists the title. Books, chapters, theses, standards, software, reports and many preprints are in neither while being perfectly real, so this is weak evidence about the reference and no evidence at all that the work does not exist.",
+      },
+      {
+        label: "Could not be checked",
+        count: citeCount("could_not_check"),
+        says: "The lookups did not answer, so this reference was not checked. It says nothing whatever about the reference.",
+      },
+    ]
+  : []
+).filter((state) => state.count > 0);
+const citeProblems = (Array.isArray(citations?.problems) ? citations.problems : [])
+  .map((line) => String(line || "").trim())
+  .filter(Boolean);
+const citeWorkers = (Array.isArray(citations?.workers) ? citations.workers : [])
+  .map((slot) => String(slot || "").trim())
+  .filter(Boolean);
 
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""
@@ -457,10 +528,15 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
   {oneModelRan && (
     <p class="prov__warn prov__warn--block">
       <strong>One model wrote this entire review.</strong> All{" "}
-      {agentRows.length} agents ran on{" "}
+      {reviewerRows.length} agents that wrote any part of it ran on{" "}
       <span class="mono">{oneModelRan}</span>. Agents that share a model are not
       independent corroboration of one another, so read agreement between them
       as one reader repeating itself rather than as several readers concurring.
+      {workerRows.length > 0 && (
+        <span class="prov__attest">
+          {`The ${workerRows.length} citation worker slot${workerRows.length === 1 ? "" : "s"} below are not counted here. ${workerRows.length === 1 ? "It looked" : "They looked"} references up and wrote no part of the review, so a different model in ${workerRows.length === 1 ? "that slot" : "those slots"} would not make this panel any more varied than it was.`}
+        </span>
+      )}
     </p>
   )}
 
@@ -517,7 +593,10 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
           <tbody>
             {agentRows.map((row) => (
               <tr>
-                <td>{row.role || row.slot}</td>
+                <td>
+                  {row.role || row.slot}
+                  {row.worker && <span class="prov__tool">wrote no part of the review</span>}
+                </td>
                 <td class="mono">{row.track || "N/A"}</td>
                 <td class="mono">{row.assignedModel || "N/A"}</td>
                 <td class="mono">{row.model || "unrecorded"}</td>
@@ -538,6 +617,15 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         using, and the second column is never filled in from the first: a slot
         reading unrecorded is one nobody observed, not one that ran what it was
         asked for.
+        {workerRows.length > 0 && (
+          <span class="prov__attest">
+            A row marked as writing no part of the review is a citation lane
+            worker. It looked references up and recorded what it found, and it
+            wrote no finding, no track report and no part of the letter, so it
+            is shown here and counted nowhere on this page as a reader of the
+            manuscript.
+          </span>
+        )}
       </p>
     </details>
   )}
@@ -574,6 +662,78 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         run with a stage that never reported at all, so this table exists to let
         a reader check that claim rather than take it.
       </p>
+    </details>
+  )}
+
+  {generator && citations && (
+    <details class="prov__more">
+      <summary>
+        What the citation lane checked
+        {citeTable && ` (${citeReferences} reference${citeReferences === 1 ? "" : "s"})`}
+      </summary>
+      {!citeEnabled && (
+        <p class="prov__note">
+          This run's arm convened no citation lane, so no reference was looked up
+          in an index and no in-text use was checked against the source it names.
+          That is not the same as looking and finding nothing, and it is recorded
+          here so the absence is not read as a clean result. The citations
+          specialist read the works cited either way, and its report is beside
+          the other track reports above.
+        </p>
+      )}
+      {citeEnabled && !citeTable && (
+        <p class="prov__note">
+          This run planned a citation lane and left no table behind it, so that
+          lane looked up no reference and checked no in-text use. Nothing follows
+          from that about the reference list, which was not examined by it. The
+          run's own account of why is below.
+        </p>
+      )}
+      {citeTable && (
+        <div class="table-scroll">
+          <table class="prov__table">
+            <thead>
+              <tr><th>State</th><th>References</th><th>What that state means</th></tr>
+            </thead>
+            <tbody>
+              {citeStates.map((state) => (
+                <tr>
+                  <td>{state.label}</td>
+                  <td class="mono">{state.count}</td>
+                  <td>{state.says}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {citeTable && (
+        <p class="prov__note">
+          {`The reference list holds ${citeReferences} work${citeReferences === 1 ? "" : "s"}, and ${citeCount("uses_judged")} of the ${citeCount("uses")} in-text use${citeCount("uses") === 1 ? "" : "s"} found in the manuscript were checked against the source named for ${citeCount("uses") === 1 ? "it" : "them"}.`}
+          {" "}Each state above is counted separately and they are deliberately
+          not added together. A reference whose printed DOI is unregistered, one
+          that two indexes do not list, and one the lookups could not answer for
+          are three different facts, and a single total of them would read as a
+          count of bad references, which none of the three claims.
+        </p>
+      )}
+      {citeProblems.length > 0 && (
+        <ul class="prov__lines">
+          {citeProblems.map((line) => (<li>{line}</li>))}
+        </ul>
+      )}
+      <p class="prov__note">
+        Nothing in this section is a finding. A citation becomes a finding on
+        this page only where the citations specialist read the row, judged it and
+        wrote it up, and the letter and the appendix hold those. The lane's own
+        rows are not published, and neither is the article text it fetched in
+        order to check them.
+      </p>
+      {citeWorkers.length > 0 && (
+        <p class="prov__note">
+          {`${citeWorkers.length} worker slot${citeWorkers.length === 1 ? "" : "s"} (${citeWorkers.join(", ")}) did these lookups. ${citeWorkers.length === 1 ? "It wrote" : "They wrote"} no part of the review and ${citeWorkers.length === 1 ? "is" : "are"} not counted among the agents that read the manuscript.`}
+        </p>
+      )}
     </details>
   )}
 
@@ -810,6 +970,22 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     padding: 0.7rem 1.15rem 0.9rem;
     font-size: var(--t--1);
     color: var(--muted);
+  }
+
+  /* The engine's own sentences about work a lane did not finish, kept as a list
+     so each one reads as its own statement. They are quoted rather than
+     rewritten, because each is carefully worded about what it does and does not
+     claim, and a summary of them would lose exactly that. */
+  .prov__lines {
+    margin: 0;
+    padding: 0.2rem 1.15rem 0.3rem 2.1rem;
+    font-size: var(--t--1);
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .prov__lines li {
+    margin: 0.3rem 0;
   }
 
   /* The tool name and the query it was given, stacked: the query is the

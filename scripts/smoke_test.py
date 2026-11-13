@@ -34,6 +34,7 @@ from smoke_checks.local import (
     check_severity_is_read_from_the_engine_not_guessed,
     check_the_advisory_verdict_is_labelled_advisory,
     check_the_attestation_says_what_it_has_to_say,
+    check_the_citation_section_prints_no_charge_nobody_made,
     check_the_decision_is_attributed_to_a_person,
     check_the_locked_engine_release_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
@@ -153,6 +154,8 @@ def main() -> int:
     print("ok  the summary describes the run that was recorded")
     check_the_page_keeps_the_model_asked_apart_from_the_model_that_ran()
     print("ok  the page shows each slot's model asked and model ran, from two fields")
+    check_the_citation_section_prints_no_charge_nobody_made()
+    print("ok  the citations section states each lookup state and sums none of them")
     check_an_attestation_needs_a_named_editor()
     print("ok  a true attestation needs a named editor and an actual reading")
     check_a_rehearsal_claims_no_reading()
