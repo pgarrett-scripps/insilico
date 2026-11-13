@@ -673,20 +673,19 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </summary>
       {!citeEnabled && (
         <p class="prov__note">
-          This run's arm convened no citation lane, so no reference was looked up
-          in an index and no in-text use was checked against the source it names.
-          That is not the same as looking and finding nothing, and it is recorded
-          here so the absence is not read as a clean result. The citations
-          specialist read the works cited either way, and its report is beside
-          the other track reports above.
+          This run's arm ran no citations specialist and convened no citation
+          lane, so no reference was looked up in an index and no in-text use was
+          checked against the source it names. That is not the same as looking
+          and finding nothing, and it is recorded here so the absence is not read
+          as a clean result.
         </p>
       )}
       {citeEnabled && !citeTable && (
         <p class="prov__note">
-          This run planned a citation lane and left no table behind it, so that
-          lane looked up no reference and checked no in-text use. Nothing follows
-          from that about the reference list, which was not examined by it. The
-          run's own account of why is below.
+          This run planned a citation lane and this record carries no counts from
+          it, so this page cannot say what that lane looked up or checked.
+          Nothing follows from that about the reference list either way. The
+          run's own account of why there are no counts is below.
         </p>
       )}
       {citeTable && (

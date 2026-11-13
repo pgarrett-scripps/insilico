@@ -5618,6 +5618,13 @@ def check_the_citation_section_prints_no_charge_nobody_made() -> None:
     offline is which fields the component reads and which wordings it carries.
     """
     component = _provenance_component_fields()
+    # Every sentence here is asserted against the source with its runs of
+    # whitespace collapsed, because the component is wrapped prose: a phrase
+    # this check cares about can sit across two lines today and on one line
+    # after an editor reflows the paragraph, and a check that passed only on
+    # the line breaks would stop guarding the wording the day someone tidied
+    # it. Field names and expressions are matched against the source itself.
+    prose = " ".join(component.split())
 
     assert "runRecord.citations" in component, (
         "the page has to read the citation lane from the record's own field"
@@ -5634,7 +5641,7 @@ def check_the_citation_section_prints_no_charge_nobody_made() -> None:
         "no evidence at all that the work does not exist",
         "says nothing whatever about the reference",
     ):
-        assert caveat in component, f"a state of a lookup needs its own caption: {caveat}"
+        assert caveat in prose, f"a state of a lookup needs its own caption: {caveat}"
 
     # The engine's summary sentence is not printed. It bundles the three states
     # in with the one clean one and carries the verdict tallies besides.
@@ -5665,10 +5672,10 @@ def check_the_citation_section_prints_no_charge_nobody_made() -> None:
     assert "citeProblems.map" in component, (
         "the engine's lines about what the lane did not settle have to be printed"
     )
-    assert "Nothing in this section is a finding" in component, (
+    assert "Nothing in this section is a finding" in prose, (
         "a reader has to be told that a row no specialist wrote up is not a finding"
     )
-    assert "the citations specialist read the row, judged it and" in component, (
+    assert "the citations specialist read the row, judged it and" in prose, (
         "the page has to say what turns a row into a finding"
     )
     # A lane that was planned and left no table, and an arm that convened no
@@ -5676,12 +5683,53 @@ def check_the_citation_section_prints_no_charge_nobody_made() -> None:
     assert "citeEnabled && !citeTable" in component, (
         "a planned lane with no ledger behind it needs its own wording"
     )
-    assert "convened no citation lane" in component, (
+    assert "convened no citation lane" in prose, (
         "an arm with no lane has to say so, because absent is not zero"
     )
-    assert "so the absence is not read as a clean result" in component, (
+    assert "so the absence is not read as a clean result" in prose, (
         "the no-lane wording has to say what it is not"
     )
+
+    # Neither empty branch may say more than the run folder knows.
+    #
+    # `citations.enabled` is true exactly when the plan holds the citations
+    # specialist, so false means there was no such specialist. A sentence
+    # promising the reader that the specialist read the works cited anyway is
+    # false every time that branch prints, and it is the more damaging
+    # direction of the two: it tells a reader the references were examined by
+    # someone when nobody was asked to.
+    assert "ran no citations specialist and convened no citation lane" in prose, (
+        "the no-lane wording has to say there was no citations specialist either"
+    )
+    for claimed in (
+        "read the works cited either way",
+        "its report is beside",
+    ):
+        assert claimed not in prose, (
+            "a run with no citations specialist must not be described as having "
+            f"one that read anything: {claimed}"
+        )
+
+    # The other branch prints for three different runs: a lane that wrote no
+    # ledger, a record written before the ledger existed, and a ledger file
+    # that is there and could not be read. Only the first of those three is a
+    # lane that looked nothing up, and the page cannot tell them apart, so it
+    # reports the absence of counts and lets the engine's own line below give
+    # the reason.
+    assert "this record carries no counts from it" in prose, (
+        "an empty lane section reports what the record lacks, not what the lane did"
+    )
+    assert "this page cannot say what that lane looked up or checked" in prose, (
+        "the page has to admit it does not know, since an unreadable ledger lands here too"
+    )
+    for overclaimed in (
+        "that lane looked up no reference",
+        "left no table behind it",
+    ):
+        assert overclaimed not in prose, (
+            "a record with no counts is not a lane that checked nothing: "
+            f"{overclaimed}"
+        )
 
 
 def check_the_citation_lane_is_read_from_the_runs_own_ledger() -> None:
