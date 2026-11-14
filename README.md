@@ -15,13 +15,13 @@ full referee report back. Everything is published.**
 
 In Silico doesn't host papers. You point us at a preprint that already lives on
 **arXiv, bioRxiv or medRxiv**, and a panel of AI referees reads it the way a
-journal's reviewers would: five specialists each take one question, two
-fact-checkers audit the citations and methods, the findings are argued out in a
-debate, and an editor writes the decision letter.
+journal's reviewers would: three reviewers each read the whole paper on their
+own, six specialists each take one question, and an editor reads every report
+and writes the decision letter.
 
-Then we publish *all of it*: the letter, every report, the debate, and a record
-of exactly which models did the work and what it cost. It all appears next to a
-link to your paper.
+Then we publish *all of it*: the letter, every report, and a record of exactly
+which models did the work, which readers reported, and what it cost. It all
+appears next to a link to your paper.
 
 [![The published reviews page](media/reviews.png)](https://pgarrett-scripps.github.io/insilico/reviews/)
 

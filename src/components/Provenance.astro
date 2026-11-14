@@ -21,6 +21,12 @@ const insilico = provenance.insilico || {}
 const configuration = provenance.configuration || {}
 const journalProfile = provenance.journal_profile || {}
 const review = provenance.review || {}
+// Text the publishing editor read in a refusal and allowed onto the page. The
+// leak scan refuses a path or an address by default, and an editor can overrule
+// it for a string that is the review's own words. That overruling is a judgement
+// a reader is entitled to see, so it is printed here rather than being recorded
+// only in the JSON.
+const allowedText = Array.isArray(review.allowed_text) ? review.allowed_text : [];
 const preprint = provenance.preprint || {};
 const fallback = provenance.model || "unspecified";
 const modelName = (value: string | {model?: string}) =>
@@ -28,23 +34,28 @@ const modelName = (value: string | {model?: string}) =>
     ? value.model
     : value;
 
-const modelRows = [
-  ...Object.entries(provenance.models || {}).map(([tag, v]) => ({
-    stage: TAG_LABEL[tag] || tag,
-    model: modelName(v) || fallback,
-  })),
-  ...Object.entries(provenance.agent_models || {}).map(([agent, v]) => ({
-    stage: `${agent.replace(/_/g, " ")} (override)`,
-    model: modelName(v) || fallback,
-  })),
-];
+// The hosted panel's table, keyed by the stage tags that panel used. A plugin
+// run keys `models` by agent slot instead, and its table is built from the
+// generator's agent rows below, which also know each slot's role and track.
+const modelRows = provenance.generator
+  ? []
+  : [
+      ...Object.entries(provenance.models || {}).map(([tag, v]) => ({
+        stage: TAG_LABEL[tag] || tag,
+        model: modelName(v) || fallback,
+      })),
+      ...Object.entries(provenance.agent_models || {}).map(([agent, v]) => ({
+        stage: `${agent.replace(/_/g, " ")} (override)`,
+        model: modelName(v) || fallback,
+      })),
+    ];
 
 // An empty model table means no per-stage split ran: every agent, from the
 // desk screen to the editor, used one model. That is a different artifact
 // from the graded panel the rest of the corpus records. The verdict was
 // decided by whatever reviewed the paper, with no stronger model checking it,
 // and a reader comparing two reviews needs to see that before comparing them.
-const singleModel = modelRows.length === 0 && provenance.model
+const singleModel = !provenance.generator && modelRows.length === 0 && provenance.model
   ? provenance.model
   : null;
 
@@ -104,20 +115,94 @@ const conversion = health.verdict && health.verdict !== "clean"
 // A review generated on the editor's own machine, on a subscription, and
 // uploaded as a pull request. The hosted panel's accounting does not exist for
 // one of these: there is no five-reviewer split and no dollar figure. What
-// replaces it is this block, and the two facts a reader most needs from it are
-// that the engine source is pinned by hash and that the verdict was a person's
-// rather than the model's. Absent on every version 2 record, and silent there.
+// replaces it is this block, and the facts a reader most needs from it are
+// that the engine and the plugin are pinned by hash, which agents ran on which
+// model, whether every reader the arm asked for reported, and that the verdict
+// was a person's rather than the model's. Absent on every version 2 record,
+// and silent there.
 const generator = provenance.generator || null;
 const engine = generator?.engine || {};
 const engineHash = generator?.engine_fingerprint || {};
 const transport = generator?.transport || {};
-const modelIds = generator?.model_ids || {};
+const plugin = generator?.plugin || {};
+const pluginHash = plugin.fingerprint || {};
 const input = generator?.input || {};
 const runRecord = generator?.run || {};
 const attestation = generator?.attestation || {};
+const advisory = generator?.advisory_verdict || {};
 
-// What the transport reported back, when it disagreed with what was asked for.
-// Equal lists are the ordinary case and say nothing worth a row.
+// One row per agent that ran. The run gives every slot a model of its own
+// rather than one model per stage, so this is the table that says what wrote
+// which part of the review. Each row keeps the two model facts apart: assigned
+// is what the run asked that slot to use and ran is what something observed it
+// on. A slot with a plan and no observation shows the gap, because writing the
+// plan into the ran column would turn an unanswered question into an answer.
+// The harness's unfilled placeholder rows are dropped where the record is
+// built, not here.
+const agentRows = (Array.isArray(generator?.agents) ? generator.agents : []).map((row) => ({
+  slot: String(row.slot || ""),
+  role: String(row.role || row.agent_type || "").replace(/^pra:/, "").replace(/[_-]/g, " "),
+  track: String(row.track || ""),
+  model: String(row.model || ""),
+  assignedModel: String(row.assigned_model || ""),
+  toolCalls: typeof row.tool_calls === "number" ? row.tool_calls : null,
+  attempt: typeof row.attempt === "number" ? row.attempt : null,
+  findings: typeof row.findings === "number" ? row.findings : null,
+  noneFound: row.none_found === true,
+  // The citation lane's workers look references up and write rows into a
+  // ledger. They write no finding, no track report and no part of the letter,
+  // so they are shown in this table and left out of every count of who read
+  // the manuscript. Read off the role the run recorded, before the display
+  // rewrite below turns its hyphen into a space.
+  worker: String(row.role || "") === "citation-worker",
+}));
+
+// The rows that wrote some part of the review. Every claim on this page about
+// who read the paper, how varied the panel was, and whether one model wrote
+// all of it is counted over these, because four citation workers on a cheaper
+// model would otherwise make a panel look more varied than it was.
+const reviewerRows = agentRows.filter((row) => !row.worker);
+const workerRows = agentRows.filter((row) => row.worker);
+
+// The slots the run gave a model and nothing observed running one. The engine
+// publishes a review with this list non-empty, so the page says so rather than
+// letting the table's blanks pass for a formatting choice.
+const unverifiedModels = (Array.isArray(runRecord.models_unverified) ? runRecord.models_unverified : [])
+  .map((slot) => String(slot))
+  .filter(Boolean);
+
+// Agents running the same model are not independent of one another, however
+// many of them read the manuscript. When one model ran the whole panel, that is
+// the heaviest caveat on the page and it goes above the tables rather than in
+// one. It is claimed only when every row was observed: one observed model and
+// four unobserved slots is not a panel that shared a model, it is a panel
+// nobody watched.
+const agentModels = [...new Set(reviewerRows.map((row) => row.model).filter(Boolean))];
+const everyAgentObserved = reviewerRows.length > 0 && reviewerRows.every((row) => row.model);
+const oneModelRan = reviewerRows.length > 1 && everyAgentObserved && agentModels.length === 1
+  ? agentModels[0]
+  : null;
+
+// The stage ledger. Publishing refuses a run with a missing stage, so the
+// interesting rows here are the readers that reported nothing and the ones that
+// had to be retried: both are facts about how much of this review is one pass.
+const ledger = runRecord.completeness || {};
+const requiredStages = Array.isArray(ledger.required) ? ledger.required : [];
+const reportedStages = Array.isArray(ledger.reported) ? ledger.reported : [];
+const noneFound = Array.isArray(ledger.none_found) ? ledger.none_found : [];
+const retried = Array.isArray(ledger.retried) ? ledger.retried : [];
+const quarantined = typeof runRecord.quarantined_findings_count === "number"
+  ? runRecord.quarantined_findings_count
+  : 0;
+const specialists = Array.isArray(runRecord.specialist_tracks) ? runRecord.specialist_tracks : [];
+const advisoryRows = [
+  ["Significance", advisory.significance],
+  ["Strength of evidence", advisory.strength_of_evidence],
+  ["Reasoning", advisory.reasoning],
+  ["What it rests on", advisory.basis],
+  ["Stated limitation", advisory.limitation],
+].filter(([, value]) => String(value || "").trim());
+
 // Where the reviewed bytes came from. With a local file the hash is still the
 // hash of what the engine read, but a reader cannot fetch the identifier and
 // reproduce it, because the operator supplied the PDF from their own disk. That
@@ -129,21 +214,63 @@ const sourceOfBytes = input.local_file === undefined
     ? "supplied locally"
     : "fetched from the identifier";
 
-// The engine's own rule for "the same model", from model_runtime.same_model:
-// the requested id, a dated release of it, or a bracketed variant of it. Those
-// are the forms the transport reports back for one request, so comparing the
-// strings exactly called `claude-sonnet-5-5-20260929` a substitution the engine
-// had already accepted. The banner then fired on every run the transport dated,
-// and on any record listing two observed ids whatever they were.
-const observed = Array.isArray(modelIds.observed) ? modelIds.observed : [];
-const sameModel = (served, requested) => {
-  if (!requested) return false;
-  return served === requested
-    || served.startsWith(`${requested}-`)
-    || served.startsWith(`${requested}[`);
-};
-const substituted = observed.filter((served) => !sameModel(String(served), String(modelIds.requested || "")));
-const modelDrift = substituted.length ? substituted : null;
+// The citation lane. It reads the reference list, looks each entry up in
+// Crossref and Europe PMC, and checks in-text uses against the source each one
+// names. What goes on this page and what stays in the downloadable record was
+// decided on one rule: this page is about named authors' real papers, so a
+// number here must be one that cannot be read as a charge nobody made.
+//
+// On the page: how many references were in the list, and each state with its
+// own count and its own caption saying what that state does and does not mean.
+// The three states that are not a clean resolution are never added together and
+// never shown as one figure, because "9 references unverified" is a sentence
+// about the authors that none of the three supports.
+//
+// Not on the page: the engine's own one-sentence summary and the per-use
+// verdict tallies it contains. The verdict counts include in-text uses a
+// citation worker judged as not supported, and an aggregate of those is a
+// numeric accusation against references nobody names and no specialist
+// confirmed. They stay in provenance.json, where they sit beside the counts
+// that qualify them. The ledger rows themselves are not published at all: a row
+// the citations specialist did not write up is not a finding, and printing one
+// would make it look like one.
+const citations = runRecord.citations || null;
+const citeEnabled = citations?.enabled === true;
+const citeCounts = citations?.counts || {};
+const citeCount = (key) => (typeof citeCounts[key] === "number" ? citeCounts[key] : 0);
+const citeReferences = citeCount("references");
+const citeTable = citeEnabled && citeReferences > 0;
+const citeStates = (citeTable
+  ? [
+      {
+        label: "Confirmed against an index",
+        count: citeCount("resolved"),
+        says: "An index holds a record matching the reference as it is printed.",
+      },
+      {
+        label: "Printed DOI the registry has no record of",
+        count: citeCount("not_found"),
+        says: "The reference list gave a DOI of its own and the DOI registry does not hold it. This is usually a typo in the reference rather than anything about the work.",
+      },
+      {
+        label: "Not listed in either index checked",
+        count: citeCount("not_located"),
+        says: "Neither Crossref nor Europe PMC lists the title. Books, chapters, theses, standards, software, reports and many preprints are in neither while being perfectly real, so this is weak evidence about the reference and no evidence at all that the work does not exist.",
+      },
+      {
+        label: "Could not be checked",
+        count: citeCount("could_not_check"),
+        says: "The lookups did not answer, so this reference was not checked. It says nothing whatever about the reference.",
+      },
+    ]
+  : []
+).filter((state) => state.count > 0);
+const citeProblems = (Array.isArray(citations?.problems) ? citations.problems : [])
+  .map((line) => String(line || "").trim())
+  .filter(Boolean);
+const citeWorkers = (Array.isArray(citations?.workers) ? citations.workers : [])
+  .map((slot) => String(slot || "").trim())
+  .filter(Boolean);
 
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""
@@ -199,6 +326,28 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </div>
     )}
 
+    {generator && (pluginHash.sha256 || plugin.workflow_sha256) && (
+      <div class="prov__cell">
+        <p class="label">Review plugin</p>
+        <p class="prov__value mono">
+          workflow {plugin.workflow_version || "unversioned"}
+          {plugin.finding_schema_version
+            ? ` · findings ${plugin.finding_schema_version}`
+            : ""}
+        </p>
+        {pluginHash.sha256 && (
+          <p class="prov__hash mono" title={pluginHash.sha256}>
+            {pluginHash.file_count} files, sha256 {String(pluginHash.sha256).slice(0, 16)}…
+          </p>
+        )}
+        {plugin.workflow_sha256 && (
+          <p class="prov__hash mono" title={plugin.workflow_sha256}>
+            workflow sha256 {String(plugin.workflow_sha256).slice(0, 16)}…
+          </p>
+        )}
+      </div>
+    )}
+
     {generator && (
       <div class="prov__cell">
         <p class="label">Input reviewed</p>
@@ -215,19 +364,53 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       </div>
     )}
 
-    {generator && runRecord.workflow && (
+    {generator && runRecord.arm && (
       <div class="prov__cell">
         <p class="label">Run</p>
         <p class="prov__value mono">
-          {runRecord.workflow}
+          {runRecord.arm}
           {runRecord.reviewers ? ` · ${runRecord.reviewers} reviewer${runRecord.reviewers === 1 ? "" : "s"}` : ""}
+          {specialists.length > 0 ? ` · ${specialists.length} specialist${specialists.length === 1 ? "" : "s"}` : ""}
         </p>
         <p class="prov__hash">
           {typeof runRecord.findings === "number"
-            ? `${runRecord.findings} finding${runRecord.findings === 1 ? "" : "s"}`
+            ? `${runRecord.findings} finding${runRecord.findings === 1 ? "" : "s"} in the letter`
             : "finding count unrecorded"}
+          {typeof runRecord.appendix_findings === "number" && runRecord.appendix_findings > 0
+            ? `, ${runRecord.appendix_findings} in the appendix`
+            : ""}
+          {runRecord.escalated_in_bundle
+            ? `, ${runRecord.escalated_in_bundle} escalated`
+            : ""}
           {runRecord.literature_cutoff ? `, literature to ${runRecord.literature_cutoff}` : ""}
         </p>
+        {/* A finding the evidence guards threw out never reaches the letter, and
+            a reader weighing the review should see how many were thrown out
+            rather than only how many survived. The row itself is in the
+            bundle: review_package carries quarantined_findings into
+            editor-package.json, so saying it is not in the bundle sent a
+            reader looking for something they already had. */}
+        {quarantined > 0 && (
+          <p class="prov__hash">
+            {quarantined} finding{quarantined === 1 ? " was" : "s were"} quarantined
+            by the evidence guards and held out of the decision letter.
+            {quarantined === 1 ? " It is" : " They are"} in this bundle's
+            editor-package.json under quarantined_findings.
+          </p>
+        )}
+        {/* A review with nothing in it is a result, and "0 findings in the
+            letter" on its own reads like a run that broke. The engine
+            finishes such a run as complete-without-findings and publishes it
+            like any other review, so the panel says what it means. A review
+            the guards emptied reaches the same status and is refused at
+            publish, which is why the sentence is held back when anything was
+            quarantined. */}
+        {runRecord.findings === 0 && !runRecord.appendix_findings && quarantined === 0 && (
+          <p class="prov__hash">
+            The reviewers raised no make-or-break findings against this
+            manuscript.
+          </p>
+        )}
       </div>
     )}
 
@@ -247,7 +430,7 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     {/* A local run records no debate round count. Showing "N/A" for a number
         the hosted panel measured and this path never had would read as a
         missing measurement rather than an absent stage. */}
-    {(provenance.debate_rounds != null || !generator) && (
+    {provenance.debate_rounds != null && (
       <div class="prov__cell">
         <p class="label">Debate rounds</p>
         <p class="prov__value mono">{provenance.debate_rounds ?? "N/A"}</p>
@@ -307,6 +490,13 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     )}
   </div>
 
+  {allowedText.length > 0 && (
+    <p class="prov__warn prov__warn--block">
+      <strong>The editor allowed text the leak scan had refused:</strong>{" "}
+      <span class="mono">{allowedText.join("  ")}</span>
+    </p>
+  )}
+
   {generator && (
     <p class="prov__warn prov__warn--block">
       <strong>The decision on this review is a person's, not a model's.</strong>{" "}
@@ -315,8 +505,9 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       {attestation.editor
         ? <span class="mono">{attestation.editor}</span>
         : "a human editor"}
-      {" "}after reading the run, and publishing it required that editor to merge
-      it.
+      {attestation.human_reviewed_before_merge === true
+        ? ", who read the run before taking it, and publishing it required that editor to merge it."
+        : ". Whether that editor read the run before taking the decision is not recorded here, so read it as a decision taken on the engine's reports."}
       {attestation.statement && (
         <span class="prov__attest">{attestation.statement}</span>
       )}
@@ -334,13 +525,215 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     </p>
   )}
 
-  {modelDrift && (
+  {oneModelRan && (
     <p class="prov__warn prov__warn--block">
-      <strong>The transport served a different model than was asked for.</strong>{" "}
-      The run requested <span class="mono">{modelIds.requested}</span> and the
-      calls reported <span class="mono">{modelDrift.join(", ")}</span>.
-      Read the review as the work of what answered, not of what was requested.
+      <strong>One model wrote this entire review.</strong> All{" "}
+      {reviewerRows.length} agents that wrote any part of it ran on{" "}
+      <span class="mono">{oneModelRan}</span>. Agents that share a model are not
+      independent corroboration of one another, so read agreement between them
+      as one reader repeating itself rather than as several readers concurring.
+      {workerRows.length > 0 && (
+        <span class="prov__attest">
+          {`The ${workerRows.length} citation worker slot${workerRows.length === 1 ? "" : "s"} below are not counted here. ${workerRows.length === 1 ? "It looked" : "They looked"} references up and wrote no part of the review, so a different model in ${workerRows.length === 1 ? "that slot" : "those slots"} would not make this panel any more varied than it was.`}
+        </span>
+      )}
     </p>
+  )}
+
+  {generator && unverifiedModels.length > 0 && (
+    <p class="prov__warn prov__warn--block">
+      <strong>Some of this panel was not observed running the model it was
+      asked for.</strong>{" "}
+      {`The model that ran went unrecorded for ${unverifiedModels.length} slot${unverifiedModels.length === 1 ? "" : "s"} (${unverifiedModels.join(", ")}), so for ${unverifiedModels.length === 1 ? "it" : "those"} the plan is all this record has.`}
+    </p>
+  )}
+
+  {generator && retried.length > 0 && (
+    <p class="prov__warn prov__warn--block">
+      <strong>A reader had to be run more than once.</strong>{" "}
+      {retried.join(", ")} did not report on the first attempt and was retried.
+      The report published is the attempt that answered, and the earlier ones
+      are in the run folder rather than here.
+    </p>
+  )}
+
+  {generator && advisoryRows.length > 0 && (
+    <details class="prov__more">
+      <summary>The engine's own judgement, which decided nothing</summary>
+      <div class="table-scroll">
+        <table class="prov__table">
+          <tbody>
+            {advisoryRows.map(([label, value]) => (
+              <tr>
+                <td>{label}</td>
+                <td>{value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prov__note">
+        Advisory only. The editor agent grades significance and strength of
+        evidence and recommends no verdict, and the decision on this review was
+        taken by a person who was free to disagree with every line of it.
+      </p>
+    </details>
+  )}
+
+  {agentRows.length > 0 && (
+    <details class="prov__more">
+      <summary>Which model wrote which part</summary>
+      <div class="table-scroll">
+        <table class="prov__table">
+          <thead>
+            <tr>
+              <th>Agent</th><th>Track</th><th>Model asked</th><th>Model ran</th><th>Findings</th><th>Tool calls</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agentRows.map((row) => (
+              <tr>
+                <td>
+                  {row.role || row.slot}
+                  {row.worker && <span class="prov__tool">wrote no part of the review</span>}
+                </td>
+                <td class="mono">{row.track || "N/A"}</td>
+                <td class="mono">{row.assignedModel || "N/A"}</td>
+                <td class="mono">{row.model || "unrecorded"}</td>
+                <td class="mono">
+                  {row.noneFound
+                    ? "none found"
+                    : row.findings == null ? "N/A" : row.findings}
+                </td>
+                <td class="mono">{row.toolCalls == null ? "N/A" : row.toolCalls}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prov__note">
+        The run assigns each slot a model of its own. Model asked is what it was
+        told to use and Model ran is what the harness record says it was seen
+        using, and the second column is never filled in from the first: a slot
+        reading unrecorded is one nobody observed, not one that ran what it was
+        asked for.
+        {workerRows.length > 0 && (
+          <span class="prov__attest">
+            A row marked as writing no part of the review is a citation lane
+            worker. It looked references up and recorded what it found, and it
+            wrote no finding, no track report and no part of the letter, so it
+            is shown here and counted nowhere on this page as a reader of the
+            manuscript.
+          </span>
+        )}
+      </p>
+    </details>
+  )}
+
+  {generator && requiredStages.length > 0 && (
+    <details class="prov__more">
+      <summary>
+        Every reader the arm asked for
+        {` (${reportedStages.length} of ${requiredStages.length} reported)`}
+      </summary>
+      <div class="table-scroll">
+        <table class="prov__table">
+          <thead>
+            <tr><th>Stage</th><th>Reported</th></tr>
+          </thead>
+          <tbody>
+            {requiredStages.map((stage) => (
+              <tr>
+                <td class="mono">{stage}</td>
+                <td>
+                  {!reportedStages.includes(stage)
+                    ? "no report"
+                    : noneFound.includes(stage)
+                      ? "reported, found nothing"
+                      : "reported"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="prov__note">
+        A reader that found nothing is a result, not a gap. Publishing refuses a
+        run with a stage that never reported at all, so this table exists to let
+        a reader check that claim rather than take it.
+      </p>
+    </details>
+  )}
+
+  {generator && citations && (
+    <details class="prov__more">
+      <summary>
+        What the citation lane checked
+        {citeTable && ` (${citeReferences} reference${citeReferences === 1 ? "" : "s"})`}
+      </summary>
+      {!citeEnabled && (
+        <p class="prov__note">
+          This run's arm ran no citations specialist and convened no citation
+          lane, so no reference was looked up in an index and no in-text use was
+          checked against the source it names. That is not the same as looking
+          and finding nothing, and it is recorded here so the absence is not read
+          as a clean result.
+        </p>
+      )}
+      {citeEnabled && !citeTable && (
+        <p class="prov__note">
+          This run planned a citation lane and this record carries no counts from
+          it, so this page cannot say what that lane looked up or checked.
+          Nothing follows from that about the reference list either way. The
+          run's own account of why there are no counts is below.
+        </p>
+      )}
+      {citeTable && (
+        <div class="table-scroll">
+          <table class="prov__table">
+            <thead>
+              <tr><th>State</th><th>References</th><th>What that state means</th></tr>
+            </thead>
+            <tbody>
+              {citeStates.map((state) => (
+                <tr>
+                  <td>{state.label}</td>
+                  <td class="mono">{state.count}</td>
+                  <td>{state.says}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {citeTable && (
+        <p class="prov__note">
+          {`The reference list holds ${citeReferences} work${citeReferences === 1 ? "" : "s"}, and ${citeCount("uses_judged")} of the ${citeCount("uses")} in-text use${citeCount("uses") === 1 ? "" : "s"} found in the manuscript were checked against the source named for ${citeCount("uses") === 1 ? "it" : "them"}.`}
+          {" "}Each state above is counted separately and they are deliberately
+          not added together. A reference whose printed DOI is unregistered, one
+          that two indexes do not list, and one the lookups could not answer for
+          are three different facts, and a single total of them would read as a
+          count of bad references, which none of the three claims.
+        </p>
+      )}
+      {citeProblems.length > 0 && (
+        <ul class="prov__lines">
+          {citeProblems.map((line) => (<li>{line}</li>))}
+        </ul>
+      )}
+      <p class="prov__note">
+        Nothing in this section is a finding. A citation becomes a finding on
+        this page only where the citations specialist read the row, judged it and
+        wrote it up, and the letter and the appendix hold those. The lane's own
+        rows are not published, and neither is the article text it fetched in
+        order to check them.
+      </p>
+      {citeWorkers.length > 0 && (
+        <p class="prov__note">
+          {`${citeWorkers.length} worker slot${citeWorkers.length === 1 ? "" : "s"} (${citeWorkers.join(", ")}) did these lookups. ${citeWorkers.length === 1 ? "It wrote" : "They wrote"} no part of the review and ${citeWorkers.length === 1 ? "is" : "are"} not counted among the agents that read the manuscript.`}
+        </p>
+      )}
+    </details>
   )}
 
   {singleModel && (
@@ -576,6 +969,22 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
     padding: 0.7rem 1.15rem 0.9rem;
     font-size: var(--t--1);
     color: var(--muted);
+  }
+
+  /* The engine's own sentences about work a lane did not finish, kept as a list
+     so each one reads as its own statement. They are quoted rather than
+     rewritten, because each is carefully worded about what it does and does not
+     claim, and a summary of them would lose exactly that. */
+  .prov__lines {
+    margin: 0;
+    padding: 0.2rem 1.15rem 0.3rem 2.1rem;
+    font-size: var(--t--1);
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .prov__lines li {
+    margin: 0.3rem 0;
   }
 
   /* The tool name and the query it was given, stacked: the query is the

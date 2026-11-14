@@ -26,7 +26,13 @@ jobs:
           pip install --require-hashes --only-binary=:all: -r requirements.txt
       - run: pip check
       - run: python scripts/check_runtime.py
+
+      # This job installs the locked engine, so the checks that read a run
+      # folder through it have to run here rather than report themselves
+      # skipped. Requiring it turns a broken install into a failure.
       - run: python scripts/smoke_test.py
+        env:
+          INSILICO_REQUIRE_ENGINE: "1"
 
       # The skill drives the engine's CLI by hand, and an engine command with
       # its options in the wrong place is only caught by running it, which
@@ -44,8 +50,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      # A bare interpreter on purpose: this job proves the bundle and site
+      # layer needs no engine. The run-folder checks skip here, and the
+      # waiver says so out loud instead of letting CI decide.
       - name: Bundle rendering is well-formed
         run: python scripts/smoke_test.py
+        env:
+          INSILICO_REQUIRE_ENGINE: "0"
 
       - name: Published artifact manifests are valid
         run: python scripts/check_review_manifests.py

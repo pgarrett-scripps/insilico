@@ -135,13 +135,15 @@ A published review contains the panel output described under
 contains `manuscript_stats.md`, which records counts over the text the panel
 read so a reader can compare that text with the selected archive source.
 
-Every review ships a `provenance.json`: provider, the model at each stage and
-any per-agent override, PeerReviewAgents version and commit SHA, In Silico
-commit SHA, resolved configuration and hash, journal profile hash, debate
-rounds, active desk screens, per-reviewer scores, total and per-agent cost, and
-the resolved preprint metadata. A `manifest.json` fingerprints every artifact
-in the bundle. You can re-run the panel yourself. Output will not be identical,
-because the models are not deterministic, but the inputs are disclosed.
+Every review ships a `provenance.json`: the transport that ran it, one row per
+agent with the model that agent ran on, the arm and workflow the run was asked
+for, the PeerReviewAgents release with the hash of each plugin and workflow file
+that did the work, the In Silico commit SHA, which stages reported and which
+were retried, how many findings the guards held back, the total and per-agent
+cost, and the resolved preprint metadata. A `manifest.json` fingerprints every
+artifact in the bundle. You can re-run the panel yourself. Output will not be
+identical, because the models are not deterministic, but the inputs are
+disclosed.
 
 A published bundle is never edited. Records use two coordinates. `v<N>` is the
 manuscript version and `r<M>` is an independent review attempt of that version.

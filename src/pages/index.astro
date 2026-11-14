@@ -6,13 +6,17 @@ const stats = statistics();
 const papers = corpus().slice(0, 3);
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+// What the panel does now, which is not what produced every review in the
+// archive. The reviews published before this page was rewritten came from a
+// hosted panel with a desk screen and a recorded debate, and each of those
+// bundles still describes itself in its own words on its own page.
 const STAGES = [
-  { stage: "Desk", who: "Integrity scan · editorial triage", out: "Pass, or a desk rejection" },
-  { stage: "Review", who: "Scientific validity · Quantitative evidence · Contribution and prior work · Reporting and reproducibility · Ethics", out: "5 scored reports" },
-  { stage: "Audit", who: "Citation integrity · Methods completeness", out: "2 factual checklists" },
-  { stage: "Debate", who: "Advocate vs. Skeptic, parallel rounds", out: "Full transcript" },
-  { stage: "Synthesis", who: "Debate synthesizer", out: "The debate, condensed for the editor" },
-  { stage: "Decision", who: "Editor-in-chief, reading every report directly", out: "Recommendation + letter" },
+  { stage: "Ingest", who: "The manuscript, converted and hashed before anything reads it", out: "The exact text the panel saw" },
+  { stage: "Review", who: "Three core reviewers, each reading the whole manuscript without seeing the others", out: "Findings, each tied to evidence" },
+  { stage: "Specialists", who: "Statistics · Figures and tables · Methods and reporting · Citations · Numbers · Field context", out: "6 track reports" },
+  { stage: "Guards", who: "Every finding checked against the manuscript it quotes", out: "What survives, and what was thrown out" },
+  { stage: "Editor", who: "One editor, reading every finding and every report directly", out: "Letter, plus an advisory judgement" },
+  { stage: "Decision", who: "A person, after reading the run", out: "The verdict on the record" },
 ];
 ---
 
@@ -23,9 +27,9 @@ const STAGES = [
       <p class="label hero__eyebrow">An open, AI-refereed overlay journal</p>
       <h1 class="hero__title">In&nbsp;Silico</h1>
       <p class="hero__lede">
-        We don't host papers. Point us at a preprint and a panel of thirteen
-        agents reviews it. We publish <em>the entire review</em> next to a link
-        to your work.
+        We don't host papers. Point us at a preprint and a panel of independent
+        reviewers, six specialist readers and an editor reviews it. We publish
+        <em>the entire review</em> next to a link to your work.
       </p>
 
       <div class="hero__actions">
@@ -78,10 +82,9 @@ const STAGES = [
           away.
         </p>
         <p>
-          Here every submission that clears the desk gets five specialist
-          reports, a recorded debate and an editor's verdict. The record is
-          public, versioned, and reproducible down to the model that wrote each
-          line.
+          Here every submission gets independent core reports, six specialist
+          track reports and an editor's letter. The record is public,
+          versioned, and reproducible down to the model each agent ran on.
         </p>
       </div>
     </section>
@@ -89,7 +92,7 @@ const STAGES = [
     <section class="pipeline">
       <div class="pipeline__head">
         <h2 class="h-section">What the panel does</h2>
-        <p class="label">13 agents · two debate rounds</p>
+        <p class="label">3 core reviewers · 6 specialist tracks · 1 editor</p>
       </div>
       <ol class="pipeline__list">
         {STAGES.map((s, i) => (
@@ -102,8 +105,9 @@ const STAGES = [
         ))}
       </ol>
       <p class="pipeline__note">
-        Contribution and prior work queries arXiv, Semantic Scholar, PubMed and
-        bioRxiv live. Each review publishes its own bill.
+        Field context is read against the published literature. Each review
+        publishes the run behind it: every agent and the model it ran on, which
+        stages reported, and how many findings the guards threw out.
       </p>
     </section>
 
