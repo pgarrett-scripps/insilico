@@ -5,5 +5,5 @@
 # package carries no model client and the plain package is the whole
 # dependency. There are no extras to ask for.
 peerreviewagents==0.9.0
-rustypaper==0.2.2
+rustypaper==0.2.3
 pyyaml>=6.0
