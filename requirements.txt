@@ -227,9 +227,9 @@ mcp==1.30.0 \
     --hash=sha256:445414625fce5c295faa505bb11bacece661ab6f4028d57c935db57820b7a3e4 \
     --hash=sha256:666edb5009503e1047c9d60346a756f94b261f05cc2625f23d41c728ffc484d0
     # via peerreviewagents
-peerreviewagents==0.9.0 \
-    --hash=sha256:6048fa83cdecfef2b4ba3e5a40c68282f220e368abdabe95b2ad4dbe29525480 \
-    --hash=sha256:cccea1c2930b04404103e5179dc4f858b082bdd4053be3a15c3a6788acc114ba
+peerreviewagents==0.9.1 \
+    --hash=sha256:4839ae0360a883d087e7e83ad40f6c925b21d191ae708ff431ad3f81047fd2be \
+    --hash=sha256:f19e2e59bd28feeb1c56fab3d5b8ef790a2e98b780dd1bd1d07c39a682c2b9cb
     # via -r requirements.in
 pillow==13.0.0 \
     --hash=sha256:02464da86f561f410e13b061ec37c3068a9cb557a095494157742d07b3c24a27 \
@@ -677,13 +677,13 @@ rpds-py==2026.9.1 \
     # via
     #   jsonschema
     #   referencing
-rustypaper==0.2.3 \
-    --hash=sha256:0ffb5468b659c863da056a65c870038068a915920adbbf3555dfce77661d46c3 \
-    --hash=sha256:2b2fbf6017ae1a9d1713165add8b97e3c28588bd836d9c230c15116b60235407 \
-    --hash=sha256:380146e7463545728c26be02f9632f87e054f9dabca7275d0555d5f1aef58386 \
-    --hash=sha256:3a5fd09b8e15b66da8d2bdb70585362de92183151a0413164f0a4da159597550 \
-    --hash=sha256:6c9f36fe86f95dcbe5a4e09060b3f2e23e7607069a91036b8b5976ab11913bdd \
-    --hash=sha256:d8509473284a4b657963aa3c7ffd8522d691361b0c40c2840f6ccd79548a18c8
+rustypaper==0.2.4 \
+    --hash=sha256:4c1ecdc5b88a95710b7ea5e48f793a3f2036fd65e0be848d6588e476dc0d361f \
+    --hash=sha256:83091f24603eea537b32b8e0158da1f899cb2e2e82d2b21037c9c76eed2e4ff4 \
+    --hash=sha256:8e33925da6bc9057550a13156bead229bea92b329ba8c7b15824169b41c204d1 \
+    --hash=sha256:c14880fbfdfa5b69ca3a695a9d8d15a19718c2b088627d3bef125a47f07c26dc \
+    --hash=sha256:d331c1223f02fb04776cf099c3e5ac0ac76ddbc65c562404357e8215efdb1a63 \
+    --hash=sha256:fdffffd59c6c3eab688508f55086338fdace464409212e5dfc60a759e5c62f38
     # via
     #   -r requirements.in
     #   peerreviewagents
