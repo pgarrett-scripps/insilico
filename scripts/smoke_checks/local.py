@@ -761,18 +761,29 @@ CITATION_LEDGER_PATH = "citations/ledger.jsonl"
 # lists, and one whose lookups never answered. Four in-text uses, three judged
 # and one left owed, so the lane is reported unfinished and the review is
 # published anyway.
+#
+# 0.9.1 tallies five more states off those same rows: references the lookups
+# were never asked about, printed DOIs the reader found damaged and the ones it
+# repaired, and references carrying an abstract or a passage of full text. The
+# rows did not change, so every number the older reader reported is the number
+# it reports now.
 CITATION_COUNTS = {
     "references": 4,
     "resolved": 1,
     "not_found": 1,
     "not_located": 1,
     "could_not_check": 1,
+    "no_lookup": 0,
+    "damaged_dois": 0,
+    "repaired_dois": 0,
     "candidates": 0,
     "errors": 0,
     "unresolved": 0,
     "mismatched": 0,
     "retracted": 0,
     "with_source_text": 1,
+    "with_abstract": 1,
+    "with_full_text": 0,
     "uses": 4,
     "uses_unmatched": 0,
     "uses_judged": 3,
