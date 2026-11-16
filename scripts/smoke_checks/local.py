@@ -85,7 +85,10 @@ STARTED_AT = "2026-11-11T12:00:00+00:00"
 WORKFLOW_VERSION = "plugin-two-track-v1"
 FINDING_SCHEMA = "review-finding-v4"
 
-ISSUES_SCHEMA = "review-issues-v2"
+# Engine 0.10's issues document, stamped v3 since an issue's members carry the
+# offsets of their quote within its line. The engine refuses a v2 document by
+# name, so a bundle of the older shape is not half-read: nothing here reads one.
+ISSUES_SCHEMA = "review-issues-v3"
 
 # The one document the fixture paper was imported into. An import writes the
 # whole paper as `paper.md` and a supplement as `supplement-<name>.md`, and a
@@ -193,6 +196,43 @@ PIECE_LINES = (
     TABLE_TOTAL_LINE,
 )
 
+# Each piece's own words against the line the fixture expects it on, which is
+# what a citation's offsets are counted in. `_workspace` reads the file the
+# engine wrote and fails if a line does not hold these words, so this is a
+# claim the engine-backed half of the suite checks rather than a copy of the
+# engine's rendering. The title is left out: it is the one piece the engine
+# renders as something other than its own text, and nothing cites it.
+PIECE_TEXT = {
+    line: str(piece["text"])
+    for line, piece in zip(PIECE_LINES[1:], PAPER_PIECES[1:], strict=True)
+}
+
+
+def _cited(line: int, anchor: str, quote: str | None = None) -> dict:
+    """Where a finding's quote reads, as engine 0.10 records a citation.
+
+    The line, the start and end of the quoted characters within it, and the
+    manuscript's own characters at those offsets. The offsets are found in the
+    fixture's own piece text rather than typed, so a fixture citing words that
+    are not on the line it claims fails here instead of printing a letter that
+    marks the wrong part of a sentence.
+
+    `anchor` is the manuscript's words and `quote` is what the reviewer typed,
+    which the engine allows to differ in case or in how a dash is written. They
+    are the same words unless a caller says otherwise.
+    """
+    text = PIECE_TEXT[line]
+    start = text.index(anchor)
+    return {
+        "line": line,
+        "end_line": line,
+        "start": start,
+        "end": start + len(anchor),
+        "anchor_text": anchor,
+        "quote": anchor if quote is None else quote,
+    }
+
+
 # The findings ledger, `findings.jsonl`, in the order the readers filed rows.
 # Deliberately out of severity order, because nothing downstream may depend on
 # the order rows were written in, and one row carries a severity no engine
@@ -216,7 +256,6 @@ LEDGER = [
         "severity": "major",
         "title": "The headline effect is unguarded",
         "comment": "Report the confidence interval.",
-        "quote": "effects were large",
         "finding_uid": "f-001",
         "slot": "spec-stats",
         "track": "stats",
@@ -225,8 +264,7 @@ LEDGER = [
         "counterevidence": "The appendix reports a wider interval for the same effect.",
         "escalate": True,
         "document": MAIN_DOCUMENT,
-        "line": HEADLINE_LINE,
-        "end_line": HEADLINE_LINE,
+        **_cited(HEADLINE_LINE, "effects were large"),
         "evidence_lines": [HEADLINE_LINE, APPENDIX_LINE],
     },
     {
@@ -301,9 +339,7 @@ ISSUES = [
                 "escalate": False,
                 "title": "Missing n",
                 "document": MAIN_DOCUMENT,
-                "line": RANDOMISED_LINE,
-                "end_line": RANDOMISED_LINE,
-                "quote": "animals were assigned at random",
+                **_cited(RANDOMISED_LINE, "animals were assigned at random"),
                 "evidence_lines": [RANDOMISED_LINE],
                 "fingerprint": "4" * 64,
             },
@@ -317,9 +353,12 @@ ISSUES = [
                 "escalate": False,
                 "title": "Panel b has no axis label",
                 "document": MAIN_DOCUMENT,
-                "line": PANEL_LINE,
-                "end_line": PANEL_LINE,
-                "quote": "panel b",
+                # The one member whose quote is not the manuscript's own
+                # characters: the reviewer capitalised the panel at the start of
+                # its own sentence, which the engine matches and records as the
+                # quote beside the words it marked. The letter has to show both
+                # and say which is which.
+                **_cited(PANEL_LINE, "panel b", quote="Panel b"),
                 "evidence_lines": [PANEL_LINE],
                 "fingerprint": "9" * 64,
             },
@@ -356,9 +395,7 @@ ISSUES = [
                 "escalate": True,
                 "title": "The headline effect is unguarded",
                 "document": MAIN_DOCUMENT,
-                "line": HEADLINE_LINE,
-                "end_line": HEADLINE_LINE,
-                "quote": "effects were large",
+                **_cited(HEADLINE_LINE, "effects were large"),
                 "evidence_lines": [HEADLINE_LINE, APPENDIX_LINE],
                 "fingerprint": "2" * 64,
             },
@@ -394,9 +431,7 @@ ISSUES = [
                 "escalate": False,
                 "title": "A typo",
                 "document": MAIN_DOCUMENT,
-                "line": CITATION_LINE,
-                "end_line": CITATION_LINE,
-                "quote": "as shown previously",
+                **_cited(CITATION_LINE, "as shown previously"),
                 "evidence_lines": [CITATION_LINE],
                 "fingerprint": "7" * 64,
             },
@@ -430,9 +465,7 @@ ISSUES = [
                 "escalate": True,
                 "title": "Two different totals",
                 "document": MAIN_DOCUMENT,
-                "line": ABSTRACT_TOTAL_LINE,
-                "end_line": ABSTRACT_TOTAL_LINE,
-                "quote": "n = 48",
+                **_cited(ABSTRACT_TOTAL_LINE, "n = 48"),
                 "evidence_lines": [ABSTRACT_TOTAL_LINE, TABLE_TOTAL_LINE],
                 "fingerprint": "1" * 64,
             },
@@ -525,6 +558,26 @@ ISSUES = [
     },
 ]
 
+# The manuscript lines behind this round's citations, as `manuscript_citations`
+# reads them back off a workspace: a member's offsets with the line they are
+# counted in. The engine-backed half builds this from the folder the run was
+# bound to, through the engine's own reader; here it is derived from the pieces
+# the fixture manuscript is written from, so the letter's marking can be checked
+# with no engine installed.
+CITATIONS = {
+    member["finding_uid"]: {
+        "document": member["document"],
+        "line": member["line"],
+        "end_line": member["end_line"],
+        "start": member["start"],
+        "end": member["end"],
+        "line_text": PIECE_TEXT[member["line"]],
+        "anchor_text": member["anchor_text"],
+    }
+    for issue in ISSUES
+    for member in issue["members"]
+}
+
 VERDICT = {
     "significance": "A useful result on a narrow question.",
     "strength_of_evidence": "Moderate, and weaker than the abstract claims.",
@@ -580,9 +633,7 @@ PRIOR_ISSUES_DOCUMENT = {
                     "escalate": False,
                     "title": "The counts behind figure 2 are not available",
                     "document": MAIN_DOCUMENT,
-                    "line": COUNTS_LINE,
-                    "end_line": COUNTS_LINE,
-                    "quote": "counts are available on request",
+                    **_cited(COUNTS_LINE, "counts are available on request"),
                     "evidence_lines": [COUNTS_LINE],
                     "fingerprint": "6" * 64,
                 },
@@ -616,9 +667,7 @@ PRIOR_ISSUES_DOCUMENT = {
                     "escalate": False,
                     "title": "The assay is not named",
                     "document": MAIN_DOCUMENT,
-                    "line": ASSAY_LINE,
-                    "end_line": ASSAY_LINE,
-                    "quote": "the assay was run as described",
+                    **_cited(ASSAY_LINE, "the assay was run as described"),
                     "evidence_lines": [ASSAY_LINE],
                     "fingerprint": "5" * 64,
                 },
@@ -1583,6 +1632,17 @@ def _workspace(
             f"the engine rendered the fixture's pieces onto lines {landed}, and "
             f"this fixture's findings cite {PIECE_LINES}"
         )
+        # And what those lines hold, because a citation's offsets are counted in
+        # the characters of the rendered line. A release that folded a piece
+        # differently would leave each quote on the line that claims it and
+        # every offset into it a column or two out, which is the kind of wrong
+        # that reads as right until an author looks at the marked words.
+        written = (workspace / MAIN_DOCUMENT).read_text(encoding="utf-8").split("\n")
+        for number, text in PIECE_TEXT.items():
+            assert written[number - 1] == text, (
+                f"the engine rendered line {number} as {written[number - 1]!r} and "
+                f"this fixture counts its citations' offsets in {text!r}"
+            )
     if not paper_id:
         (workspace / "manifest.json").write_text(
             json.dumps({k: v for k, v in manifest.items() if k != "paper_id"}),
@@ -2061,6 +2121,68 @@ def check_the_decision_is_attributed_to_a_person() -> None:
     assert "Panel b has no axis label" in pooled and "Missing n" in pooled, (
         "a member finding was dropped from the issue it was pooled into"
     )
+
+
+def check_the_letter_marks_a_quote_in_the_line_it_reads_on() -> None:
+    """The authors are shown the words, where they stand, not a line number.
+
+    Engine 0.10 records the start and end of a quote within the line it reads
+    on. The letter prints that line and marks those characters beneath it, in a
+    monospaced block, because the offsets are counted in the characters of the
+    converted line and a caret only means anything under the character it sits
+    on.
+
+    Two things the marking has to get right, and both are here. A quote the
+    reviewer wrote differently from the manuscript — a capital at the start of
+    their sentence — is marked as the manuscript's own characters, and the
+    letter says that is what the marks are, so an author reading the quotation
+    above and the marks below is not left to guess which is the paper's. And a
+    finding the engine placed nowhere has nothing to mark, so it keeps the line
+    it was cited at and gains no block of carets under a line it never read.
+    """
+    prov = provenance_fixture()
+    letter = local_review.render_decision_letter(PAPER, READING, prov, citations=CITATIONS)
+
+    # The line of the manuscript, and the carets under the quoted words.
+    headline = PIECE_TEXT[HEADLINE_LINE]
+    start = headline.index("effects were large")
+    assert f"  {headline}" in letter, (
+        f"the line a finding reads on is not printed: {letter}"
+    )
+    assert f"  {' ' * start}{'^' * len('effects were large')}" in letter, (
+        f"the quoted words are not marked where they stand: {letter}"
+    )
+    assert f"Line {HEADLINE_LINE} of the manuscript" in letter, (
+        f"the marked line is not named: {letter}"
+    )
+
+    # The reviewer's quotation and the manuscript's own characters, told apart
+    # where the two differ.
+    assert "> Panel b" in letter, "the reviewer's own quotation was not printed"
+    panel = PIECE_TEXT[PANEL_LINE]
+    column = panel.index("panel b")
+    assert f"  {' ' * column}{'^' * len('panel b')}" in letter, (
+        f"a quote the reviewer wrote differently was not marked: {letter}"
+    )
+    assert "The marked characters are the manuscript's own" in letter, (
+        f"the letter marks characters it never says are the paper's: {letter}"
+    )
+
+    # A citation the engine placed nowhere, and a letter rendered with no lines
+    # read back at all: both print the finding and mark nothing.
+    unplaced = {
+        uid: dict(row, line=None, start=None, end=None)
+        for uid, row in CITATIONS.items()
+    }
+    for rendered in (
+        local_review.render_decision_letter(PAPER, READING, prov, citations=unplaced),
+        local_review.render_decision_letter(PAPER, READING, prov),
+    ):
+        assert "> effects were large" in rendered, (
+            "a finding with no placed quote lost the words the reviewer quoted"
+        )
+        marks = [row for row in rendered.splitlines() if row.strip() and set(row.strip()) == {"^"}]
+        assert not marks, f"an unplaced quote was marked in a line anyway: {marks}"
 
 
 def check_a_minor_issue_is_never_a_required_revision() -> None:
@@ -7976,7 +8098,7 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
         }
         drifted = sorted(engine_member_keys ^ fixture_member_keys)
         assert not drifted, f"an issue member has drifted from the fixture's: {drifted}"
-        for name in ("document", "line", "end_line", "quote"):
+        for name in ("document", "line", "end_line", "quote", "start", "end", "anchor_text"):
             assert name in engine_member_keys, (
                 f"the engine's own members carry no {name}, so a finding does not say "
                 f"where it reads: {sorted(engine_member_keys)}"
@@ -8113,6 +8235,30 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
     assert "finding_uid" not in letter and "'quote'" not in letter, (
         "the letter prints a mapping where the authors should read a sentence"
     )
+
+    # The quote marked in the line it reads on, which is what the engine's
+    # offsets are for. The marks are counted in the characters of the converted
+    # line, so the row above a row of carets has to hold the words the member
+    # anchored: a letter that marked anything else would be pointing the authors
+    # at the wrong part of their own sentence.
+    rendered = letter.splitlines()
+    anchored = {
+        str(member.get("anchor_text") or "")
+        for issue in reading["issues"]
+        for member in issue["members"]
+    }
+    marked = []
+    for index, row in enumerate(rendered):
+        stripped = row.strip()
+        if index and stripped and set(stripped) == {"^"}:
+            column = row.index("^")
+            marked.append(rendered[index - 1][column:column + len(stripped)])
+    assert marked, (
+        "the letter marks no quote in the line it reads on, so the offsets the "
+        "engine recorded reach no reader"
+    )
+    stray = sorted(set(marked) - anchored)
+    assert not stray, f"the letter marks characters no member anchored: {stray}"
     standing = {row["id"]: row["status"] for row in record["required_revisions"]}
     assert standing.get("i01") == "persisting", (
         f"the item both rounds raised is not marked persisting: {standing}"

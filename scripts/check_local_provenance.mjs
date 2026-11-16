@@ -216,7 +216,7 @@ function localRecord(overrides = {}) {
         resolved: 1,
         unverified: 1,
         issues_source: "editor",
-        issues_schema_version: "review-issues-v1",
+        issues_schema_version: "review-issues-v3",
         escalated_in_bundle: 4,
         findings_delivered: 53,
         findings_submitted: 53,

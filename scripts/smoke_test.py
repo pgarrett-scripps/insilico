@@ -47,6 +47,7 @@ from smoke_checks.local import (
     check_the_citation_section_prints_no_charge_nobody_made,
     check_the_decision_is_attributed_to_a_person,
     check_the_issues_are_split_by_severity_and_ordered_by_rank,
+    check_the_letter_marks_a_quote_in_the_line_it_reads_on,
     check_the_locked_engine_release_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
     check_the_page_keeps_the_model_asked_apart_from_the_model_that_ran,
@@ -145,6 +146,8 @@ def main() -> int:
     print("ok  the engine's issues are split by severity and kept in rank order")
     check_the_decision_is_attributed_to_a_person()
     print("ok  a local review attributes its decision to a human editor")
+    check_the_letter_marks_a_quote_in_the_line_it_reads_on()
+    print("ok  the letter marks a quote in the line of the manuscript it reads on")
     check_a_minor_issue_is_never_a_required_revision()
     print("ok  severity alone decides what a revision round must fix")
     check_a_severity_this_release_cannot_sort_is_refused()

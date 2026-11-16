@@ -1792,7 +1792,124 @@ def render_summary(preprint: Preprint, package: dict, provenance: dict) -> str:
     return "\n".join(lines)
 
 
-def render_decision_letter(preprint: Preprint, package: dict, provenance: dict) -> str:
+def manuscript_citations(workspace: Path, package: dict) -> dict:
+    """The manuscript's own line under every quote the issues cite, by finding.
+
+    Engine 0.10 records where a quote reads: the line, and the start and end of
+    the quoted characters within it. That is what lets the letter mark the words
+    in the line they stand in rather than name a line number and leave the
+    authors to find the sentence.
+
+    The characters come back from the engine's own `cited_text` instead of being
+    searched for here. The engine placed the quote against its normal form of
+    the document, so a second search in this script would pick the wrong one of
+    two identical sentences, would miss a quote whose spacing the normal form
+    folded, and would not follow a quote over a line break at all. A finding
+    with no placement, or one whose offsets the engine left null, gets no row
+    and is cited at its line as before.
+    """
+    why = "the manuscript lines the findings cite cannot be read"
+    read_manuscript = engine_public("read_manuscript", why)
+    cited_text = engine_public("cited_text", why)
+    base = read_manuscript(str(workspace))
+    rows: dict[str, dict] = {}
+    for issue in _list(package.get("issues")):
+        for member in issue_members(issue):
+            uid = str(_dict(member).get("finding_uid") or "")
+            if not uid or uid in rows:
+                continue
+            row = _citation_row(base, cited_text, _dict(member))
+            if row:
+                rows[uid] = row
+    return rows
+
+
+def _citation_row(base: object, cited_text: object, member: dict) -> dict:
+    """One member's quote, with the line of the manuscript it was read on."""
+    line = member.get("line")
+    start = member.get("start")
+    end = member.get("end")
+    if not isinstance(line, int) or line <= 0:
+        return {}
+    if not isinstance(start, int) or not isinstance(end, int) or end <= start:
+        return {}
+    document = str(member.get("document") or MAIN_DOCUMENT)
+    text = str(base.line_text(line, document) or "")  # type: ignore[attr-defined]
+    if not text or start >= len(text):
+        return {}
+    anchored = str(cited_text(base, member) or "")  # type: ignore[operator]
+    if not anchored:
+        return {}
+    end_line = member.get("end_line")
+    return {
+        "document": document,
+        "line": line,
+        "end_line": end_line if isinstance(end_line, int) and end_line > line else line,
+        "start": start,
+        "end": end,
+        "line_text": text,
+        "anchor_text": anchored,
+    }
+
+
+def _quoted_line(citation: dict) -> list[str]:
+    """The line a quote was read on, with the quoted characters underlined.
+
+    Printed as code, with a row of carets beneath, because the offsets count
+    characters of the line as the engine converted it and only a monospaced
+    block puts a caret under the character it marks. A line holding a tab would
+    still be marked a column out, which is why the block is the manuscript's
+    line rather than a claim about where on the page it sits.
+
+    A quote that runs over a line break is underlined to the end of the line it
+    starts on and the line it ends on is named: one row of carets cannot reach
+    across two lines, and silently marking only the first part without saying so
+    would make a part-quote read as the whole of it.
+    """
+    text = str(citation.get("line_text") or "")
+    start = citation.get("start")
+    end = citation.get("end")
+    line = citation.get("line")
+    if not text or not isinstance(start, int) or not isinstance(end, int):
+        return []
+    if not isinstance(line, int) or line <= 0 or start >= len(text) or end <= start:
+        return []
+    end_line = citation.get("end_line")
+    runs_on = isinstance(end_line, int) and end_line > line
+    stop = len(text) if runs_on else min(end, len(text))
+    document = str(citation.get("document") or "")
+    where = f"Line {line}"
+    if document and document != MAIN_DOCUMENT:
+        where = f"Line {line} of {document}"
+    # A fence longer than any run of backticks the line itself holds, so a
+    # manuscript quoting code cannot close the block early.
+    longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
+    fence = "`" * max(3, longest + 1)
+    lines = [
+        f"  {where} of the manuscript as the engine converted it, "
+        "with the quoted words marked:",
+        "",
+        f"  {fence}text",
+        f"  {text}",
+        f"  {' ' * start}{'^' * (stop - start)}",
+        f"  {fence}",
+        "",
+    ]
+    if runs_on:
+        lines += [
+            f"  The quote runs on to line {end_line}, and the marks above reach "
+            "only to the end of the line it starts on.",
+            "",
+        ]
+    return lines
+
+
+def render_decision_letter(
+    preprint: Preprint,
+    package: dict,
+    provenance: dict,
+    citations: dict | None = None,
+) -> str:
     required = required_issues(package)
     optional = suggestion_issues(package)
     attestation = provenance["generator"]["attestation"]
@@ -1831,7 +1948,7 @@ def render_decision_letter(preprint: Preprint, package: dict, provenance: dict) 
             "",
         ]
         for number, issue in enumerate(required, 1):
-            lines += _issue_entry(f"{number}", issue, package)
+            lines += _issue_entry(f"{number}", issue, package, citations)
     if optional:
         lines += [
             "## Suggestions",
@@ -1840,7 +1957,7 @@ def render_decision_letter(preprint: Preprint, package: dict, provenance: dict) 
             "",
         ]
         for number, issue in enumerate(optional, 1):
-            lines += _issue_entry(f"S{number}", issue, package)
+            lines += _issue_entry(f"S{number}", issue, package, citations)
     if not required and not optional:
         lines += [
             "## Findings",
@@ -1998,7 +2115,9 @@ def _passage_standing(passage: dict) -> str:
     return f"At {where}, it {reads}."
 
 
-def _issue_entry(label: str, issue: dict, package: dict) -> list[str]:
+def _issue_entry(
+    label: str, issue: dict, package: dict, citations: dict | None = None
+) -> list[str]:
     """One issue, with every finding it was raised from under it.
 
     The issue carries the editor agent's statement of what has to change. The
@@ -2064,11 +2183,11 @@ def _issue_entry(label: str, issue: dict, package: dict) -> list[str]:
             "",
         ]
     for member in members:
-        lines += _member_entry(member, package)
+        lines += _member_entry(member, package, citations)
     return lines
 
 
-def _member_entry(member: dict, package: dict) -> list[str]:
+def _member_entry(member: dict, package: dict, citations: dict | None = None) -> list[str]:
     """One finding behind an issue, as the reviewer wrote it."""
     finding = issue_finding(package, member)
     # The member's own values win where it has one, and a field it carries as
@@ -2082,6 +2201,23 @@ def _member_entry(member: dict, package: dict) -> list[str]:
     quote = str(row.get("quote") or "").strip()
     if quote:
         lines += [f"  > {quote}", ""]
+    # Where those words read, marked in the line itself. `quote` is what the
+    # reviewer typed and `anchor_text` is the manuscript's own characters, which
+    # can differ in a dash or a capital, so when they differ the letter says
+    # which of the two is marked rather than leaving an author to wonder why
+    # the underlined words are not the quoted ones.
+    citation = _dict(_dict(citations).get(str(member.get("finding_uid") or "")))
+    marked = _quoted_line(citation)
+    if marked:
+        lines += marked
+        anchor = str(citation.get("anchor_text") or "").strip()
+        if quote and anchor and anchor != quote:
+            lines += [
+                "  The marked characters are the manuscript's own. The quotation "
+                "above it is the reviewer's, and the two differ in how they are "
+                "written rather than in where they read.",
+                "",
+            ]
     comment = str(row.get("comment") or "").strip()
     if comment:
         lines += [f"  {comment}", ""]
@@ -4611,6 +4747,11 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # dropped from the JSON and then printed in decision_letter.md, where no
     # scan was looking for it.
     reports = track_reports(run_dir)
+    # The manuscript's own lines under the quotes this round cites, read back
+    # through the engine from the folder the run was bound to above. The letter
+    # marks each quote where it stands, so the authors see the sentence rather
+    # than a line number to go and look up.
+    citations = manuscript_citations(workspace, published_package)
     if dest.exists() and any(dest.iterdir()):
         raise CommandError(f"Refusing to overwrite an existing review bundle: {dest}")
 
@@ -4625,7 +4766,9 @@ def cmd_publish(args: argparse.Namespace) -> int:
             render_summary(preprint, published_package, provenance), encoding="utf-8"
         )
         (stage / "decision_letter.md").write_text(
-            render_decision_letter(preprint, published_package, provenance),
+            render_decision_letter(
+                preprint, published_package, provenance, citations=citations
+            ),
             encoding="utf-8",
         )
         (stage / "manuscript_stats.md").write_text(
