@@ -290,8 +290,19 @@ function localRecord(overrides = {}) {
         pages_viewed: 4,
         actions: { repaired: 1, confirmed: 18, merged: 0, described: 1, added: 2 },
         tool_calls: 11,
-        lost_pages: [{ page: 4, words: 0, pieces: 2 }],
+        lost_pages: [
+          {
+            page: 4,
+            words: 0,
+            pieces: 2,
+            added: [
+              { document: "paper.md", lines: [21, 21] },
+              { document: "paper.md", lines: [23, 23] },
+            ],
+          },
+        ],
       },
+      manuscript_state: "sealed-by-reader",
       pieces_per_source: { text: 19, ai: 1, "ai-reconstructed": 1 },
       source_values: {
         text: "the converter's own text layer",
@@ -422,7 +433,45 @@ unreadPaper.ingest.ai_read = {
 };
 unreadPaper.ingest.pieces_per_source = { text: 21 };
 unreadPaper.ingest.model_written = [];
+unreadPaper.ingest.manuscript_state = "sealed-without-read";
 accepts(unreadPaper, "an import no model read is publishable and says so");
+
+// A manuscript an application composed from its own source: nothing read a
+// page, and some of its lines are still a model's. The engine refuses to write
+// one of those without naming the model, so the record carries that name and
+// how many pieces it wrote beside the same read: false.
+const composedPaper = localRecord();
+composedPaper.ingest.ai_read = {
+  read: false,
+  reason: "written from an application's own source, which needs no reading",
+  ai_model: "claude-opus-5-5",
+  ai_pieces: 2,
+  lost_pages: [],
+};
+composedPaper.ingest.manuscript_state = "sealed-without-read";
+accepts(composedPaper, "a manuscript composed from an application's source is publishable");
+
+// What a lost page became. The page number says which page of the authors' own
+// PDF nothing was converted from; the lines say which sentences of the review
+// came off it, and are what a quotation can be checked against.
+const unlocatedLostPage = localRecord();
+delete unlocatedLostPage.ingest.ai_read.lost_pages[0].added[0].lines;
+rejects(unlocatedLostPage, "a transcribed page must say which lines it became");
+
+const draftPieceId = localRecord();
+draftPieceId.ingest.ai_read.lost_pages[0].added[0].piece = "p-21";
+rejects(draftPieceId, "a draft's own piece id is not a field a bundle carries");
+
+// The state is the engine's word for how the folder was sealed, and the two
+// sealed states are the only ones a published review can stand on: a draft or
+// a missing base is refused long before anything is written.
+const unsealedState = localRecord();
+unsealedState.ingest.manuscript_state = "draft";
+rejects(unsealedState, "a review cannot be published over an unsealed manuscript");
+
+const statelessIngest = localRecord();
+delete statelessIngest.ingest.manuscript_state;
+accepts(statelessIngest, "a record whose run named another workspace claims no state");
 
 // A line is named by where it reads, so a row with no lines or no source is a
 // count dressed as a citation.

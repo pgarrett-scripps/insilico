@@ -1224,27 +1224,15 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
             "wrote the run and the publish path here are different releases. "
             "Update the publish path before publishing a run from this release."
         )
-    # The shape of the folder itself, which decides what this review is able to
-    # say about its own manuscript. A paper-base-v1 map records where every
-    # piece sits and not where its text came from, and a v1 manifest has no
-    # account of the Read stage, so a review published over one could not say
-    # which of its lines a model wrote and which are the converter's reading of
-    # the page. The engine refuses a folder stamped v1 when it reads one, and
-    # says nothing about a folder carrying no stamp at all, which is the one
-    # this check is here for: an unstamped manifest would be read as the current
-    # shape and published as though its silence about sources meant there was
-    # nothing to report.
-    base_schema = str(engine_public("BASE_SCHEMA_VERSION", why) or "")
-    stamp = str(paper.get("schema_version") or "")
-    if stamp != base_schema:
-        raise CommandError(
-            f"The manuscript workspace at {workspace} is stamped "
-            f"{stamp or 'with no schema version at all'} and this release reads "
-            f"{base_schema}, so {why}. A review published over it could not say "
-            "which lines of the manuscript a model wrote and which pages the "
-            "converter returned nothing from. Import the paper again into a new "
-            "folder with this release."
-        )
+    # What shape the folder is in is the engine's question, and `verify_workspace`
+    # answers it above: it refuses a base stamped `paper-base-v1`, a manifest
+    # carrying no stamp at all and a base with no manifest beside it, each by
+    # name. What this pipeline needs from that stamp is what the engine needs
+    # from it, since a v1 map records where every piece sits and not where its
+    # text came from, so a review published over one could not say which of its
+    # lines a model wrote. Reading the field again here would be this
+    # repository's second opinion about a folder the engine has already refused,
+    # in wording the operator would then see twice.
     documents = [str(name) for name in _list(base.document_names())]
     if MAIN_DOCUMENT not in documents:
         raise CommandError(
@@ -2463,13 +2451,34 @@ def render_read_stage(ingest: dict) -> list[str]:
     else:
         reason = str(read.get("reason") or "").strip()
         because = f" The import's own reason: {reason}" if reason else ""
-        lines += [
-            "No model read the pages of this paper. Every line of the text is "
-            "the converter's, which means an equation or a table in a quotation "
-            "is the converter's reading of a picture of it, and no figure in "
-            f"the paper has a description behind it.{because}",
-            "",
-        ]
+        composed = str(read.get("ai_model") or "").strip()
+        pieces = read.get("ai_pieces")
+        if composed:
+            # A manuscript an application composed from its own source, rather
+            # than one converted from a page image. Nothing read a page, and
+            # some of the text is still a model's: saying only that no model
+            # read the pages would leave a reader to assume the rest is the
+            # authors' own words.
+            many = (
+                f"{pieces} pieces of it were"
+                if isinstance(pieces, int) and pieces != 1
+                else "one piece of it was"
+            )
+            lines += [
+                "No model read the pages of this paper, because this manuscript "
+                "was not converted from page images. It was written from an "
+                f"application's own source, and {many} written by {composed} "
+                f"rather than taken from that source.{because}",
+                "",
+            ]
+        else:
+            lines += [
+                "No model read the pages of this paper. Every line of the text "
+                "is the converter's, which means an equation or a table in a "
+                "quotation is the converter's reading of a picture of it, and "
+                f"no figure in the paper has a description behind it.{because}",
+                "",
+            ]
     for name, count in sorted(per_source.items()):
         description = str(said.get(name) or "").strip()
         about = f": {description}" if description else ""
@@ -2499,9 +2508,24 @@ def render_read_stage(ingest: dict) -> list[str]:
             "those pages contribute to this review was transcribed from the page "
             "image by the model named above, so nothing on them is the "
             "converter's reading and no part of them was checked against a text "
-            "layer.",
+            "layer. Where each of those pages landed in the text:",
             "",
         ]
+        for row in lost:
+            # The lines are the point. A page number tells a reader which page
+            # of their own PDF nothing was converted from, and the lines tell
+            # them which sentences of the review's manuscript came off it, which
+            # is what a quotation in the letter can be checked against.
+            places = [
+                f"{_dict(place).get('document') or MAIN_DOCUMENT} lines "
+                f"{_list(_dict(place).get('lines'))[0]} to "
+                f"{_list(_dict(place).get('lines'))[1]}"
+                for place in _list(row.get("added"))
+                if len(_list(_dict(place).get("lines"))) == 2
+            ]
+            where = ", ".join(places) if places else "nowhere the import recorded"
+            lines.append(f"- Page {row.get('page')}: {where}")
+        lines.append("")
     return lines
 
 
@@ -2519,6 +2543,14 @@ AI_READ_FIELDS = (
     "pages_viewed",
     "actions",
     "tool_calls",
+    # A manuscript composed from an application's own source reads `read: false`
+    # and still holds lines a model wrote: a description of a figure, an
+    # equation the application rebuilt. The engine refuses to write one without
+    # the model's name, and records it here with how many pieces it wrote. A
+    # bundle publishes both, because a reader asking who wrote a marked line
+    # would otherwise be told only that nothing read the pages.
+    "ai_model",
+    "ai_pieces",
 )
 
 # What a map row's `source` says about where that row's text came from. The
@@ -2529,7 +2561,7 @@ AI_READ_FIELDS = (
 CONVERTER_SOURCE = "text"
 
 
-def ingest_record(workspace: Path | None) -> dict:
+def ingest_record(workspace: Path | None, manuscript_state: str = "") -> dict:
     """What the reviewers were handed, measured off the workspace with no model.
 
     Some of those measurements are about a model. Engine 0.10 reads a manuscript
@@ -2545,8 +2577,18 @@ def ingest_record(workspace: Path | None) -> dict:
     pages nothing was converted from. The `source` on each row of `map.json` is
     the per-line fact, and it is the one the letter marks a quote against, so
     the record carries the lines and not only the tally.
+
+    `manuscript_state` is the engine's own name for how the folder came to be
+    sealed, read off the run rather than worked out here. A base sealed by a
+    reader and one sealed with no page read at all hold the same files and are
+    not the same manuscript, and the three roads to the second of them look
+    alike from the outside: the Read stage was switched off, a reader failed and
+    the run sealed what the converter had, or the pieces are an application's
+    own source. `ai_read['reason']` is the engine's sentence for which.
     """
     record = {"format": "markdown", "tool": "peerreviewagents import_paper"}
+    if manuscript_state:
+        record["manuscript_state"] = str(manuscript_state)
     if workspace is None:
         return record
     workspace = Path(workspace)
@@ -2583,11 +2625,14 @@ def read_stage_record(manifest: dict) -> dict:
     says the equations in every quotation are the converter's reading of a
     picture of them and that no figure in the paper has a description behind it.
 
-    `lost_pages` is reshaped rather than copied. The engine lists the pieces it
-    added to each page by id, and a bundle holds no piece ids, so what travels
-    is the page, the words Poppler found on it and how many pieces were added
-    off it. A reader of the bundle can see which pages of the paper exist in the
-    review only because a model transcribed them.
+    `lost_pages` is reshaped rather than copied. Each page the engine lists
+    carries the pieces it added off it, each one with the draft's own id for it,
+    the document it landed in and the lines it became. The id names nothing in a
+    bundle, since `map.json` has no ids and a citation is a document and a line,
+    so what travels is the page, the words the converter found on it and where
+    each transcribed piece ended up. A reader of the review can then go from a
+    page the converter returned nothing from to the lines of the manuscript that
+    exist only because a model read it, and quote them against the letter.
     """
     account = _dict(manifest.get("ai_read"))
     record = {
@@ -2600,7 +2645,20 @@ def read_stage_record(manifest: dict) -> dict:
         number = row.get("page")
         if not isinstance(number, int):
             continue
-        entry = {"page": number, "pieces": len(_list(row.get("added")))}
+        added = []
+        for piece in _list(row.get("added")):
+            place = _dict(piece)
+            span = [int(n) for n in _list(place.get("lines")) if isinstance(n, int)]
+            if len(span) != 2:
+                continue
+            added.append(
+                {"document": str(place.get("document") or MAIN_DOCUMENT), "lines": span}
+            )
+        entry = {
+            "page": number,
+            "pieces": len(_list(row.get("added"))),
+            "added": sorted(added, key=lambda place: (place["document"], place["lines"])),
+        }
         words = row.get("words")
         if isinstance(words, int):
             entry["words"] = words
@@ -4973,7 +5031,17 @@ def cmd_publish(args: argparse.Namespace) -> int:
     binding = bind_run_to_input(prepared, workspace, run)
     if binding["workspace_manifest_sha256"]:
         prepared["input"]["workspace_manifest_sha256"] = binding["workspace_manifest_sha256"]
-    ingest = ingest_record(workspace)
+    # The engine says what state the run's own manuscript folder is in, and it
+    # means that folder. `--workspace` may name another one, and two folders can
+    # agree on the paper by hash without being the same seal, so the state
+    # travels only where the run is talking about the folder being published.
+    # The folder itself never travels, being a path on this machine.
+    reported = _dict(reading.get("manuscript"))
+    named = str(reported.get("folder") or "")
+    published_state = ""
+    if named and Path(named).resolve() == Path(workspace).resolve():
+        published_state = str(reported.get("state") or "")
+    ingest = ingest_record(workspace, published_state)
 
     # The fingerprint is the engine's own record of every file it loaded, taken
     # at the moment the run started, not a re-hash of whatever is installed now.

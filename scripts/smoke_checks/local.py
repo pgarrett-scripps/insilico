@@ -1675,12 +1675,15 @@ def _workspace(
       the engine derives one from the text when it is given none;
     * `source.sha256`, which is passed through rather than patched: the digest of
       a PDF nobody has, so the run binding has something to agree with;
-    * `read`, an account of the Read stage. `write_manuscript` always records
-      `read: false`, because reading a manuscript means a model looking at the
-      page images and no model runs in this suite. A caller that passes one is
-      asking what a bundle publishes about a manuscript a model read, and the
-      answer is written into the manifest here rather than earned, which is why
-      the pages it names are not in the fixture PDF and never could be.
+    * `read`, an account of the Read stage. A manuscript written from pieces is
+      never read: reading one means a model looking at page images, and no model
+      runs in this suite. What `write_manuscript` records instead is the honest
+      shape for a fixture, `read: false` with the model that wrote the pieces
+      the suite marked as a model's and how many of them there were. A caller
+      that passes `read` is asking a different question, what a bundle publishes
+      about a manuscript a model did read, and that account is written into the
+      manifest here rather than earned, which is why the pages it names are not
+      in the fixture PDF and never could be.
     """
     why = "the fixture manuscript cannot be written"
     write_manuscript = local_review.engine_public("write_manuscript", why)
@@ -1696,6 +1699,11 @@ def _workspace(
             "sha256": source_sha256,
             "pages": 1,
         },
+        # The engine refuses a piece this suite marked `ai` or
+        # `ai-reconstructed` unless it is told which model wrote it, which is
+        # the right refusal: a line no converter produced, with nobody named
+        # for it, is a line a review cannot attribute to anyone.
+        ai_model=OPUS,
     )
     if pieces is None:
         # Where the engine actually put each piece, against where every
@@ -5523,7 +5531,23 @@ READER_ACCOUNT = {
     "pages_viewed": 4,
     "actions": {"repaired": 1, "confirmed": 6, "merged": 0, "described": 1, "added": 2},
     "tool_calls": 11,
-    "lost_pages": [{"page": 4, "words": 0, "rotation": 0, "added": ["p-21", "p-23"]}],
+    # What the reader added off the page the converter returned nothing from,
+    # in the shape the engine writes at the seal: the draft's own id for each
+    # piece, the document it landed in and the lines it became. The lines are
+    # this fixture's own two model written lines, so the published account can
+    # be read both ways, from a lost page to the text and from a quoted line
+    # back to the page nothing was converted from.
+    "lost_pages": [
+        {
+            "page": 4,
+            "words": 0,
+            "rotation": 0,
+            "added": [
+                {"piece": f"p-{line}", "document": MAIN_DOCUMENT, "lines": [line, line]}
+                for line in (DESCRIPTION_LINE, EQUATION_LINE)
+            ],
+        }
+    ],
 }
 
 # The same account in the shape a published record carries it, for the checks
@@ -5538,7 +5562,15 @@ INGEST_READ = {
     "ai_read": {
         **{name: value for name, value in READER_ACCOUNT.items() if name != "lost_pages"},
         "lost_pages": [
-            {"page": page["page"], "pieces": len(page["added"]), "words": page["words"]}
+            {
+                "page": page["page"],
+                "pieces": len(page["added"]),
+                "added": [
+                    {"document": place["document"], "lines": place["lines"]}
+                    for place in page["added"]
+                ],
+                "words": page["words"],
+            }
             for page in READER_ACCOUNT["lost_pages"]
         ],
     },
@@ -5615,6 +5647,18 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             assert [row["page"] for row in read["lost_pages"]] == [4], (
                 f"a page the converter returned nothing from was not published: {read}"
             )
+            # Where that page went in the text. A page number alone tells an
+            # author which page of their own PDF nothing was converted from,
+            # and the lines are what lets them read the sentences the review
+            # has from it. The draft's piece ids do not travel, because a
+            # bundle holds no piece ids and a citation is a document and a line.
+            assert read["lost_pages"][0]["added"] == [
+                {"document": MAIN_DOCUMENT, "lines": [DESCRIPTION_LINE, DESCRIPTION_LINE]},
+                {"document": MAIN_DOCUMENT, "lines": [EQUATION_LINE, EQUATION_LINE]},
+            ], f"the lines a lost page became were not published: {read['lost_pages']}"
+            assert not any(
+                "piece" in place for place in read["lost_pages"][0]["added"]
+            ), f"a draft's own piece id reached a bundle: {read['lost_pages']}"
             assert "reader_log" not in read, (
                 f"a field this release does not publish by name reached a bundle: {read}"
             )
@@ -5654,25 +5698,48 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             assert "Pages the converter returned no text from at all: 4" in stats, (
                 f"a page that reached the review only through a model is unnamed: {stats}"
             )
+            assert (
+                f"- Page 4: {MAIN_DOCUMENT} lines {DESCRIPTION_LINE} to {DESCRIPTION_LINE}, "
+                f"{MAIN_DOCUMENT} lines {EQUATION_LINE} to {EQUATION_LINE}" in stats
+            ), f"the statistics page does not say where a lost page landed: {stats}"
             assert local_review.bundle_local_path_leaks(destination) == [], (
                 "the account of the Read stage carried a path into the bundle"
             )
 
     # A manuscript nothing read says so as plainly, which is the shape every
-    # other check in this suite publishes: the equations in it are a converter's
-    # reading of a picture and no figure has a description behind it.
+    # other check in this suite publishes. It is also the shape an application
+    # that composes its own source gets: no stage read a page, and some of the
+    # lines are still a model's. The engine refuses to write one of those
+    # without naming the model, and both halves of that have to reach a reader,
+    # because "no model read the pages" on its own would be read as "every line
+    # here is the authors'".
     with tempfile.TemporaryDirectory() as tmp:
         unread = _workspace(Path(tmp) / "workspace")
         ingest = local_review.ingest_record(unread)
-        assert ingest["ai_read"]["read"] is False, (
-            f"a manuscript no model read was published as read: {ingest['ai_read']}"
+        account = ingest["ai_read"]
+        assert account["read"] is False, (
+            f"a manuscript no model read was published as read: {account}"
         )
-        assert ingest["ai_read"]["lost_pages"] == [], (
-            f"a workspace with no reader cannot name a lost page: {ingest['ai_read']}"
+        assert account["lost_pages"] == [], (
+            f"a workspace with no reader cannot name a lost page: {account}"
+        )
+        assert account["ai_model"] == OPUS, (
+            f"the model that wrote the composed pieces was not published: {account}"
+        )
+        assert account["ai_pieces"] == len(PIECE_SOURCE), (
+            f"how many pieces a model wrote was not published: {account}"
         )
         said = local_review.render_read_stage(ingest)
         assert any("No model read the pages" in row for row in said), (
             f"the statistics page is silent about a manuscript nothing read: {said}"
+        )
+        assert any(OPUS in row for row in said), (
+            f"the statistics page says nothing read the pages and does not say "
+            f"who wrote the lines that are not the converter's: {said}"
+        )
+        assert not any("Every line of the text is the converter's" in row for row in said), (
+            f"a manuscript holding a model's own lines was reported as all "
+            f"converted text: {said}"
         )
 
 
@@ -8439,6 +8506,29 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
             "the engine still writes the block shape this pipeline stopped reading"
         )
 
+        # How the folder came to be sealed, which the engine answers for the
+        # run rather than leaving a consumer to work out from the files. The
+        # two sealed states hold the same files and are not the same
+        # manuscript: one was read by a model and one is the converter's
+        # reading throughout. These rounds import with the reader off, so this
+        # is the second of them, and the name is checked against the engine's
+        # own list so a release that renamed a state fails here rather than
+        # being published under a word nothing else uses.
+        run_reading = local_review.engine_reading(run)
+        state = run_reading["manuscript"]
+        states = local_review.engine_public(
+            "MANUSCRIPT_STATES", "the manuscript states cannot be read"
+        )
+        assert state["state"] in states, (
+            f"the engine reports a manuscript state it does not list: {state}"
+        )
+        assert state["state"] == "sealed-without-read", (
+            f"these rounds import with no reader and the engine says otherwise: {state}"
+        )
+        assert state["sealed"] and not state["reader_model"], (
+            f"a manuscript nothing read cannot name a reader: {state}"
+        )
+
         with _published_tree(Path(tmp) / "reviews") as reviews:
             destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
             prepared = _engine_prepared(
@@ -8473,6 +8563,16 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
                 code = _publish(prepared, run, run / "manuscript", "--publish")
             assert code == 0, (
                 f"a run the engine wrote should publish, got exit {code}: {printed.getvalue()}"
+            )
+            # And the state travels into the record, because a reader of the
+            # bundle asking whether a model read this paper is asking the
+            # question the engine answered above.
+            provenance = json.loads(
+                (destination / "provenance.json").read_text(encoding="utf-8")
+            )
+            assert provenance["ingest"]["manuscript_state"] == state["state"], (
+                "the bundle does not say how the manuscript it reviews was "
+                f"sealed: {provenance['ingest']}"
             )
             published = local_review.prior_issues_file(destination)
             assert published == destination / local_review.REVIEW_ISSUES, (

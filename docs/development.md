@@ -559,7 +559,18 @@ and how many mapped pieces it holds, the importer that produced them, and the
 import's own account of the Read stage. That account is the reader's model and
 how many pages it viewed, how many pieces came from each source, the lines a
 model wrote rather than the converter, and the pages that reached the review
-only because a model read them off the image. Those numbers go into
+only because a model read them off the image, each with the lines of `paper.md`
+its transcription became. The record also carries the engine's own name for how
+the folder was sealed, `sealed-by-reader` or `sealed-without-read`, taken from
+the run rather than worked out at publish time, and carried only where the run
+is talking about the folder being published.
+
+A manuscript an application composed from its own source is a third case. No
+stage read a page, so the account reads `read: false`, and some of its pieces
+can still be a model's work, a description of a figure or an equation the
+application rebuilt. The engine refuses to write one of those unless the caller
+names the model, and the record carries that name with how many pieces it wrote.
+Those numbers go into
 `manuscript_stats.md` and into `provenance.json` under `ingest`, which is where
 a reader of a published review finds out whether a quoted line is the authors'
 own words. They reach no prompt, because an agent handed "8.4 boosters per 1000

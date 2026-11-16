@@ -565,8 +565,10 @@
                     "additionalProperties": { "type": "integer", "minimum": 0 }
                   },
                   "tool_calls": { "type": "integer", "minimum": 0 },
+                  "ai_model": { "type": "string", "minLength": 1 },
+                  "ai_pieces": { "type": "integer", "minimum": 1 },
                   "lost_pages": {
-                    "$comment":"A page the converter returned nothing from, which reached the review only because a model read it off the image.",
+                    "$comment":"A page the converter returned nothing from, which reached the review only because a model read it off the image, with the lines of the manuscript its transcription became. The lines are what a reader checks a quotation against: a page number alone says which page of the authors' own PDF nothing was converted from and not which sentences of the review came off it.",
                     "type": "array",
                     "items": {
                       "type": "object",
@@ -574,7 +576,24 @@
                       "properties": {
                         "page": { "type": "integer", "minimum": 1 },
                         "words": { "type": "integer", "minimum": 0 },
-                        "pieces": { "type": "integer", "minimum": 0 }
+                        "pieces": { "type": "integer", "minimum": 0 },
+                        "added": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["document", "lines"],
+                            "properties": {
+                              "document": { "type": "string", "minLength": 1 },
+                              "lines": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": { "type": "integer", "minimum": 1 }
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
                       },
                       "additionalProperties": false
                     }
@@ -624,6 +643,10 @@
                   },
                   "additionalProperties": false
                 }
+              },
+              "manuscript_state": {
+                "$comment":"How the folder this review was published from came to be sealed, in the engine's own words, read off the run rather than worked out here. Present when the run's own manuscript folder is the one published, and left out when `--workspace` named another, since the engine's statement is about the folder it read. The two values are the only sealed states: a draft or a missing base is refused before anything is written, because a review cites lines of a manuscript nobody sealed.",
+                "enum": ["sealed-by-reader", "sealed-without-read"]
               }
             }
           },

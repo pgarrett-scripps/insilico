@@ -142,8 +142,9 @@ page the converter returned no text from at all. Those lines are quoted in the
 letter like any other, so `manuscript_stats.md` names them. It says which model
 read the pages, how many pieces came from the converter and how many from the
 model, which lines the model wrote, and which pages reached the review only
-because the model read them off the image. A review of a paper no model read
-says that instead, and says why. Where a quoted line is one a model wrote, the
+because the model read them off the image, naming for each of those pages the
+lines of the manuscript its transcription became. A review of a paper no model
+read says that instead, and says why. Where a quoted line is one a model wrote, the
 letter says so under the quotation rather than leaving an author to find out
 from the record.
 
