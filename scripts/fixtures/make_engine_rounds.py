@@ -17,9 +17,9 @@ issue nobody raised again, and a second round whose `prior_round` record names
 the first round's file and digest.
 
 No model and no network. The reviewers, the editor and the recorder here are
-this script: it claims each slot with the claim code the run minted, files
-findings quoted verbatim out of the blocks the engine imported, groups them into
-issues, rules on the round before and asks the recorder to write the review. The
+this script: it claims each slot with the claim code the run minted, reads the
+whole paper, files findings quoted verbatim out of it, groups them into issues,
+rules on the round before and asks the recorder to write the review. The
 manuscript is a PDF built here out of the sentences below, so there is no paper
 to fetch and nothing to look up. The `reviewers-only` arm is the smallest arm
 whose issues an editor writes, which is what `publishable` asks about.
@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import textwrap
@@ -59,8 +60,8 @@ TITLE = "A Held Out Split, Reported Throughout: A Fixture Manuscript"
 
 # The manuscript, sentence by sentence, because the review quotes it. A quote is
 # one of these strings: the converter joins the wrapped lines back together with
-# single spaces, so the sentence that goes into the PDF is the sentence that
-# anchors in the block.
+# single spaces, so the sentence that goes into the PDF is the sentence the
+# engine finds in a line of `paper.md`.
 ABSTRACT = (
     "The measured improvement of eleven percent was recorded on a single held "
     "out split and the paper reports it as the headline result throughout.",
@@ -111,11 +112,11 @@ ROUNDS_DIFFER = "The table and the text do not agree on the headline figure"
 
 # Each round: the manuscript it reads, what each reviewer files, how the editor
 # groups it, what the editor rules about the round before, and the verdict it
-# closes on. `sentence` is the quote, and the block it anchors in is looked up
-# from the imported blocks, so a sentence that moves to another page needs no
-# change here. `members` names findings by their title and `prior_name` names a
-# prior issue by its name, because a uid and an issue id are both minted by the
-# engine and neither can be written down in advance.
+# closes on. `sentence` is the quote, and the engine places it: it finds the
+# words in `paper.md` and records the line, so a sentence that moves to another
+# page needs no change here. `members` names findings by their title and
+# `prior_name` names a prior issue by its name, because a uid and an issue id
+# are both minted by the engine and neither can be written down in advance.
 ROUNDS = (
     {
         "revision": False,
@@ -384,21 +385,43 @@ def manuscript(revision: bool) -> bytes:
     return pdf_bytes(pages)
 
 
-def anchor(blocks: list, sentence: str) -> str:
-    """The block the sentence reads in, once, or a failure that names it.
+def whole_paper(server, token: str, slot: str) -> str:
+    """Every part of the manuscript, read as a reviewer reads it.
 
-    The engine quarantines a quote that is absent from the block it is filed
-    against or appears in it twice, so the fixture looks the quote up rather
-    than asserting where it is. A manuscript that drifts then fails here, with
-    the sentence, instead of two calls later as a quarantine.
+    A slot that has not been served the whole paper has its findings refused, and
+    the paper is served in parts, so the part count is read off the first part's
+    own heading, which is `paper.md - part 1 of N - lines a-b`. Reading costs
+    nothing from the allowance, so there is nothing to spend by reading it all.
     """
-    holding = [block["id"] for block in blocks if block["text"].count(sentence) == 1]
-    if len(holding) != 1:
+    first = server.read_paper(token)
+    refused(first, f"read_paper {slot}")
+    if not isinstance(first, str):
+        raise SystemExit(f"read_paper {slot} answered {type(first).__name__}, not the paper")
+    found = re.search(r"part 1 of (\d+)", first.splitlines()[0])
+    if not found:
+        raise SystemExit(f"read_paper {slot} did not say which part it served: "
+                         f"{first.splitlines()[0][:120]}")
+    served = [first]
+    for part in range(2, int(found.group(1)) + 1):
+        more = server.read_paper(token, part=part)
+        refused(more, f"read_paper {slot} part {part}")
+        served.append(more)
+    return "\n".join(served)
+
+
+def quoted_once(paper: str, sentence: str) -> None:
+    """Fail now if the sentence is not one passage of the paper the slot was served.
+
+    The engine quarantines a quote it cannot place, or places twice, and finds
+    the line itself. The fixture does not name a line, so this is the only check
+    worth making here: a manuscript that drifts fails with the sentence, rather
+    than one call later as a quarantine.
+    """
+    if paper.count(sentence) != 1:
         raise SystemExit(
-            f"the sentence anchors in {len(holding)} block(s) and has to anchor in one: "
-            f"{sentence[:70]}"
+            f"the sentence reads in {paper.count(sentence)} passage(s) of the paper and has to "
+            f"read in one: {sentence[:70]}"
         )
-    return holding[0]
 
 
 def refused(answer: dict, what: str) -> None:
@@ -479,7 +502,6 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
                            title=TITLE, prior_issues=prior)
     refused(opened, "ingest")
     codes = {row["slot"]: row["claim_code"] for row in opened["claim_codes"]}
-    ids = [block["id"] for block in opened["outline"]]
 
     uids: dict[str, str] = {}
     escalated: list[str] = []
@@ -487,13 +509,12 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
         claim = server.claim_agent(slot, codes[slot])
         refused(claim, f"claim {slot}")
         token = claim["agent_token"]
-        blocks = server.read_blocks(token, ids)
-        refused(blocks, f"read_blocks {slot}")
-        rows = blocks["blocks"]
+        paper = whole_paper(server, token, slot)
         for filing in filings:
             quote = sentence_in(filing["sentence"], revision)
+            quoted_once(paper, quote)
             stored = server.submit_finding(
-                token, title=filing["title"], block_id=anchor(rows, quote), quote=quote,
+                token, title=filing["title"], quote=quote,
                 comment=filing["comment"], severity=filing["severity"],
                 kind=filing["kind"], escalate=filing["escalate"],
             )
@@ -511,6 +532,7 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
     editor = server.claim_agent("editor", codes["editor"])
     refused(editor, "claim editor")
     token = editor["agent_token"]
+    whole_paper(server, token, "editor")
     batch, rulings, carried = ruled_batch(plan, editor.get("prior_issues") or [], uids)
     submitted = server.submit_issues(token, issues=batch)
     refused(submitted, "submit_issues")

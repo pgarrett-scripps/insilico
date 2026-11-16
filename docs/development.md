@@ -401,12 +401,15 @@ missing an entry the engine wrote. `publish` names the key and the flag that
 publishes it as it stands.
 
 The imported manuscript is what ties the steps together. `prepare` hashes the
-PDF it fetched, the engine's importer hashes the bytes it was handed into
-`paper.json`, and the run records the paper it reviewed. `publish` reads that
-`paper.json` from the manuscript folder beside the run, compares all three, and
-refuses when they disagree, so a run of one paper cannot be published as a
-review of another. `--workspace` points at that folder when it is somewhere
-else.
+PDF it fetched, the engine's importer hashes the bytes it was handed into the
+workspace's `manifest.json`, and the run records the paper it reviewed.
+`publish` reads that workspace through the engine's own `verify_workspace`,
+which re-digests every file the import listed, compares all three identities,
+and refuses when they disagree, so a run of one paper cannot be published as a
+review of another and a folder whose `paper.md` was edited after the import is
+refused by name. That last one matters because a finding cites a line of that
+file: edit it and every citation in the review points at text nobody read.
+`--workspace` points at that folder when it is somewhere else.
 
 `--editor` and `--human-reviewed` have no defaults. The published record carries
 an attestation that a named person read the run before it was merged, and that
@@ -532,14 +535,18 @@ OpenRouter asking for a Claude alias it does not serve.
 ## Manuscript text hierarchy
 
 On the current path the engine's own `import` command reads the manuscript. It
-takes the PDF `prepare` downloaded and writes a workspace holding the converted
-text and the evidence-linked source blocks the reviewer quotes from. Quotations
-in a review are validated against those blocks before the run is saved, so a
-finding cannot cite a passage the manuscript does not contain.
+takes the PDF `prepare` downloaded and writes a workspace holding the whole
+paper as one Markdown file, `paper.md`, with one piece of it per numbered line,
+a `map.json` recording each piece's lines, kind, section and page, and a
+`manifest.json` digesting all of it. A reviewer reads that text and quotes it:
+the engine finds the quote, records the line it reads on, and quarantines a
+quote it cannot place or places twice, so a finding cannot cite a passage the
+manuscript does not contain.
 
 `publish` measures that workspace with no model and records what the reviewer
-was handed: the character count, a hash of the converted text, the block count,
-and the importer that produced them. Those numbers go into
+was handed: the character count, a hash of the converted text, how many lines
+and how many mapped pieces it holds, and the importer that produced them. Those
+numbers go into
 `manuscript_stats.md` and into `provenance.json` under `ingest`. They reach no
 prompt, because an agent handed "8.4 boosters per 1000 words" writes a finding
 about it.

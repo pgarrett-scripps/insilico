@@ -75,6 +75,14 @@ DECISIONS = ("accept", "minor", "major", "reject")
 # `--workspace` has a sibling to default to.
 REVIEW_DIRECTORY = "review"
 MANUSCRIPT_DIRECTORY = "manuscript"
+# What the engine calls the manuscript itself inside that folder. Engine 0.10
+# writes the whole paper as one Markdown file, one piece of it per line, and a
+# finding cites a line of this file by name; a supplement is a document of its
+# own beside it. The name is not on the engine's public surface, so it is
+# written here and checked against the workspace the engine hands back in
+# `bind_run_to_input`, where a release that renamed it is refused rather than
+# published under a label this file invented.
+MAIN_DOCUMENT = "paper.md"
 
 # The six specialist tracks the plugin ships, each writing one `audit_<track>.md`
 # report into the run. Named here so a bundle can say which reports are missing
@@ -495,12 +503,12 @@ def resolve_workspace(review_dir: Path, flag: str) -> Path:
     if flag:
         return Path(flag).resolve()
     sibling = Path(review_dir).resolve().parent / MANUSCRIPT_DIRECTORY
-    if (sibling / "paper.json").is_file():
+    if (sibling / "manifest.json").is_file():
         return sibling
     raise CommandError(
         f"No manuscript workspace at {sibling}, so this run cannot be tied to "
         "the paper that was prepared. Pass --workspace with the folder holding "
-        "paper.json."
+        "manifest.json beside paper.md and map.json."
     )
 
 
@@ -1114,14 +1122,49 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
 
     The chain is: the hash prepare took of the fetched bytes, the hash the
     importer took of the bytes it was given, and the paper id the run recorded.
+
+    The workspace is read through the engine's own `verify_workspace`, which
+    re-digests every file the import manifest lists before it answers. A folder
+    whose `paper.md` was edited after the import is refused there by name, and
+    that matters more now than it did: a finding cites a line of that file, so
+    an edited manuscript turns every citation in the review into a line number
+    about text nobody reviewed.
     """
-    paper = maybe_json(Path(workspace) / "paper.json")
-    if not paper:
-        raise CommandError(
-            f"No paper.json in {workspace}. Point --workspace at the manuscript "
-            "folder the run imported."
+    manifest_path = Path(workspace) / "manifest.json"
+    why = "this run cannot be tied to the paper that was prepared"
+    if not manifest_path.is_file():
+        legacy = (
+            " It holds paper.json, which is an import from before the engine "
+            "wrote paper.md, and this pipeline does not read it: re-import the "
+            "manuscript."
+            if (Path(workspace) / "paper.json").is_file() else ""
         )
-    imported = str(paper.get("source_sha256") or "")
+        raise CommandError(
+            f"No manifest.json in {workspace}, so {why}. Point --workspace at "
+            "the manuscript folder the run imported, the one holding paper.md, "
+            f"map.json and manifest.json.{legacy}"
+        )
+    verify = engine_public("verify_workspace", why)
+    try:
+        base = verify(str(workspace))
+    except (ValueError, KeyError, OSError) as exc:
+        raise CommandError(
+            f"The engine refused the manuscript workspace at {workspace}, so "
+            f"{why}: {exc}. Every finding in this run cites a line of that "
+            "folder's paper.md, so a folder that no longer matches its own "
+            "import manifest cannot be published as what was reviewed."
+        ) from exc
+    paper = _dict(getattr(base, "manifest", None))
+    documents = [str(name) for name in _list(base.document_names())]
+    if MAIN_DOCUMENT not in documents:
+        raise CommandError(
+            f"The manuscript workspace at {workspace} holds no {MAIN_DOCUMENT}, "
+            f"so {why}. It holds {', '.join(documents) or 'no documents'}. This "
+            "publish path names the manuscript's own document when it prints "
+            "where a passage stands, and naming a file the import does not hold "
+            "would tell the authors to look in a document that is not there."
+        )
+    imported = str(_dict(paper.get("source")).get("sha256") or "")
     expected = str(prepared["input"]["sha256"])
     if not imported:
         raise CommandError(
@@ -1135,11 +1178,11 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
             f"{imported}. Review the PDF that prepare fetched, or prepare the "
             "paper this workspace holds."
         )
-    workspace_paper_id = str(paper.get("id") or "")
+    workspace_paper_id = str(getattr(base, "paper_id", "") or paper.get("paper_id") or "")
     run_paper_id = str(run.get("paper_id") or "")
     if not workspace_paper_id:
         raise CommandError(
-            f"The paper.json in {workspace} records no paper id, so this run "
+            f"The manifest.json in {workspace} records no paper id, so this run "
             "cannot be tied to the manuscript that was imported. Import the "
             "paper again."
         )
@@ -1155,9 +1198,8 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
             f"The run reviewed paper {run_paper_id} but --workspace holds paper "
             f"{workspace_paper_id}. Point --run and --workspace at the same review."
         )
-    manifest = Path(workspace) / "manifest.json"
     return {
-        "workspace_manifest_sha256": digest(manifest.read_bytes()) if manifest.is_file() else None,
+        "workspace_manifest_sha256": digest(manifest_path.read_bytes()),
         "paper_id": workspace_paper_id,
     }
 
@@ -1239,16 +1281,23 @@ def issue_members(issue: dict) -> list[dict]:
 def surviving_passages(issue: dict) -> list[dict]:
     """The prior issue's quoted passages the engine still found in this draft.
 
-    The engine writes one object per passage, `{finding_uid, block_id, quote}`,
-    so the quote is a field of the row and not the row itself. Taking the row
-    for the quote printed a Python dict into a real decision letter, under a
-    heading telling the authors that was the text still standing in their
-    manuscript. A row carrying no quote is dropped rather than printed empty.
+    The engine writes one object per passage, `{finding_uid, quote, document,
+    line, fingerprint, matched_by}`, so the quote is a field of the row and not
+    the row itself. Taking the row for the quote printed a Python dict into a
+    real decision letter, under a heading telling the authors that was the text
+    still standing in their manuscript. A row carrying no quote is dropped
+    rather than printed empty.
 
-    What the engine means by one of these is narrow: the text a finding of an
-    earlier round quoted is still in this draft word for word. It is evidence
-    about the text and not a ruling, and where it sits under `resolved` the
-    editor agent had to say why the issue is fixed anyway.
+    What the engine means by one of these is narrow, and `matched_by` says which
+    of two narrow things. `quote` is the earlier finding's words found in this
+    draft word for word. `fingerprint` is the passage they were quoted from,
+    found by the digest of its own text, so the passage is unchanged while the
+    quoted words were not matched: the wording of the quote moved inside it. The
+    `line` is where this draft holds it and has nothing to do with the line the
+    earlier round cited, because the file is rewritten at every import.
+
+    Either way it is evidence about the text and not a ruling, and where it sits
+    under `resolved` the editor agent had to say why the issue is fixed anyway.
     """
     passages = []
     for row in _list(_dict(issue).get("surviving_quotes")):
@@ -1257,9 +1306,13 @@ def surviving_passages(issue: dict) -> list[dict]:
         quote = str(row.get("quote") or "").strip()
         if not quote:
             continue
+        line = row.get("line")
         passages.append({
             "finding_uid": str(row.get("finding_uid") or ""),
-            "block_id": str(row.get("block_id") or ""),
+            "document": str(row.get("document") or ""),
+            "line": line if isinstance(line, int) else None,
+            "fingerprint": str(row.get("fingerprint") or ""),
+            "matched_by": str(row.get("matched_by") or ""),
             "quote": quote,
         })
     return passages
@@ -1325,11 +1378,23 @@ def escalated(findings: list[dict]) -> list[dict]:
 
 
 def _location(finding: dict) -> str:
+    """Where in the manuscript one finding was placed, as the engine placed it.
+
+    Engine 0.10 anchors a quote in the manuscript text itself and records the
+    line it reads on, the last line where it runs over several, and the document
+    when that is a supplement rather than the paper. A finding with no line is
+    not located, which is what an unplaced quote is.
+    """
     placement = finding.get("placement")
     if placement not in (None, "anchored"):
         return f"unplaced ({placement})"
-    block = finding.get("block_id")
-    return f"block {block}" if block else "not located"
+    line = finding.get("line")
+    if not isinstance(line, int) or line <= 0:
+        return "not located"
+    end = finding.get("end_line")
+    where = f"lines {line}-{end}" if isinstance(end, int) and end > line else f"line {line}"
+    document = str(finding.get("document") or "")
+    return f"{where} of {document}" if document and document != MAIN_DOCUMENT else where
 
 
 def _tags(finding: dict) -> str:
@@ -1872,13 +1937,50 @@ def _closed_entry(issue: dict) -> list[str]:
         # whether they were being shown their own revision or the complaint the
         # issue was raised with. This is the revision as it now reads.
         lines += [
-            "**This draft, where the earlier finding's quoted text still reads "
-            "the same:**",
+            "**This draft, where the earlier finding's passage still stands:**",
             "",
         ]
-        lines += [f"> {passage['quote']}" for passage in surviving]
-        lines.append("")
+        for passage in surviving:
+            lines += [f"> {passage['quote']}", ""]
+            where = _passage_standing(passage)
+            if where:
+                lines += [where, ""]
     return lines
+
+
+def _passage_standing(passage: dict) -> str:
+    """How this draft still holds one passage, in the engine's own terms.
+
+    `matched_by` is the whole of the claim. `quote` is the earlier words found
+    again word for word. `fingerprint` is the passage found by the digest of its
+    text while those words were not matched, which is a weaker thing to tell
+    authors and was published as though it were the stronger one. The line is
+    this draft's own, so it is named as such: the earlier round's numbering is
+    gone, and an author told `line 11` of a file they do not have would look for
+    it in the one they do.
+    """
+    matched = str(passage.get("matched_by") or "")
+    line = passage.get("line")
+    document = str(passage.get("document") or "")
+    where = ""
+    if isinstance(line, int) and line > 0:
+        where = f"line {line} of this draft as the engine converted it"
+        if document and document != MAIN_DOCUMENT:
+            where = f"line {line} of {document}, as the engine converted it"
+    if matched == "quote":
+        reads = "still reads word for word"
+    elif matched == "fingerprint":
+        reads = (
+            "is the same passage by the digest of its text, so the quoted "
+            "wording has moved inside it rather than out of the paper"
+        )
+    else:
+        reads = ""
+    if not reads:
+        return f"Found at {where}." if where else ""
+    if not where:
+        return f"It {reads}."
+    return f"At {where}, it {reads}."
 
 
 def _issue_entry(label: str, issue: dict, package: dict) -> list[str]:
@@ -1886,8 +1988,8 @@ def _issue_entry(label: str, issue: dict, package: dict) -> list[str]:
 
     The issue carries the editor agent's statement of what has to change. The
     evidence under it is the reviewers' own: the member holds the quote and the
-    blocks, and the reviewer's comment and what the finding rests on are joined
-    back on from the ledger by `finding_uid`.
+    lines it was read on, and the reviewer's comment and what the finding rests
+    on are joined back on from the ledger by `finding_uid`.
     """
     name = str(issue.get("name") or "Unnamed issue").strip()
     identifier = str(issue.get("id") or "")
@@ -1924,10 +2026,10 @@ def _issue_entry(label: str, issue: dict, package: dict) -> list[str]:
         lines += [statement, ""]
     rebuttal = str(issue.get("rebuttal_quote") or "").strip()
     if rebuttal:
-        block = str(issue.get("rebuttal_block_id") or "").strip()
+        line = issue.get("rebuttal_line")
         lines += [
             "What the manuscript says about it"
-            + (f", in block {block}" if block else "")
+            + (f", on line {line}" if isinstance(line, int) and line > 0 else "")
             + ":",
             "",
             f"> {rebuttal}",
@@ -2000,16 +2102,22 @@ def render_stats(preprint: Preprint, ingest: dict, generator: dict) -> str:
         lines.append(f"- Manuscript text: {chars} characters")
     if ingest.get("text_sha256"):
         lines.append(f"- Manuscript text sha256: `{ingest['text_sha256']}`")
-    blocks = ingest.get("blocks")
-    if blocks:
-        lines.append(f"- Source blocks: {blocks}")
+    pieces = ingest.get("pieces")
+    if pieces:
+        lines.append(f"- Pieces of the paper mapped: {pieces}")
+    text_lines = ingest.get("lines")
+    if text_lines:
+        lines.append(f"- Numbered lines of {MAIN_DOCUMENT}: {text_lines}")
     lines += [
         "",
         "## How the text was read",
         "",
-        f"Imported by {ingest.get('tool') or 'the engine importer'} into "
-        "evidence-linked source blocks. Quotations in this review were validated "
-        "against those blocks before the review was saved.",
+        f"Imported by {ingest.get('tool') or 'the engine importer'} into one "
+        f"Markdown file, {MAIN_DOCUMENT}, holding one piece of the paper per "
+        "numbered line, with a map recording each piece's kind, section and "
+        "page in the original. Every quotation in this review was found in that "
+        "text, and the line it reads on was recorded, before the review was "
+        "saved.",
         "",
     ]
     return "\n".join(lines)
@@ -2021,16 +2129,16 @@ def ingest_record(workspace: Path | None) -> dict:
     if workspace is None:
         return record
     workspace = Path(workspace)
-    manuscript = workspace / "manuscript.md"
+    manuscript = workspace / MAIN_DOCUMENT
     if manuscript.is_file():
         text = manuscript.read_text(encoding="utf-8")
         record["chars"] = len(text)
         record["text_sha256"] = digest(text.encode())
-    paper = workspace / "paper.json"
-    if paper.is_file():
-        blocks = maybe_json(paper).get("blocks")
-        if isinstance(blocks, list):
-            record["blocks"] = len(blocks)
+        record["lines"] = len(text.splitlines())
+    manifest = maybe_json(workspace / "manifest.json")
+    pieces = _dict(manifest.get("counts")).get("pieces")
+    if isinstance(pieces, int):
+        record["pieces"] = pieces
     return record
 
 
@@ -3225,7 +3333,7 @@ def manuscript_text(workspace: Path | str | None) -> str:
     """
     if workspace is None:
         return ""
-    manuscript = Path(workspace) / "manuscript.md"
+    manuscript = Path(workspace) / MAIN_DOCUMENT
     try:
         return manuscript.read_text(encoding="utf-8", errors="replace")
     except OSError:
@@ -3855,11 +3963,11 @@ def assert_publishable_issues(package: dict) -> None:
             "the previous round, and a word outside them would be published in "
             "the letter as though the engine had ruled it."
         )
-    # The surviving passages are objects, `{finding_uid, block_id, quote}`, and
-    # the letter prints the quote out of each one. A row that is not an object,
-    # or that carries no quote, is refused rather than published: a row read as
-    # a string printed a Python dict into a letter under a heading telling the
-    # authors that was their own text.
+    # The surviving passages are objects, `{finding_uid, quote, document, line,
+    # fingerprint, matched_by}`, and the letter prints the quote out of each
+    # one. A row that is not an object, or that carries no quote, is refused
+    # rather than published: a row read as a string printed a Python dict into
+    # a letter under a heading telling the authors that was their own text.
     shapeless = sorted({
         f"{_dict(row).get('id')} ({type(passage).__name__})"
         for row in rows
@@ -4611,7 +4719,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--workspace",
         default="",
         help="The imported manuscript workspace. Defaults to the manuscript "
-        "folder beside the run, whose paper.json is what ties this run to the "
+        "folder beside the run, whose manifest.json is what ties this run to the "
         "paper that was prepared",
     )
     p.add_argument(

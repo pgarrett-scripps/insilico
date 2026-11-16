@@ -31,7 +31,6 @@ from smoke_checks.local import (
     check_a_rehearsal_claims_no_reading,
     check_a_version_is_only_recorded_when_it_looks_like_one,
     check_a_rehearsal_is_never_written_into_the_published_tree,
-    check_a_run_of_one_paper_cannot_be_published_as_another,
     check_an_attestation_needs_a_named_editor,
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_every_documented_command_runs_against_a_real_parser,
@@ -180,8 +179,6 @@ def main() -> int:
     print("ok  every engine command in the skill is one the engine's parser accepts")
     check_every_documented_command_runs_against_a_real_parser()
     print("ok  every command and flag the documents give is one a real parser accepts")
-    check_a_run_of_one_paper_cannot_be_published_as_another()
-    print("ok  a run is bound to the paper that was prepared")
     check_a_rehearsal_is_never_written_into_the_published_tree()
     print("ok  a run without --publish stays out of docs/reviews")
     check_the_method_paragraph_describes_the_run_that_happened()

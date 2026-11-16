@@ -83,9 +83,60 @@ CITATION_WORKER_MODEL = HAIKU
 CLAUDE_CODE_VERSION = "2.1.322"
 STARTED_AT = "2026-11-11T12:00:00+00:00"
 WORKFLOW_VERSION = "plugin-two-track-v1"
-FINDING_SCHEMA = "review-finding-v3"
+FINDING_SCHEMA = "review-finding-v4"
 
-ISSUES_SCHEMA = "review-issues-v1"
+ISSUES_SCHEMA = "review-issues-v2"
+
+# The one document the fixture paper was imported into. An import writes the
+# whole paper as `paper.md` and a supplement as `supplement-<name>.md`, and a
+# finding names the document it quoted, so even a one-document fixture says
+# which.
+MAIN_DOCUMENT = local_review.MAIN_DOCUMENT
+
+# The fixture paper, as the engine's importer writes one: the pieces of the
+# paper on numbered lines of `paper.md`, a blank line between them. A finding
+# carries no block id any more, it carries a quote and the line that quote was
+# read on, so each line here holds the words the finding that cites it quotes.
+# A fixture whose lines did not hold their own quotes would let the letter
+# print a line number that means nothing and no check here would see it.
+PAPER_LINES = (
+    "# A manuscript with findings at every severity",                  # 1
+    "",
+    "Across both cohorts the effects were large.",                     # 3
+    "",
+    "A fuller account is given in the appendix, where the interval "
+    "is reported in the appendix table.",                              # 5
+    "",
+    "Both groups were treated identically and animals were assigned "
+    "at random.",                                                      # 7
+    "",
+    "Counts were read from the plates, and the assay was run as "
+    "described.",                                                      # 9
+    "",
+    "Per-well counts are available on request.",                       # 11
+    "",
+    "The receptor is blocked by the same compound, as shown "
+    "previously.",                                                     # 13
+    "",
+    "Figure 2, panel b, gives the counts for the second cohort.",      # 15
+    "",
+    "The abstract reports n = 48 across both cohorts.",                # 17
+    "",
+    "Table 1 totals the same cohorts at n = 46.",                      # 19
+)
+
+# The lines the fixture findings quote, named rather than typed at each use so
+# a line can be moved in one place. The numbers are the odd lines above: the
+# even ones are the blank lines between the pieces.
+HEADLINE_LINE = 3
+APPENDIX_LINE = 5
+RANDOMISED_LINE = 7
+ASSAY_LINE = 9
+COUNTS_LINE = 11
+CITATION_LINE = 13
+PANEL_LINE = 15
+ABSTRACT_TOTAL_LINE = 17
+TABLE_TOTAL_LINE = 19
 
 # The findings ledger, `findings.jsonl`, in the order the readers filed rows.
 # Deliberately out of severity order, because nothing downstream may depend on
@@ -102,7 +153,9 @@ LEDGER = [
         "track": "citations",
         "basis": "judgement",
         "placement": "anchored",
-        "block_id": "b7",
+        "document": MAIN_DOCUMENT,
+        "line": CITATION_LINE,
+        "end_line": CITATION_LINE,
     },
     {
         "severity": "major",
@@ -116,8 +169,10 @@ LEDGER = [
         "basis_reason": "The reported mean and n do not give the stated interval.",
         "counterevidence": "The appendix reports a wider interval for the same effect.",
         "escalate": True,
-        "block_id": "b2",
-        "evidence_blocks": ["b2", "b3"],
+        "document": MAIN_DOCUMENT,
+        "line": HEADLINE_LINE,
+        "end_line": HEADLINE_LINE,
+        "evidence_lines": [HEADLINE_LINE, APPENDIX_LINE],
     },
     {
         "severity": "moderate",
@@ -127,7 +182,9 @@ LEDGER = [
         "slot": "core-1",
         "track": "methods-reporting",
         "basis": "two-quotes",
-        "block_id": "b4",
+        "document": MAIN_DOCUMENT,
+        "line": RANDOMISED_LINE,
+        "end_line": RANDOMISED_LINE,
     },
     {
         "severity": "catastrophic",
@@ -144,7 +201,9 @@ LEDGER = [
         "slot": "spec-figures-tables",
         "track": "figures-tables",
         "basis": "two-quotes",
-        "block_id": "b9",
+        "document": MAIN_DOCUMENT,
+        "line": PANEL_LINE,
+        "end_line": PANEL_LINE,
     },
     {
         "severity": "minor",
@@ -155,7 +214,9 @@ LEDGER = [
         "track": "numbers",
         "basis": "two-quotes",
         "escalate": True,
-        "block_id": "b11",
+        "document": MAIN_DOCUMENT,
+        "line": ABSTRACT_TOTAL_LINE,
+        "end_line": ABSTRACT_TOTAL_LINE,
     },
 ]
 
@@ -184,9 +245,12 @@ ISSUES = [
                 "basis": "two-quotes",
                 "escalate": False,
                 "title": "Missing n",
-                "block_id": "b4",
+                "document": MAIN_DOCUMENT,
+                "line": RANDOMISED_LINE,
+                "end_line": RANDOMISED_LINE,
                 "quote": "animals were assigned at random",
-                "evidence_blocks": ["b4"],
+                "evidence_lines": [RANDOMISED_LINE],
+                "fingerprint": "4" * 64,
             },
             {
                 "finding_uid": "f-010",
@@ -197,16 +261,19 @@ ISSUES = [
                 "basis": "two-quotes",
                 "escalate": False,
                 "title": "Panel b has no axis label",
-                "block_id": "b9",
+                "document": MAIN_DOCUMENT,
+                "line": PANEL_LINE,
+                "end_line": PANEL_LINE,
                 "quote": "panel b",
-                "evidence_blocks": ["b9"],
+                "evidence_lines": [PANEL_LINE],
+                "fingerprint": "9" * 64,
             },
         ],
         # How many reviewer slots raised it, counted from the members. The
         # engine publishes the number and not the slot names, so this is an int
         # on every row, zero included.
         "raised_by": 2,
-        "rebuttal_block_id": None,
+        "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": None,
         "prior_rank": None,
@@ -233,13 +300,16 @@ ISSUES = [
                 "basis": "computed",
                 "escalate": True,
                 "title": "The headline effect is unguarded",
-                "block_id": "b2",
+                "document": MAIN_DOCUMENT,
+                "line": HEADLINE_LINE,
+                "end_line": HEADLINE_LINE,
                 "quote": "effects were large",
-                "evidence_blocks": ["b2", "b3"],
+                "evidence_lines": [HEADLINE_LINE, APPENDIX_LINE],
+                "fingerprint": "2" * 64,
             },
         ],
         "raised_by": 1,
-        "rebuttal_block_id": "b3",
+        "rebuttal_line": APPENDIX_LINE,
         "rebuttal_quote": "the interval is reported in the appendix",
         "prior_id": None,
         "prior_rank": None,
@@ -255,7 +325,9 @@ ISSUES = [
         "severity": "minor",
         "category": "literature-and-citations",
         "rank": 3,
-        "statement": "The citation at b7 supports a weaker statement than the sentence makes.",
+        "statement": (
+            "The citation on that line supports a weaker statement than the sentence makes."
+        ),
         "members": [
             {
                 "finding_uid": "f-004",
@@ -266,13 +338,16 @@ ISSUES = [
                 "basis": "judgement",
                 "escalate": False,
                 "title": "A typo",
-                "block_id": "b7",
+                "document": MAIN_DOCUMENT,
+                "line": CITATION_LINE,
+                "end_line": CITATION_LINE,
                 "quote": "as shown previously",
-                "evidence_blocks": ["b7"],
+                "evidence_lines": [CITATION_LINE],
+                "fingerprint": "7" * 64,
             },
         ],
         "raised_by": 1,
-        "rebuttal_block_id": None,
+        "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": None,
         "prior_rank": None,
@@ -299,13 +374,16 @@ ISSUES = [
                 "basis": "two-quotes",
                 "escalate": True,
                 "title": "Two different totals",
-                "block_id": "b11",
+                "document": MAIN_DOCUMENT,
+                "line": ABSTRACT_TOTAL_LINE,
+                "end_line": ABSTRACT_TOTAL_LINE,
                 "quote": "n = 48",
-                "evidence_blocks": ["b11", "b12"],
+                "evidence_lines": [ABSTRACT_TOTAL_LINE, TABLE_TOTAL_LINE],
+                "fingerprint": "1" * 64,
             },
         ],
         "raised_by": 1,
-        "rebuttal_block_id": None,
+        "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": None,
         "prior_rank": None,
@@ -324,7 +402,7 @@ ISSUES = [
         "statement": "The previous round could not tell which assay the counts came from.",
         "members": [],
         "raised_by": 0,
-        "rebuttal_block_id": None,
+        "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": "i05",
         "prior_rank": 2,
@@ -340,7 +418,13 @@ ISSUES = [
         "surviving_quotes": [
             {
                 "finding_uid": "f-021",
-                "block_id": "b5",
+                "line": ASSAY_LINE,
+                "document": MAIN_DOCUMENT,
+                "fingerprint": "5" * 64,
+                # Found by the words the earlier round quoted, which is the one
+                # of the two matches that lets the letter say the sentence still
+                # reads as it did.
+                "matched_by": "quote",
                 "quote": "the assay was run as described",
             },
         ],
@@ -358,7 +442,7 @@ ISSUES = [
         "statement": "The previous round asked for the per-well counts behind figure 2.",
         "members": [],
         "raised_by": 0,
-        "rebuttal_block_id": None,
+        "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": "i06",
         "prior_rank": 1,
@@ -366,13 +450,19 @@ ISSUES = [
         "status_reason": "Nothing in this draft says where the counts are, and no reader found them.",
         "text_unchanged_reason": "The methods section is unchanged from the previous draft.",
         # Rows, not strings. The engine writes each surviving passage as the
-        # finding that quoted it, the block it was found in and the quote
-        # itself, and a fixture of bare strings let a renderer publish the row
-        # as Python text without any check here seeing it.
+        # finding that quoted it, the document and line it was found on in this
+        # draft, how it was matched and the quote itself, and a fixture of bare
+        # strings let a renderer publish the row as Python text without any
+        # check here seeing it. This one was matched by its fingerprint, so the
+        # passage is the same passage and the quoted words have moved inside it,
+        # which is a different sentence for the letter to write.
         "surviving_quotes": [
             {
                 "finding_uid": "f-022",
-                "block_id": "b6",
+                "line": COUNTS_LINE,
+                "document": MAIN_DOCUMENT,
+                "fingerprint": "6" * 64,
+                "matched_by": "fingerprint",
                 "quote": "counts are available on request",
             },
         ],
@@ -434,13 +524,16 @@ PRIOR_ISSUES_DOCUMENT = {
                     "basis": "judgement",
                     "escalate": False,
                     "title": "The counts behind figure 2 are not available",
-                    "block_id": "b6",
+                    "document": MAIN_DOCUMENT,
+                    "line": COUNTS_LINE,
+                    "end_line": COUNTS_LINE,
                     "quote": "counts are available on request",
-                    "evidence_blocks": ["b6"],
+                    "evidence_lines": [COUNTS_LINE],
+                    "fingerprint": "6" * 64,
                 },
             ],
             "raised_by": 1,
-            "rebuttal_block_id": None,
+            "rebuttal_line": None,
             "rebuttal_quote": None,
             "prior_id": None,
             "prior_rank": None,
@@ -467,13 +560,16 @@ PRIOR_ISSUES_DOCUMENT = {
                     "basis": "judgement",
                     "escalate": False,
                     "title": "The assay is not named",
-                    "block_id": "b5",
+                    "document": MAIN_DOCUMENT,
+                    "line": ASSAY_LINE,
+                    "end_line": ASSAY_LINE,
                     "quote": "the assay was run as described",
-                    "evidence_blocks": ["b5"],
+                    "evidence_lines": [ASSAY_LINE],
+                    "fingerprint": "5" * 64,
                 },
             ],
             "raised_by": 1,
-            "rebuttal_block_id": None,
+            "rebuttal_line": None,
             "rebuttal_quote": None,
             "prior_id": None,
             "prior_rank": None,
@@ -1377,26 +1473,77 @@ def _run_tree(root: Path, **overrides) -> Path:
     return root
 
 
-def _workspace(root: Path, paper_id: str = "paper-abc", manuscript: str | None = None) -> Path:
+def _workspace(
+    root: Path,
+    paper_id: str = "paper-abc",
+    manuscript: str | None = None,
+    source_sha256: str = "b" * 64,
+) -> Path:
     """The folder the engine's import command writes, as publish needs it.
 
-    `manuscript.md` is part of that folder, written by the importer as the
-    blocks the reviewers were handed. The leak scan reads it, because a hit that
-    appears in the paper is the paper's own text rather than this machine's, so a
-    check of the allowance has to be able to say what the paper said.
+    `paper.md` is the whole paper, one piece of it on each numbered line, and
+    `map.json` is one row per piece saying which lines it covers. The leak scan
+    reads the Markdown, because a hit that appears in the paper is the paper's
+    own text rather than this machine's, so a check of the allowance has to be
+    able to say what the paper said.
+
+    `manifest.json` names every file the import wrote and the digest of its
+    bytes, and the publish path reads the folder through the engine's own
+    `verify_workspace`, which re-digests all of them before anything is read
+    out. The digests here are therefore taken from the bytes this function has
+    just written rather than typed: a typed digest would have every publishing
+    check refuse the fixture, and a manifest listing no files would waive the
+    one guard that stops a finding citing a line of a file somebody edited
+    after the import.
     """
     workspace = Path(root)
     workspace.mkdir(parents=True, exist_ok=True)
-    (workspace / "paper.json").write_text(
-        json.dumps({"id": paper_id, "source_sha256": "b" * 64, "blocks": []}), encoding="utf-8"
-    )
+    text = "\n".join(PAPER_LINES) + "\n" if manuscript is None else manuscript
+    numbered = text.split("\n")
+    if numbered and numbered[-1] == "":
+        numbered.pop()
+    pieces = [
+        {
+            "lines": [number, number],
+            "kind": "title" if number == 1 else "paragraph",
+            "section": "Front matter",
+            "page": 1,
+            "source": "text",
+            "fingerprint": local_review.digest(line.encode("utf-8")),
+            "document": MAIN_DOCUMENT,
+        }
+        for number, line in enumerate(numbered, start=1)
+        if line.strip()
+    ]
+    files = {
+        MAIN_DOCUMENT: text,
+        "map.json": json.dumps(pieces, indent=1),
+    }
+    for name, body in files.items():
+        (workspace / name).write_text(body, encoding="utf-8")
     (workspace / "manifest.json").write_text(
-        json.dumps({"paper_id": paper_id, "files": {}}), encoding="utf-8"
-    )
-    (workspace / "manuscript.md").write_text(
-        manuscript
-        if manuscript is not None
-        else "[b1 | Abstract | manuscript page 1]\nA fixture manuscript.\n",
+        json.dumps(
+            {
+                "schema_version": "paper-base-v1",
+                "paper_id": paper_id,
+                "source": {
+                    "file": "original/original.pdf",
+                    "sha256": source_sha256,
+                    "pages": 1,
+                },
+                "parser": "fixture",
+                "documents": [MAIN_DOCUMENT],
+                "counts": {"pieces": len(pieces)},
+                "statistics": {
+                    "pieces": len(pieces),
+                    "lines": {MAIN_DOCUMENT: len(numbered)},
+                },
+                "files": {
+                    name: local_review.digest(body.encode("utf-8"))
+                    for name, body in files.items()
+                },
+            }
+        ),
         encoding="utf-8",
     )
     return workspace
@@ -1929,15 +2076,18 @@ def check_a_minor_issue_is_never_a_required_revision() -> None:
         "the editor agent's reason for ruling an item fixed was dropped"
     )
     # The quotes the engine still found in this draft, as it writes them: a row
-    # per passage, naming the finding that quoted it and the block it was found
-    # in. The record used to carry them for the unverified list alone, so a
-    # reader of round.json could not see what a ruling of `resolved` was made
-    # against, and the reason the editor gave for ruling it fixed anyway was
-    # nowhere in the record at all.
+    # per passage, naming the finding that quoted it, the document and line it
+    # was found on in this draft and how it was matched. The record used to
+    # carry them for the unverified list alone, so a reader of round.json could
+    # not see what a ruling of `resolved` was made against, and the reason the
+    # editor gave for ruling it fixed anyway was nowhere in the record at all.
     assert closed["unverified"][0]["surviving_quotes"] == [
         {
             "finding_uid": "f-022",
-            "block_id": "b6",
+            "document": MAIN_DOCUMENT,
+            "line": COUNTS_LINE,
+            "fingerprint": "6" * 64,
+            "matched_by": "fingerprint",
             "quote": "counts are available on request",
         },
     ], f"the quotes still standing in the manuscript were dropped: {closed['unverified'][0]}"
@@ -1948,7 +2098,10 @@ def check_a_minor_issue_is_never_a_required_revision() -> None:
     assert resolved_row["surviving_quotes"] == [
         {
             "finding_uid": "f-021",
-            "block_id": "b5",
+            "document": MAIN_DOCUMENT,
+            "line": ASSAY_LINE,
+            "fingerprint": "5" * 64,
+            "matched_by": "quote",
             "quote": "the assay was run as described",
         },
     ], f"a resolved item's surviving quotes were dropped: {resolved_row}"
@@ -2011,16 +2164,21 @@ def check_a_severity_this_release_cannot_sort_is_refused() -> None:
 def check_a_surviving_quote_is_printed_as_the_authors_own_words() -> None:
     """A passage that still reads the same is printed, never the row holding it.
 
-    The engine records a surviving passage as a row of three fields: the finding
-    it came from, the block it sits in, and the quoted words. The letter printed
-    the row itself, so the authors were shown a line of Python where their own
-    sentence belonged. Nothing caught it because the fixture carried bare
-    strings, which the old renderer printed unchanged, so the check restated the
-    fixture rather than testing the renderer.
+    The engine records a surviving passage as a row: the finding it came from,
+    the document and the line it was found on in this draft, how it was matched
+    and the quoted words. The letter printed the row itself, so the authors were
+    shown a line of Python where their own sentence belonged. Nothing caught it
+    because the fixture carried bare strings, which the old renderer printed
+    unchanged, so the check restated the fixture rather than testing the
+    renderer.
 
     Both closed lists carry such a row now, a ruled-fixed item and an unverified
     one, because the two are rendered by the same entry and a fixture that
-    exercised one proved nothing about the other.
+    exercised one proved nothing about the other. The two are matched
+    differently as well: one was found by the words the earlier round quoted and
+    one by the digest of the passage they were read in, and the letter has to
+    say which, because "the wording has moved inside the passage" is not "the
+    sentence is unchanged".
     """
     letter = local_review.render_decision_letter(PAPER, READING, provenance_fixture())
     assert "## The previous round's items" in letter, (
@@ -2034,12 +2192,22 @@ def check_a_surviving_quote_is_printed_as_the_authors_own_words() -> None:
         )
     # The row's own field names, which is what the letter printed when it
     # printed the row. One of these in a published letter is the bug.
-    for leaked in ("finding_uid", "block_id", "'quote'", "{'", "f-021", "f-022"):
+    for leaked in (
+        "finding_uid", "matched_by", "fingerprint", "'quote'", "{'", "f-021", "f-022",
+    ):
         assert leaked not in prior, (
             f"the letter printed the record of a passage rather than the passage: {prior}"
         )
-    assert "This draft, where the earlier finding's quoted text still reads the same" in prior, (
+    assert "This draft, where the earlier finding's passage still stands" in prior, (
         f"an unlabelled block quote reads as part of the editor agent's reason: {prior}"
+    )
+    # The two matches, told apart in the authors' own terms. The line is named
+    # too, because a passage found in this draft is at a line of this draft.
+    assert f"line {ASSAY_LINE} of this draft" in prior and "still reads word for word" in prior, (
+        f"a passage found by its quoted words is not reported as unchanged: {prior}"
+    )
+    assert f"line {COUNTS_LINE} of this draft" in prior and "wording has moved" in prior, (
+        f"a passage found by its digest is reported as though the words were unchanged: {prior}"
     )
 
     # A row with no quote in it is a row with nothing to show the authors, and
@@ -2047,7 +2215,15 @@ def check_a_surviving_quote_is_printed_as_the_authors_own_words() -> None:
     # show no text.
     empty = dict(
         ISSUES[5],
-        surviving_quotes=[{"finding_uid": "f-099", "block_id": "b9", "quote": ""}],
+        surviving_quotes=[
+            {
+                "finding_uid": "f-099",
+                "document": MAIN_DOCUMENT,
+                "line": PANEL_LINE,
+                "matched_by": "quote",
+                "quote": "",
+            }
+        ],
     )
     assert local_review.surviving_passages(empty) == [], (
         "a row carrying no quoted words is not a surviving passage"
@@ -3003,14 +3179,14 @@ def check_a_run_of_one_paper_cannot_be_published_as_another() -> None:
     Three steps each hash something and none of them was compared: prepare
     hashes the fetched PDF, the importer hashes the bytes it was given, and the
     run records the paper id it reviewed.
+
+    The workspace is read through the engine's own `verify_workspace` now, so
+    this is a check against the real reader: the paper's identity comes out of
+    the folder the importer wrote, and the same call re-digests `paper.md`,
+    which is the file every line number in the review points into.
     """
     with tempfile.TemporaryDirectory() as tmp:
-        workspace = Path(tmp) / "workspace"
-        workspace.mkdir()
-        (workspace / "paper.json").write_text(
-            json.dumps({"id": "paper-abc", "source_sha256": "b" * 64}), encoding="utf-8"
-        )
-        (workspace / "manifest.json").write_text(json.dumps({"files": {}}), encoding="utf-8")
+        workspace = _workspace(Path(tmp) / "workspace")
         prepared = {"input": {"sha256": "b" * 64}}
         run = {"paper_id": "paper-abc"}
 
@@ -3030,13 +3206,50 @@ def check_a_run_of_one_paper_cannot_be_published_as_another() -> None:
             raise AssertionError(f"publishing {why} was allowed")
 
         # A workspace that recorded no hash cannot be tied to anything either.
-        (workspace / "paper.json").write_text(json.dumps({"id": "paper-abc"}), encoding="utf-8")
+        manifest = json.loads((workspace / "manifest.json").read_text(encoding="utf-8"))
+        manifest.pop("source")
+        (workspace / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
         try:
             local_review.bind_run_to_input(prepared, workspace, run)
         except local_review.CommandError:
             pass
         else:
             raise AssertionError("a workspace with no source hash was accepted")
+
+        # And the folder itself has to be the one the import left behind. The
+        # review's quotations are lines of `paper.md`, so a `paper.md` edited
+        # after the import is a folder whose line numbers mean nothing, and the
+        # engine refuses it by name rather than letting the publish path read
+        # the identity out of a manifest that no longer describes the files.
+        edited = _workspace(Path(tmp) / "edited")
+        (edited / MAIN_DOCUMENT).write_text("Another paper entirely.\n", encoding="utf-8")
+        try:
+            local_review.bind_run_to_input(prepared, edited, run)
+        except local_review.CommandError as refusal:
+            assert MAIN_DOCUMENT in str(refusal), (
+                f"the refusal has to name the file that changed: {refusal}"
+            )
+        else:
+            raise AssertionError("a workspace edited after the import was accepted")
+
+        # A folder from before the engine wrote `paper.md` is refused for what
+        # it is, with the one thing that fixes it, rather than for a missing
+        # file whose name says nothing.
+        legacy = Path(tmp) / "legacy"
+        legacy.mkdir()
+        (legacy / "paper.json").write_text(
+            json.dumps({"id": "paper-abc", "source_sha256": "b" * 64, "blocks": []}),
+            encoding="utf-8",
+        )
+        try:
+            local_review.bind_run_to_input(prepared, legacy, run)
+        except local_review.CommandError as refusal:
+            message = str(refusal)
+            assert "paper.json" in message and "re-import" in message, (
+                f"a folder from the old shape has to be named as one: {message}"
+            )
+        else:
+            raise AssertionError("a manuscript folder from before paper.md was accepted")
 
 
 def check_a_rehearsal_is_never_written_into_the_published_tree() -> None:
@@ -3206,11 +3419,7 @@ def check_a_run_with_no_manifest_paper_id_is_still_bound() -> None:
             "the run recorded no paper id": ("paper-abc", {}),
             "the workspace recorded no paper id": ("", {"paper_id": "paper-abc"}),
         }.items():
-            ws = Path(tmp) / f"ws-{len(why)}"
-            ws.mkdir()
-            (ws / "paper.json").write_text(
-                json.dumps({"id": paper_id, "source_sha256": "b" * 64}), encoding="utf-8"
-            )
+            ws = _workspace(Path(tmp) / f"ws-{len(why)}", paper_id)
             try:
                 local_review.bind_run_to_input(prepared, ws, bad_run)
             except local_review.CommandError:
@@ -4324,7 +4533,9 @@ def check_the_run_folder_is_found_whichever_path_is_typed() -> None:
         try:
             local_review.resolve_workspace(lonely, "")
         except local_review.CommandError as error:
-            assert "paper.json" in str(error), f"the refusal has to say what it wanted: {error}"
+            assert "manifest.json" in str(error) and MAIN_DOCUMENT in str(error), (
+                f"the refusal has to say what it wanted: {error}"
+            )
         else:
             raise AssertionError("a run with no manuscript workspace beside it was accepted")
 
@@ -7616,17 +7827,19 @@ def _engine_prepared(root: Path, destination: Path, run: Path, pdf: Path, **over
     The publish path refuses a run of one paper published under another paper's
     identity, by comparing the hash prepare took of the fetched bytes against
     the hash the importer recorded. So the hash here is read out of the run's
-    own `paper.json` rather than made up, and the rest of the record is the
+    own import manifest rather than made up, and the rest of the record is the
     suite's preprint fixture.
     """
-    paper = json.loads((run / "manuscript" / "paper.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (run / "manuscript" / "manifest.json").read_text(encoding="utf-8")
+    )
     return _prepared(
         root,
         destination,
         input={
             "kind": "doi",
             "identifier": PAPER.doi,
-            "sha256": paper["source_sha256"],
+            "sha256": manifest["source"]["sha256"],
             "bytes": pdf.stat().st_size,
             "local_file": False,
         },
@@ -7702,6 +7915,43 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
         assert rows, "the engine wrote no issues at all"
         drifted = sorted(set(rows[0]) ^ set(PACKAGE["issues"][0]))
         assert not drifted, f"an issue row has drifted from the fixture's: {drifted}"
+
+        # And the members inside a row, which is where a finding says what it
+        # cites: the document, the line, the end line and the quoted words. That
+        # is the shape this round moved to, so it is the shape most likely to
+        # drift, and a member key the fixture invented or missed would be a
+        # fixture testing a review nobody writes.
+        engine_member_keys = {key for row in rows for member in row["members"] for key in member}
+        fixture_member_keys = {
+            key for row in PACKAGE["issues"] for member in row["members"] for key in member
+        }
+        drifted = sorted(engine_member_keys ^ fixture_member_keys)
+        assert not drifted, f"an issue member has drifted from the fixture's: {drifted}"
+        for name in ("document", "line", "end_line", "quote"):
+            assert name in engine_member_keys, (
+                f"the engine's own members carry no {name}, so a finding does not say "
+                f"where it reads: {sorted(engine_member_keys)}"
+            )
+
+        # The manuscript folder the engine imported, in the shape every line
+        # number in the review is a line of.
+        workspace = json.loads(
+            (run / "manuscript" / "manifest.json").read_text(encoding="utf-8")
+        )
+        assert workspace["schema_version"] == "paper-base-v1", (
+            f"the imported manuscript is not the shape this release reads: {workspace}"
+        )
+        for name in (MAIN_DOCUMENT, "map.json"):
+            assert (run / "manuscript" / name).is_file(), (
+                f"the engine's own import holds no {name}"
+            )
+            assert name in workspace["files"], (
+                f"{name} is not digested by the import manifest, so an edit to it "
+                "would go unnoticed"
+            )
+        assert not (run / "manuscript" / "paper.json").exists(), (
+            "the engine still writes the block shape this pipeline stopped reading"
+        )
 
         with _published_tree(Path(tmp) / "reviews") as reviews:
             destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
@@ -7794,8 +8044,15 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
             f"the engine's surviving quotes did not reach the record: {row['id']}"
         )
         for quote in quotes:
-            assert {"finding_uid", "block_id", "quote"} <= set(quote), (
+            assert {"finding_uid", "document", "line", "quote"} <= set(quote), (
                 f"a surviving quote is missing a field the engine writes: {quote}"
+            )
+            # And the field set the fixture's own surviving quotes carry, so a
+            # row the engine starts writing differently fails here rather than
+            # being rendered from a fixture nobody wrote.
+            drifted = sorted(set(quote) ^ set(ISSUES[4]["surviving_quotes"][0]))
+            assert not drifted, (
+                f"a surviving quote has drifted from the fixture's: {drifted}"
             )
             # The authors read their own sentence, not a mapping of it.
             assert f"> {quote['quote']}" in letter, (
@@ -7929,6 +8186,10 @@ ENGINE_BACKED = (
     (
         check_two_rounds_the_engine_itself_wrote_publish,
         "two rounds the engine itself wrote publish, the second reading the first",
+    ),
+    (
+        check_a_run_of_one_paper_cannot_be_published_as_another,
+        "a run is bound to the paper that was prepared, through the engine's own reader",
     ),
 )
 
