@@ -216,7 +216,7 @@ function localRecord(overrides = {}) {
         resolved: 1,
         unverified: 1,
         issues_source: "editor",
-        issues_schema_version: "review-issues-v3",
+        issues_schema_version: "review-issues-v4",
         escalated_in_bundle: 4,
         findings_delivered: 53,
         findings_submitted: 53,
@@ -274,7 +274,47 @@ function localRecord(overrides = {}) {
     // than leaving the field out: an absent prior round and a round nobody
     // recorded read the same way, and only one of them is honest.
     prior_round: {},
-    ingest: { format: "markdown", tool: "peerreviewagents import_paper" },
+    // What the panel was handed, and how much of it a model wrote rather than
+    // the converter. A record that counted the text without naming the lines a
+    // model wrote would describe a review of a document it never described.
+    ingest: {
+      format: "markdown",
+      tool: "peerreviewagents import_paper",
+      base_schema_version: "paper-base-v2",
+      ai_read: {
+        read: true,
+        reader_model: "claude-opus-5-5",
+        reader_slot: "reader",
+        attempt: 1,
+        pages: 4,
+        pages_viewed: 4,
+        actions: { repaired: 1, confirmed: 18, merged: 0, described: 1, added: 2 },
+        tool_calls: 11,
+        lost_pages: [{ page: 4, words: 0, pieces: 2 }],
+      },
+      pieces_per_source: { text: 19, ai: 1, "ai-reconstructed": 1 },
+      source_values: {
+        text: "the converter's own text layer",
+        ai: "written by a model reading the page image",
+        "ai-reconstructed": "a model's repair of a line the converter misread",
+      },
+      model_written: [
+        {
+          document: "paper.md",
+          lines: [21, 21],
+          kind: "figure-description",
+          source: "ai",
+          page: 3,
+        },
+        {
+          document: "paper.md",
+          lines: [23, 23],
+          kind: "equation",
+          source: "ai-reconstructed",
+          page: 3,
+        },
+      ],
+    },
     panel: [],
     total_cost_usd: null,
     errors: [],
@@ -352,6 +392,57 @@ rejects(machineDecision, "only a human editor may be recorded as deciding");
 const noJudgement = localRecord();
 delete noJudgement.generator.advisory_verdict;
 rejects(noJudgement, "a record must carry the engine's advisory judgement");
+
+// A model reads the manuscript against its page images before any reviewer sees
+// it, and some of the lines the review quotes are lines that model wrote. The
+// record has to say so, in all four parts: the shape of the folder, the
+// stage's own account, the count by source and the lines themselves.
+for (const name of [
+  "base_schema_version",
+  "ai_read",
+  "pieces_per_source",
+  "model_written",
+]) {
+  const missing = localRecord();
+  delete missing.ingest[name];
+  rejects(missing, `a record must say ${name} about the text its panel read`);
+}
+
+const unnamedReader = localRecord();
+delete unnamedReader.ingest.ai_read.reader_model;
+rejects(unnamedReader, "a stage that ran must name the model that ran it");
+
+// An import nobody read is a publishable state and says so plainly, with no
+// model to name and no lines a model wrote.
+const unreadPaper = localRecord();
+unreadPaper.ingest.ai_read = {
+  read: false,
+  reason: "the caller asked for no read",
+  lost_pages: [],
+};
+unreadPaper.ingest.pieces_per_source = { text: 21 };
+unreadPaper.ingest.model_written = [];
+accepts(unreadPaper, "an import no model read is publishable and says so");
+
+// A line is named by where it reads, so a row with no lines or no source is a
+// count dressed as a citation.
+const unlocatedLine = localRecord();
+delete unlocatedLine.ingest.model_written[0].lines;
+rejects(unlocatedLine, "a model written row must say which lines it covers");
+
+const unsourcedLine = localRecord();
+delete unsourcedLine.ingest.model_written[0].source;
+rejects(unsourcedLine, "a model written row must say what wrote it");
+
+// Nothing of the reader's own working is published: the stage's log sits on the
+// machine that ran it and would carry a path off it.
+const leakedLog = localRecord();
+leakedLog.ingest.ai_read.reader_log = "/home/someone/run/reader.jsonl";
+rejects(leakedLog, "the reader's log is not a field a published record carries");
+
+const strayLine = localRecord();
+strayLine.ingest.model_written[0].fingerprint = "0f0f0f";
+rejects(strayLine, "a model written row carries no field beyond where it reads");
 
 const emptyJudgement = localRecord();
 emptyJudgement.generator.advisory_verdict = {};

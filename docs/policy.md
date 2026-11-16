@@ -135,6 +135,18 @@ A published review contains the panel output described under
 contains `manuscript_stats.md`, which records counts over the text the panel
 read so a reader can compare that text with the selected archive source.
 
+Some of that text is not the authors' own. Before any reviewer sees a paper, a
+model reads it against its page images: it repairs an equation or a table the
+converter mangled, writes a description under every figure, and transcribes a
+page the converter returned no text from at all. Those lines are quoted in the
+letter like any other, so `manuscript_stats.md` names them. It says which model
+read the pages, how many pieces came from the converter and how many from the
+model, which lines the model wrote, and which pages reached the review only
+because the model read them off the image. A review of a paper no model read
+says that instead, and says why. Where a quoted line is one a model wrote, the
+letter says so under the quotation rather than leaving an author to find out
+from the record.
+
 Every review ships a `provenance.json`: the transport that ran it, one row per
 agent with the model that agent ran on, the arm and workflow the run was asked
 for, the PeerReviewAgents release with the hash of each plugin and workflow file

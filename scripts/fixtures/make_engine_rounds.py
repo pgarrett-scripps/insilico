@@ -498,8 +498,15 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
     pdf = out / ("revision.pdf" if revision else "manuscript.pdf")
     pdf.write_bytes(manuscript(revision))
 
+    # `ai_read=False` because no model runs here. Engine 0.10 imports a paper
+    # into a draft and holds it there until a reader slot has looked at the page
+    # images and sealed it, and no other slot may claim before the seal, so a
+    # fixture that left the reader on would be refused at the first claim. The
+    # import seals the draft itself instead and records `read: false` with the
+    # reason, which is what every bundle built from this fixture then says about
+    # the text its panel was handed.
     opened = server.ingest(str(pdf), str(run_dir), reviewers=REVIEWERS, arm=ARM,
-                           title=TITLE, prior_issues=prior)
+                           title=TITLE, prior_issues=prior, ai_read=False)
     refused(opened, "ingest")
     codes = {row["slot"]: row["claim_code"] for row in opened["claim_codes"]}
 

@@ -535,8 +535,98 @@
         "properties": { "schema_version": { "const": 4 } }
       },
       "then": {
-        "required": ["generator", "models", "assigned_models", "prior_round"],
+        "required": ["generator", "models", "assigned_models", "prior_round", "ingest"],
         "properties": {
+          "ingest": {
+            "$comment":"What the panel was handed, and how much of it a model wrote. Engine 0.10 reads a manuscript against its page images before any reviewer sees it: it rewrites an equation the converter mangled, writes a description under every figure, and transcribes a page the converter returned no text from. Those lines are quoted in the letter like any other, so a record that measured the text without saying which of it a model wrote would be describing a review of a document it never described. `base_schema_version` is the shape of the imported folder, `ai_read` is the import's own account of the stage, `pieces_per_source` counts the pieces by where their words came from, and `model_written` names the lines, which is what makes a quotation checkable rather than merely counted.",
+            "type": "object",
+            "required": [
+              "base_schema_version",
+              "ai_read",
+              "pieces_per_source",
+              "model_written"
+            ],
+            "properties": {
+              "base_schema_version": { "type": "string", "minLength": 1 },
+              "ai_read": {
+                "$comment":"The import's own account of the Read stage, closed to anything else. The publish path copies it field by field rather than wholesale, because the stage also records where its log sits on the machine that ran it, and a record carrying that would publish a path off that machine.",
+                "type": "object",
+                "required": ["read", "lost_pages"],
+                "properties": {
+                  "read": { "type": "boolean" },
+                  "reason": { "type": "string" },
+                  "reader_model": { "type": "string", "minLength": 1 },
+                  "reader_slot": { "type": "string", "minLength": 1 },
+                  "attempt": { "type": "integer", "minimum": 1 },
+                  "pages": { "type": "integer", "minimum": 0 },
+                  "pages_viewed": { "type": "integer", "minimum": 0 },
+                  "actions": {
+                    "type": "object",
+                    "additionalProperties": { "type": "integer", "minimum": 0 }
+                  },
+                  "tool_calls": { "type": "integer", "minimum": 0 },
+                  "lost_pages": {
+                    "$comment":"A page the converter returned nothing from, which reached the review only because a model read it off the image.",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["page"],
+                      "properties": {
+                        "page": { "type": "integer", "minimum": 1 },
+                        "words": { "type": "integer", "minimum": 0 },
+                        "pieces": { "type": "integer", "minimum": 0 }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "allOf": [
+                  {
+                    "$comment":"A stage that ran has to name the model that ran it. An account saying a model read the paper without saying which model is the one shape of this field nobody can check.",
+                    "if": {
+                      "required": ["read"],
+                      "properties": { "read": { "const": true } }
+                    },
+                    "then": {
+                      "required": ["reader_model"],
+                      "properties": { "reader_model": {} }
+                    }
+                  }
+                ]
+              },
+              "pieces_per_source": {
+                "$comment":"How many pieces of the manuscript came from each source: the converter's own text layer, a model that read the page image, or a model's repair of a line the converter misread. The words are the engine's own, and `source_values` carries its description of each one.",
+                "type": "object",
+                "additionalProperties": { "type": "integer", "minimum": 0 }
+              },
+              "source_values": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              },
+              "model_written": {
+                "$comment":"One row per piece of the manuscript a model wrote rather than the converter, with the lines it occupies. Named rather than counted because the lines are what a reader of the review can check a quotation against.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["document", "lines", "source"],
+                  "properties": {
+                    "document": { "type": "string", "minLength": 1 },
+                    "lines": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "integer", "minimum": 1 }
+                    },
+                    "kind": { "type": "string" },
+                    "source": { "type": "string", "minLength": 1 },
+                    "page": { "type": "integer", "minimum": 1 }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
           "prior_round": {
             "$comment": "Required on a version 4 record and empty on a first round. The constraints are in the top-level properties block; this is here because a required name has to appear in its own subschema's properties under Ajv strict mode.",
             "type": "object"

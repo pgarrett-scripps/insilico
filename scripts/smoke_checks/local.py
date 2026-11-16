@@ -85,10 +85,10 @@ STARTED_AT = "2026-11-11T12:00:00+00:00"
 WORKFLOW_VERSION = "plugin-two-track-v1"
 FINDING_SCHEMA = "review-finding-v4"
 
-# Engine 0.10's issues document, stamped v3 since an issue's members carry the
-# offsets of their quote within its line. The engine refuses a v2 document by
-# name, so a bundle of the older shape is not half-read: nothing here reads one.
-ISSUES_SCHEMA = "review-issues-v3"
+# Engine 0.10's issues document, stamped v4 since an issue carries the document
+# its rebuttal passage reads in. The engine refuses a v3 document by name, so a
+# bundle of the older shape is not half-read: nothing here reads one.
+ISSUES_SCHEMA = "review-issues-v4"
 
 # The one document the fixture paper was imported into. An import writes the
 # whole paper as `paper.md` and a supplement as `supplement-<name>.md`, and a
@@ -162,6 +162,32 @@ PAPER_PIECES = (
         "section": "Results",
         "text": "Table 1 totals the same cohorts at n = 46.",
     },
+    # The two pieces no converter produced. Engine 0.10 reads a manuscript
+    # against its page images before any reviewer sees it, and what the model
+    # writes there is carried on the map row as `source`: `ai` for words that
+    # are nowhere in the paper, a description of a figure among them, and
+    # `ai-reconstructed` for a line that is printed in the paper and that the
+    # converter misread, with the converter's own reading kept beside it. A
+    # fixture of ten clean paragraphs could not exercise a letter that has to
+    # tell the authors whose words they are being asked about.
+    {
+        "kind": "figure-description",
+        "section": "Results",
+        "page": 3,
+        "source": "ai",
+        "text": "Two bars for each cohort, with panel b unlabelled on the "
+        "vertical axis.",
+    },
+    {
+        "kind": "equation",
+        "section": "Results",
+        "page": 3,
+        "source": "ai-reconstructed",
+        "latex": "n_{total} = 48",
+        "number": "1",
+        "text": "",
+        "original": {"latex": "n total 4 8"},
+    },
 )
 
 # The lines the fixture findings quote, named rather than typed at each use so
@@ -179,6 +205,8 @@ CITATION_LINE = 13
 PANEL_LINE = 15
 ABSTRACT_TOTAL_LINE = 17
 TABLE_TOTAL_LINE = 19
+DESCRIPTION_LINE = 21
+EQUATION_LINE = 23
 
 # One line per piece above, in that order: where the fixture expects the engine
 # to have put it. The title is the first line of the file and is quoted by
@@ -194,6 +222,8 @@ PIECE_LINES = (
     PANEL_LINE,
     ABSTRACT_TOTAL_LINE,
     TABLE_TOTAL_LINE,
+    DESCRIPTION_LINE,
+    EQUATION_LINE,
 )
 
 # Each piece's own words against the line the fixture expects it on, which is
@@ -202,8 +232,20 @@ PIECE_LINES = (
 # claim the engine-backed half of the suite checks rather than a copy of the
 # engine's rendering. The title is left out: it is the one piece the engine
 # renders as something other than its own text, and nothing cites it.
+# The two pieces the engine writes as something other than their own words. A
+# figure description carries its prefix into the file, so a machine's account of
+# an image never reads as the manuscript's own prose, and an equation is written
+# as LaTeX between dollars with its number beside it. Both are claims about the
+# engine's rendering rather than copies of it: `_workspace` reads the file the
+# engine wrote and fails if the line does not hold these characters.
+RENDERED_TEXT = {
+    DESCRIPTION_LINE: "Figure description: " + str(PAPER_PIECES[-2]["text"]),
+    EQUATION_LINE: "$$ " + str(PAPER_PIECES[-1]["latex"])
+    + " \\tag{" + str(PAPER_PIECES[-1]["number"]) + "} $$",
+}
+
 PIECE_TEXT = {
-    line: str(piece["text"])
+    line: RENDERED_TEXT.get(line, str(piece["text"]))
     for line, piece in zip(PIECE_LINES[1:], PAPER_PIECES[1:], strict=True)
 }
 
@@ -295,8 +337,12 @@ LEDGER = [
         "track": "figures-tables",
         "basis": "two-quotes",
         "document": MAIN_DOCUMENT,
-        "line": PANEL_LINE,
-        "end_line": PANEL_LINE,
+        # Read on the line a model wrote. A reviewer who cannot see the figure
+        # reads the description under it, so a finding about a panel is the one
+        # a letter is most likely to raise against words no author wrote, and
+        # the letter has to say so before an author answers it.
+        "line": DESCRIPTION_LINE,
+        "end_line": DESCRIPTION_LINE,
     },
     {
         "severity": "minor",
@@ -358,8 +404,8 @@ ISSUES = [
                 # its own sentence, which the engine matches and records as the
                 # quote beside the words it marked. The letter has to show both
                 # and say which is which.
-                **_cited(PANEL_LINE, "panel b", quote="Panel b"),
-                "evidence_lines": [PANEL_LINE],
+                **_cited(DESCRIPTION_LINE, "panel b", quote="Panel b"),
+                "evidence_lines": [DESCRIPTION_LINE],
                 "fingerprint": "9" * 64,
             },
         ],
@@ -367,6 +413,7 @@ ISSUES = [
         # engine publishes the number and not the slot names, so this is an int
         # on every row, zero included.
         "raised_by": 2,
+        "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": None,
@@ -401,6 +448,11 @@ ISSUES = [
             },
         ],
         "raised_by": 1,
+        # Null for the paper itself. The engine names a document here only
+        # where the passage answering an issue is in a supplement, and the
+        # fixture manuscript is one document, so a name here would claim a file
+        # the review never read.
+        "rebuttal_document": None,
         "rebuttal_line": APPENDIX_LINE,
         "rebuttal_quote": "the interval is reported in the appendix",
         "prior_id": None,
@@ -437,6 +489,7 @@ ISSUES = [
             },
         ],
         "raised_by": 1,
+        "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": None,
@@ -471,6 +524,7 @@ ISSUES = [
             },
         ],
         "raised_by": 1,
+        "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": None,
@@ -490,6 +544,7 @@ ISSUES = [
         "statement": "The previous round could not tell which assay the counts came from.",
         "members": [],
         "raised_by": 0,
+        "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": "i05",
@@ -530,6 +585,7 @@ ISSUES = [
         "statement": "The previous round asked for the per-well counts behind figure 2.",
         "members": [],
         "raised_by": 0,
+        "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
         "prior_id": "i06",
@@ -564,6 +620,16 @@ ISSUES = [
 # bound to, through the engine's own reader; here it is derived from the pieces
 # the fixture manuscript is written from, so the letter's marking can be checked
 # with no engine installed.
+#
+# A citation carries where its line came from as well as what it says, because
+# the letter has to tell an author quoting a model's description of a figure
+# apart from one quoting the paper. That is a field of the map row the engine
+# wrote, read back with the line.
+PIECE_SOURCE = {
+    DESCRIPTION_LINE: {"source": "ai", "page": 3, "kind": "figure-description"},
+    EQUATION_LINE: {"source": "ai-reconstructed", "page": 3, "kind": "equation"},
+}
+
 CITATIONS = {
     member["finding_uid"]: {
         "document": member["document"],
@@ -573,6 +639,7 @@ CITATIONS = {
         "end": member["end"],
         "line_text": PIECE_TEXT[member["line"]],
         "anchor_text": member["anchor_text"],
+        **PIECE_SOURCE.get(member["line"], {"source": "text"}),
     }
     for issue in ISSUES
     for member in issue["members"]
@@ -639,6 +706,7 @@ PRIOR_ISSUES_DOCUMENT = {
                 },
             ],
             "raised_by": 1,
+            "rebuttal_document": None,
             "rebuttal_line": None,
             "rebuttal_quote": None,
             "prior_id": None,
@@ -673,6 +741,7 @@ PRIOR_ISSUES_DOCUMENT = {
                 },
             ],
             "raised_by": 1,
+            "rebuttal_document": None,
             "rebuttal_line": None,
             "rebuttal_quote": None,
             "prior_id": None,
@@ -1582,6 +1651,7 @@ def _workspace(
     paper_id: str = "paper-abc",
     pieces: list | None = None,
     source_sha256: str = "b" * 64,
+    read: dict | None = None,
 ) -> Path:
     """The folder the engine's import command writes, as publish needs it.
 
@@ -1597,14 +1667,20 @@ def _workspace(
     paper is the paper's own text rather than this machine's, and a check of the
     allowance has to be able to say what the paper said.
 
-    Two things are asked of this fixture that an import cannot be asked for, and
-    both are done to the manifest after the call, which is safe because the
+    Three things are asked of this fixture that an import cannot be asked for,
+    and they are done to the manifest after the call, which is safe because the
     manifest is the one file not digested in its own `files` map:
 
     * a workspace carrying no `paper_id` at all, which no import writes, since
       the engine derives one from the text when it is given none;
     * `source.sha256`, which is passed through rather than patched: the digest of
-      a PDF nobody has, so the run binding has something to agree with.
+      a PDF nobody has, so the run binding has something to agree with;
+    * `read`, an account of the Read stage. `write_manuscript` always records
+      `read: false`, because reading a manuscript means a model looking at the
+      page images and no model runs in this suite. A caller that passes one is
+      asking what a bundle publishes about a manuscript a model read, and the
+      answer is written into the manifest here rather than earned, which is why
+      the pages it names are not in the fixture PDF and never could be.
     """
     why = "the fixture manuscript cannot be written"
     write_manuscript = local_review.engine_public("write_manuscript", why)
@@ -1643,11 +1719,17 @@ def _workspace(
                 f"the engine rendered line {number} as {written[number - 1]!r} and "
                 f"this fixture counts its citations' offsets in {text!r}"
             )
-    if not paper_id:
-        (workspace / "manifest.json").write_text(
-            json.dumps({k: v for k, v in manifest.items() if k != "paper_id"}),
-            encoding="utf-8",
-        )
+    patched = {k: v for k, v in manifest.items() if k != "paper_id" or paper_id}
+    if read is not None:
+        patched["ai_read"] = read
+        pages = [row["page"] for row in read.get("lost_pages") or [] if row.get("page")]
+        if pages:
+            # Where the import itself records a page it got nothing from, beside
+            # the reader's own account of transcribing it. The two are written
+            # separately by the engine and a bundle publishes both.
+            patched["known_gaps"] = dict(patched.get("known_gaps") or {}, converter_pages=pages)
+    if patched != manifest:
+        (workspace / "manifest.json").write_text(json.dumps(patched), encoding="utf-8")
     return workspace
 
 
@@ -1940,7 +2022,16 @@ def _build_arguments(**overrides) -> dict:
         submitter="",
         submitter_is_author="",
         baseline_eligible=False,
-        ingest={"format": "markdown", "tool": "peerreviewagents import_paper"},
+        # What `ingest_record` reads off an imported workspace, in the shape a
+        # published record has to carry. Typed here because this builds a record
+        # with no workspace behind it. `check_a_bundle_says_which_lines_a_model
+        # _wrote` publishes for real off a folder the engine wrote, and that is
+        # what keeps this shape honest rather than merely passing the schema.
+        ingest=dict(
+            INGEST_READ,
+            format="markdown",
+            tool="peerreviewagents import_paper",
+        ),
         transport=_run_transport(),
         review_id="docs/reviews/2026/fixture/v1/r1",
         publishing=True,
@@ -2159,13 +2250,58 @@ def check_the_letter_marks_a_quote_in_the_line_it_reads_on() -> None:
     # The reviewer's quotation and the manuscript's own characters, told apart
     # where the two differ.
     assert "> Panel b" in letter, "the reviewer's own quotation was not printed"
-    panel = PIECE_TEXT[PANEL_LINE]
+    panel = PIECE_TEXT[DESCRIPTION_LINE]
     column = panel.index("panel b")
     assert f"  {' ' * column}{'^' * len('panel b')}" in letter, (
         f"a quote the reviewer wrote differently was not marked: {letter}"
     )
     assert "The marked characters are the manuscript's own" in letter, (
         f"the letter marks characters it never says are the paper's: {letter}"
+    )
+
+    # That quote reads on a line a model wrote, and the letter has to say so.
+    # A figure description is an account of an image and appears nowhere in the
+    # paper, so an author told to answer a finding against it is being asked
+    # about words they never wrote, and the answer to that is not a revision.
+    assert "These are not the authors' words" in letter, (
+        f"a quote from a line a model wrote is printed as the paper's: {letter}"
+    )
+    assert "page 3 of the original" in letter, (
+        f"the page the model read that line off was dropped: {letter}"
+    )
+
+    # The other thing a model writes, for the same reason and with a different
+    # answer: a line that is printed in the paper and that the converter
+    # misread, which the model rewrote from the page image. The authors' own
+    # line, in a model's transcription of it.
+    repaired = local_review._written_by_a_model(
+        {"source": "ai-reconstructed", "page": 3}
+    )
+    assert any("the converter misread" in row for row in repaired), (
+        f"a repaired line is not told apart from one the authors never wrote: {repaired}"
+    )
+    assert local_review._written_by_a_model({"source": "text", "page": 3}) == [], (
+        "a line of the converter's own text was reported as a model's"
+    )
+    unknown = local_review._written_by_a_model({"source": "ai-translated"})
+    assert any("`ai-translated`" in row for row in unknown), (
+        f"a source this release does not know was passed over in silence: {unknown}"
+    )
+
+    # The passage answering an issue can be in a supplement, and a line number
+    # with no file beside it sends the authors to the wrong file.
+    supplement = dict(
+        READING,
+        issues=[dict(ISSUES[1], rebuttal_document="supplement-methods.md")],
+    )
+    elsewhere = local_review.render_decision_letter(
+        PAPER, supplement, prov, citations=CITATIONS
+    )
+    assert "in supplement-methods.md" in elsewhere, (
+        f"a rebuttal quoted from a supplement is reported as the paper's: {elsewhere}"
+    )
+    assert "in supplement-methods.md" not in letter, (
+        "a rebuttal read in the paper itself names a second file"
     )
 
     # A citation the engine placed nowhere, and a letter rendered with no lines
@@ -5373,6 +5509,173 @@ def check_a_written_bundle_carries_no_local_path() -> None:
             )
 
 
+# The account of the Read stage this suite publishes against, written into the
+# manifest by hand. No model ran: engine 0.10's reader looks at the page images
+# of a real paper, and nothing in this repository calls a model. What is being
+# checked is what a bundle says about a manuscript a model read, which is a
+# property of the publish path and not of the reader.
+READER_ACCOUNT = {
+    "read": True,
+    "reader_model": OPUS,
+    "reader_slot": "reader",
+    "attempt": 1,
+    "pages": 4,
+    "pages_viewed": 4,
+    "actions": {"repaired": 1, "confirmed": 6, "merged": 0, "described": 1, "added": 2},
+    "tool_calls": 11,
+    "lost_pages": [{"page": 4, "words": 0, "rotation": 0, "added": ["p-21", "p-23"]}],
+}
+
+# The same account in the shape a published record carries it, for the checks
+# that build a record with no workspace behind them. `ingest_record` reads this
+# off the folder the engine wrote, and `check_a_bundle_says_which_lines_a_model
+# _wrote` publishes for real and compares the two, so what is typed here cannot
+# quietly become a shape the publish path does not produce. The one value with
+# nothing behind it is the base schema name, which that same check reads off
+# the installed engine instead.
+INGEST_READ = {
+    "base_schema_version": "paper-base-v2",
+    "ai_read": {
+        **{name: value for name, value in READER_ACCOUNT.items() if name != "lost_pages"},
+        "lost_pages": [
+            {"page": page["page"], "pieces": len(page["added"]), "words": page["words"]}
+            for page in READER_ACCOUNT["lost_pages"]
+        ],
+    },
+    "pieces_per_source": {
+        "text": len(PAPER_PIECES) - len(PIECE_SOURCE),
+        **{
+            source: sum(1 for row in PIECE_SOURCE.values() if row["source"] == source)
+            for source in sorted({row["source"] for row in PIECE_SOURCE.values()})
+        },
+    },
+    "source_values": {
+        "text": "the converter's own text layer",
+        "ai": "written by a model reading the page image",
+        "ai-reconstructed": "a model's repair of a line the converter misread",
+    },
+    "model_written": [
+        {
+            "document": MAIN_DOCUMENT,
+            "lines": [line, line],
+            "kind": row["kind"],
+            "source": row["source"],
+            "page": row["page"],
+        }
+        for line, row in sorted(PIECE_SOURCE.items())
+    ],
+}
+
+
+def check_a_bundle_says_which_lines_a_model_wrote() -> None:
+    """A review of a read manuscript has to say what the model wrote into it.
+
+    Engine 0.10 puts a model between the converter and the panel. It rewrites
+    an equation the converter mangled, writes a description under every figure
+    and transcribes a page the converter returned nothing from, and only then is
+    the manuscript sealed. Every one of those lines is quotable, cited by line
+    number like any other and printed in the letter in the same type.
+
+    So a bundle that published only the character count and a digest would be
+    publishing a review of a text it did not describe. Two facts are owed to
+    anyone reading it: which lines of the manuscript a model wrote, which is
+    what makes a quotation checkable against the list, and which pages of the
+    paper exist in the review only because a model read them off an image.
+    Both are published here from the import's own files.
+
+    The account of the stage is a whitelist of the engine's fields rather than
+    a copy of its object. A release that put a path in it would otherwise
+    publish this machine's directories, which is the one thing a bundle may
+    never carry, so the fixture puts a path there and the bundle is read back.
+    """
+    leaky = dict(READER_ACCOUNT, reader_log=f"{Path.home().resolve()}/runs/read.json")
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            run = _run_directory(Path(tmp) / "run")
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            prepared = _prepared(Path(tmp) / "prepared", destination)
+            workspace = _workspace(Path(tmp) / "workspace", read=leaky)
+
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = _publish(prepared, run, workspace, "--publish")
+            assert code == 0, f"this bundle should publish, got exit {code}: {out.getvalue()}"
+
+            record = json.loads((destination / "provenance.json").read_text(encoding="utf-8"))
+            ingest = record["ingest"]
+            assert ingest["base_schema_version"] == local_review.engine_public(
+                "BASE_SCHEMA_VERSION", "the base schema version cannot be read"
+            ), f"the shape of the imported manuscript was not published: {ingest}"
+
+            read = ingest["ai_read"]
+            assert read["read"] is True and read["reader_model"] == OPUS, (
+                f"the model that read the pages was not published: {read}"
+            )
+            assert read["pages_viewed"] == 4, f"what the reader looked at was dropped: {read}"
+            assert [row["page"] for row in read["lost_pages"]] == [4], (
+                f"a page the converter returned nothing from was not published: {read}"
+            )
+            assert "reader_log" not in read, (
+                f"a field this release does not publish by name reached a bundle: {read}"
+            )
+
+            # The per-line facts, which are what a quotation can be checked
+            # against. The counts come from the import and the lines from the
+            # map it wrote over the file, and the two are published separately
+            # because a tally cannot say which line to look at.
+            assert ingest["pieces_per_source"]["ai"] == 1, (
+                f"the pieces a model wrote were not counted: {ingest['pieces_per_source']}"
+            )
+            assert ingest["pieces_per_source"]["ai-reconstructed"] == 1, (
+                f"a repaired piece was counted as the converter's: {ingest['pieces_per_source']}"
+            )
+            written = {row["lines"][0]: row for row in ingest["model_written"]}
+            assert sorted(written) == [DESCRIPTION_LINE, EQUATION_LINE], (
+                f"the lines a model wrote were not published: {ingest['model_written']}"
+            )
+            assert written[DESCRIPTION_LINE]["source"] == "ai", (
+                f"a description written from an image is not the converter's: {written}"
+            )
+            assert written[EQUATION_LINE]["source"] == "ai-reconstructed", (
+                f"a repaired equation is not reported as repaired: {written}"
+            )
+            assert written[EQUATION_LINE]["kind"] == "equation", (
+                f"what kind of piece a model wrote was dropped: {written}"
+            )
+
+            # And the same facts in the document a person reads, because a
+            # reader of the review is owed them in words rather than in a field
+            # of a JSON file nobody opens.
+            stats = (destination / "manuscript_stats.md").read_text(encoding="utf-8")
+            assert OPUS in stats, f"the statistics page does not name the reader: {stats}"
+            assert f"line {DESCRIPTION_LINE}" in stats and f"line {EQUATION_LINE}" in stats, (
+                f"the statistics page does not say which lines a model wrote: {stats}"
+            )
+            assert "Pages the converter returned no text from at all: 4" in stats, (
+                f"a page that reached the review only through a model is unnamed: {stats}"
+            )
+            assert local_review.bundle_local_path_leaks(destination) == [], (
+                "the account of the Read stage carried a path into the bundle"
+            )
+
+    # A manuscript nothing read says so as plainly, which is the shape every
+    # other check in this suite publishes: the equations in it are a converter's
+    # reading of a picture and no figure has a description behind it.
+    with tempfile.TemporaryDirectory() as tmp:
+        unread = _workspace(Path(tmp) / "workspace")
+        ingest = local_review.ingest_record(unread)
+        assert ingest["ai_read"]["read"] is False, (
+            f"a manuscript no model read was published as read: {ingest['ai_read']}"
+        )
+        assert ingest["ai_read"]["lost_pages"] == [], (
+            f"a workspace with no reader cannot name a lost page: {ingest['ai_read']}"
+        )
+        said = local_review.render_read_stage(ingest)
+        assert any("No model read the pages" in row for row in said), (
+            f"the statistics page is silent about a manuscript nothing read: {said}"
+        )
+
+
 def check_the_locked_engine_release_is_the_one_declared() -> None:
     """The lock has to name the engine release requirements.in asks for.
 
@@ -8109,8 +8412,20 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
         workspace = json.loads(
             (run / "manuscript" / "manifest.json").read_text(encoding="utf-8")
         )
-        assert workspace["schema_version"] == "paper-base-v1", (
+        # Read off the engine rather than typed, because the publish path reads
+        # it off the engine too: a release that stamped a new shape would
+        # otherwise be caught here by a name while the pipeline went on
+        # publishing against whatever the new shape turned out to be.
+        base_schema = local_review.engine_public(
+            "BASE_SCHEMA_VERSION", "the base schema version cannot be read"
+        )
+        assert workspace["schema_version"] == base_schema, (
             f"the imported manuscript is not the shape this release reads: {workspace}"
+        )
+        assert base_schema != "paper-base-v1", (
+            "paper-base-v1 carries no source on a map row and no account of the "
+            "Read stage, so a review published over it could not say which of "
+            "its lines a model wrote"
         )
         for name in (MAIN_DOCUMENT, "map.json"):
             assert (run / "manuscript" / name).is_file(), (
@@ -8333,6 +8648,10 @@ ENGINE_BACKED = (
     (
         check_a_written_bundle_carries_no_local_path,
         "a published bundle, read back off disk, names no local path",
+    ),
+    (
+        check_a_bundle_says_which_lines_a_model_wrote,
+        "a bundle says which lines a model wrote and which pages only it read",
     ),
     (
         check_a_review_of_a_detection_paper_publishes,

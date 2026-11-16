@@ -543,13 +543,27 @@ the engine finds the quote, records the line it reads on, and quarantines a
 quote it cannot place or places twice, so a finding cannot cite a passage the
 manuscript does not contain.
 
+The import no longer hands that text straight to the panel. It writes a draft
+and holds it there until the Read stage has been through it: a reader slot looks
+at the page images, repairs an equation or a table the converter mangled,
+describes every figure, transcribes a page the converter returned no text from
+at all, and only then seals the folder. No reviewer may claim a slot before the
+seal. Each row of `map.json` says where its words came from: `text` for the
+converter's own layer, `ai-reconstructed` for a line the converter printed and a
+model repaired, with the converter's reading kept beside it, and `ai` for words
+no converter produced.
+
 `publish` measures that workspace with no model and records what the reviewer
 was handed: the character count, a hash of the converted text, how many lines
-and how many mapped pieces it holds, and the importer that produced them. Those
-numbers go into
-`manuscript_stats.md` and into `provenance.json` under `ingest`. They reach no
-prompt, because an agent handed "8.4 boosters per 1000 words" writes a finding
-about it.
+and how many mapped pieces it holds, the importer that produced them, and the
+import's own account of the Read stage. That account is the reader's model and
+how many pages it viewed, how many pieces came from each source, the lines a
+model wrote rather than the converter, and the pages that reached the review
+only because a model read them off the image. Those numbers go into
+`manuscript_stats.md` and into `provenance.json` under `ingest`, which is where
+a reader of a published review finds out whether a quoted line is the authors'
+own words. They reach no prompt, because an agent handed "8.4 boosters per 1000
+words" writes a finding about it.
 
 ### Retired: the four-source hierarchy
 

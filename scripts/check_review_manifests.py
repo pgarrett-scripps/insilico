@@ -27,10 +27,16 @@ def verify(manifest_path: Path) -> list[str]:
     if manifest.get("schema_version") != 1 or not isinstance(expected, dict):
         return [f"{label}: unsupported or malformed manifest"]
 
+    # Every file under the bundle but the manifest itself, named the way the
+    # manifest names it: a path relative to the bundle. Published bundles are
+    # flat, so this reads the same files the old listing of the top level did.
+    # Walking is what keeps a file written into a subfolder from being the one
+    # artifact no digest covers, which is also why the manifest excludes itself
+    # by path rather than by name.
     actual_names = {
-        path.name
-        for path in bundle.iterdir()
-        if path.is_file() and path.name != manifest_path.name
+        path.relative_to(bundle).as_posix()
+        for path in bundle.rglob("*")
+        if path.is_file() and path != manifest_path
     }
     expected_names = set(expected)
     errors = [
