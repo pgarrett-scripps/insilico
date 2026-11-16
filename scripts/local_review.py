@@ -51,10 +51,11 @@ from typing import NamedTuple
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fetch_preprint import Preprint, download, resolve  # noqa: E402
-from review_paths import REPO, REVIEWS, ROUND_RECORD, RUNS  # noqa: E402
+from review_paths import REPO, REVIEW_ISSUES, REVIEWS, ROUND_RECORD, RUNS  # noqa: E402
 from review_plan import (  # noqa: E402
     CommandError,
     draft_number,
+    existing_bundles,
     find_paper_dir,
     paper_slug,
     plan_review,
@@ -108,6 +109,24 @@ UNREAD_STATEMENT = (
 
 SEVERITY_ORDER = {"major": 0, "moderate": 1, "minor": 2}
 REQUIRED_SEVERITIES = ("major", "moderate")
+SUGGESTION_SEVERITY = "minor"
+# The two statuses that close a prior round's issue out. Such an issue is
+# reported against the round that raised it, carries no rank, and is not one of
+# the changes the authors have to answer now, so it is neither a required
+# change nor a suggestion here.
+#
+# `resolved` is the editor agent's own ruling that a prior issue was fixed, and
+# `unverified` is a prior issue nobody raised again and nobody ruled fixed,
+# which is still open. The two are never printed as one number and `unverified`
+# is never printed as a fix: a finding can disappear from text nobody touched,
+# so nothing being filed this round is not evidence of anything.
+RESOLVED_STATUS = "resolved"
+UNVERIFIED_STATUS = "unverified"
+CLOSED_STATUSES = (RESOLVED_STATUS, UNVERIFIED_STATUS)
+# What an issue id looks like, so a published record can be checked against the
+# engine's own minting rule rather than trusted. The engine mints `i01`, `i02`
+# and so on, and a published request id is that id unchanged.
+ISSUE_ID_PATTERN = re.compile(r"^i\d{2,}$")
 
 # The two states a run can finish in, which are the engine's own
 # `COMPLETE_STATUSES`. `complete` is a review with findings in it, and
@@ -232,7 +251,7 @@ def engine_module(why: str):
     except ImportError as exc:
         raise CommandError(
             f"{ENGINE_PACKAGE} is not importable, so {why}. Install "
-            "PeerReviewAgents 0.9.0 or newer, or run this with the virtual "
+            "PeerReviewAgents 0.10.0 or newer, or run this with the virtual "
             "environment the review ran in."
         ) from exc
 
@@ -252,7 +271,7 @@ def engine_public(name: str, why: str):
     except AttributeError as exc:
         raise CommandError(
             f"{ENGINE_PACKAGE}.{name} is not importable, so {why}. Install "
-            "PeerReviewAgents 0.9.0 or newer, or run this with the virtual "
+            "PeerReviewAgents 0.10.0 or newer, or run this with the virtual "
             "environment the review ran in."
         ) from exc
 
@@ -756,18 +775,114 @@ def startup_stamp(reading: dict) -> str | None:
     return str(maybe_json(Path(str(stamped))).get("at") or "") or None
 
 
+def issues_document(reading: dict) -> dict:
+    """The two facts about `issues.json` that belong to the file, not the review.
+
+    `read_run` answers everything about the review itself, and a bundle needs
+    two things that are properties of the document instead: the schema it was
+    stamped with, and every issue id this manuscript has spent. The ids matter
+    because the next round is handed this bundle's own `issues.json` as its
+    prior round, and a prior file that cannot account for the ids already used
+    lets round two mint an id round one had already given out.
+
+    The file is located through `reading['reports']`, the engine's own map of
+    what is on disk, the same way `startup_stamp` locates `startup.json`.
+    Nothing else is read out of it. The status rule, the issues and the
+    findings all stay the engine's reading, so there is still one reader.
+
+    The stamp is checked rather than copied. A document written under a schema
+    this release does not publish may mean something else by the same field
+    names, and a letter rendered from a half-understood file is worse than no
+    letter, so an unknown stamp is a refusal here as it is in the engine.
+    """
+    why = "an issues document cannot be checked"
+    path = _dict(reading.get("reports")).get("issues")
+    document = maybe_json(Path(str(path))) if path else {}
+    if not document:
+        return {}
+    stamp = str(document.get("schema_version") or "")
+    known = str(engine_public("ISSUES_SCHEMA_VERSION", why) or "")
+    if stamp != known:
+        raise CommandError(
+            f"The run's issues.json is stamped {stamp or 'with nothing'} and this "
+            f"pipeline publishes {known}. The engine that wrote the run and the "
+            "engine installed here are different releases. Install the release "
+            "the run was written by, or rerun the review."
+        )
+    return {
+        "schema_version": stamp,
+        "issue_ids_used": [str(i) for i in _list(document.get("issue_ids_used"))],
+    }
+
+
+def assert_issue_vocabulary() -> None:
+    """Check this file's copies of the issue words against the engine's own.
+
+    The ordering rules below are a line each and they are written here rather
+    than imported: `peerreviewagents.issues` is a module inside the engine, and
+    the surface the engine supports is the package, so importing it would be
+    reaching into internals that are free to move between releases.
+
+    What that costs is the risk of the words drifting apart, so the words are
+    checked instead of trusted. A release that renamed a severity or a status
+    would otherwise file every issue as a suggestion, or publish a prior issue
+    nobody ruled on as one of this round's required changes, and both would be
+    silent. This refuses instead, naming the word that moved.
+    """
+    why = "the issue vocabularies cannot be checked"
+    # The engine publishes these as tuples, and `_list` is for values read out
+    # of JSON, where a tuple cannot appear. Reading them with it found no words
+    # at all and refused every run, so the sequence is taken as it comes and a
+    # value that is not one is reported as unreadable below.
+    def words(name: str) -> list[str]:
+        value = engine_public(name, why)
+        if isinstance(value, (list, tuple)):
+            return [str(word) for word in value]
+        return []
+
+    severities = words("ISSUE_SEVERITIES")
+    statuses = words("ISSUE_STATUSES")
+    missing = [w for w in (*REQUIRED_SEVERITIES, SUGGESTION_SEVERITY) if w not in severities]
+    missing += [w for w in CLOSED_STATUSES if w not in statuses]
+    if missing:
+        raise CommandError(
+            "This pipeline sorts issues by words engine "
+            f"{ENGINE_PACKAGE} no longer uses: {', '.join(missing)}. Its "
+            f"severities are {', '.join(severities) or 'unreadable'} and its "
+            f"statuses are {', '.join(statuses) or 'unreadable'}. Update the "
+            "publish path before publishing a run from this release."
+        )
+
+
 def review_package(reading: dict) -> dict:
     """The editor's review, in the shape the documents are rendered from.
 
-    `read_run` returns the editor's placement and judgement as separate keys,
-    de-duplicated per `finding_uid` and with a finding the editor put in both
-    lists counted once. This gathers them back into one record, which is what
-    the bundle publishes beside the documents so a reader can check a quotation
-    against the structured finding it came from.
+    Engine 0.10.0 reports one review rather than a letter and an appendix: the
+    issues the editor raised, each carrying the findings it was raised from.
+    Nothing is placed out of sight any more, so there are no two lists to
+    gather. The major and moderate issues in `rank` order are the required
+    changes, the minor ones are the suggestions, and a prior issue this round
+    closed out is reported against the round that raised it.
+
+    The findings ledger is carried beside the issues because an issue member
+    holds the evidence fields and not the reviewer's own words: `comment`,
+    `basis_reason` and `counterevidence` are on the finding, and the letter
+    joins them back on by `finding_uid`.
+
+    `schema_version` and `issue_ids_used` come from the document rather than the
+    reading, and they are published because this record is what the next round
+    is handed as its prior round.
     """
+    document = issues_document(reading)
     return {
-        "findings": _list(reading.get("body")),
-        "appendix": _list(reading.get("appendix")),
+        "schema_version": document.get("schema_version"),
+        "issues_source": reading.get("issues_source"),
+        "issue_ids_used": [str(i) for i in _list(document.get("issue_ids_used"))],
+        "issues": [_dict(issue) for issue in _list(reading.get("issues"))],
+        "prior_round": _dict(reading.get("prior_round")),
+        # The ledger, de-duplicated by the engine, in full. Every issue member
+        # names a row in it.
+        "findings": [_dict(finding) for finding in _list(reading.get("findings"))],
         "summary": reading.get("summary"),
         "verdict": _dict(reading.get("verdict")),
         "limitations": _list(reading.get("limitations")),
@@ -1033,27 +1148,130 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
     }
 
 
-def sorted_findings(package: dict) -> list[dict]:
-    """The findings the editor put in the body of the letter, worst first."""
-    findings = [f for f in _list(package.get("findings")) if isinstance(f, dict)]
-    return sorted(findings, key=lambda f: SEVERITY_ORDER.get(str(f.get("severity")), 9))
+def issue_rank(issue: dict) -> int:
+    """One issue's place in the editor's order, or last for a row without one.
 
-
-def appendix_findings(package: dict) -> list[dict]:
-    """The findings the editor kept but did not place in the letter's body.
-
-    The plugin caps the body at eight. Everything else a reviewer raised and the
-    editor accepted goes to the appendix rather than being dropped, so the
-    bundle publishes both and says which is which.
+    The engine ranks the issues a round raised from 1, and leaves `rank` null on
+    a prior issue it closed out, which is ranked against the round it came from
+    and carries `prior_rank` instead.
     """
-    findings = [f for f in _list(package.get("appendix")) if isinstance(f, dict)]
-    return sorted(findings, key=lambda f: SEVERITY_ORDER.get(str(f.get("severity")), 9))
+    rank = _dict(issue).get("rank")
+    return rank if isinstance(rank, int) else 10 ** 6
 
 
-def severity_counts(findings: list[dict]) -> dict[str, int]:
+def prior_rank(issue: dict) -> int:
+    """Where a closed-out issue sat in the round that raised it."""
+    rank = _dict(issue).get("prior_rank")
+    return rank if isinstance(rank, int) else 10 ** 6
+
+
+def all_issues(package: dict) -> list[dict]:
+    """Every issue row the run reported, in the order the document holds them."""
+    return [i for i in _list(package.get("issues")) if isinstance(i, dict)]
+
+
+def live_issues(package: dict) -> list[dict]:
+    """Every issue this round raised, in the editor's rank order.
+
+    A prior issue this round closed out is not one of them: it is reported
+    against the round that raised it and the authors have nothing to answer for
+    it now.
+    """
+    live = [i for i in all_issues(package) if str(i.get("status")) not in CLOSED_STATUSES]
+    return sorted(live, key=issue_rank)
+
+
+def required_issues(package: dict) -> list[dict]:
+    """The required changes: the major and moderate issues, in rank order.
+
+    This is the whole list. Nothing is capped and nothing is held back, which is
+    why there is no appendix any more.
+    """
+    return [i for i in live_issues(package)
+            if str(i.get("severity")) in REQUIRED_SEVERITIES]
+
+
+def suggestion_issues(package: dict) -> list[dict]:
+    """The suggestions: the minor issues, in rank order."""
+    return [i for i in live_issues(package)
+            if str(i.get("severity")) == SUGGESTION_SEVERITY]
+
+
+def resolved_issues(package: dict) -> list[dict]:
+    """The prior issues the editor agent ruled fixed, in their prior order."""
+    return sorted((i for i in all_issues(package)
+                   if str(i.get("status")) == RESOLVED_STATUS), key=prior_rank)
+
+
+def unverified_issues(package: dict) -> list[dict]:
+    """The prior issues nobody raised again and nobody ruled fixed.
+
+    Still open. The status exists precisely because it is not a fix.
+    """
+    return sorted((i for i in all_issues(package)
+                   if str(i.get("status")) == UNVERIFIED_STATUS), key=prior_rank)
+
+
+def closed_issues(package: dict) -> list[dict]:
+    """Every prior issue closed out this round, the ruled ones first."""
+    return resolved_issues(package) + unverified_issues(package)
+
+
+def issue_members(issue: dict) -> list[dict]:
+    """The findings one issue is raised from, as the issue keeps them."""
+    return [m for m in _list(_dict(issue).get("members")) if isinstance(m, dict)]
+
+
+def finding_index(package: dict) -> dict[str, dict]:
+    """The ledger by `finding_uid`, for joining a member back to its finding.
+
+    A member carries the evidence fields and not the reviewer's own prose. The
+    comment, what the basis rests on and the strongest counterpoint are on the
+    finding in the ledger, and this is how the letter gets them back.
+    """
+    index: dict[str, dict] = {}
+    for finding in _list(package.get("findings")):
+        uid = str(_dict(finding).get("finding_uid") or "")
+        if uid:
+            index[uid] = _dict(finding)
+    return index
+
+
+def issue_finding(package: dict, member: dict) -> dict:
+    """The ledger row behind one member, or the member itself as a fallback.
+
+    A run whose ledger file is gone is read by the engine off the issue members
+    themselves, so the member is all there is, and rendering from it loses the
+    prose rather than the finding.
+    """
+    uid = str(_dict(member).get("finding_uid") or "")
+    return finding_index(package).get(uid) or _dict(member)
+
+
+def issue_slots(issue: dict) -> list[str]:
+    """The reviewer slots that raised one issue, in order and without repeats."""
+    slots: list[str] = []
+    for member in issue_members(issue):
+        slot = str(member.get("slot") or "").strip()
+        if slot and slot not in slots:
+            slots.append(slot)
+    return slots
+
+
+def issue_is_escalated(issue: dict) -> bool:
+    """Whether any reviewer escalated a finding this issue is raised from."""
+    return any(member.get("escalate") for member in issue_members(issue))
+
+
+def escalated_issues(issues: list[dict]) -> list[dict]:
+    return [i for i in issues if issue_is_escalated(i)]
+
+
+def severity_counts(rows: list[dict]) -> dict[str, int]:
+    """Major, moderate and minor over issues or findings, which share the word."""
     counts = {"major": 0, "moderate": 0, "minor": 0}
-    for finding in findings:
-        severity = str(finding.get("severity") or "")
+    for row in rows:
+        severity = str(_dict(row).get("severity") or "")
         if severity in counts:
             counts[severity] += 1
     return counts
@@ -1342,14 +1560,38 @@ def no_findings_note(run: dict) -> str:
     )
 
 
-def render_summary(
-    preprint: Preprint, package: dict, provenance: dict, findings: list[dict]
-) -> str:
-    counts = severity_counts(findings)
+def _issue_tags(issue: dict) -> str:
+    """How a reader should weigh one issue, in the engine's own vocabulary.
+
+    The id first, because it is the id the authors answer and the id this issue
+    keeps in every later round. Then the severity, the category the editor filed
+    it under, how many reviewer slots raised it, and its standing against the
+    prior round.
+    """
+    parts = [f"`{str(issue.get('id') or 'no id')}`",
+             str(issue.get("severity") or "unstated")]
+    category = str(issue.get("category") or "")
+    if category:
+        parts.append(category)
+    raised = issue.get("raised_by")
+    if isinstance(raised, int) and raised:
+        parts.append(f"raised by {raised} reader{'' if raised == 1 else 's'}")
+    status = str(issue.get("status") or "")
+    if status:
+        parts.append(status)
+    if issue_is_escalated(issue):
+        parts.append("escalated")
+    return ", ".join(parts)
+
+
+def render_summary(preprint: Preprint, package: dict, provenance: dict) -> str:
     generator = provenance["generator"]
     run = generator["run"]
-    appendix = appendix_findings(package)
-    escalations = escalated(findings) + escalated(appendix)
+    required = required_issues(package)
+    suggestions = suggestion_issues(package)
+    counts = severity_counts(required)
+    escalations = escalated_issues([*required, *suggestions])
+    closed = closed_issues(package)
     lines = [
         f"# Review Summary: {preprint.title or 'Untitled submission'}",
         "",
@@ -1358,9 +1600,9 @@ def render_summary(
         f"**Generated by:** {generator['engine']['name']} {generator['engine']['version']}, "
         f"{generator['plugin']['workflow_version']}, run locally on the "
         f"{run.get('arm') or 'unrecorded'} arm",
-        f"**Findings in this letter:** {len(findings)} "
-        f"({counts['major']} major, {counts['moderate']} moderate, {counts['minor']} minor)"
-        + (f", with {len(appendix)} more in the appendix" if appendix else ""),
+        f"**Required changes:** {len(required)} "
+        f"({counts['major']} major, {counts['moderate']} moderate)",
+        f"**Suggestions:** {len(suggestions)}",
         f"**Escalated by a reviewer:** {len(escalations)}",
         "",
         "## How this review was produced",
@@ -1373,7 +1615,7 @@ def render_summary(
     tracks = _dict(run.get("findings_by_track"))
     if tracks:
         lines += [
-            "Findings raised per track, before the editor pooled them: "
+            "Findings raised per track, before the editor pooled them into issues: "
             + ", ".join(f"{track} {count}" for track, count in sorted(tracks.items()))
             + ".",
             "",
@@ -1382,26 +1624,30 @@ def render_summary(
     if summary:
         lines += ["## The editor agent's summary of the review", "", summary, ""]
     lines += verdict_section(package.get("verdict"))
-    if not findings and not appendix:
+    if not required and not suggestions:
         lines += ["## What the review found", "", no_findings_note(run), ""]
-    if findings:
-        lines += ["## Findings in the letter", ""]
-        for number, finding in enumerate(findings, 1):
-            title = str(finding.get("title") or "Untitled finding").strip()
-            lines.append(f"{number}. **{title}** ({_tags(finding)})")
+    if required:
+        lines += ["## Required changes", ""]
+        for number, issue in enumerate(required, 1):
+            name = str(issue.get("name") or "Unnamed issue").strip()
+            lines.append(f"{number}. **{name}** ({_issue_tags(issue)})")
         lines.append("")
-    if appendix:
+    if suggestions:
+        lines += ["## Suggestions", ""]
+        for number, issue in enumerate(suggestions, 1):
+            name = str(issue.get("name") or "Unnamed issue").strip()
+            lines.append(f"{number}. **{name}** ({_issue_tags(issue)})")
+        lines.append("")
+    if closed:
         lines += [
-            "## Findings in the appendix",
+            "## Carried over from the previous round",
             "",
-            "Accepted by the editor agent and kept out of the letter's body, "
-            "which the workflow caps at a fixed number of findings.",
+            f"{len(resolved_issues(package))} ruled fixed and "
+            f"{len(unverified_issues(package))} left unverified, which is still "
+            "open. The decision letter says what each one was and what the "
+            "editor agent said about it.",
             "",
         ]
-        for number, finding in enumerate(appendix, 1):
-            title = str(finding.get("title") or "Untitled finding").strip()
-            lines.append(f"{number}. **{title}** ({_tags(finding)})")
-        lines.append("")
     limitations = [str(v).strip() for v in _list(package.get("limitations")) if str(v).strip()]
     if limitations:
         lines += ["## Stated limitations of this review", ""]
@@ -1410,12 +1656,9 @@ def render_summary(
     return "\n".join(lines)
 
 
-def render_decision_letter(
-    preprint: Preprint, package: dict, provenance: dict, findings: list[dict]
-) -> str:
-    required = [f for f in findings if str(f.get("severity")) in REQUIRED_SEVERITIES]
-    optional = [f for f in findings if str(f.get("severity")) == "minor"]
-    appendix = appendix_findings(package)
+def render_decision_letter(preprint: Preprint, package: dict, provenance: dict) -> str:
+    required = required_issues(package)
+    optional = suggestion_issues(package)
     attestation = provenance["generator"]["attestation"]
     if attestation.get("human_reviewed_before_merge"):
         standing = (
@@ -1442,33 +1685,37 @@ def render_decision_letter(
     if summary:
         lines += ["## Assessment", "", summary, ""]
     if required:
-        lines += ["## Required changes", ""]
-        for number, finding in enumerate(required, 1):
-            lines += _letter_entry(f"R{number}", finding)
+        lines += [
+            "## Required changes",
+            "",
+            "Numbered in the editor agent's own order of priority. The id in "
+            "brackets is this item's name for the life of the manuscript: it is "
+            "the id the engine minted for it, and a later round reporting on "
+            "this item uses the same one.",
+            "",
+        ]
+        for number, issue in enumerate(required, 1):
+            lines += _issue_entry(f"{number}", issue, package)
     if optional:
-        lines += ["## Suggestions", ""]
-        for number, finding in enumerate(optional, 1):
-            lines += _letter_entry(f"S{number}", finding)
-    if not findings:
+        lines += [
+            "## Suggestions",
+            "",
+            "Worth doing, and not conditions of the decision.",
+            "",
+        ]
+        for number, issue in enumerate(optional, 1):
+            lines += _issue_entry(f"S{number}", issue, package)
+    if not required and not optional:
         lines += [
             "## Findings",
             "",
             no_findings_note(provenance["generator"]["run"]),
             "",
         ]
-    if appendix:
-        lines += [
-            "## Appendix",
-            "",
-            "Findings the editor agent accepted and left out of the body above. "
-            "They are not withdrawn, and they are listed in full here.",
-            "",
-        ]
-        for number, finding in enumerate(appendix, 1):
-            lines += _letter_entry(f"A{number}", finding)
+    lines += _prior_round_section(package)
     rulings = [r for r in _list(package.get("escalation_rulings")) if isinstance(r, dict)]
     if rulings:
-        by_uid = {str(f.get("finding_uid") or ""): f for f in [*findings, *appendix]}
+        index = finding_index(package)
         lines += [
             "## Rulings on escalated findings",
             "",
@@ -1479,7 +1726,7 @@ def render_decision_letter(
         ]
         for ruling in rulings:
             uid = str(ruling.get("finding_uid") or "")
-            title = str(_dict(by_uid.get(uid)).get("title") or "").strip()
+            title = str(_dict(index.get(uid)).get("title") or "").strip()
             lines += [f"### {title or uid or 'Unidentified finding'}", ""]
             if uid:
                 lines += [f"`{uid}`", ""]
@@ -1489,45 +1736,182 @@ def render_decision_letter(
     return "\n".join(lines)
 
 
-def _letter_entry(label: str, finding: dict) -> list[str]:
-    title = str(finding.get("title") or "Untitled finding").strip()
-    lines = [
-        f"### {label}. {title}",
-        "",
-        f"**Severity:** {str(finding.get('severity') or 'unstated')}  ",
-        f"**Raised by:** {str(finding.get('slot') or 'an unrecorded slot')} "
-        f"on track {str(finding.get('track') or 'unrecorded')}  ",
-        f"**Location:** {_location(finding)}",
-        "",
-    ]
-    if finding.get("escalate"):
+def _prior_round_section(package: dict) -> list[str]:
+    """What this round says about the round before it, and no more than that.
+
+    Two lists, never added together and never printed as one number. The
+    editor agent ruled the first fixed and said why, which is one model's
+    reading of this draft against the item, not an audit and not a rerun of
+    anything. The second it did not rule on at all: nobody raised the item
+    again and nobody ruled it fixed, so it is still open, and the quotes the
+    engine found still standing in the manuscript are printed with it.
+    """
+    resolved = resolved_issues(package)
+    unverified = unverified_issues(package)
+    if not resolved and not unverified:
+        return []
+    prior = _dict(package.get("prior_round"))
+    lines = ["## The previous round's items", ""]
+    carried = prior.get("issues")
+    if isinstance(carried, int) and carried:
         lines += [
-            "**The reviewer escalated this finding as bearing on the paper's "
-            "central claim.**",
+            f"This round was given the previous round's {carried} open item"
+            f"{'' if carried == 1 else 's'} and ruled on each one as follows.",
             "",
         ]
-    lines += basis_note(finding)
-    quote = str(finding.get("quote") or "").strip()
-    if quote:
-        lines += ["Manuscript passage:", "", f"> {quote}", ""]
-    comment = str(finding.get("comment") or "").strip()
-    if comment:
-        lines += [comment, ""]
-    replacement = str(finding.get("replacement") or "").strip()
-    if replacement:
-        lines += ["Suggested replacement:", "", f"> {replacement}", ""]
-    counter = str(finding.get("counterevidence") or "").strip()
-    if counter:
-        lines += [f"**Strongest counterpoint:** {counter}", ""]
-    reason = str(finding.get("editor_reason") or "").strip()
+    if resolved:
+        lines += [
+            "### Ruled fixed",
+            "",
+            "The editor agent read this draft against each item and ruled it "
+            "addressed, for the reason given. That is one editor agent's "
+            "reading of the text in front of it. Nothing was re-run, no "
+            "analysis was reproduced, and this is not an independent audit of "
+            "compliance.",
+            "",
+        ]
+        for issue in resolved:
+            lines += _closed_entry(issue)
+    if unverified:
+        lines += [
+            "### Left unverified, and still open",
+            "",
+            "No reviewer raised these again and the editor agent did not rule "
+            "them fixed. That is not a fix and it is not evidence of one: a "
+            "finding can disappear from text nobody touched. They stand as "
+            "open items and are carried into the next round.",
+            "",
+        ]
+        for issue in unverified:
+            lines += _closed_entry(issue)
+    return lines
+
+
+def _closed_entry(issue: dict) -> list[str]:
+    """One prior-round item, with the engine's own words for where it stands."""
+    name = str(issue.get("name") or "Unnamed issue").strip()
+    identifier = str(issue.get("id") or "")
+    lines = [f"### {identifier or 'no id'}. {name}" if identifier else f"### {name}", ""]
+    rank = issue.get("prior_rank")
+    standing = [str(issue.get("status") or "unstated")]
+    if isinstance(rank, int):
+        standing.append(f"item {rank} of the previous round")
+    severity = str(issue.get("severity") or "")
+    if severity:
+        standing.append(severity)
+    lines += [f"**Standing:** {', '.join(standing)}", ""]
+    statement = str(issue.get("statement") or "").strip()
+    if statement:
+        lines += [statement, ""]
+    reason = str(issue.get("status_reason") or "").strip()
     if reason:
-        lines += [f"**The editor agent's reason for placing it here:** {reason}", ""]
-    raising = finding.get("reviewers_raising")
-    if isinstance(raising, int) and raising > 1:
-        lines += [f"**Raised independently by {raising} reviewers.**", ""]
-    uid = str(finding.get("finding_uid") or "").strip()
+        lines += [f"**The editor agent's reason:** {reason}", ""]
+    unchanged = str(issue.get("text_unchanged_reason") or "").strip()
+    if unchanged:
+        lines += [f"**On the manuscript text:** {unchanged}", ""]
+    surviving = [str(q).strip() for q in _list(issue.get("surviving_quotes")) if str(q).strip()]
+    if surviving:
+        lines += ["Passages the engine found still standing in the manuscript:", ""]
+        lines += [f"> {quote}" for quote in surviving]
+        lines.append("")
+    return lines
+
+
+def _issue_entry(label: str, issue: dict, package: dict) -> list[str]:
+    """One issue, with every finding it was raised from under it.
+
+    The issue carries the editor agent's statement of what has to change. The
+    evidence under it is the reviewers' own: the member holds the quote and the
+    blocks, and the reviewer's comment and what the finding rests on are joined
+    back on from the ledger by `finding_uid`.
+    """
+    name = str(issue.get("name") or "Unnamed issue").strip()
+    identifier = str(issue.get("id") or "")
+    heading = f"### {label}. {name}"
+    if identifier:
+        heading += f" [`{identifier}`]"
+    lines = [heading, ""]
+    slots = issue_slots(issue)
+    standing = [f"**Severity:** {str(issue.get('severity') or 'unstated')}  "]
+    category = str(issue.get("category") or "")
+    if category:
+        standing.append(f"**Category:** {category}  ")
+    standing.append(
+        "**Raised by:** "
+        + (", ".join(slots) if slots else "an unrecorded slot")
+        + "  "
+    )
+    status = str(issue.get("status") or "")
+    if status:
+        prior = str(issue.get("prior_id") or "")
+        standing.append(
+            f"**Against the previous round:** {status}"
+            + (f", as item `{prior}`" if prior else "")
+        )
+    lines += standing + [""]
+    if issue_is_escalated(issue):
+        lines += [
+            "**A reviewer escalated a finding behind this item as bearing on "
+            "the paper's central claim.**",
+            "",
+        ]
+    statement = str(issue.get("statement") or "").strip()
+    if statement:
+        lines += [statement, ""]
+    rebuttal = str(issue.get("rebuttal_quote") or "").strip()
+    if rebuttal:
+        block = str(issue.get("rebuttal_block_id") or "").strip()
+        lines += [
+            "What the manuscript says about it"
+            + (f", in block {block}" if block else "")
+            + ":",
+            "",
+            f"> {rebuttal}",
+            "",
+        ]
+    audits = [str(a).strip() for a in _list(issue.get("audits")) if str(a).strip()]
+    if audits:
+        lines += [
+            "**Specialist audits behind it:** " + ", ".join(f"`{a}`" for a in audits),
+            "",
+        ]
+    members = issue_members(issue)
+    if members:
+        lines += [
+            f"**Raised from {len(members)} finding"
+            f"{'' if len(members) == 1 else 's'}:**",
+            "",
+        ]
+    for member in members:
+        lines += _member_entry(member, package)
+    return lines
+
+
+def _member_entry(member: dict, package: dict) -> list[str]:
+    """One finding behind an issue, as the reviewer wrote it."""
+    finding = issue_finding(package, member)
+    # The member's own values win where it has one, and a field it carries as
+    # null does not blank out the ledger's: every member field is present on
+    # every member, so a plain merge would hide what the finding recorded.
+    row = dict(finding)
+    row.update({k: v for k, v in _dict(member).items() if v not in (None, "", [])})
+    title = str(row.get("title") or "Untitled finding").strip()
+    uid = str(member.get("finding_uid") or "").strip()
+    lines = [f"- **{title}** ({_tags(row)})", ""]
+    quote = str(row.get("quote") or "").strip()
+    if quote:
+        lines += [f"  > {quote}", ""]
+    comment = str(row.get("comment") or "").strip()
+    if comment:
+        lines += [f"  {comment}", ""]
+    for label, key in (("What it rests on", "basis_reason"),
+                       ("Suggested replacement", "replacement"),
+                       ("Strongest counterpoint", "counterevidence")):
+        text = str(row.get(key) or "").strip()
+        if text:
+            lines += [f"  **{label}:** {text}", ""]
     if uid:
-        lines += [f"`{uid}`", ""]
+        lines += [f"  `{uid}`", ""]
     return lines
 
 
@@ -1661,8 +2045,7 @@ def build_provenance(
     advisory judgement, and the attestation that a person read the run before it
     was merged.
     """
-    findings = sorted_findings(package)
-    appendix = appendix_findings(package)
+    live = live_issues(package)
     # Recorded only when somebody actually submitted the paper. A review an
     # editor started themselves was solicited by nobody, and writing an empty
     # claim for it would be read as a claim we failed to collect.
@@ -1679,9 +2062,24 @@ def build_provenance(
     # states an intention and the run states what happened, and when the two
     # disagree the run is the one that is true.
     run_record = {key: value for key, value in run.items() if key != "engine_source"}
-    run_record["findings"] = len(findings)
-    run_record["appendix_findings"] = len(appendix)
-    run_record["escalated_in_bundle"] = len(escalated(findings) + escalated(appendix))
+    # What this bundle published, counted off the issues it published rather
+    # than off the findings the reviewers wrote. The two are different numbers
+    # and always were: the editor agent pools findings into issues, so a round
+    # with six findings can publish four items, and the old `findings` count
+    # described neither the letter nor the ledger once pooling existed. The
+    # ledger's own total stays in `findings_delivered`, which the engine sets.
+    #
+    # `issues` counts the issues this round raised, which is the engine's own
+    # meaning of the word: a prior issue ruled fixed or left unverified is
+    # counted under its own name below and is not one of this round's asks.
+    run_record["issues"] = len(live)
+    run_record["required"] = len(required_issues(package))
+    run_record["suggestions"] = len(suggestion_issues(package))
+    run_record["resolved"] = len(resolved_issues(package))
+    run_record["unverified"] = len(unverified_issues(package))
+    run_record["escalated_in_bundle"] = len(escalated_issues(live))
+    run_record["issues_source"] = str(package.get("issues_source") or "")
+    run_record["issues_schema_version"] = str(package.get("schema_version") or "")
     # The provider is the run's too. It used to be a constant at the top level
     # and another constant inside the transport, so a record could say
     # claude-code twice over a run on another transport, and nothing in the file
@@ -1777,7 +2175,17 @@ def build_provenance(
         "assigned_models": assigned,
         "decision": decision,
         "desk_rejected": False,
-        "round": 1,
+        # Which round of review this is, counted by the prepare step from the
+        # drafts of this paper already reviewed here. It used to be the literal
+        # 1 in every record, including the second round published against the
+        # same paper, which is the kind of field a reader checks a claim
+        # against. Nothing in the ids depends on it now: an item is named by the
+        # engine's issue id, which does not carry a round in it.
+        "round": int(prepared.get("round") or 1),
+        # What this round was given to rule against: the file, its digest and
+        # how many items were in it, as the engine reports them. No path, and
+        # nothing from this machine.
+        "prior_round": _dict(package.get("prior_round")),
         "ingest": ingest,
         "panel": [],
         # A subscription has no per-review price. Null says there is no figure,
@@ -1801,43 +2209,98 @@ def write_manifest(dest: Path) -> None:
 
 
 def write_round_record(
-    dest: Path, preprint: Preprint, provenance: dict, findings: list[dict]
+    dest: Path, preprint: Preprint, provenance: dict, package: dict
 ) -> None:
     """The machine-readable round record a later revision round is measured against.
 
-    Each required revision carries the engine's own `finding_uid` now. A
-    revision round has to say which of the previous round's findings it is
-    answering, and an `R1-03` that means nothing outside this file could not be
-    matched back to the finding the reviewer wrote.
+    Every item is named by the engine's own issue id, and that is the whole
+    point of the file. `R1-01` was minted here, counted from the top of this
+    round's own list, so the two rounds published against the same paper both
+    opened with an `R1-01` and they were different asks. An id that is spent
+    the moment the list is reordered cannot be checked off in a later round,
+    which is exactly what a round record is for. The engine's id is minted once,
+    carried through every round the issue survives, and never reused, so an
+    `i03` here is the `i03` the next round rules on.
+
+    `closed_issues` is what this round said about the round before it, and the
+    two lists in it are kept apart on purpose. `resolved` is the editor agent's
+    own ruling, with its reason. `unverified` is an item nobody raised again and
+    nobody ruled on, which is still open, and `carried_forward` counts it as
+    open. Adding the two together would publish a compliance figure that the
+    run does not support.
     """
-    required = [
+    rows = [
         {
-            "id": f"R1-{number:02d}",
-            "finding_uid": str(finding.get("finding_uid") or ""),
-            "track": str(finding.get("track") or ""),
-            "basis": str(finding.get("basis") or ""),
-            "escalated": bool(finding.get("escalate")),
-            "text": str(finding.get("comment") or finding.get("title") or "").strip(),
-            "source_reviewer": str(finding.get("slot") or ""),
+            "id": str(issue.get("id") or ""),
+            "severity": str(issue.get("severity") or ""),
+            "category": str(issue.get("category") or ""),
+            "rank": issue_rank(issue),
+            "name": str(issue.get("name") or "").strip(),
+            "text": str(issue.get("statement") or issue.get("name") or "").strip(),
+            "finding_uids": [
+                str(_dict(member).get("finding_uid") or "")
+                for member in issue_members(issue)
+                if str(_dict(member).get("finding_uid") or "")
+            ],
+            "raised_by": issue_slots(issue),
+            "escalated": issue_is_escalated(issue),
+            "status": str(issue.get("status") or ""),
+            "prior_id": str(issue.get("prior_id") or ""),
             "blocking": False,
         }
-        for number, finding in enumerate(
-            [f for f in findings if str(f.get("severity")) in REQUIRED_SEVERITIES], 1
-        )
+        for issue in required_issues(package)
     ]
     write_json(
         dest / ROUND_RECORD,
         {
             "schema_version": 1,
-            "round": 1,
+            "round": int(provenance.get("round") or 1),
             "manuscript_title": preprint.title,
             "decision": provenance["decision"],
-            "required_revisions": required,
+            "required_revisions": rows,
             "minor_suggestions": [
-                str(f.get("comment") or f.get("title") or "").strip()
-                for f in findings
-                if str(f.get("severity")) == "minor"
+                {
+                    "id": str(issue.get("id") or ""),
+                    "rank": issue_rank(issue),
+                    "name": str(issue.get("name") or "").strip(),
+                    "text": str(issue.get("statement") or issue.get("name") or "").strip(),
+                }
+                for issue in suggestion_issues(package)
             ],
+            "closed_issues": {
+                "resolved": [
+                    {
+                        "id": str(issue.get("id") or ""),
+                        "prior_id": str(issue.get("prior_id") or ""),
+                        "prior_rank": prior_rank(issue),
+                        "name": str(issue.get("name") or "").strip(),
+                        "status_reason": str(issue.get("status_reason") or "").strip(),
+                    }
+                    for issue in resolved_issues(package)
+                ],
+                "unverified": [
+                    {
+                        "id": str(issue.get("id") or ""),
+                        "prior_id": str(issue.get("prior_id") or ""),
+                        "prior_rank": prior_rank(issue),
+                        "name": str(issue.get("name") or "").strip(),
+                        "status_reason": str(issue.get("status_reason") or "").strip(),
+                        "surviving_quotes": [
+                            str(quote)
+                            for quote in _list(issue.get("surviving_quotes"))
+                        ],
+                    }
+                    for issue in unverified_issues(package)
+                ],
+            },
+            # Every item a later round still has to answer: this round's own
+            # list plus the previous round's items nobody ruled fixed.
+            "carried_forward": [
+                str(issue.get("id") or "")
+                for issue in all_issues(package)
+                if str(issue.get("status") or "") != RESOLVED_STATUS
+            ],
+            "issue_ids_used": [str(i) for i in _list(package.get("issue_ids_used"))],
             "manuscript_text_sha256": provenance["ingest"].get("text_sha256", ""),
             "manuscript_file_sha256": provenance["generator"]["input"]["sha256"],
             "desk_rejected": False,
@@ -1909,6 +2372,60 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
     return 0
 
 
+def review_round(paper_dir: Path, draft: int) -> int:
+    """Which round of review this is for the manuscript, counting from one.
+
+    A round is a review of a draft, so the number is one more than the number of
+    earlier drafts of this paper that have been reviewed here. A revision round
+    increments it and a second attempt on the same draft does not: a re-review
+    of identical text is this round read again, and numbering it as a new one
+    would tell the authors they had been through a round they were never sent.
+
+    The ids do not depend on this. They are the engine's, minted once per issue
+    and stable across rounds, which is what lets a later round rule on an item
+    by name. The number is published because a reader asks which round they are
+    looking at, and the record used to answer 1 whatever the answer was.
+    """
+    try:
+        published = existing_bundles(Path(paper_dir))
+    except OSError:
+        return 1
+    return 1 + len([number for number in published if number < int(draft)])
+
+
+def prior_issues_file(prior: Path | None) -> Path | None:
+    """The previous round's published items, which this round rules against.
+
+    The engine's `--prior-issues` takes a document in its own issues schema, and
+    the bundle's copy is one: the ids, the ranks, the statements and the ids
+    already spent, as the engine wrote them. Handing it back is what makes the
+    second round a second round rather than a fresh look, and what stops it
+    minting an id the first round already used.
+
+    A bundle published before this file existed has none, and the answer is None
+    rather than a refusal. The round still runs, with no prior input, which is
+    the same thing the engine does on a first look.
+
+    A round that ended with every item ruled fixed is the same answer for a
+    different reason. The engine refuses a prior file with nothing open in it,
+    and rightly: there is nothing in it to match. Naming it anyway would stop
+    the run with an error over a round that went well.
+    """
+    if prior is None:
+        return None
+    path = Path(prior) / REVIEW_ISSUES
+    if not path.is_file():
+        return None
+    open_items = [
+        row
+        for row in _list(maybe_json(path).get("issues"))
+        if isinstance(row, dict)
+        and str(row.get("id") or "")
+        and str(row.get("status") or "") != RESOLVED_STATUS
+    ]
+    return path if open_items else None
+
+
 def cmd_prepare(args: argparse.Namespace) -> int:
     """Resolve the paper, fetch the exact bytes, and decide where a review goes."""
     out = Path(args.out).resolve()
@@ -1970,14 +2487,39 @@ def cmd_prepare(args: argparse.Namespace) -> int:
         record["draft"] = plan.draft
         record["attempt"] = plan.attempt
         record["plan_kind"] = plan.kind
+        record["round"] = review_round(paper_dir, plan.draft)
+        prior_issues = prior_issues_file(plan.prior)
+        record["prior_issues"] = str(prior_issues) if prior_issues else ""
     else:
         record["destination"] = str(RUNS / f"local-{digest(data)[:12]}")
         record["draft"] = 1
         record["attempt"] = 1
         record["plan_kind"] = "unpublishable local run"
+        record["round"] = 1
+        record["prior_issues"] = ""
 
     write_json(out / "prepared.json", record)
     print(json.dumps(record, indent=2))
+    if record.get("prior_issues"):
+        # Printed because it is the one part of the plan the operator has to act
+        # on: the engine does not find the previous round by itself, and a
+        # revision round run without it reads the manuscript as a first look and
+        # mints a fresh set of ids for items the authors were already given.
+        print(
+            "\nThis is round "
+            f"{record['round']}. Pass the previous round's items to the engine "
+            f"with --prior-issues {shlex.quote(str(record['prior_issues']))}, "
+            "or the run cannot rule on any of them.",
+            file=sys.stderr,
+        )
+    elif record.get("publishable") and int(record.get("round") or 1) > 1:
+        print(
+            "\nThis is round "
+            f"{record['round']} and the previous round published no "
+            f"{REVIEW_ISSUES}, so there is nothing for this run to rule "
+            "against. It will read the manuscript as a first look.",
+            file=sys.stderr,
+        )
     if not publishable:
         print(
             "\nThis run cannot be published. A review has to name the exact "
@@ -2157,6 +2699,52 @@ LOCAL_REFERENCE_PATTERNS = (
         re.compile(r"[\w.+-]+@(?:\d{1,3}(?:\.\d{1,3}){3}(?![\w.])|\[[0-9A-Fa-f:.]+\])"),
     ),
 )
+
+# How a path opens: a leading slash, or two, under the rules worked out for the
+# absolute path pattern above. Named here because the shapes below reuse it.
+_PATH_OPENER = r"(?:(?<![\w~./:])//|(?<![\w~./])/)"
+
+# A path under somebody's home directory or a temporary directory, whoever's
+# machine it is on. These are tier 1 wherever they appear, and nothing waives
+# one: not `--allow-text`, not the manuscript printing it.
+#
+# The machine facts below cover this machine's own home and temporary
+# directories, looked up at publish time. These cover the rest: `/home/runner`
+# from a CI log, `/Users/someone` from a collaborator's laptop, `/tmp/pdf-cache`
+# from a container the run passed through. The absolute path pattern already
+# finds all of them, as tier 2, which meant any of them could be published by
+# reading the refusal and passing the path back, and a path in a home or
+# temporary directory is never the review's own words. There is nothing in a
+# review of a paper for this to be wrong about: a manuscript does not quote
+# `/home/<name>/<file>`, and if one ever does, the answer is to edit the run's
+# own copy rather than to publish a path.
+UNWAIVABLE_PATH_SHAPES = (
+    (
+        "a path in a home directory",
+        re.compile(rf"{_PATH_OPENER}(?i:home|users)(?:/{_SEGMENT})+/?"),
+    ),
+    (
+        "a path in a temporary directory",
+        re.compile(
+            rf"{_PATH_OPENER}"
+            r"(?i:tmp|temp|var/tmp|var/folders|private/tmp|private/var/folders)"
+            rf"(?:/{_SEGMENT})+/?"
+        ),
+    ),
+    (
+        "a path in a home directory",
+        re.compile(rf"(?<![\w/])~(?:{_SEGMENT})?/{_FIRST_SEGMENT}(?:/{_SEGMENT})*"),
+    ),
+    (
+        "a path under $HOME",
+        re.compile(rf"\$(?:HOME|\{{HOME\}})/{_SEGMENT}(?:/{_SEGMENT})*"),
+    ),
+    (
+        "a path in a Windows user profile",
+        re.compile(rf"(?<![\w:])[A-Za-z]:[\\/]+(?i:users)[\\/]+{_SEGMENT}(?:[\\/]+{_SEGMENT})*"),
+    ),
+)
+
 
 class Fact(NamedTuple):
     """One string that names this machine, with the rule for finding it.
@@ -2415,6 +3003,13 @@ def machine_facts(
                 specific=False,
             )
         )
+    # The shapes nothing waives, carried as facts so that one scan reads them
+    # with everything else: the same canonical forms, the same longest-hit
+    # folding, the same refusal. Registering them as specific is also what makes
+    # `names_a_specific_fact` refuse an allowance that contains one, so an
+    # editor cannot publish a home directory by passing the refusal's own text
+    # back on the command line.
+    facts += [Fact(why, pattern) for why, pattern in UNWAIVABLE_PATH_SHAPES]
     return tuple(facts)
 
 
@@ -2730,7 +3325,8 @@ def leak_refusal(leaks: Sequence[Leak]) -> str:
     if unwaivable:
         said += (
             f" {len(unwaivable)} of these name this machine itself, looked up"
-            " rather than recognised, and no flag and no manuscript waives one."
+            " rather than recognised, or a path under a home or temporary"
+            " directory, and no flag and no manuscript waives one."
         )
     return said
 
@@ -2870,8 +3466,8 @@ def without_local_paths(
 ) -> object:
     """The same JSON with the engine's own path fields made relative or dropped.
 
-    `editor-package.json` is the engine's own output copied into the bundle, and
-    a run folder records absolute paths in several places. Only a value in one
+    `issues.json` is the engine's own output copied into the bundle, and a run
+    folder records absolute paths in several places. Only a value in one
     of `PATH_FIELDS` that is actually a path is touched, so the review's own
     words reach the reader as the reviewer wrote them. Every change is appended
     to `projected`, which the caller prints: a published artifact that differs
@@ -2881,7 +3477,7 @@ def without_local_paths(
     A key is never rewritten. A mapping keyed by a path leaks through the key
     rather than the value, and the version that rewrote a key inside this
     repository to a relative one turned `<checkout>/docs/figs/a.png` into
-    `docs/figs/a.png` with nothing said. Engine 0.9 writes no mapping keyed by
+    `docs/figs/a.png` with nothing said. Engine 0.10 writes no mapping keyed by
     an absolute path at all, so there is no engine behaviour behind the rewrite
     to preserve, and a path-shaped key is refused here instead.
 
@@ -2958,13 +3554,95 @@ def without_local_paths(
     return value
 
 
+def assert_publishable_issues(package: dict) -> None:
+    """The published items have to be an input the next round can rule against.
+
+    This is the other half of a stable id. Publishing the engine's ids is no
+    use if the file they are published in is one the next round refuses, and the
+    refusal would arrive a round later, in front of the authors, with the ids
+    already printed in a decision letter.
+
+    So the rules the engine's own prior-round loader applies are applied here,
+    to the file about to be written, and a bundle that would not survive them is
+    refused before it exists. They are few and they are not guesses: the
+    document carries the schema stamp this pipeline publishes, every row is an
+    object with an id in the engine's own form, no id appears twice, and
+    `issue_ids_used` accounts for every id in the file. That last one is what
+    stops a resolved issue's id being minted again for a different problem two
+    rounds later.
+    """
+    stamp = str(package.get("schema_version") or "")
+    if not stamp:
+        raise CommandError(
+            f"The run's {REVIEW_ISSUES} carries no schema_version, so a later "
+            "round could not tell what the ids in it mean and would refuse the "
+            "file. Re-run the review on an engine that writes the issues "
+            "document."
+        )
+    rows = _list(package.get("issues"))
+    strange = [type(row).__name__ for row in rows if not isinstance(row, dict)]
+    if strange:
+        raise CommandError(
+            f"{len(strange)} issue row(s) in this run are not objects "
+            f"({', '.join(sorted(set(strange)))}), so the published "
+            f"{REVIEW_ISSUES} would not be a file a later round can read."
+        )
+    identifiers = [str(_dict(row).get("id") or "") for row in rows]
+    malformed = sorted({name or "(absent)" for name in identifiers
+                        if not ISSUE_ID_PATTERN.match(name)})
+    if malformed:
+        raise CommandError(
+            f"{len(malformed)} issue(s) in this run carry an id that is not an "
+            f"id of this engine ({', '.join(malformed[:5])}). An id is text of "
+            "the form i01 upwards, and it is what a later round rules against, "
+            "so a bundle cannot publish one it cannot match."
+        )
+    repeated = sorted({name for name in identifiers if identifiers.count(name) > 1})
+    if repeated:
+        raise CommandError(
+            f"The issue id(s) {', '.join(repeated)} appear more than once in "
+            "this run. One id is one problem across every round, so a file "
+            "holding the same id twice is one a later round refuses."
+        )
+    # A severity this release does not sort is an issue that would appear in
+    # neither list: not a required change, not a suggestion, and so not in the
+    # letter at all. The engine's vocabulary can grow, and the answer to a word
+    # this pipeline has no place for is to refuse and name it, never to publish
+    # a letter that quietly drops an issue the editor agent raised.
+    known = (*REQUIRED_SEVERITIES, SUGGESTION_SEVERITY)
+    unsorted_rows = [
+        f"{row.get('id')} ({row.get('severity') or 'no severity'})"
+        for row in live_issues(package)
+        if str(_dict(row).get("severity")) not in known
+    ]
+    if unsorted_rows:
+        raise CommandError(
+            f"{len(unsorted_rows)} issue(s) in this run carry a severity this "
+            f"pipeline does not sort: {', '.join(unsorted_rows[:5])}. It sorts "
+            f"{', '.join(known)}, and an issue outside that list would be "
+            "neither a required change nor a suggestion, so it would not appear "
+            "in the letter at all. Update the publish path before publishing a "
+            "run from this release."
+        )
+    used = {str(name) for name in _list(package.get("issue_ids_used"))}
+    unlisted = sorted(set(identifiers) - used)
+    if unlisted:
+        raise CommandError(
+            f"{len(unlisted)} issue id(s) in this run are missing from "
+            f"issue_ids_used ({', '.join(unlisted[:5])}). That list is every id "
+            "the round and its own prior rounds spent, and a later round mints "
+            "above it, so an id left out of it would be handed to a different "
+            "problem once this one is resolved."
+        )
+
+
 def projection_report(
     *,
     engine_package: dict,
     published: dict,
     projected: Sequence[str] = (),
 ) -> str:
-    """How the published editor-package.json differs from the engine's own.
+    """How the published issues.json differs from the engine's own.
 
     The bundle's copy is not the engine's file with a few strings scrubbed. It
     is rebuilt by `review_package` from the same reading, and the rebuild is the
@@ -2982,8 +3660,8 @@ def projection_report(
     parts: list[str] = []
     if not engine_keys:
         parts.append(
-            "the engine's own editor-package.json could not be read, so the "
-            "keys carried into the bundle were not compared with it"
+            f"the engine's own {REVIEW_ISSUES} could not be read, so the keys "
+            "carried into the bundle were not compared with it"
         )
     if left_out:
         parts.append(f"not carried: {', '.join(left_out)}")
@@ -2993,7 +3671,7 @@ def projection_report(
         parts.append(f"path fields projected: {', '.join(projected)}")
     if engine_keys and not left_out and not added and not projected:
         parts.append("every key the engine wrote, published as written")
-    return "editor-package.json, " + ". ".join(parts)
+    return f"{REVIEW_ISSUES}, " + ". ".join(parts)
 
 
 # Every file in a bundle is scanned. The two JSON forms are parsed first, the
@@ -3239,10 +3917,10 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             detail.append("The engine holds it back because:")
             detail += [f"({n}) {reason}." for n, reason in enumerate(reasons, start=1)]
         else:
-            if source != "editor-package":
+            if source != "issues":
                 detail.append(
-                    f"Its findings came from {source}, which is not the editor's "
-                    "own placement of them."
+                    f"Its findings came from {source}, which is not the "
+                    "editor's own issues."
                 )
             if problems:
                 detail.append(
@@ -3344,10 +4022,17 @@ def cmd_publish(args: argparse.Namespace) -> int:
             "own copy instead."
         )
 
+    # The words this pipeline sorts and publishes by, checked against the
+    # engine's own public vocabulary before anything is read with them. A
+    # severity or a status that moved in the engine would otherwise sort every
+    # issue into the wrong list silently, which is the one failure a published
+    # review cannot carry.
+    assert_issue_vocabulary()
     package = review_package(reading)
     run = run_record(reading)
     if args.publish:
         require_complete_run(run_dir, run, reading)
+        assert_publishable_issues(package)
     workspace = resolve_workspace(run_dir, args.workspace)
     preprint_data = prepared.get("preprint")
     if preprint_data is None:
@@ -3440,7 +4125,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # off the run folder for the comparison rather than described from memory.
     if args.publish:
         engine_package = maybe_json(
-            Path(str(_dict(reading.get("files")).get("editor-package.json") or ""))
+            Path(str(_dict(reading.get("reports")).get("issues") or ""))
         )
         print(
             projection_report(
@@ -3485,7 +4170,6 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # unscrubbed one put the paths back: a reviewer's `source_review_path` was
     # dropped from the JSON and then printed in decision_letter.md, where no
     # scan was looking for it.
-    findings = sorted_findings(published_package)
     reports = track_reports(run_dir)
     if dest.exists() and any(dest.iterdir()):
         raise CommandError(f"Refusing to overwrite an existing review bundle: {dest}")
@@ -3498,10 +4182,10 @@ def cmd_publish(args: argparse.Namespace) -> int:
         stage = Path(staging)
 
         (stage / "summary.md").write_text(
-            render_summary(preprint, published_package, provenance, findings), encoding="utf-8"
+            render_summary(preprint, published_package, provenance), encoding="utf-8"
         )
         (stage / "decision_letter.md").write_text(
-            render_decision_letter(preprint, published_package, provenance, findings),
+            render_decision_letter(preprint, published_package, provenance),
             encoding="utf-8",
         )
         (stage / "manuscript_stats.md").write_text(
@@ -3514,10 +4198,11 @@ def cmd_publish(args: argparse.Namespace) -> int:
         for name, path in reports.items():
             shutil.copyfile(path, stage / name)
         write_json(stage / "provenance.json", provenance)
-        write_round_record(stage, preprint, provenance, findings)
+        write_round_record(stage, preprint, provenance, published_package)
         # Kept beside the documents so a reader can check a quotation against
-        # the structured record the reviewers actually produced.
-        write_json(stage / "editor-package.json", published_package)
+        # the structured record the reviewers actually produced, and so the next
+        # round can be handed this round's items by name.
+        write_json(stage / REVIEW_ISSUES, published_package)
 
         # Read back what is actually on disk before the manifest fixes it. This
         # is the check that cannot be fooled by a file nobody thought to scrub,
@@ -3537,12 +4222,21 @@ def cmd_publish(args: argparse.Namespace) -> int:
         for path in sorted(stage.iterdir()):
             shutil.move(str(path), str(dest / path.name))
 
+    counts = _dict(provenance["generator"]["run"])
     print(f"bundle   {dest}")
+    print(f"round    {provenance['round']}")
     print(f"decision {provenance['decision']} (chosen by {args.editor})")
     print(
-        f"findings {len(findings)} in the letter, "
-        f"{provenance['generator']['run']['appendix_findings']} in the appendix"
+        f"items    {counts.get('required', 0)} required change(s) and "
+        f"{counts.get('suggestions', 0)} suggestion(s), pooled by the editor "
+        f"agent from {counts.get('findings_delivered', 0)} finding(s)"
     )
+    if counts.get("resolved") or counts.get("unverified"):
+        print(
+            f"prior    {counts.get('resolved', 0)} item(s) the editor agent "
+            f"ruled fixed, {counts.get('unverified', 0)} left unverified and "
+            "still open"
+        )
     print(f"reports  {len(reports)} specialist track report(s) copied in")
     print(
         f"baseline {'eligible' if provenance['review']['baseline_eligible'] else 'experimental only'}"

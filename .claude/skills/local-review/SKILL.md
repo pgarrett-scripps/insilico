@@ -10,7 +10,7 @@ machine, on the Claude Code subscription, and leave it on a branch for the
 editor to open as a pull request. Merging that pull request is what publishes
 the review. Nothing here publishes anything.
 
-No paid API key is involved at any point. Engine 0.9 is a Claude Code plugin:
+No paid API key is involved at any point. Engine 0.10 is a Claude Code plugin:
 the review runs as a headless Claude Code session on the signed-in
 subscription, and the starter clears `ANTHROPIC_API_KEY` and
 `ANTHROPIC_AUTH_TOKEN` from the environment it launches before it starts, so a
@@ -64,7 +64,7 @@ Run from the repository root:
 .venv/bin/python scripts/local_review.py fingerprint
 ```
 
-Use whichever interpreter has `peerreviewagents` 0.9.0 or newer importable. It
+Use whichever interpreter has `peerreviewagents` 0.10.0 or newer importable. It
 is often a virtual environment outside this checkout rather than the `.venv`
 here, and the `peerreview` command used in step 3 is the console script beside
 it. Ask the operator which interpreter that is rather than guessing.
@@ -127,7 +127,27 @@ roughly how long it will take. Do not run it twice on the same output folder:
 the engine refuses an existing run folder on purpose, so a retry needs a new
 one.
 
-There is no `--provider`, no single `--model` and no policy flag. Engine 0.9
+On a revision round, add the previous round's items. Step 2 prints the path when
+there is one, and this is the command it tells you to run:
+
+```bash
+peerreview review \
+  runs/prepared-<slug>/<fetched>.pdf \
+  runs/<work> \
+  --arm full-two-track \
+  --reviewers 3 \
+  --literature-cutoff <today, YYYY-MM-DD> \
+  --prior-issues docs/reviews/<year>/<slug>/v<draft>/r<attempt>/issues.json
+```
+
+That file is the previous bundle's own `issues.json`. Without it the engine
+reads the manuscript as a first look and mints a fresh set of ids for items the
+authors were already given, so a revision round run without it cannot rule on
+any of them. The referees are not told which round it is either way: the prior
+items go to the editor agent alone, so what the letter reports as resolved is
+the editor's reading of the revision and not a referee's re-examination.
+
+There is no `--provider`, no single `--model` and no policy flag. Engine 0.10
 gives every slot a model of its own, and four flags move that plan:
 
 - `--reviewer-models` takes `A,B,C`, the list the core reviewers are drawn
@@ -258,8 +278,8 @@ reviewers raised failed its guard and was quarantined, is held back by the
 engine with a reason naming how many it took, and publish prints that reason
 and writes nothing. Such a review endorses none of its own work, which is a
 different claim from a manuscript found sound, and the letter would tell the
-authors the wrong one. Read the quarantined findings in `editor-package.json`
-before deciding what to do next.
+authors the wrong one. Read the quarantined findings in `issues.json` before
+deciding what to do next.
 
 Add `--baseline-eligible` if the user said yes in step 4. When a submission
 issue named a submitter, add `--submitter <login>` and, if that issue stated
@@ -269,9 +289,15 @@ themselves: the page then says nobody solicited the review, which is true.
 
 This writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`, one
 `audit_<track>.md` per specialist reader copied out of the run,
-`editor-package.json`, `round.json`, `provenance.json` (schema version 4) and
+`issues.json`, `round.json`, `provenance.json` (schema version 4) and
 `manifest.json` into the destination from step 2. It refuses to overwrite an
 existing bundle, and it prints which specialist readers wrote no report.
+
+The bundle's `issues.json` is the file a later round of this paper is handed as
+its prior input, so keep it. The issue ids in it are the engine's own, they
+persist across rounds, and publish refuses a bundle whose issues file a later
+round would not accept rather than letting the refusal arrive a round later with
+the ids already printed in a decision letter.
 
 It also prints what the citation lane checked, each state with a number of its
 own, and anything the lane did not finish, in the engine's own words. An

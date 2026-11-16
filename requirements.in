@@ -1,9 +1,15 @@
 # Production review environment on Linux with Python 3.12.
 # Regenerate requirements.txt with the command recorded in its header.
 #
-# peerreviewagents 0.9 runs the review as a Claude Code plugin, so the
+# peerreviewagents 0.10 runs the review as a Claude Code plugin, so the
 # package carries no model client and the plain package is the whole
 # dependency. There are no extras to ask for.
-peerreviewagents==0.9.1
+#
+# 0.10.0 is not on PyPI yet, so the lock below still names 0.9.1 and cannot
+# be recompiled against it. The declared pin is what this repository is
+# written for, the gate that compares the two files fails until the release
+# lands, and CI fails on the install step for the same reason. Recompile the
+# lock as the first commit after the release.
+peerreviewagents==0.10.0
 rustypaper==0.2.4
 pyyaml>=6.0

@@ -15,8 +15,10 @@ from smoke_checks.commands import check_command_parsing_is_strict
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
 from smoke_checks.local import (
     check_a_destination_outside_its_tree_is_refused,
-    check_a_minor_finding_is_never_a_required_revision,
+    check_a_home_or_temporary_path_is_refused_on_anybodys_machine,
+    check_a_minor_issue_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
+    check_a_severity_this_release_cannot_sort_is_refused,
     check_a_path_shaped_key_is_refused_rather_than_published_without_it,
     check_a_schema_pattern_means_what_the_repositorys_own_gate_means,
     check_a_rehearsal_claims_no_reading,
@@ -28,14 +30,15 @@ from smoke_checks.local import (
     check_every_documented_command_runs_against_a_real_parser,
     check_every_published_file_is_hashed,
     check_every_spelling_of_a_machine_fact_is_the_same_fact,
+    check_the_fixtures_counts_are_the_ones_the_reader_computes,
     check_nothing_reaches_into_the_engines_internals,
     check_only_this_machines_own_names_are_refused_as_this_machine,
     check_ordinary_review_text_publishes_and_a_local_path_does_not,
-    check_severity_is_read_from_the_engine_not_guessed,
     check_the_advisory_verdict_is_labelled_advisory,
     check_the_attestation_says_what_it_has_to_say,
     check_the_citation_section_prints_no_charge_nobody_made,
     check_the_decision_is_attributed_to_a_person,
+    check_the_issues_are_split_by_severity_and_ordered_by_rank,
     check_the_locked_engine_release_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
     check_the_page_keeps_the_model_asked_apart_from_the_model_that_ran,
@@ -130,12 +133,16 @@ def main() -> int:
     check_rerun_refuses_a_moved_draft()
     print("ok  a rerun refuses a draft that moved")
 
-    check_severity_is_read_from_the_engine_not_guessed()
-    print("ok  an unrecognised severity stays visible and out of the counts")
+    check_the_issues_are_split_by_severity_and_ordered_by_rank()
+    print("ok  the engine's issues are split by severity and kept in rank order")
     check_the_decision_is_attributed_to_a_person()
     print("ok  a local review attributes its decision to a human editor")
-    check_a_minor_finding_is_never_a_required_revision()
+    check_a_minor_issue_is_never_a_required_revision()
     print("ok  severity alone decides what a revision round must fix")
+    check_a_severity_this_release_cannot_sort_is_refused()
+    print("ok  an issue carrying a severity this release cannot sort is refused")
+    check_the_fixtures_counts_are_the_ones_the_reader_computes()
+    print("ok  the fixture's own tallies are the ones the publish path counts")
     check_an_unclaimed_review_is_labelled_an_experiment()
     print("ok  an unclaimed local review is published as an experiment")
     check_every_published_file_is_hashed()
@@ -172,6 +179,8 @@ def main() -> int:
     print("ok  ordinary review notation publishes and a local path is refused by name")
     check_only_this_machines_own_names_are_refused_as_this_machine()
     print("ok  this machine's own names are refused and ordinary prose is not")
+    check_a_home_or_temporary_path_is_refused_on_anybodys_machine()
+    print("ok  a home or temporary path is refused whoever's machine it is on")
     check_every_spelling_of_a_machine_fact_is_the_same_fact()
     print("ok  every encoding of a machine fact reduces to the same fact")
     check_a_path_shaped_key_is_refused_rather_than_published_without_it()

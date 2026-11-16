@@ -160,7 +160,7 @@
           }
         },
         "run": {
-          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the findings came from, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose, and `cause` is not on it: the engine writes a cause only for a run that stopped, which it never calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it. `problems` is a different matter and is allowed, because engine 0.9.0 appends lines there after it has decided publishable: an unfinished citation ledger and a citation worker that ran another model family are both recorded as problems and neither withholds the review. They are published as what the run did not finish, beside the findings, and never folded into errors, which is the list of what went wrong.",
+          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the review was read from, who pooled it into issues, the counts of what it asked and what it ruled on the prior round, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose, and `cause` is not on it: the engine writes a cause only for a run that stopped, which it never calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it. `problems` is a different matter and is allowed, because engine 0.9.0 appends lines there after it has decided publishable: an unfinished citation ledger and a citation worker that ran another model family are both recorded as problems and neither withholds the review. They are published as what the run did not finish, beside the findings, and never folded into errors, which is the list of what went wrong.",
           "type": "object",
           "required": [
             "arm",
@@ -169,6 +169,13 @@
             "status",
             "publishable",
             "findings_source",
+            "issues",
+            "required",
+            "suggestions",
+            "resolved",
+            "unverified",
+            "issues_source",
+            "issues_schema_version",
             "reviewers",
             "completeness"
           ],
@@ -210,12 +217,12 @@
               "enum": ["complete", "complete-without-findings"]
             },
             "publishable": {
-              "$comment": "The engine's own answer, from read_run, to the only question the publish gate asks: the run finished, the findings came from a readable editor package rather than the ledger, a guard verdict was recorded, the guards did not empty the review, and every run file could be read in full. It is recorded rather than inferred so a reader of the bundle sees the same flag the gate saw, and it is a const because a record written from a run the engine refused has no business on the site.",
+              "$comment": "The engine's own answer, from read_run, to the only question the publish gate asks: the run finished, the review was read off a readable issues document rather than rebuilt from the ledger, an editor pooled the findings into it, a guard verdict was recorded, the guards did not empty the review, and every run file could be read in full. It is recorded rather than inferred so a reader of the bundle sees the same flag the gate saw, and it is a const because a record written from a run the engine refused has no business on the site. The engine's own list of reasons is what the publish path prints when it refuses, so a reader of a refusal gets the engine's words and not this repository's paraphrase of them.",
               "const": true
             },
             "findings_source": {
-              "$comment": "Where the published findings came from. The editor package is the editor agent's own placement of them. A pool rebuilt from findings.jsonl is the engine's fallback for a run whose editor package is missing or damaged, and it carries no editorial placement at all, so it is not published here.",
-              "const": "editor-package"
+              "$comment": "Where the published review came from. issues is the issues document the editor agent wrote, which is the review itself in engine 0.10: one entry per issue, each carrying the findings it was raised from. The engine also reports ledger, for a run whose issues document is missing or damaged or holds no issue over findings that are in the ledger, and none for a run that holds neither. Neither is published: a pile of findings nobody pooled is not a review, and the engine calls such a run unpublishable anyway.",
+              "const": "issues"
             },
             "review_guard_status": {
               "$comment": "The engine's verdict on its own findings, and it writes exactly two words. clean is a run the guards took nothing from, and quarantined is one they took something from, however much. Both publish: a review that raised nothing is clean with no findings, and one that lost a finding whose quote could not be anchored still endorses the rest, with quarantined_findings_count saying how many were held back. The one run neither word excuses is a review the guards emptied, and the engine refuses that on publishable, naming how many it held.",
@@ -238,8 +245,40 @@
                 "retried": { "type": "array", "items": { "type": "string" } }
               }
             },
-            "findings": { "type": "integer", "minimum": 0 },
-            "appendix_findings": { "type": "integer", "minimum": 0 },
+            "issues": {
+              "$comment": "What this round raised, counted off the issues the bundle published. It is not a count of findings: the editor agent pools findings into issues, so a round with six findings can raise four of them, and the ledger's own total is findings_delivered. A prior issue this round ruled fixed or left unverified is not one of this round's asks and is counted under its own name below. The two fields this count replaces, findings and appendix_findings, described a letter body and an appendix that engine 0.10 does not write: nothing is placed out of sight any more, so there is no second list to count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "required": {
+              "$comment": "The issues a revision has to answer: the major and moderate ones this round raised, in the engine's own severity vocabulary. Severity alone decides this, and the decision letter's requests are exactly these in rank order.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "suggestions": {
+              "$comment": "The minor issues this round raised. They are published in full beside the required ones and a revision is not held to them, which is the only difference between the two numbers.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "resolved": {
+              "$comment": "Prior-round issues this round's editor ruled fixed, by name and with a reason. It is the editor's ruling on a revised manuscript and never a claim that this repository verified anything, and it is zero on a first round, which has no prior issues to rule on.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "unverified": {
+              "$comment": "Prior-round issues this round neither raised again nor ruled fixed. The word is the engine's and it is published as exactly what it says: nobody checked, so the issue stands unchecked. It is not a fix and the page never prints it as one.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "issues_source": {
+              "$comment": "Who pooled the findings into issues. editor is an editor agent that claimed the review and closed it. server is the engine minting one issue per finding because nobody did, which the engine itself calls unpublishable, so a published record carries editor and the const says so rather than leaving a reader to work out which of two words they are looking at.",
+              "const": "editor"
+            },
+            "issues_schema_version": {
+              "$comment": "The schema stamp on the issues document this bundle was read from, as the engine wrote it. Recorded because the ids in a published issues.json are what a later round matches against, and a round that cannot read the stamp refuses the file rather than guessing what its ids mean.",
+              "type": "string",
+              "minLength": 1
+            },
             "escalated_in_bundle": { "type": "integer", "minimum": 0 },
             "findings_delivered": { "type": "integer", "minimum": 0 },
             "findings_submitted": { "type": "integer", "minimum": 0 },
@@ -387,6 +426,21 @@
     "decision": { "enum": ["accept", "minor", "major", "reject"] },
     "desk_rejected": { "type": "boolean" },
     "round": { "type": "integer", "minimum": 1 },
+    "prior_round": {
+      "$comment": "What this round was given to rule against, as the engine reports it: the prior file's name, a short digest of its contents, how many of its issues were carried in, and this round's tally by status. It carries no path, because where the earlier round sat on disk is a fact about the machine and not about the review. An empty object is a first round, which was given nothing, and that is published rather than left out so a reader can tell a first round from a record that forgot to say.",
+      "type": "object",
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^[a-f0-9]+$" },
+        "issues": { "type": "integer", "minimum": 0 },
+        "tally": {
+          "$comment": "One count per status the engine names, over this round's issues: how many of the prior round's asks are still standing, how many were ruled fixed and how many nobody checked.",
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "additionalProperties": false
+    },
     "revision": { "type": "object" },
     "submitter": { "type": "string" },
     "submitter_is_author": { "enum": ["", "yes", "no"] },
@@ -481,8 +535,12 @@
         "properties": { "schema_version": { "const": 4 } }
       },
       "then": {
-        "required": ["generator", "models", "assigned_models"],
+        "required": ["generator", "models", "assigned_models", "prior_round"],
         "properties": {
+          "prior_round": {
+            "$comment": "Required on a version 4 record and empty on a first round. The constraints are in the top-level properties block; this is here because a required name has to appear in its own subschema's properties under Ajv strict mode.",
+            "type": "object"
+          },
           "model": {
             "$comment":"Refused outright rather than merely left out of the required list. Every version 2 record carries a single model id, and a reader of this file should not have to infer that a plugin run must not: 0.9 gives each slot a model of its own, so one id at the top would describe a panel that did not sit. The engine's own protocol file writes a sentence there rather than an id for the same reason, and a sentence is not an id either. An empty not matches nothing, so a record carrying this key cannot validate.",
             "not": {}

@@ -194,6 +194,24 @@ const retried = Array.isArray(ledger.retried) ? ledger.retried : [];
 const quarantined = typeof runRecord.quarantined_findings_count === "number"
   ? runRecord.quarantined_findings_count
   : 0;
+// How many findings the readers submitted and reached the ledger, which is the
+// number the issues above were pooled from. It is a separate fact from the
+// issue count and the panel prints both rather than letting one stand in for
+// the other.
+const findingsDelivered = typeof runRecord.findings_delivered === "number"
+  ? runRecord.findings_delivered
+  : 0;
+// Whether this round ruled on anything earlier at all. A first round rules on
+// nothing, and "0 resolved, 0 unverified" on a first round would read as a
+// revision that fixed nothing.
+const ruledOnPrior = (typeof runRecord.resolved === "number" ? runRecord.resolved : 0)
+  + (typeof runRecord.unverified === "number" ? runRecord.unverified : 0);
+// The prior round this one ruled against, as the engine reported it. It is an
+// empty object on a first round, which is published rather than left out, so an
+// absent row here means a first round and never a record that forgot to say.
+const priorRound = provenance.prior_round && typeof provenance.prior_round === "object"
+  ? provenance.prior_round
+  : {};
 const specialists = Array.isArray(runRecord.specialist_tracks) ? runRecord.specialist_tracks : [];
 const advisoryRows = [
   ["Significance", advisory.significance],
@@ -372,40 +390,61 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
           {runRecord.reviewers ? ` · ${runRecord.reviewers} reviewer${runRecord.reviewers === 1 ? "" : "s"}` : ""}
           {specialists.length > 0 ? ` · ${specialists.length} specialist${specialists.length === 1 ? "" : "s"}` : ""}
         </p>
+        {/* What the review asks for, as the editor pooled it. A finding is a
+            single observation one reader submitted, and an issue is what the
+            editor made of the findings that are about the same problem, so the
+            two counts are not two readings of one number: the letter asks for
+            issues, and the ledger below says how many submissions went into
+            them. */}
         <p class="prov__hash">
-          {typeof runRecord.findings === "number"
-            ? `${runRecord.findings} finding${runRecord.findings === 1 ? "" : "s"} in the letter`
-            : "finding count unrecorded"}
-          {typeof runRecord.appendix_findings === "number" && runRecord.appendix_findings > 0
-            ? `, ${runRecord.appendix_findings} in the appendix`
+          {typeof runRecord.issues === "number"
+            ? `${runRecord.issues} issue${runRecord.issues === 1 ? "" : "s"} from ${findingsDelivered} finding${findingsDelivered === 1 ? "" : "s"}`
+            : "issue count unrecorded"}
+          {typeof runRecord.required === "number"
+            ? `, ${runRecord.required} required`
+            : ""}
+          {typeof runRecord.suggestions === "number"
+            ? `, ${runRecord.suggestions} suggested`
             : ""}
           {runRecord.escalated_in_bundle
             ? `, ${runRecord.escalated_in_bundle} escalated`
             : ""}
           {runRecord.literature_cutoff ? `, literature to ${runRecord.literature_cutoff}` : ""}
         </p>
+        {/* What this round made of the last round's issues, and the one word
+            that has to stay honest. "Resolved" is the editor's reading of the
+            revision and not a test that passed, and "unverified" means nobody
+            could tell from the manuscript, which is a state of the evidence and
+            not a verdict against the authors. Both are printed as the engine
+            reported them and neither is summed into a score. */}
+        {ruledOnPrior > 0 && (
+          <p class="prov__hash">
+            Of the previous round's issues, {runRecord.resolved} read as
+            resolved by the editor and {runRecord.unverified} could not be
+            checked against this version. Neither word is a test that ran.
+          </p>
+        )}
         {/* A finding the evidence guards threw out never reaches the letter, and
             a reader weighing the review should see how many were thrown out
             rather than only how many survived. The row itself is in the
             bundle: review_package carries quarantined_findings into
-            editor-package.json, so saying it is not in the bundle sent a
-            reader looking for something they already had. */}
+            issues.json, so saying it is not in the bundle sent a reader
+            looking for something they already had. */}
         {quarantined > 0 && (
           <p class="prov__hash">
             {quarantined} finding{quarantined === 1 ? " was" : "s were"} quarantined
             by the evidence guards and held out of the decision letter.
             {quarantined === 1 ? " It is" : " They are"} in this bundle's
-            editor-package.json under quarantined_findings.
+            issues.json under quarantined_findings.
           </p>
         )}
-        {/* A review with nothing in it is a result, and "0 findings in the
-            letter" on its own reads like a run that broke. The engine
-            finishes such a run as complete-without-findings and publishes it
-            like any other review, so the panel says what it means. A review
-            the guards emptied reaches the same status and is refused at
-            publish, which is why the sentence is held back when anything was
-            quarantined. */}
-        {runRecord.findings === 0 && !runRecord.appendix_findings && quarantined === 0 && (
+        {/* A review with nothing in it is a result, and "0 issues" on its own
+            reads like a run that broke. The engine finishes such a run as
+            complete-without-findings and publishes it like any other review,
+            so the panel says what it means. A review the guards emptied
+            reaches the same status and is refused at publish, which is why the
+            sentence is held back when anything was quarantined. */}
+        {runRecord.issues === 0 && quarantined === 0 && (
           <p class="prov__hash">
             The reviewers raised no make-or-break findings against this
             manuscript.
@@ -426,6 +465,34 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         </p>
       )}
     </div>
+
+    {/* What the round was handed. A revision round rules against the previous
+        round's own issues file, and the record names that file and a digest of
+        it rather than where it sat on disk. The second sentence is the part a
+        reader cannot see from the letter: the referees were given the
+        manuscript and no knowledge of the round, so only the editor read the
+        earlier issues, and what the letter calls resolved is the editor's
+        reading rather than a referee's re-examination. */}
+    {generator && priorRound.file && (
+      <div class="prov__cell">
+        <p class="label">Ruled against</p>
+        <p class="prov__value mono">
+          {priorRound.file}
+          {typeof priorRound.issues === "number"
+            ? ` · ${priorRound.issues} issue${priorRound.issues === 1 ? "" : "s"}`
+            : ""}
+        </p>
+        {priorRound.digest && (
+          <p class="prov__hash mono" title={String(priorRound.digest)}>
+            digest {String(priorRound.digest)}
+          </p>
+        )}
+        <p class="prov__hash">
+          The referees read the manuscript without being told which round this
+          is. Only the editor was given the earlier issues.
+        </p>
+      </div>
+    )}
 
     {/* A local run records no debate round count. Showing "N/A" for a number
         the hosted panel measured and this path never had would read as a
@@ -724,7 +791,7 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
       <p class="prov__note">
         Nothing in this section is a finding. A citation becomes a finding on
         this page only where the citations specialist read the row, judged it and
-        wrote it up, and the letter and the appendix hold those. The lane's own
+        wrote it up, and the issues the editor pooled hold those. The lane's own
         rows are not published, and neither is the article text it fetched in
         order to check them.
       </p>

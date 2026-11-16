@@ -249,7 +249,7 @@ $PY scripts/local_review.py publish \
 
 `publish` writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`, one
 `audit_<track>.md` for each of the six specialist tracks the run reported on,
-`editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. A
+`issues.json`, `round.json`, `provenance.json` and `manifest.json`. A
 track the arm asked for with no report in the run is named as a gap on the
 rendered page rather than quietly left out. It refuses to overwrite an existing
 bundle.
@@ -372,21 +372,33 @@ dropped when it does not. That happens only when the value is actually shaped
 like a path, so a reviewer's `/ 2 is the wrong denominator` in such a field is
 published as written.
 
-Every publish prints one line about `editor-package.json`, because the bundle's
-copy is not the engine's file with a few strings scrubbed. It is rebuilt from the
-same reading by `review_package`, and that rebuild is the intended projection:
-the engine's package carries the whole run and the bundle publishes the parts a
-reader of the review needs. The line compares the two sets of top-level keys and
-names what the bundle does not carry, such as `stages` and `reviewer_provenance`,
-what it adds, which today is `findings_source`, and any path field that was
-rewritten or dropped. It is computed from the engine's own file read back off the
-run folder rather than from a list in this repository, so the next engine release
-changes the line instead of making it wrong. A path used as a JSON
-*field name* is refused outright, inside this checkout or outside it. Engine
-0.9 writes no mapping keyed by a path, so a rewrite there would be faithful to
-nothing, and dropping the key would publish an artifact missing an entry the
-engine wrote. `publish` names the key and the flag that publishes it as it
-stands.
+Every publish prints one line about `issues.json`, because the bundle's copy is
+not the engine's file with a few strings scrubbed. It is rebuilt from the same
+reading by `review_package`, and that rebuild is the intended projection: the
+engine's file carries the whole run and the bundle publishes the parts a reader
+of the review needs. The line compares the two sets of top-level keys and names
+what the bundle does not carry, such as `stages`, what it adds, which today is
+the findings ledger the issues were pooled from plus `findings_source`,
+`issues_source` and `review_guard_status`, and any path field that was rewritten
+or dropped. It is computed from the engine's own file read back off the run
+folder rather than from a list in this repository, so the next engine release
+changes the line instead of making it wrong.
+
+The bundle keeps the engine's name for that file on purpose. It is the same
+document narrowed, and the next round is handed this copy as its prior input, so
+the issue ids in it are the ids the engine minted and a later round can rule
+against them. Before writing it, `publish` applies the engine's own prior-round
+rules to the file it is about to write: the document carries a schema stamp,
+every row is an object, every id is of the engine's form, no id appears twice,
+and `issue_ids_used` accounts for every id in the file. A bundle that would not
+survive those rules is refused now rather than a round later, in front of the
+authors, with the ids already printed in a decision letter.
+
+A path used as a JSON *field name* is refused outright, inside this checkout or
+outside it. Engine 0.10 writes no mapping keyed by a path, so a rewrite there
+would be faithful to nothing, and dropping the key would publish an artifact
+missing an entry the engine wrote. `publish` names the key and the flag that
+publishes it as it stands.
 
 The imported manuscript is what ties the steps together. `prepare` hashes the
 PDF it fetched, the engine's importer hashes the bytes it was handed into

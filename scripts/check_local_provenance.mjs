@@ -195,7 +195,7 @@ function localRecord(overrides = {}) {
         claude_code_version: "2.1.322",
         status: "complete",
         publishable: true,
-        findings_source: "editor-package",
+        findings_source: "issues",
         review_guard_status: "clean",
         completeness: {
           required: ["reviewer-1", "reviewer-2", "reviewer-3", ...TRACKS, "editor"],
@@ -206,8 +206,17 @@ function localRecord(overrides = {}) {
           attempts: { "reviewer-1": 1, "audit-stats": 2 },
           retried: ["audit-stats"],
         },
-        findings: 8,
-        appendix_findings: 45,
+        // What the review asks for, counted off the issues the editor wrote.
+        // The ledger's own total stays in findings_delivered: 53 findings
+        // pooled into 11 issues, of which 7 are required changes and 4 are
+        // suggestions, with one prior issue ruled fixed and one left unchecked.
+        issues: 11,
+        required: 7,
+        suggestions: 4,
+        resolved: 1,
+        unverified: 1,
+        issues_source: "editor",
+        issues_schema_version: "review-issues-v1",
         escalated_in_bundle: 4,
         findings_delivered: 53,
         findings_submitted: 53,
@@ -261,6 +270,10 @@ function localRecord(overrides = {}) {
     decision: "major",
     desk_rejected: false,
     round: 1,
+    // A first round was given nothing to rule against, and it says so rather
+    // than leaving the field out: an absent prior round and a round nobody
+    // recorded read the same way, and only one of them is honest.
+    prior_round: {},
     ingest: { format: "markdown", tool: "peerreviewagents import_paper" },
     panel: [],
     total_cost_usd: null,
@@ -489,17 +502,59 @@ const silentAboutPublishable = localRecord();
 delete silentAboutPublishable.generator.run.publishable;
 rejects(silentAboutPublishable, "a record must carry the engine's own publish flag");
 
-// Where the published findings came from. The engine rebuilds a pool from
-// findings.jsonl when the editor package is missing or damaged, and that pool
-// carries no editorial placement: no body, no appendix, no rulings. Publishing
-// it would present the raw submissions as the editor's letter.
+// Where the published review came from. The engine reads the raw ledger when
+// the issues document is missing or damaged, or when it holds no issue over
+// findings that are in the ledger, and what comes back then is a pile of
+// findings nobody pooled rather than a review. Publishing it would present the
+// raw submissions as the editor's letter.
 const rebuiltPool = localRecord();
-rebuiltPool.generator.run.findings_source = "findings-ledger";
-rejects(rebuiltPool, "findings rebuilt from the ledger are not the editor's review");
+rebuiltPool.generator.run.findings_source = "ledger";
+rejects(rebuiltPool, "findings read off the ledger are not the editor's review");
 
 const silentAboutSource = localRecord();
 delete silentAboutSource.generator.run.findings_source;
-rejects(silentAboutSource, "a record must say where its findings came from");
+rejects(silentAboutSource, "a record must say where its review came from");
+
+// Who pooled the findings into issues. `server` is the engine minting one issue
+// per finding because no editor claimed the review, which it calls
+// unpublishable itself, and a record carrying that word describes a run the
+// gate did not let through.
+const unpooled = localRecord();
+unpooled.generator.run.issues_source = "server";
+rejects(unpooled, "a review nobody pooled into issues is not an editor's review");
+
+const silentAboutPooling = localRecord();
+delete silentAboutPooling.generator.run.issues_source;
+rejects(silentAboutPooling, "a record must say who pooled its findings into issues");
+
+// What the review asks for. A record without the counts cannot say how much was
+// required of the authors, and the page prints them.
+for (const name of ["issues", "required", "suggestions", "resolved", "unverified"]) {
+  const missing = localRecord();
+  delete missing.generator.run[name];
+  rejects(missing, `a record must carry its ${name} count`);
+}
+
+// What the round was given to rule against. The engine publishes the prior
+// file's name, a digest and the tally, and never the path it was read from: a
+// path says whose machine ran the earlier round.
+const secondRound = localRecord();
+secondRound.round = 2;
+secondRound.prior_round = {
+  file: "issues.json",
+  digest: "0123456789abcdef",
+  issues: 9,
+  tally: { new: 3, persisting: 5, regressed: 1, resolved: 2, unverified: 1 },
+};
+accepts(secondRound, "a second round records the file it ruled against");
+
+const pathyPrior = localRecord();
+pathyPrior.prior_round = { file: "issues.json", path: "/home/someone/runs/issues.json" };
+rejects(pathyPrior, "a prior round must not name the machine it was read from");
+
+const silentAboutPrior = localRecord();
+delete silentAboutPrior.prior_round;
+rejects(silentAboutPrior, "a record must say what it was given to rule against");
 
 // A review written before a rate limit stopped the session is complete and
 // publishable, and the note is the only thing that says the session did not end
@@ -681,7 +736,9 @@ assertValidProvenance(noneFound, "a track that reported nothing to report answer
 const foundNothing = localRecord();
 foundNothing.generator.run.status = "complete-without-findings";
 foundNothing.generator.run.review_guard_status = "clean";
-foundNothing.generator.run.findings = 0;
+foundNothing.generator.run.issues = 0;
+foundNothing.generator.run.required = 0;
+foundNothing.generator.run.suggestions = 0;
 foundNothing.generator.run.findings_delivered = 0;
 foundNothing.generator.run.quarantined_findings_count = 0;
 assertValidProvenance(foundNothing, "fixture");

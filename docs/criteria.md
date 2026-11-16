@@ -117,19 +117,43 @@ byte-identical to the draft before it, one referee raised its score from 3 to 5
 an expanded methods section that was not in the paper, and the editor rejected
 the manuscript for disregarding a review process nobody had gone through.
 
-Continuity lives on the editor's numbered required revisions instead, which is
-the actual contract with the authors. An item keeps the id it was born with:
-`R1-03` is the third ask of round 1 for the life of the manuscript, still called
-`R1-03` in round 3. A compliance auditor rules on each one against the new
-draft, and to call an item addressed it must quote manuscript text. The quote
-is then searched for in the manuscript, and one that is not there is recorded as
-unsubstantiated and counts as still open.
+Continuity lives on the editor's numbered issues instead, which is the actual
+contract with the authors. Only the editor is given the previous round's issues,
+which is what keeps the referees blind while the asks still carry over.
 
-Two things follow for a reader. The specialist reports in a later round are an
-independent read of the paper as it stands, so a referee restating a concern is
-not evidence the authors ignored it, and score movement between rounds includes
-the resampling noise of a fresh panel. The account of what happened to the asks
-is the compliance audit and the decision letter.
+An issue keeps the id it was born with. The id is the engine's own, of the form
+`i03`, and this site publishes it unchanged rather than renumbering it for the
+page: `i03` is one problem for the life of the manuscript, called `i03` in every
+round that mentions it, and an id is never handed to a second problem even after
+the first is closed. Each published bundle's `issues.json` is the file the next
+round is given, so the ids a reader sees in a decision letter are the ids the
+next round rules against.
+
+The editor rules on every issue of the previous round, and the ruling is one of
+five words. `persisting` and `regressed` mean this round's referees raised it
+again, still wrong or worse. `resolved` means the editor read the revision and
+judged it fixed. `unverified` means nobody raised it again and nothing in the
+manuscript shows it was fixed. `new` is an issue this round is the first to
+raise.
+
+Two of those words need reading carefully, and the page says so where it prints
+them. **`resolved` is the editor's reading of the revision, not a test that
+ran.** The engine checks it in one direction only: where the text a prior
+finding quoted still appears word for word in the new manuscript, a `resolved`
+ruling has to say why it is fixed anyway, and the passages the engine found are
+published beside the ruling so a reader can see what the ruling was made
+against. Without that reason the ruling becomes `unverified`. Nothing else about
+a `resolved` issue is verified, and this site never presents one as proof that
+the authors complied. **`unverified` is a statement about the evidence, not a
+verdict against the authors.** It means the manuscript did not settle the
+question either way, it is carried into the next round like any other open
+issue, and it is never counted as a fix.
+
+Two more things follow for a reader. The referee and specialist reports in a
+later round are an independent read of the paper as it stands, so a referee
+restating a concern is not evidence the authors ignored it, and score movement
+between rounds includes the resampling noise of a fresh panel. The account of
+what happened to the asks is the issue list and the decision letter.
 
 An unchanged resubmission is caught by comparing the manuscript file's SHA-256
 against the one the previous round recorded. There is no re-reading or converter
