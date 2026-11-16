@@ -93,41 +93,80 @@ ISSUES_SCHEMA = "review-issues-v2"
 # which.
 MAIN_DOCUMENT = local_review.MAIN_DOCUMENT
 
-# The fixture paper, as the engine's importer writes one: the pieces of the
-# paper on numbered lines of `paper.md`, a blank line between them. A finding
-# carries no block id any more, it carries a quote and the line that quote was
-# read on, so each line here holds the words the finding that cites it quotes.
-# A fixture whose lines did not hold their own quotes would let the letter
-# print a line number that means nothing and no check here would see it.
-PAPER_LINES = (
-    "# A manuscript with findings at every severity",                  # 1
-    "",
-    "Across both cohorts the effects were large.",                     # 3
-    "",
-    "A fuller account is given in the appendix, where the interval "
-    "is reported in the appendix table.",                              # 5
-    "",
-    "Both groups were treated identically and animals were assigned "
-    "at random.",                                                      # 7
-    "",
-    "Counts were read from the plates, and the assay was run as "
-    "described.",                                                      # 9
-    "",
-    "Per-well counts are available on request.",                       # 11
-    "",
-    "The receptor is blocked by the same compound, as shown "
-    "previously.",                                                     # 13
-    "",
-    "Figure 2, panel b, gives the counts for the second cohort.",      # 15
-    "",
-    "The abstract reports n = 48 across both cohorts.",                # 17
-    "",
-    "Table 1 totals the same cohorts at n = 46.",                      # 19
+# The fixture paper, as the pieces an import is given rather than as the file
+# one writes: `_workspace` hands these to the engine's own `write_manuscript`,
+# which renders them into `paper.md` and writes the map and the manifest beside
+# it. Nothing here says where a piece lands or what the file looks like, because
+# a fixture that wrote the format itself would be a second copy of it, agreeing
+# with this repository's belief about the engine rather than with the engine.
+#
+# A finding carries no block id any more, it carries a quote and the line that
+# quote was read on, so each piece here holds the words the finding that cites
+# it quotes. A fixture whose lines did not hold their own quotes would let the
+# letter print a line number that means nothing and no check here would see it.
+PAPER_PIECES = (
+    {
+        "kind": "title",
+        "section": "Front matter",
+        "text": "A manuscript with findings at every severity",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Abstract",
+        "text": "Across both cohorts the effects were large.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Abstract",
+        "text": "A fuller account is given in the appendix, where the interval "
+        "is reported in the appendix table.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Methods",
+        "text": "Both groups were treated identically and animals were assigned "
+        "at random.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Methods",
+        "text": "Counts were read from the plates, and the assay was run as "
+        "described.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Methods",
+        "text": "Per-well counts are available on request.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Introduction",
+        "text": "The receptor is blocked by the same compound, as shown "
+        "previously.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Results",
+        "text": "Figure 2, panel b, gives the counts for the second cohort.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Abstract",
+        "text": "The abstract reports n = 48 across both cohorts.",
+    },
+    {
+        "kind": "paragraph",
+        "section": "Results",
+        "text": "Table 1 totals the same cohorts at n = 46.",
+    },
 )
 
 # The lines the fixture findings quote, named rather than typed at each use so
-# a line can be moved in one place. The numbers are the odd lines above: the
-# even ones are the blank lines between the pieces.
+# a line can be moved in one place. These are not the layout: they are what the
+# fixture's citations claim, and `_workspace` reads the map the engine wrote and
+# fails if a piece landed anywhere else. A release that laid the pieces out
+# differently would otherwise leave every citation here pointing at a line of
+# text nobody quoted, which is exactly the failure a line number can hide.
 HEADLINE_LINE = 3
 APPENDIX_LINE = 5
 RANDOMISED_LINE = 7
@@ -137,6 +176,22 @@ CITATION_LINE = 13
 PANEL_LINE = 15
 ABSTRACT_TOTAL_LINE = 17
 TABLE_TOTAL_LINE = 19
+
+# One line per piece above, in that order: where the fixture expects the engine
+# to have put it. The title is the first line of the file and is quoted by
+# nothing.
+PIECE_LINES = (
+    1,
+    HEADLINE_LINE,
+    APPENDIX_LINE,
+    RANDOMISED_LINE,
+    ASSAY_LINE,
+    COUNTS_LINE,
+    CITATION_LINE,
+    PANEL_LINE,
+    ABSTRACT_TOTAL_LINE,
+    TABLE_TOTAL_LINE,
+)
 
 # The findings ledger, `findings.jsonl`, in the order the readers filed rows.
 # Deliberately out of severity order, because nothing downstream may depend on
@@ -1476,76 +1531,63 @@ def _run_tree(root: Path, **overrides) -> Path:
 def _workspace(
     root: Path,
     paper_id: str = "paper-abc",
-    manuscript: str | None = None,
+    pieces: list | None = None,
     source_sha256: str = "b" * 64,
 ) -> Path:
     """The folder the engine's import command writes, as publish needs it.
 
-    `paper.md` is the whole paper, one piece of it on each numbered line, and
-    `map.json` is one row per piece saying which lines it covers. The leak scan
-    reads the Markdown, because a hit that appears in the paper is the paper's
-    own text rather than this machine's, so a check of the allowance has to be
-    able to say what the paper said.
+    Written by the engine's own `write_manuscript`, from the pieces above: it
+    renders `paper.md`, writes `map.json` over it and `manifest.json` digesting
+    all of it, and hands back the manifest it wrote. Nothing about the format is
+    repeated here. A fixture that laid out the file itself could only agree with
+    what this repository believes the engine writes, and the publish path reads
+    this folder through the engine's `verify_workspace`, so the one thing worth
+    publishing against is a folder the engine made.
 
-    `manifest.json` names every file the import wrote and the digest of its
-    bytes, and the publish path reads the folder through the engine's own
-    `verify_workspace`, which re-digests all of them before anything is read
-    out. The digests here are therefore taken from the bytes this function has
-    just written rather than typed: a typed digest would have every publishing
-    check refuse the fixture, and a manifest listing no files would waive the
-    one guard that stops a finding citing a line of a file somebody edited
-    after the import.
+    The leak scan reads the rendered Markdown, because a hit that appears in the
+    paper is the paper's own text rather than this machine's, and a check of the
+    allowance has to be able to say what the paper said.
+
+    Two things are asked of this fixture that an import cannot be asked for, and
+    both are done to the manifest after the call, which is safe because the
+    manifest is the one file not digested in its own `files` map:
+
+    * a workspace carrying no `paper_id` at all, which no import writes, since
+      the engine derives one from the text when it is given none;
+    * `source.sha256`, which is passed through rather than patched: the digest of
+      a PDF nobody has, so the run binding has something to agree with.
     """
+    why = "the fixture manuscript cannot be written"
+    write_manuscript = local_review.engine_public("write_manuscript", why)
     workspace = Path(root)
     workspace.mkdir(parents=True, exist_ok=True)
-    text = "\n".join(PAPER_LINES) + "\n" if manuscript is None else manuscript
-    numbered = text.split("\n")
-    if numbered and numbered[-1] == "":
-        numbered.pop()
-    pieces = [
-        {
-            "lines": [number, number],
-            "kind": "title" if number == 1 else "paragraph",
-            "section": "Front matter",
-            "page": 1,
-            "source": "text",
-            "fingerprint": local_review.digest(line.encode("utf-8")),
-            "document": MAIN_DOCUMENT,
-        }
-        for number, line in enumerate(numbered, start=1)
-        if line.strip()
-    ]
-    files = {
-        MAIN_DOCUMENT: text,
-        "map.json": json.dumps(pieces, indent=1),
-    }
-    for name, body in files.items():
-        (workspace / name).write_text(body, encoding="utf-8")
-    (workspace / "manifest.json").write_text(
-        json.dumps(
-            {
-                "schema_version": "paper-base-v1",
-                "paper_id": paper_id,
-                "source": {
-                    "file": "original/original.pdf",
-                    "sha256": source_sha256,
-                    "pages": 1,
-                },
-                "parser": "fixture",
-                "documents": [MAIN_DOCUMENT],
-                "counts": {"pieces": len(pieces)},
-                "statistics": {
-                    "pieces": len(pieces),
-                    "lines": {MAIN_DOCUMENT: len(numbered)},
-                },
-                "files": {
-                    name: local_review.digest(body.encode("utf-8"))
-                    for name, body in files.items()
-                },
-            }
-        ),
-        encoding="utf-8",
+    manifest = write_manuscript(
+        workspace,
+        [dict(piece) for piece in (PAPER_PIECES if pieces is None else pieces)],
+        paper_id=paper_id or None,
+        parser="fixture",
+        source={
+            "file": "original/original.pdf",
+            "sha256": source_sha256,
+            "pages": 1,
+        },
     )
+    if pieces is None:
+        # Where the engine actually put each piece, against where every
+        # citation in this fixture says it is. A release that put a blank line
+        # somewhere else would leave the quotes intact and every line number
+        # wrong, and a wrong line number reads exactly like a right one.
+        rows = json.loads((workspace / "map.json").read_text(encoding="utf-8"))
+        landed = tuple(int(row["lines"][0]) for row in rows)
+        assert landed == PIECE_LINES, (
+            f"the engine rendered the fixture's pieces onto lines {landed}, and "
+            f"this fixture's findings cite {PIECE_LINES}"
+        )
+    if not paper_id:
+        (workspace / "manifest.json").write_text(
+            json.dumps({k: v for k, v in manifest.items() if k != "paper_id"}),
+            encoding="utf-8",
+        )
     return workspace
 
 
@@ -5430,17 +5472,22 @@ def check_a_review_of_a_detection_paper_publishes() -> None:
             *ISSUES[1:],
         ],
     )
-    manuscript = (
-        "[b1 | Abstract | manuscript page 1]\nA detection paper.\n\n"
-        "[b2 | Methods | manuscript page 2]\n"
-        "Correspondence to a.author@univ.example.edu.\n"
-    )
+    # A paper of its own for this check, because the address the review quotes
+    # has to be in the manuscript for the scan to read it as the paper's.
+    pieces = [
+        {"kind": "title", "section": "Front matter", "text": "A detection paper"},
+        {
+            "kind": "paragraph",
+            "section": "Methods",
+            "text": "Correspondence to a.author@univ.example.edu.",
+        },
+    ]
 
     with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
         with _published_tree(Path(tmp) / "reviews") as reviews:
             run = _run_directory(Path(tmp) / "run", **{"issues.json":notation})
             destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
-            workspace = _workspace(Path(tmp) / "workspace", manuscript=manuscript)
+            workspace = _workspace(Path(tmp) / "workspace", pieces=pieces)
 
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
@@ -5879,9 +5926,11 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
     local path. A hit that appears verbatim in the manuscript is the paper's own
     text and is allowed, except for the facts, which no paper can waive.
     """
+    # The manuscript as the scan is given it: the text of `paper.md`, which is
+    # what `local_references` takes. Nothing is read out of it but the words.
     manuscript = (
-        "[b1 | Abstract | manuscript page 1]\nA short fixture manuscript.\n\n"
-        "[b2 | Methods | manuscript page 2]\n"
+        "# A short fixture manuscript\n"
+        "\n"
         "Correspondence to a.author@univ.example.edu, data at /srv/public/set.\n"
     )
     facts = local_review.machine_facts(run_dir="/tmp/fixture-run/review")

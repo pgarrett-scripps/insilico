@@ -78,10 +78,12 @@ MANUSCRIPT_DIRECTORY = "manuscript"
 # What the engine calls the manuscript itself inside that folder. Engine 0.10
 # writes the whole paper as one Markdown file, one piece of it per line, and a
 # finding cites a line of this file by name; a supplement is a document of its
-# own beside it. The name is not on the engine's public surface, so it is
-# written here and checked against the workspace the engine hands back in
-# `bind_run_to_input`, where a release that renamed it is refused rather than
-# published under a label this file invented.
+# own beside it. The engine publishes the name on its own surface, and this copy
+# exists because half of this pipeline reads a published bundle with no engine
+# installed and still has to say which document a line belongs to. The copy is
+# checked against the engine's own in `bind_run_to_input`, so a release that
+# renamed the file is refused there rather than published under a label this
+# file invented.
 MAIN_DOCUMENT = "paper.md"
 
 # The six specialist tracks the plugin ships, each writing one `audit_<track>.md`
@@ -1155,6 +1157,19 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
             "import manifest cannot be published as what was reviewed."
         ) from exc
     paper = _dict(getattr(base, "manifest", None))
+    # The engine's own name for the main document, against the copy this file
+    # keeps for the engine-free half. Checked here rather than trusted: a
+    # release that renamed the file would otherwise be refused below for holding
+    # no paper.md, which names the wrong problem and sends the operator looking
+    # at their own import.
+    engine_main = str(engine_public("MAIN_DOCUMENT", why) or "")
+    if engine_main != MAIN_DOCUMENT:
+        raise CommandError(
+            f"The engine calls a manuscript's main document {engine_main} and "
+            f"this pipeline reads {MAIN_DOCUMENT}, so {why}. The engine that "
+            "wrote the run and the publish path here are different releases. "
+            "Update the publish path before publishing a run from this release."
+        )
     documents = [str(name) for name in _list(base.document_names())]
     if MAIN_DOCUMENT not in documents:
         raise CommandError(
