@@ -311,8 +311,8 @@ scheme's `//` survives the collapse, because `https://home/x` is a URL and
 
 A backslash is two characters at once and nothing in the text says which one it
 is, so the canonical form is built twice and a hit from either counts. In one
-reading the escape is dropped first, which is what `\/home\/ty\/x` and
-`ty\-MS\-7C80` need. In the other the backslash is folded to a separator first,
+reading the escape is dropped first, which is what `\/home\/opal\/x` and
+`lab\-WS\-01` need. In the other the backslash is folded to a separator first,
 which is what `\opt\.cache\insilico` needs, since dropping the escape first
 would eat the separator in front of a segment that starts with `.`, `-` or `_`
 and turn the path into `/opt.cache/insilico`. Neither reading is the right one
@@ -321,7 +321,7 @@ and the scan does not try to pick.
 There is
 no left or right boundary on the match, no
 vocabulary that is exempt and no prose-only mode, because a string like
-`/home/ty` or `ty-ms-7c80` cannot turn up in a review of a paper or in this
+`/home/opal` or `lab-ws-01` cannot turn up in a review of a paper or in this
 repository's own vocabulary. Nothing waives one. No flag reaches it, an
 allowance that merely contains one is itself refused before the scan runs, and
 finding the same text in the manuscript does not excuse it either, because a

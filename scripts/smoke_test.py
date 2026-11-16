@@ -14,11 +14,18 @@ from smoke_checks.bundles import (
 from smoke_checks.commands import check_command_parsing_is_strict
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
 from smoke_checks.local import (
+    check_a_credential_or_an_installed_path_is_a_fact_and_never_prose,
     check_a_destination_outside_its_tree_is_refused,
+    check_a_first_round_claims_no_standing_against_a_round_that_never_ran,
+    check_a_hand_edited_prior_file_is_not_the_one_that_round_published,
     check_a_home_or_temporary_path_is_refused_on_anybodys_machine,
+    check_a_later_round_cannot_publish_without_the_round_before_it,
     check_a_minor_issue_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
     check_a_severity_this_release_cannot_sort_is_refused,
+    check_a_standing_this_release_never_publishes_is_refused,
+    check_a_surviving_quote_is_printed_as_the_authors_own_words,
+    check_a_withheld_run_with_no_reason_is_reported_as_having_none,
     check_a_path_shaped_key_is_refused_rather_than_published_without_it,
     check_a_schema_pattern_means_what_the_repositorys_own_gate_means,
     check_a_rehearsal_claims_no_reading,
@@ -31,6 +38,8 @@ from smoke_checks.local import (
     check_every_published_file_is_hashed,
     check_every_spelling_of_a_machine_fact_is_the_same_fact,
     check_the_fixtures_counts_are_the_ones_the_reader_computes,
+    check_no_editorial_page_names_the_machine_it_was_written_on,
+    check_no_published_document_overstates_what_the_editor_agent_did,
     check_nothing_reaches_into_the_engines_internals,
     check_only_this_machines_own_names_are_refused_as_this_machine,
     check_ordinary_review_text_publishes_and_a_local_path_does_not,
@@ -141,6 +150,24 @@ def main() -> int:
     print("ok  severity alone decides what a revision round must fix")
     check_a_severity_this_release_cannot_sort_is_refused()
     print("ok  an issue carrying a severity this release cannot sort is refused")
+    check_a_standing_this_release_never_publishes_is_refused()
+    print("ok  a standing outside the engine's five words is refused by name")
+    check_a_surviving_quote_is_printed_as_the_authors_own_words()
+    print("ok  a passage that still reads the same is printed as the authors wrote it")
+    check_a_first_round_claims_no_standing_against_a_round_that_never_ran()
+    print("ok  a first round claims no standing against a round that never ran")
+    check_a_later_round_cannot_publish_without_the_round_before_it()
+    print("ok  a later round publishes only against the items it actually read")
+    check_a_hand_edited_prior_file_is_not_the_one_that_round_published()
+    print("ok  the previous round's items are read as the bytes that bundle published")
+    check_a_withheld_run_with_no_reason_is_reported_as_having_none()
+    print("ok  a run the engine withheld without a reason is reported as having none")
+    check_a_credential_or_an_installed_path_is_a_fact_and_never_prose()
+    print("ok  a credential and a path inside an installed environment are refused")
+    check_no_published_document_overstates_what_the_editor_agent_did()
+    print("ok  no authored document claims more of the editor agent than it did")
+    check_no_editorial_page_names_the_machine_it_was_written_on()
+    print("ok  no editorial page names the machine it was written on")
     check_the_fixtures_counts_are_the_ones_the_reader_computes()
     print("ok  the fixture's own tallies are the ones the publish path counts")
     check_an_unclaimed_review_is_labelled_an_experiment()

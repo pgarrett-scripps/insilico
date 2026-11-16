@@ -28,7 +28,7 @@ agent file in the plugin:
 - six specialist readers, one dimension each: `stats`, `figures-tables`,
   `methods-reporting`, `citations`, `numbers`, `field`
 - one editor agent, which pools every finding, rules on the ones a reviewer
-  escalated, and chooses which belong in the body of the letter
+  escalated, and writes the numbered issues the letter asks for
 - a citation lane of worker slots, `cite-1` upward, which reads the reference
   list, looks each entry up and checks in-text uses against the source each one
   names. The workers write a ledger and no part of the review, so they are

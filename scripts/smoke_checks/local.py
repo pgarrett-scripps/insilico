@@ -31,6 +31,7 @@ import contextlib
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -167,7 +168,7 @@ LEDGER = [
 # orders the letter and nothing may fall back to file order.
 ISSUES = [
     {
-        "id": "i02",
+        "id": "i08",
         "name": "The sample size is not stated",
         "severity": "moderate",
         "category": "methods-and-reporting",
@@ -216,7 +217,7 @@ ISSUES = [
         "audits": ["audit_figures-tables.md"],
     },
     {
-        "id": "i01",
+        "id": "i07",
         "name": "The headline interval is not supported by the reported numbers",
         "severity": "major",
         "category": "statistics-and-inference",
@@ -249,7 +250,7 @@ ISSUES = [
         "audits": ["audit_stats.md"],
     },
     {
-        "id": "i03",
+        "id": "i09",
         "name": "A reference is cited for the wrong claim",
         "severity": "minor",
         "category": "literature-and-citations",
@@ -282,7 +283,7 @@ ISSUES = [
         "audits": [],
     },
     {
-        "id": "i04",
+        "id": "i10",
         "name": "Two totals for the same cohort",
         "severity": "minor",
         "category": "results-and-numbers",
@@ -329,8 +330,20 @@ ISSUES = [
         "prior_rank": 2,
         "status": "resolved",
         "status_reason": "The methods now name the assay and its catalogue number.",
-        "text_unchanged_reason": None,
-        "surviving_quotes": [],
+        # Ruled fixed although one passage the earlier finding quoted is still
+        # in this draft word for word. The engine refuses that ruling unless the
+        # editor says why, and it publishes the passage beside the reason, so
+        # the letter has to print the quote itself rather than the row.
+        "text_unchanged_reason": (
+            "The sentence is unchanged, and the assay is named in the one after it."
+        ),
+        "surviving_quotes": [
+            {
+                "finding_uid": "f-021",
+                "block_id": "b5",
+                "quote": "the assay was run as described",
+            },
+        ],
         "audits": [],
     },
     {
@@ -352,7 +365,17 @@ ISSUES = [
         "status": "unverified",
         "status_reason": "Nothing in this draft says where the counts are, and no reader found them.",
         "text_unchanged_reason": "The methods section is unchanged from the previous draft.",
-        "surviving_quotes": ["counts are available on request"],
+        # Rows, not strings. The engine writes each surviving passage as the
+        # finding that quoted it, the block it was found in and the quote
+        # itself, and a fixture of bare strings let a renderer publish the row
+        # as Python text without any check here seeing it.
+        "surviving_quotes": [
+            {
+                "finding_uid": "f-022",
+                "block_id": "b6",
+                "quote": "counts are available on request",
+            },
+        ],
         "audits": [],
     },
 ]
@@ -379,13 +402,138 @@ FINDINGS_BY_TRACK = {
     "field": 0,
 }
 
+# The previous round's own published issues.json, which is the file this run was
+# handed as its prior round. It is a real document on disk in the checks that
+# publish, because the publish path now compares what the engine read against
+# what the plan named and hashes the file against the bundle that published it:
+# a fixture that only claimed a prior round could not exercise either rule.
+#
+# The round before this one was itself a later round of the same line. It raised
+# `i05` and `i06` as new problems, ruled the four items it inherited fixed, and
+# so published the six ids its line had spent while carrying only two rows.
+PRIOR_ISSUES_DOCUMENT = {
+    "schema_version": ISSUES_SCHEMA,
+    "issues_source": "editor",
+    "issues_source_reason": None,
+    "summary": "The round before this one, as it was published.",
+    "issues": [
+        {
+            "id": "i06",
+            "name": "The earlier round asked for the raw counts",
+            "severity": "major",
+            "category": "reproducibility",
+            "rank": 1,
+            "statement": "The previous round asked for the per-well counts behind figure 2.",
+            "members": [
+                {
+                    "finding_uid": "f-022",
+                    "slot": "core-1",
+                    "track": "numbers",
+                    "severity": "major",
+                    "kind": "omission",
+                    "basis": "judgement",
+                    "escalate": False,
+                    "title": "The counts behind figure 2 are not available",
+                    "block_id": "b6",
+                    "quote": "counts are available on request",
+                    "evidence_blocks": ["b6"],
+                },
+            ],
+            "raised_by": 1,
+            "rebuttal_block_id": None,
+            "rebuttal_quote": None,
+            "prior_id": None,
+            "prior_rank": None,
+            "status": "new",
+            "status_reason": None,
+            "text_unchanged_reason": None,
+            "surviving_quotes": [],
+            "audits": ["audit_numbers.md"],
+        },
+        {
+            "id": "i05",
+            "name": "The earlier round asked for the assay to be named",
+            "severity": "moderate",
+            "category": "methods-and-reporting",
+            "rank": 2,
+            "statement": "The previous round could not tell which assay the counts came from.",
+            "members": [
+                {
+                    "finding_uid": "f-021",
+                    "slot": "spec-methods-reporting",
+                    "track": "methods-reporting",
+                    "severity": "moderate",
+                    "kind": "omission",
+                    "basis": "judgement",
+                    "escalate": False,
+                    "title": "The assay is not named",
+                    "block_id": "b5",
+                    "quote": "the assay was run as described",
+                    "evidence_blocks": ["b5"],
+                },
+            ],
+            "raised_by": 1,
+            "rebuttal_block_id": None,
+            "rebuttal_quote": None,
+            "prior_id": None,
+            "prior_rank": None,
+            "status": "new",
+            "status_reason": None,
+            "text_unchanged_reason": None,
+            "surviving_quotes": [],
+            "audits": ["audit_methods-reporting.md"],
+        },
+    ],
+    "counts": {
+        "issues": 2,
+        "required": 2,
+        "suggestions": 0,
+        "resolved": 0,
+        "unverified": 0,
+        "issue_members": 2,
+        "by_severity": {"major": 1, "moderate": 1, "minor": 0},
+        "by_category": {"reproducibility": 1, "methods-and-reporting": 1},
+        "by_status": {
+            "new": 2,
+            "persisting": 0,
+            "regressed": 0,
+            "resolved": 0,
+            "unverified": 0,
+        },
+    },
+    "prior_round": {
+        "file": "issues.json",
+        "digest": "d" * 16,
+        "issues": 4,
+        "tally": {
+            "new": 2,
+            "persisting": 0,
+            "regressed": 0,
+            "resolved": 4,
+            "unverified": 0,
+        },
+    },
+    "issue_ids_used": ["i01", "i02", "i03", "i04", "i05", "i06"],
+    "audits": ["audit_numbers.md", "audit_methods-reporting.md"],
+    "limitations": ["Did not re-run the analysis."],
+}
+
+# The bytes of that file, written the way the publish path writes every JSON
+# file of a bundle, because the two digests below are over these bytes and the
+# helper that puts the file on disk writes exactly this text.
+PRIOR_ISSUES_TEXT = json.dumps(PRIOR_ISSUES_DOCUMENT, indent=2, ensure_ascii=False) + "\n"
+PRIOR_ISSUES_SHA256 = local_review.digest(PRIOR_ISSUES_TEXT.encode())
+
 # What the prior round left this one, as the engine publishes it: the file's
 # own name and a digest of its content, never the path it was read from, the
 # number of open items it handed over, and this round's tally of rulings over
 # them. Two items came in, one was ruled fixed and one could not be verified.
+# The digest is the engine's own rule, `sha256` of the file's text cut to
+# sixteen characters, computed here over the file the checks write rather than
+# typed in, so the publish path's comparison of the two is a real comparison.
 PRIOR_ROUND = {
     "file": "issues.json",
-    "digest": "c" * 16,
+    "digest": PRIOR_ISSUES_SHA256[:16],
     "issues": 2,
     "tally": {
         "new": 4,
@@ -396,11 +544,22 @@ PRIOR_ROUND = {
     },
 }
 
-# Every id this line of rounds has spent, this round's included. The two ids
-# the prior round minted are in it because a resolved issue is reported once
-# and then dropped from the carry: without them the next round would hand i05
-# to a different problem.
-ISSUE_IDS_USED = ["i01", "i02", "i03", "i04", "i05", "i06"]
+# The same prior round as protocol.json carries it, which is written at ingest,
+# before any ruling exists: the file, its digest and how many items came over,
+# and no tally.
+PRIOR_ROUND_PROTOCOL = {key: value for key, value in PRIOR_ROUND.items() if key != "tally"}
+
+# Every id this line of rounds has spent, this round's included, which is what
+# the engine publishes: the ids its own prior file listed, plus the ids of the
+# rows in this round. The four this round minted start above every id the line
+# had already used, because the engine mints from `i01` upwards and skips what
+# is taken: the earlier rounds of this line spent `i01` to `i06`, so a new
+# problem here is `i07`. The retired ids stay in the list because a resolved
+# issue is reported once and then dropped from the carry: without them the next
+# round would hand `i05` to a different problem.
+ISSUE_IDS_USED = [
+    "i01", "i02", "i03", "i04", "i05", "i06", "i07", "i08", "i09", "i10",
+]
 
 PACKAGE = {
     "schema_version": ISSUES_SCHEMA,
@@ -506,6 +665,7 @@ PACKAGE = {
     "finding_schema_version": FINDING_SCHEMA,
     "review_guard_status": "clean",
     "findings_delivered": 6,
+    "findings_submitted": 6,
     "quarantined_findings_count": 0,
     "quarantined_findings": [],
 }
@@ -879,7 +1039,13 @@ def _protocol(**overrides) -> dict:
         "literature_cutoff": None,
         "version": WORKFLOW_VERSION,
         "finding_schema_version": FINDING_SCHEMA,
-        "body_finding_limit": 8,
+        # No `body_finding_limit`. That field capped the findings a letter body
+        # could carry, and engine 0.10 writes no letter body: the editor's
+        # issues are what the review asks for, so the protocol records the issue
+        # schema and how many issues one submission may carry instead.
+        "issues_schema_version": ISSUES_SCHEMA,
+        "issue_batch_limit": 12,
+        "prior_round_issues": dict(PRIOR_ROUND_PROTOCOL),
         "agents": _protocol_agents(TRACKS),
         "plan": _plan(TRACKS),
     }
@@ -896,6 +1062,11 @@ def _progress(**overrides) -> dict:
         "arm": "full-two-track",
         "stages": _stages(TRACKS),
         "findings_delivered": 6,
+        # Both counts, as the engine writes them: what the reviewers submitted
+        # and what survived pooling into the ledger the editor read. They are
+        # equal here because nothing was merged away, and they are two fields
+        # because a run where they differ has to be able to say so.
+        "findings_submitted": 6,
         "quarantined_findings_count": 0,
         "review_guard_status": "clean",
         "tool_calls": _tool_calls(TRACKS),
@@ -1231,15 +1402,50 @@ def _workspace(root: Path, paper_id: str = "paper-abc", manuscript: str | None =
     return workspace
 
 
+def _prior_bundle(root: Path) -> Path:
+    """The previous round's bundle, as far as this round reads it.
+
+    Two files: the items that round published, and the manifest that bundle
+    hashed its own files into. Both are needed, because the publish path checks
+    the file it was handed against the digest the engine recorded and against
+    the digest the bundle published, and the second of those lives here.
+    """
+    bundle = Path(root)
+    bundle.mkdir(parents=True, exist_ok=True)
+    (bundle / local_review.REVIEW_ISSUES).write_text(PRIOR_ISSUES_TEXT, encoding="utf-8")
+    (bundle / "manifest.json").write_text(
+        json.dumps(
+            {
+                "bundle": "r1",
+                "files": {local_review.REVIEW_ISSUES: PRIOR_ISSUES_SHA256},
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return bundle
+
+
 def _prepared(root: Path, destination: Path, **overrides) -> Path:
-    """What prepare writes, as publish reads it."""
+    """What prepare writes, as publish reads it.
+
+    A revision round by default, because the fixture run is one: its package
+    rules on two items of an earlier round. The plan therefore names that
+    round's published items, and the file is written beside the plan so the
+    publish path can hash it. A check of a first round passes `round=1` and
+    `prior_issues=""`, which is what prepare writes when there is no round
+    before this one.
+    """
     prepared = Path(root)
     prepared.mkdir(parents=True, exist_ok=True)
     record = {
         "publishable": True,
-        "draft": 1,
+        "draft": 3,
         "attempt": 1,
-        "plan_kind": "first review",
+        "plan_kind": "revision round",
+        "round": 3,
+        "prior_issues": str(_prior_bundle(prepared / "prior-round") / local_review.REVIEW_ISSUES),
         "destination": str(destination),
         "input": {
             "kind": "doi",
@@ -1325,6 +1531,7 @@ def _run_record(**overrides) -> dict:
         "findings_source": "issues",
         "review_guard_status": "clean",
         "findings_delivered": 6,
+        "findings_submitted": 6,
         "quarantined_findings_count": 0,
         "escalated_count": 2,
         "findings_by_track": dict(COUNTED_BY_TRACK),
@@ -1562,11 +1769,11 @@ def check_the_issues_are_split_by_severity_and_ordered_by_rank() -> None:
     """
     required = local_review.required_issues(PACKAGE)
     suggestions = local_review.suggestion_issues(PACKAGE)
-    assert [i["id"] for i in required] == ["i01", "i02"], (
+    assert [i["id"] for i in required] == ["i07", "i08"], (
         f"the required changes are not the major and moderate issues in rank order: "
         f"{[i['id'] for i in required]}"
     )
-    assert [i["id"] for i in suggestions] == ["i03", "i04"], (
+    assert [i["id"] for i in suggestions] == ["i09", "i10"], (
         f"the suggestions are not the minor issues in rank order: "
         f"{[i['id'] for i in suggestions]}"
     )
@@ -1585,7 +1792,7 @@ def check_the_issues_are_split_by_severity_and_ordered_by_rank() -> None:
     assert [i["id"] for i in local_review.unverified_issues(PACKAGE)] == ["i06"], (
         "the issue left unverified was not found"
     )
-    assert [i["id"] for i in local_review.live_issues(PACKAGE)] == ["i01", "i02", "i03", "i04"], (
+    assert [i["id"] for i in local_review.live_issues(PACKAGE)] == ["i07", "i08", "i09", "i10"], (
         "a closed-out prior issue was counted among this round's own issues"
     )
 
@@ -1593,7 +1800,7 @@ def check_the_issues_are_split_by_severity_and_ordered_by_rank() -> None:
     # it survives pooling: the major one and one of the suggestions rest on a
     # finding a reader escalated, and the other two do not.
     escalated = local_review.escalated_issues(local_review.live_issues(PACKAGE))
-    assert [i["id"] for i in escalated] == ["i01", "i04"], (
+    assert [i["id"] for i in escalated] == ["i07", "i10"], (
         f"the escalated issues were not found: {[i['id'] for i in escalated]}"
     )
 
@@ -1653,8 +1860,8 @@ def check_the_decision_is_attributed_to_a_person() -> None:
 
     # The id is published as the engine minted it, because that is the id a
     # later round rules against.
-    assert "[`i01`]" in required, f"the engine's own issue id was not published: {required}"
-    assert "`i03`" in letter.split("## Suggestions", 1)[1], (
+    assert "[`i07`]" in required, f"the engine's own issue id was not published: {required}"
+    assert "`i09`" in letter.split("## Suggestions", 1)[1], (
         "a suggestion was published without its id"
     )
 
@@ -1677,10 +1884,10 @@ def check_a_minor_issue_is_never_a_required_revision() -> None:
 
     assert record["decision"] == "major", f"decision lost: {record.get('decision')!r}"
     assert record["round"] == 2, f"the round number was dropped: {record.get('round')!r}"
-    assert [item["id"] for item in record["required_revisions"]] == ["i01", "i02"], (
+    assert [item["id"] for item in record["required_revisions"]] == ["i07", "i08"], (
         f"expected the major and the moderate in rank order: {record['required_revisions']}"
     )
-    assert [item["id"] for item in record["minor_suggestions"]] == ["i03", "i04"], (
+    assert [item["id"] for item in record["minor_suggestions"]] == ["i09", "i10"], (
         f"minor issues mangled: {record['minor_suggestions']}"
     )
     assert record["desk_rejected"] is False, "a local run has no desk screen to fail"
@@ -1721,10 +1928,34 @@ def check_a_minor_issue_is_never_a_required_revision() -> None:
     assert "name the assay" in closed["resolved"][0]["status_reason"], (
         "the editor agent's reason for ruling an item fixed was dropped"
     )
-    assert closed["unverified"][0]["surviving_quotes"] == ["counts are available on request"], (
-        "the quotes still standing in the manuscript were dropped"
+    # The quotes the engine still found in this draft, as it writes them: a row
+    # per passage, naming the finding that quoted it and the block it was found
+    # in. The record used to carry them for the unverified list alone, so a
+    # reader of round.json could not see what a ruling of `resolved` was made
+    # against, and the reason the editor gave for ruling it fixed anyway was
+    # nowhere in the record at all.
+    assert closed["unverified"][0]["surviving_quotes"] == [
+        {
+            "finding_uid": "f-022",
+            "block_id": "b6",
+            "quote": "counts are available on request",
+        },
+    ], f"the quotes still standing in the manuscript were dropped: {closed['unverified'][0]}"
+    assert "unchanged from the previous draft" in (
+        closed["unverified"][0]["text_unchanged_reason"] or ""
+    ), f"the reason the text is unchanged was dropped: {closed['unverified'][0]}"
+    resolved_row = closed["resolved"][0]
+    assert resolved_row["surviving_quotes"] == [
+        {
+            "finding_uid": "f-021",
+            "block_id": "b5",
+            "quote": "the assay was run as described",
+        },
+    ], f"a resolved item's surviving quotes were dropped: {resolved_row}"
+    assert "named in the one after it" in (resolved_row["text_unchanged_reason"] or ""), (
+        f"the editor's reason for ruling it fixed anyway was dropped: {resolved_row}"
     )
-    assert record["carried_forward"] == ["i02", "i01", "i03", "i04", "i06"], (
+    assert record["carried_forward"] == ["i08", "i07", "i09", "i10", "i06"], (
         f"the carry is not this round's items plus what was left open: {record['carried_forward']}"
     )
     assert "i05" not in record["carried_forward"], (
@@ -1748,16 +1979,16 @@ def check_a_severity_this_release_cannot_sort_is_refused() -> None:
     """
     strange = dict(
         ISSUES[1],
-        id="i07",
+        id="i11",
         severity="blocking",
         rank=5,
     )
-    package = dict(PACKAGE, issues=[*ISSUES, strange], issue_ids_used=[*ISSUE_IDS_USED, "i07"])
+    package = dict(PACKAGE, issues=[*ISSUES, strange], issue_ids_used=[*ISSUE_IDS_USED, "i11"])
     try:
         local_review.assert_publishable_issues(package)
     except local_review.CommandError as refusal:
         message = str(refusal)
-        assert "i07" in message and "blocking" in message, (
+        assert "i11" in message and "blocking" in message, (
             f"the refusal has to name the issue and the word: {message}"
         )
         assert "major" in message and "minor" in message, (
@@ -1775,6 +2006,526 @@ def check_a_severity_this_release_cannot_sort_is_refused() -> None:
 
     # And the fixture itself has to pass, or the refusal above proves nothing.
     local_review.assert_publishable_issues(PACKAGE)
+
+
+def check_a_surviving_quote_is_printed_as_the_authors_own_words() -> None:
+    """A passage that still reads the same is printed, never the row holding it.
+
+    The engine records a surviving passage as a row of three fields: the finding
+    it came from, the block it sits in, and the quoted words. The letter printed
+    the row itself, so the authors were shown a line of Python where their own
+    sentence belonged. Nothing caught it because the fixture carried bare
+    strings, which the old renderer printed unchanged, so the check restated the
+    fixture rather than testing the renderer.
+
+    Both closed lists carry such a row now, a ruled-fixed item and an unverified
+    one, because the two are rendered by the same entry and a fixture that
+    exercised one proved nothing about the other.
+    """
+    letter = local_review.render_decision_letter(PAPER, READING, provenance_fixture())
+    assert "## The previous round's items" in letter, (
+        f"the round's rulings are not in the letter: {letter}"
+    )
+    prior = letter.split("## The previous round's items", 1)[1]
+
+    for quote in ("the assay was run as described", "counts are available on request"):
+        assert f"> {quote}" in prior, (
+            f"a surviving passage was not printed as the authors' words: {prior}"
+        )
+    # The row's own field names, which is what the letter printed when it
+    # printed the row. One of these in a published letter is the bug.
+    for leaked in ("finding_uid", "block_id", "'quote'", "{'", "f-021", "f-022"):
+        assert leaked not in prior, (
+            f"the letter printed the record of a passage rather than the passage: {prior}"
+        )
+    assert "This draft, where the earlier finding's quoted text still reads the same" in prior, (
+        f"an unlabelled block quote reads as part of the editor agent's reason: {prior}"
+    )
+
+    # A row with no quote in it is a row with nothing to show the authors, and
+    # printing the heading over nothing would say the text survived and then
+    # show no text.
+    empty = dict(
+        ISSUES[5],
+        surviving_quotes=[{"finding_uid": "f-099", "block_id": "b9", "quote": ""}],
+    )
+    assert local_review.surviving_passages(empty) == [], (
+        "a row carrying no quoted words is not a surviving passage"
+    )
+
+
+def check_a_later_round_cannot_publish_without_the_round_before_it() -> None:
+    """The plan names the previous round's items and the run has to have read them.
+
+    Nothing joined the two up. A run made without `--prior-issues` published as
+    round three with no prior round recorded, every item `new`, and the first
+    ids minted again for problems that had nothing to do with the ones the
+    authors were sent under those numbers. Four pairs are refused here, and the
+    pair that agrees publishes.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        bundle = _prior_bundle(root / "r2")
+        named = str(bundle / local_review.REVIEW_ISSUES)
+        plan = {"round": 3, "prior_issues": named}
+
+        # The pair that agrees: the plan names the file, the engine read a file,
+        # and the digest the engine recorded is of the file on disk.
+        local_review.assert_the_round_ruled_against_its_prior(plan, PACKAGE)
+
+        # The plan named the previous round and the run never read it.
+        try:
+            local_review.assert_the_round_ruled_against_its_prior(
+                plan, dict(PACKAGE, prior_round={})
+            )
+        except local_review.CommandError as refusal:
+            message = str(refusal)
+            assert "round 3" in message and "--prior-issues" in message, (
+                f"the refusal has to name the round and the flag to re-run with: {message}"
+            )
+        else:
+            raise AssertionError("a later round published without the items it rules against")
+
+        # The reverse surprise: the run ruled against some file the plan knows
+        # nothing about, so nothing can say which round the letter is about.
+        try:
+            local_review.assert_the_round_ruled_against_its_prior(
+                {"round": 3, "prior_issues": ""}, PACKAGE
+            )
+        except local_review.CommandError as refusal:
+            assert "does not name" in str(refusal), (
+                f"the refusal has to say the plan does not name the file: {refusal}"
+            )
+        else:
+            raise AssertionError("a run ruled against a round the plan never named")
+
+        # The file the plan named is gone, so what was ruled against cannot be
+        # checked at all.
+        try:
+            local_review.assert_the_round_ruled_against_its_prior(
+                {"round": 3, "prior_issues": str(root / "gone" / local_review.REVIEW_ISSUES)},
+                PACKAGE,
+            )
+        except local_review.CommandError as refusal:
+            assert "no longer at" in str(refusal), (
+                f"a missing prior file has to be reported as missing: {refusal}"
+            )
+        else:
+            raise AssertionError("a prior file that is not there was read anyway")
+
+        # A different file, hashed into its own bundle so the manifest agrees
+        # with it: what fails is the engine's digest, which is of the file the
+        # run actually read.
+        other = root / "r2-other"
+        other.mkdir()
+        text = PRIOR_ISSUES_TEXT.replace("the per-well counts", "the per-plate counts")
+        (other / local_review.REVIEW_ISSUES).write_text(text, encoding="utf-8")
+        (other / "manifest.json").write_text(
+            json.dumps(
+                {"files": {local_review.REVIEW_ISSUES: local_review.digest(text.encode())}},
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        try:
+            local_review.assert_the_round_ruled_against_its_prior(
+                {
+                    "round": 3,
+                    "prior_issues": str(other / local_review.REVIEW_ISSUES),
+                },
+                PACKAGE,
+            )
+        except local_review.CommandError as refusal:
+            message = str(refusal)
+            assert PRIOR_ROUND["digest"] in message, (
+                f"the refusal has to print the digest the engine recorded: {message}"
+            )
+            assert "never sent" in message, (
+                f"the refusal has to say what the letter would be about: {message}"
+            )
+        else:
+            raise AssertionError("a round published against a file the previous round never wrote")
+
+        # A first round names no prior file and the engine read none, which is
+        # the ordinary case and not an error.
+        local_review.assert_the_round_ruled_against_its_prior(
+            {"round": 1, "prior_issues": ""}, dict(PACKAGE, prior_round={})
+        )
+
+
+def check_a_hand_edited_prior_file_is_not_the_one_that_round_published() -> None:
+    """The previous round's items are read only as the bytes that bundle published.
+
+    The file sits in a published bundle in a public repository, and the next
+    round rules against it: an id, a statement or a severity in it becomes the
+    standing of a request the authors already answered. A row deleted or a
+    statement rewritten by hand was read as the previous round's own words, and
+    the only sign of it was in the file's history. Every bundle hashes its own
+    files into `manifest.json`, so there is a published digest, and it is
+    checked where the file is named as an input.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+
+        # The published bundle, untouched, is accepted and is the file a later
+        # round is handed.
+        clean = _prior_bundle(root / "v1" / "r2")
+        assert local_review.prior_issues_file(clean) == clean / local_review.REVIEW_ISSUES, (
+            "the previous round's own file was not read back"
+        )
+
+        # The same bundle with one statement rewritten by hand, and the
+        # manifest left as it was published.
+        edited = _prior_bundle(root / "v1" / "r2-edited")
+        (edited / local_review.REVIEW_ISSUES).write_text(
+            PRIOR_ISSUES_TEXT.replace("major", "minor"), encoding="utf-8"
+        )
+        try:
+            local_review.prior_issues_file(edited)
+        except local_review.CommandError as refusal:
+            message = str(refusal)
+            assert "not the file that bundle published" in message, (
+                f"an edited prior file has to be refused as edited: {message}"
+            )
+            assert PRIOR_ISSUES_SHA256[:16] in message, (
+                f"the refusal has to print the digest the bundle recorded: {message}"
+            )
+        else:
+            raise AssertionError("a hand-edited prior file was accepted as the published one")
+
+        # A bundle whose manifest does not account for the file reads the same
+        # way from here: there is no published digest to check against.
+        unaccounted = root / "v1" / "r2-unaccounted"
+        unaccounted.mkdir(parents=True)
+        (unaccounted / local_review.REVIEW_ISSUES).write_text(
+            PRIOR_ISSUES_TEXT, encoding="utf-8"
+        )
+        (unaccounted / "manifest.json").write_text(
+            json.dumps({"files": {"summary.md": "a" * 64}}, indent=2) + "\n", encoding="utf-8"
+        )
+        try:
+            local_review.prior_issues_file(unaccounted)
+        except local_review.CommandError as refusal:
+            assert "does not account for" in str(refusal), (
+                f"an unaccounted prior file has to be refused as unaccounted: {refusal}"
+            )
+        else:
+            raise AssertionError("a prior file no manifest accounts for was read anyway")
+
+
+def check_a_first_round_claims_no_standing_against_a_round_that_never_ran() -> None:
+    """With no round before it, there is no previous round to be new against.
+
+    Every item of a first round printed `Against the previous round: new`, which
+    says there was a previous round and that this item is not in it. The word is
+    the engine's and it is right in the record, where `new` is one of five
+    standings. What was wrong was printing it in a letter to authors who have
+    had no earlier letter.
+    """
+    # A first round as the engine writes one: no prior round, and so no row
+    # ruling on an item of a round that does not exist.
+    first = dict(PACKAGE, prior_round={}, issues=list(local_review.live_issues(PACKAGE)))
+    assert not local_review.has_prior_round(first), (
+        "a package the engine gave no prior round is a first round"
+    )
+    letter = local_review.render_decision_letter(
+        PAPER,
+        dict(first, findings=LEDGER),
+        dict(provenance_fixture(), round=1, prior_round={}),
+    )
+    assert "Against the previous round" not in letter, (
+        f"a first round told the authors where an item stands against nothing: {letter}"
+    )
+    assert "The previous round's items" not in letter, (
+        f"a first round reported on a round that never ran: {letter}"
+    )
+
+    # And the standing is printed when there is a round for it to be about.
+    later = local_review.render_decision_letter(PAPER, READING, provenance_fixture())
+    assert "**Against the previous round:** new" in later, (
+        f"a later round owes the authors each item's standing: {later}"
+    )
+
+
+def check_a_standing_this_release_never_publishes_is_refused() -> None:
+    """Five words are published as a standing, and a sixth is refused by name.
+
+    The five are the engine's own vocabulary. A word outside them would print in
+    the letter as the item's standing against the previous round, meaning
+    whatever the reader took it to mean, and a shape outside the three fields of
+    a surviving passage would print as a line of Python. Both are refused at the
+    publish gate rather than rendered.
+    """
+    assert local_review.ISSUE_STATUSES == (
+        "new",
+        "persisting",
+        "regressed",
+        local_review.RESOLVED_STATUS,
+        local_review.UNVERIFIED_STATUS,
+    ), f"the published standings are not the five the engine mints: {local_review.ISSUE_STATUSES}"
+
+    strange = dict(ISSUES[1], status="fixed")
+    try:
+        local_review.assert_publishable_issues(
+            dict(PACKAGE, issues=[*ISSUES[:1], strange, *ISSUES[2:]])
+        )
+    except local_review.CommandError as refusal:
+        message = str(refusal)
+        assert "fixed" in message and strange["id"] in message, (
+            f"the refusal has to name the word and the issue carrying it: {message}"
+        )
+        assert "persisting" in message, (
+            f"the refusal has to say which words this release does publish: {message}"
+        )
+    else:
+        raise AssertionError("a standing no publish ever mints was accepted")
+
+    shapeless = dict(ISSUES[5], surviving_quotes=["counts are available on request"])
+    try:
+        local_review.assert_publishable_issues(
+            dict(PACKAGE, issues=[*ISSUES[:5], shapeless])
+        )
+    except local_review.CommandError as refusal:
+        assert shapeless["id"] in str(refusal), (
+            f"the refusal has to name the issue carrying the row: {refusal}"
+        )
+    else:
+        raise AssertionError("a surviving passage that is not a row of the engine's was accepted")
+
+    # The fixture itself passes both, or the refusals above prove nothing.
+    local_review.assert_publishable_issues(PACKAGE)
+
+
+def check_a_credential_or_an_installed_path_is_a_fact_and_never_prose() -> None:
+    """The scan was built for the operator's filesystem and missed two things.
+
+    A key pasted into a refusal, printed by a tool into a run log, or sitting in
+    an environment line copied into a comment would have travelled into a
+    published bundle untouched, because nothing scanned for one. And the longest
+    paths on the machine went unscanned: the engine is installed under one, and
+    a traceback out of a run is full of them, naming the interpreter, its
+    version and the layout of the install.
+
+    Both are tier 1, which is the tier nothing waives: not the manuscript
+    printing it, not `--allow-text`. A credential is not a fact about this
+    machine, but it shares the only property that tier is for.
+    """
+    secrets = (
+        "sk-ant-api03-" + "A" * 40,
+        "ghp_" + "b" * 36,
+        "AKIAZZZZZZZZZZZZZZZZ",
+        "AIza" + "c" * 35,
+        "xoxb-1234567890-" + "d" * 24,
+        "Authorization: Bearer " + "e" * 40,
+        "-----BEGIN RSA PRIVATE KEY-----",
+    )
+    for secret in secrets:
+        leaks = local_review.local_references(f"the log line read {secret} and stopped")
+        assert leaks, f"a credential reached a published file unscanned: {secret}"
+        assert all(leak.machine_fact for leak in leaks), (
+            f"a credential is tier 1, which nothing waives: {secret}"
+        )
+        assert local_review.names_a_specific_fact(secret, ()), (
+            f"an allowance naming a credential would publish it: {secret}"
+        )
+        # And an allowance cannot waive it, whichever way it is offered.
+        waived = local_review.local_references(
+            secret, manuscript=secret, allowed=[secret]
+        )
+        assert waived, f"an allowance waived a credential: {secret}"
+        assert "allow-text" not in local_review.leak_refusal(waived), (
+            f"the refusal offered a flag for a credential: {secret}"
+        )
+
+    installed = (
+        "/usr/lib/python3.12/site-packages/peerreviewagents/plugin/server.py",
+        "/opt/node/lib/node_modules/astro/dist/core/build.js",
+        "/var/lib/pyenv/versions/3.12.1/lib/python3.12/dist-packages/engine/runs.py",
+        "/run/user/1000/gnupg/S.gpg-agent",
+    )
+    for path in installed:
+        leaks = local_review.local_references(f"the traceback printed {path}")
+        assert leaks, f"a path inside an installed environment was not scanned: {path}"
+        assert all(leak.machine_fact for leak in leaks), (
+            f"a path inside an installed environment is tier 1: {path}"
+        )
+
+    # And ordinary review prose still publishes. `/usr/bin` and the words these
+    # shapes are made of are not refused on their own, because a scan that
+    # fires on a reviewer's sentence gets waived by habit.
+    for ordinary in (
+        "the method runs on a site packages install of the toolkit",
+        "the authors bear the burden of showing the effect",
+        "the node modules in figure 3 are the lymph nodes",
+        "the run user was not reported",
+    ):
+        assert local_review.local_references(ordinary) == [], (
+            f"ordinary review prose was refused as a machine fact: {ordinary}"
+        )
+
+
+def check_a_withheld_run_with_no_reason_is_reported_as_having_none() -> None:
+    """When the engine withholds a run it says why, and a silence is not a reason.
+
+    There used to be a fallback here that rebuilt a reason out of the old flat
+    findings fields when the list was missing, for an engine too old to carry
+    one. This release requires an engine that always carries it, and the
+    fallback described a run shape the engine no longer writes, so it told the
+    operator a story about a run nobody could have read that way. An empty list
+    is now reported as what it is.
+    """
+    run = _run_record()
+    reading = {
+        "status": "blocked",
+        "publishable": False,
+        "not_publishable_reasons": [],
+        "cause": "",
+    }
+    try:
+        local_review.require_complete_run(Path("."), run, reading)
+    except local_review.CommandError as refusal:
+        message = str(refusal)
+        assert "gave no reason" in message, (
+            f"a silence has to be reported as a silence: {message}"
+        )
+        assert "read the run folder" in message, (
+            f"the refusal has to say what is left to do: {message}"
+        )
+        for invented in ("findings", "lane", "guard took"):
+            assert invented not in message, (
+                f"the refusal explained a withheld run by guesswork: {message}"
+            )
+    else:
+        raise AssertionError("a run the engine withheld without a reason was published")
+
+    # With reasons, they are the engine's own words and all of them.
+    with_reasons = dict(
+        reading,
+        not_publishable_reasons=["the editor agent wrote no issues", "a reader never reported"],
+        cause="the editor slot ran out of turns",
+    )
+    try:
+        local_review.require_complete_run(Path("."), run, with_reasons)
+    except local_review.CommandError as refusal:
+        message = str(refusal)
+        for reason in with_reasons["not_publishable_reasons"]:
+            assert reason in message, f"the engine's own reason was dropped: {message}"
+        assert with_reasons["cause"] in message, f"the cause was dropped: {message}"
+    else:
+        raise AssertionError("a run the engine withheld with reasons was published")
+
+
+def check_no_published_document_overstates_what_the_editor_agent_did() -> None:
+    """Two sentences said more than the run supports, and they are authored here.
+
+    The method paragraph said the editor agent chose which findings belong in
+    the body of the letter, which was a sentence about a limit that no longer
+    exists: every issue it raises is in the letter, split by severity. And the
+    provenance page called an unverified item one the editor agent could not
+    verify, where the word means no reviewer raised it again and nothing showed
+    it fixed. Both are checked here because both are prose in this repository,
+    not output from the engine.
+    """
+    paragraph = local_review.method_paragraph(
+        {"arm": "full-two-track", "reviewers": 3, "specialist_tracks": list(TRACKS)},
+        _expected_models(),
+    )
+    assert "wrote the numbered issues the letter asks for" in paragraph, (
+        f"the paragraph has to say what the editor agent produced: {paragraph}"
+    )
+    for retired in ("belong in the body", "chose which", "most important"):
+        assert retired not in paragraph, (
+            f"the paragraph still describes a limit this release does not apply: {paragraph}"
+        )
+
+    skill = (
+        Path(__file__).resolve().parents[2]
+        / ".claude" / "skills" / "local-review" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "writes the numbered issues the letter asks for" in skill, (
+        "the skill has to describe the editor agent's own output"
+    )
+    for retired in ("belong in the body", "chose which"):
+        assert retired not in skill, (
+            f"the skill still says the editor agent picked what the letter carries: {retired}"
+        )
+
+    # The page is JSX, so its sentences are wrapped over several lines. What is
+    # checked is the sentence, with the wrapping taken out.
+    page = " ".join(_provenance_component_fields().split())
+    assert "raised again by no reviewer and shown fixed by nothing" in page, (
+        "the page has to say what unverified means"
+    )
+    assert "Neither word is a test that ran" in page, (
+        "the page has to say that neither ruling is a check that ran"
+    )
+    for retired in ("could not be verified", "could not verify", "unverified by the editor"):
+        assert retired not in page, (
+            f"the page still reads as though a verification was attempted: {retired}"
+        )
+
+
+def check_no_editorial_page_names_the_machine_it_was_written_on() -> None:
+    """The scan covered published bundles and not the pages beside them.
+
+    Every file in a review bundle is scanned before it is published, because a
+    path out of a run folder had reached one. The editorial pages were written
+    by hand and never scanned, and they are on the same site: the owner's home
+    directory and the hostname of the machine this pipeline was built on sat in
+    the development page and in comments in these scripts, where they were read
+    by nobody and published to everybody.
+
+    Tier 1 is refused on every page. Those are facts that can only be one
+    machine, and they are the running machine's: the home directory and
+    hostname are looked up at scan time, so a path belonging to somebody else's
+    computer is refused here only on the computer that holds it, and the
+    general shapes below catch the rest.
+
+    A shape is refused on every page but the development page. That page
+    documents this scan, so it prints example paths on purpose, and a scan that
+    refused them would be a scan nobody could write about. What is still
+    refused there is this machine: the home directory, the checkout, the host
+    name and the rest of what the scan looks up, and a credential. An example
+    path belonging to no computer is a shape and may be printed, the real one
+    may not.
+    """
+    root = Path(__file__).resolve().parents[2]
+    pages = re.findall(r'slug:\s*"([\w-]+)"', (root / "src" / "lib" / "pages.js").read_text())
+    assert pages, "the editorial pages could not be read from src/lib/pages.js"
+    documents = [root / "docs" / f"{slug}.md" for slug in pages] + [root / "README.md"]
+    # The page that documents the scan, and the only one allowed a shape.
+    documenting = root / "docs" / "development.md"
+
+    facts = local_review.machine_facts()
+    # What the scan looked up on this computer, without the shapes that are
+    # carried as facts so nothing waives them. A shape names no machine, so on
+    # the page that documents the scan it is an example and not a leak.
+    shapes = {why for why, _ in local_review.UNWAIVABLE_PATH_SHAPES}
+    looked_up = tuple(fact for fact in facts if fact.why not in shapes)
+    for document in documents:
+        text = document.read_text(encoding="utf-8")
+        leaks = local_review.local_references(text, facts=facts)
+        if document == documenting:
+            leaks = [
+                leak for leak in leaks if local_review.names_a_specific_fact(leak.text, looked_up)
+            ]
+        assert leaks == [], (
+            f"{document.name} names this machine or a path on it: "
+            f"{[leak.line for leak in leaks]}"
+        )
+
+    # And the check can fail: a home path in a page is refused, and on the
+    # documenting page a specific fact still is while an example shape is not.
+    planted = "the run wrote it to /home/someone/reviews/r1/summary.md"
+    assert local_review.local_references(planted, facts=facts), (
+        "a home path in an editorial page has to be refused"
+    )
+    own = str(Path.home() / "Repos" / "insilico")
+    assert any(
+        leak.machine_fact
+        for leak in local_review.local_references(f"built in {own}", facts=facts)
+    ), "this machine's own home directory is a fact no page may print"
 
 
 def check_the_fixtures_counts_are_the_ones_the_reader_computes() -> None:
@@ -2659,7 +3410,14 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 code = _publish(
-                    _prepared(Path(tmp) / "prepared", destination),
+                    # A first round: the run was given nothing to rule against,
+                    # so the plan names no prior items either. The two have to
+                    # agree, and the publish path refuses the pair where the
+                    # plan names a file the run never read.
+                    _prepared(
+                        Path(tmp) / "prepared", destination, round=1, prior_issues="",
+                        draft=1, plan_kind="first review",
+                    ),
                     empty,
                     _workspace(Path(tmp) / "workspace"),
                     "--publish",
@@ -4346,14 +5104,18 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
     exports, which is checked against the real `__all__` when the engine is
     importable here.
 
-    There is no allowance left. The citation ledger fixture generator held the
-    only one: it drove the engine's own ledger writer, because 0.9.0 published
-    no reader or writer for the table and a hand typed fixture would only ever
-    have agreed with what this repository believed the engine writes. The engine
-    now documents the rows as a consumer surface and exports
-    `read_citation_ledger`, so the fixture writes the rows itself and reads
-    their tallies back off the public reader, and nothing here imports a private
-    module at all.
+    One allowance, for one file and one module. `fixtures/make_engine_rounds.py`
+    builds its two run folders by calling `peerreviewagents.plugin.server`,
+    which is the plugin an agent session calls and not a supported surface. The
+    public way to produce a run folder is `review`, which starts a Claude Code
+    session and spends a subscription on a model, so it is not something a check
+    can run. The alternative is not a public API, it is a run folder typed out
+    by hand, which is the thing that generator exists to replace: a fixture
+    written here can only ever agree with what this repository believes the
+    engine writes. So the private import buys a fixture the engine wrote, the
+    allowance names the one file and the one module, and the check below fails
+    if the allowance ever stops being used, so it cannot quietly cover a file
+    that no longer needs it.
     """
     root = Path(local_review.__file__).resolve().parent
     package = local_review.ENGINE_PACKAGE
@@ -4368,14 +5130,28 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
         "hold the one allowance is a file this scan has to be reading"
     )
 
+    # The one allowance: this file, this module, this name, and nothing else.
+    allowed_private = {"make_engine_rounds.py": (f"{package}.plugin", ("server",))}
+    used = set()
+
     private = {}
     names: set[str] = set()
     for path in sources:
         for module, taken in _engine_imports(path):
-            if module != package:
+            if module == package:
+                names.update(taken)
+            elif allowed_private.get(path.name) == (module, taken):
+                # `server` is a module inside the plugin and not a public name,
+                # so it is not one of the names checked against `__all__` below.
+                used.add(path.name)
+            else:
                 private.setdefault(path.name, []).append(module)
-            names.update(taken)
         names.update(_engine_public_names(path))
+    assert used == set(allowed_private), (
+        "the allowance to import the engine's plugin covers "
+        f"{sorted(set(allowed_private) - used)}, which no longer imports it. An "
+        "allowance nobody uses is one the next file inherits by accident: take it out."
+    )
     assert not private, (
         "these scripts import the engine's internals rather than its public "
         f"surface: {private}. Every name 0.10 supports is on {package}.__all__."
@@ -5032,7 +5808,7 @@ def check_ordinary_review_text_publishes_and_a_local_path_does_not() -> None:
 def _detected_facts(
     *,
     home: str = "/export/people/pretend",
-    host: str = "ty-MS-7C80",
+    host: str = "lab-WS-01",
     user: str = "pretend",
     tmp: str = "/tmp",
     cwd: str = "/data",
@@ -5055,7 +5831,7 @@ def _detected_facts(
     the resolved one does not match is the ordinary case on a machine reached
     through a symbolic link. Leaving the real environment in place meant the
     facts of the machine running the suite were mixed into every described
-    machine, and a case written about `/home/ty` passed here for the wrong
+    machine, and a case written about `/home/opal` passed here for the wrong
     reason on this machine and failed on anybody else's.
     """
     saved = {name: Path.__dict__.get(name) for name in ("home", "cwd")}
@@ -5245,7 +6021,7 @@ def _name_spellings(name: str) -> tuple[tuple[str, str], ...]:
 # from path shapes alone cannot see at all.
 SPECIFIC_MACHINES = (
     {},
-    {"home": "/home/ty", "user": "ty", "checkout": "/home/ty/Repos/insilico"},
+    {"home": "/home/opal", "user": "opal", "checkout": "/home/opal/Repos/insilico"},
     {"host": "node1.lab"},
 )
 
@@ -5259,7 +6035,7 @@ def check_only_this_machines_own_names_are_refused_as_this_machine() -> None:
     every character that is not a word character: `file:` was excluded by hand
     and `box:` was not, `//` and `a~` and `http://localhost:8000` all published
     the home directory that followed them. A whole-field host rule published
-    `node.ty-ms-7c80`, `run_ty-ms-7c80_1` and the host as a JSON key. And the
+    `node.lab-ws-01`, `run_lab-ws-01_1` and the host as a JSON key. And the
     same caution made a word-shaped host name unwaivable, so a machine called
     `editor` could not publish its own provenance record.
 
@@ -5267,7 +6043,7 @@ def check_only_this_machines_own_names_are_refused_as_this_machine() -> None:
     of two or more segments and a host name carrying a digit, a hyphen or a dot
     are specific: matched as a plain case-insensitive substring, everywhere, in
     every string and every key at any depth, and nothing waives one. Nothing has
-    to be protected from that test, because `/home/ty` and `ty-ms-7c80` do not
+    to be protected from that test, because `/home/opal` and `lab-ws-01` do not
     occur in a review of a paper or in this repository's own vocabulary. A
     one-segment directory, a one-word host and the bare account name are generic:
     tier 2 shapes, waivable, because a word is not a leak.
@@ -5291,7 +6067,7 @@ def check_only_this_machines_own_names_are_refused_as_this_machine() -> None:
         facts = _detected_facts(**machine)
         home = machine.get("home", "/export/people/pretend")
         checkout = machine.get("checkout", "/export/people/pretend/insilico")
-        host = machine.get("host", "ty-MS-7C80")
+        host = machine.get("host", "lab-WS-01")
         for text in _specific_forms(home, checkout, host):
             hits = local_review.local_references(text, facts=facts)
             assert any(leak.machine_fact for leak in hits), (
@@ -5364,11 +6140,13 @@ def check_only_this_machines_own_names_are_refused_as_this_machine() -> None:
     # could waive. The promotion runs before the allowances are read, which is
     # what stops `--allow-text` on the whole path from waiving the home
     # directory inside it.
-    facts = _detected_facts(home="/home/ty", user="ty", checkout="/home/ty/Repos/insilico")
-    hits = local_review.local_references(
-        "the run wrote /home/ty/papers/draft.pdf", facts=facts
+    facts = _detected_facts(
+        home="/home/opal", user="opal", checkout="/home/opal/Repos/insilico"
     )
-    assert [leak.text for leak in hits] == ["/home/ty/papers/draft.pdf"], (
+    hits = local_review.local_references(
+        "the run wrote /home/opal/papers/draft.pdf", facts=facts
+    )
+    assert [leak.text for leak in hits] == ["/home/opal/papers/draft.pdf"], (
         f"the leak has to be reported whole: {[leak.line for leak in hits]}"
     )
     assert hits[0].machine_fact, (
@@ -5536,7 +6314,7 @@ def check_every_spelling_of_a_machine_fact_is_the_same_fact() -> None:
         {"home": "/home/pretend", "user": "pretend",
          "checkout": "/home/pretend/insilico", "host": "box-7.lab"},
         {"home": "/export/people/pretend", "user": "pretend",
-         "checkout": "/export/people/pretend/insilico", "host": "ty-MS-7C80"},
+         "checkout": "/export/people/pretend/insilico", "host": "lab-WS-01"},
     )
     for machine in described:
         facts = _detected_facts(**machine)
@@ -5607,7 +6385,7 @@ def check_every_spelling_of_a_machine_fact_is_the_same_fact() -> None:
     # first, `\opt\.cache\insilico` becomes `/opt.cache/insilico`, which is a
     # path on no machine, and the fact is gone with no hit at all. Read as a
     # separator first it is the path it was. Neither reading is right on its
-    # own, `ty\-MS\-7C80` needing the other one, so both are canonicalised and
+    # own, `lab\-WS\-01` needing the other one, so both are canonicalised and
     # a hit is taken from whichever found it. These four are a cache directory,
     # a scratch disk, a runs folder and the macOS temporary directory.
     for checkout in (
@@ -5638,9 +6416,9 @@ def check_every_spelling_of_a_machine_fact_is_the_same_fact() -> None:
     # and a quoted hyphen are the separator and the hyphen they stand for.
     facts = _detected_facts(
         home="/home/pretend", user="pretend", checkout="/home/pretend/insilico",
-        host="ty-MS-7C80",
+        host="lab-WS-01",
     )
-    for text in ("\\/home\\/pretend\\/x", "ty\\-MS\\-7C80", "ty＼-MS＼-7C80"):
+    for text in ("\\/home\\/pretend\\/x", "lab\\-WS\\-01", "lab＼-WS＼-01"):
         hits = local_review.local_references(text, facts=facts)
         assert any(leak.machine_fact for leak in hits), (
             f"a quoted separator stopped being this machine: {text!r} -> "
@@ -6749,6 +7527,295 @@ def check_a_published_bundle_carries_no_ledger_and_no_fetched_text() -> None:
             )
 
 
+def _engine_round(out: Path, number: int, prior: str) -> dict:
+    """Drive one round of the fixture generator and return what it wrote.
+
+    `scripts/fixtures/make_engine_rounds.py` runs the engine's own plugin over a
+    PDF it builds, with no model and no network, and prints a JSON line
+    describing the run folder. One round per call, because the engine serves one
+    paper per process and because a later round has to be given the file the
+    round before it published.
+    """
+    generator = Path(local_review.__file__).resolve().parent / "fixtures" / "make_engine_rounds.py"
+    done = subprocess.run(
+        [sys.executable, str(generator), "--out", str(out), "--round", str(number),
+         "--prior", prior],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=900,
+    )
+    assert done.returncode == 0, (
+        f"round {number} of the fixture generator failed with exit "
+        f"{done.returncode}: {done.stdout[-1500:]}{done.stderr[-1500:]}"
+    )
+    return json.loads(done.stdout.strip().splitlines()[-1])
+
+
+def _plugin_tree(run: Path) -> None:
+    """Record the plugin files a session would have loaded, hashed for real.
+
+    The plugin server hashes the engine's modules and its own, and the starter
+    hashes the Claude Code plugin tree it hands the session. Nothing handed this
+    run a plugin tree, because nothing started a session, so the folder carries
+    two thirds of the manifest and the publish path refuses it. The hashes put
+    here are the installed plugin's own bytes, read through the engine's
+    `plugin_directory`, which is what a run started in this environment would
+    have recorded.
+    """
+    path = run / "review" / "manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    installed = local_review.installed_code_manifest()
+    manifest["code"].update(
+        {
+            name: value
+            for name, value in installed.items()
+            if name.startswith(local_review.PLUGIN_PREFIX)
+        }
+    )
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+
+def _session_evidence(run: Path) -> None:
+    """Write the start-up probe and the harness record, which are this suite's.
+
+    Those two files are the evidence that a Claude Code session started, loaded
+    the plugin and ran the agents, and no session did: this fixture is the
+    agents. So they are written here, out of the suite's own `_startup` and
+    `_runtime`, into a temporary folder, and the check below first proves the
+    publish path refuses the run without them. The slots and the models in the
+    harness record are read out of the run's own `protocol.json`, so the record
+    says what this run asked for rather than what another fixture asked for.
+    """
+    review = run / "review"
+    protocol = json.loads((review / "protocol.json").read_text(encoding="utf-8"))
+    rows = [
+        {
+            "label": slot,
+            "state": "complete",
+            "attempt": 1,
+            "agentType": f"pra:{slot}",
+            "model": model,
+            "tokens": 24000,
+            "toolCalls": 6,
+            "durationMs": 120000,
+        }
+        for slot, model in sorted(protocol["models"].items())
+    ]
+    (review / "runtime.json").write_text(
+        json.dumps(_runtime((), agents=rows), indent=2) + "\n", encoding="utf-8"
+    )
+    (review / "startup.json").write_text(
+        json.dumps(_startup(), indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def _engine_prepared(root: Path, destination: Path, run: Path, pdf: Path, **overrides) -> Path:
+    """What prepare would have written for the paper this run really imported.
+
+    The publish path refuses a run of one paper published under another paper's
+    identity, by comparing the hash prepare took of the fetched bytes against
+    the hash the importer recorded. So the hash here is read out of the run's
+    own `paper.json` rather than made up, and the rest of the record is the
+    suite's preprint fixture.
+    """
+    paper = json.loads((run / "manuscript" / "paper.json").read_text(encoding="utf-8"))
+    return _prepared(
+        root,
+        destination,
+        input={
+            "kind": "doi",
+            "identifier": PAPER.doi,
+            "sha256": paper["source_sha256"],
+            "bytes": pdf.stat().st_size,
+            "local_file": False,
+        },
+        **overrides,
+    )
+
+
+def _publish_refusal(prepared: Path, run: Path, workspace: Path) -> str:
+    """Publish, expect a refusal, and hand back the sentence it refused with."""
+    out = io.StringIO()
+    errors = io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(errors):
+        code = _publish(prepared, run, workspace, "--publish")
+    assert code != 0, f"this publish should have been refused: {out.getvalue()}"
+    return errors.getvalue() + out.getvalue()
+
+
+def check_two_rounds_the_engine_itself_wrote_publish() -> None:
+    """Publish a run folder the engine wrote, and a second round that reads it back.
+
+    Every other check here publishes a fixture: a run folder typed out in this
+    file from the engine's documents. That is a copy of what this repository
+    believes the engine writes, and a field the engine starts writing
+    differently stays as it was typed until somebody notices. This check
+    publishes what the engine produces. `scripts/fixtures/make_engine_rounds.py`
+    drives the plugin over a PDF it builds, filing the findings, pooling them
+    into issues and ruling on the round before, and the publish path then reads
+    that folder.
+
+    Two of the files a published bundle rests on cannot come from that
+    generator, and the check proves it before it supplies them. The plugin tree
+    is hashed by the starter out of the directory it hands a session, and the
+    start-up probe is the engine's evidence that the session connected the
+    plugin's MCP server. Nothing started a session here, because this fixture is
+    the reviewers, so the folder as the generator leaves it is refused twice
+    over, once for the manifest and once for the probe. Only then are the two
+    supplied, from the installed plugin's real bytes and from this suite's own
+    probe, and what publishes is a bundle whose every review document is the
+    engine's.
+
+    Then the round the two blockers were about. The second round is given the
+    file the first round published, which is what `prepare` hands the engine, so
+    the digest the run records of its prior input is a digest of the published
+    bytes. It carries one prior item forward as persisting, rules one resolved
+    with a sentence that still reads the same in the revision, and leaves one
+    unverified. The letter has to print those surviving sentences as the
+    authors' words and the record has to carry the reasons, both of which were
+    wrong against a hand written fixture until this round.
+
+    The field names are checked in both directions too, because that is the
+    drift this generator exists to catch: nothing the hand written package
+    declares may be missing from the engine's own `issues.json`, and nothing the
+    engine writes there may be missing from the fixture, but for `stages`, which
+    the fixture carries in `progress.json` instead.
+    """
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "rounds"
+        first = _engine_round(out, 1, "")
+        run = Path(first["run"])
+        assert first["publishable"], f"the engine called its own run unpublishable: {first}"
+
+        # What the engine wrote, before anything of this suite's is added to it.
+        document = json.loads((run / "review" / "issues.json").read_text(encoding="utf-8"))
+        absent = sorted(set(PACKAGE) - set(document))
+        assert not absent, (
+            f"the hand written package declares fields the engine does not write: {absent}"
+        )
+        extra = sorted(set(document) - set(PACKAGE) - {"stages"})
+        assert not extra, (
+            f"the engine writes fields the hand written package has never heard of: {extra}"
+        )
+        rows = document["issues"]
+        assert rows, "the engine wrote no issues at all"
+        drifted = sorted(set(rows[0]) ^ set(PACKAGE["issues"][0]))
+        assert not drifted, f"an issue row has drifted from the fixture's: {drifted}"
+
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            prepared = _engine_prepared(
+                Path(tmp) / "prepared-1",
+                destination,
+                run,
+                out / "manuscript.pdf",
+                round=1,
+                prior_issues="",
+                plan_kind="first round",
+            )
+
+            # The folder as the generator leaves it, refused for the plugin tree
+            # nothing handed it.
+            refusal = _publish_refusal(prepared, run, run / "manuscript")
+            assert "plugin/" in refusal, (
+                f"a run with no plugin tree in its manifest has to be refused for it: {refusal}"
+            )
+            assert not destination.exists(), "a refused publish wrote a bundle anyway"
+
+            # And then for the session that never started.
+            _plugin_tree(run)
+            refusal = _publish_refusal(prepared, run, run / "manuscript")
+            assert "start-up probe" in refusal, (
+                f"a run with no start-up probe has to be refused for it: {refusal}"
+            )
+            assert not destination.exists(), "a refused publish wrote a bundle anyway"
+
+            _session_evidence(run)
+            printed = io.StringIO()
+            with contextlib.redirect_stdout(printed):
+                code = _publish(prepared, run, run / "manuscript", "--publish")
+            assert code == 0, (
+                f"a run the engine wrote should publish, got exit {code}: {printed.getvalue()}"
+            )
+            published = local_review.prior_issues_file(destination)
+            assert published == destination / local_review.REVIEW_ISSUES, (
+                f"the next round would not find this round's issues: {published}"
+            )
+
+            # The second round reads the file the first round published, which is
+            # the file `prepare` hands the engine, and records a digest of those
+            # bytes.
+            second = _engine_round(out, 2, str(published))
+            later = Path(second["run"])
+            reading = json.loads((later / "review" / "issues.json").read_text(encoding="utf-8"))
+            recorded = (reading.get("prior_round") or {}).get("digest")
+            expected = local_review.digest(published.read_bytes())[:16]
+            assert recorded == expected, (
+                "the engine's record of its prior input is not a digest of the published "
+                f"bytes: {recorded} against {expected}"
+            )
+
+            _plugin_tree(later)
+            _session_evidence(later)
+            next_destination = reviews / "2026" / "fixture-paper" / "v2" / "r1"
+            printed = io.StringIO()
+            with contextlib.redirect_stdout(printed):
+                code = _publish(
+                    _engine_prepared(
+                        Path(tmp) / "prepared-2",
+                        next_destination,
+                        later,
+                        out / "revision.pdf",
+                        round=2,
+                        draft=2,
+                        prior_issues=str(published),
+                    ),
+                    later,
+                    later / "manuscript",
+                    "--publish",
+                )
+            assert code == 0, (
+                f"the second round should publish, got exit {code}: {printed.getvalue()}"
+            )
+            record = json.loads((next_destination / "round.json").read_text(encoding="utf-8"))
+            letter = (next_destination / "decision_letter.md").read_text(encoding="utf-8")
+
+    closed = record["closed_issues"]
+    resolved = closed["resolved"]
+    unverified = closed["unverified"]
+    assert len(resolved) == 1 and len(unverified) == 1, (
+        f"the second round ruled on something other than one of each: {closed}"
+    )
+    for row in resolved + unverified:
+        assert row["status_reason"].strip(), f"a ruling carries no reason: {row['id']}"
+        quotes = row["surviving_quotes"]
+        assert quotes and all(isinstance(quote, dict) for quote in quotes), (
+            f"the engine's surviving quotes did not reach the record: {row['id']}"
+        )
+        for quote in quotes:
+            assert {"finding_uid", "block_id", "quote"} <= set(quote), (
+                f"a surviving quote is missing a field the engine writes: {quote}"
+            )
+            # The authors read their own sentence, not a mapping of it.
+            assert f"> {quote['quote']}" in letter, (
+                f"the letter does not print the surviving sentence as a quotation: {quote}"
+            )
+    assert resolved[0]["text_unchanged_reason"].strip(), (
+        "a resolved item whose quoted sentence still reads the same has to say why"
+    )
+    assert "finding_uid" not in letter and "'quote'" not in letter, (
+        "the letter prints a mapping where the authors should read a sentence"
+    )
+    standing = {row["id"]: row["status"] for row in record["required_revisions"]}
+    assert standing.get("i01") == "persisting", (
+        f"the item both rounds raised is not marked persisting: {standing}"
+    )
+    assert unverified[0]["id"] in record["carried_forward"], (
+        "an item nobody verified has to be carried into the next round"
+    )
+
+
 # The checks that read a run folder, which in 0.9 means the engine reads it.
 # They write a fixture run to disk and hand it to `peerreviewagents.read_run`,
 # so they are checks against the real reader, and there is nothing for them to
@@ -6858,6 +7925,10 @@ ENGINE_BACKED = (
     (
         check_the_run_manifests_manuscript_path_never_reaches_a_bundle,
         "the manuscript path in the run's manifest never reaches a published file",
+    ),
+    (
+        check_two_rounds_the_engine_itself_wrote_publish,
+        "two rounds the engine itself wrote publish, the second reading the first",
     ),
 )
 

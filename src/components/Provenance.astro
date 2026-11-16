@@ -413,15 +413,18 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         </p>
         {/* What this round made of the last round's issues, and the one word
             that has to stay honest. "Resolved" is the editor's reading of the
-            revision and not a test that passed, and "unverified" means nobody
-            could tell from the manuscript, which is a state of the evidence and
-            not a verdict against the authors. Both are printed as the engine
+            revision and not a test that passed. "Unverified" was said too
+            broadly here, as text that could not be checked, which describes a
+            check that was attempted. The engine means something narrower: no
+            reviewer raised the issue again this round and nothing in the round
+            showed it fixed, so it stands open. Both are printed as the engine
             reported them and neither is summed into a score. */}
         {ruledOnPrior > 0 && (
           <p class="prov__hash">
             Of the previous round's issues, {runRecord.resolved} read as
-            resolved by the editor and {runRecord.unverified} could not be
-            checked against this version. Neither word is a test that ran.
+            resolved by the editor and {runRecord.unverified} were raised again
+            by no reviewer and shown fixed by nothing, so they stand open.
+            Neither word is a test that ran.
           </p>
         )}
         {/* A finding the evidence guards threw out never reaches the letter, and

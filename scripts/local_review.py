@@ -123,6 +123,14 @@ SUGGESTION_SEVERITY = "minor"
 RESOLVED_STATUS = "resolved"
 UNVERIFIED_STATUS = "unverified"
 CLOSED_STATUSES = (RESOLVED_STATUS, UNVERIFIED_STATUS)
+# Every standing an issue may hold against the previous round, which is the
+# engine's own `ISSUE_STATUSES`. `assert_issue_vocabulary` checks this tuple
+# against the installed engine's, so the words are here for the sake of the
+# publish path on a machine where the engine is not importable rather than as a
+# second opinion about what the engine writes. A status outside the five is
+# refused rather than printed: a letter telling the authors an item was `fixed`
+# is a word the engine never wrote and a ruling nobody made.
+ISSUE_STATUSES = ("new", "persisting", "regressed", RESOLVED_STATUS, UNVERIFIED_STATUS)
 # What an issue id looks like, so a published record can be checked against the
 # engine's own minting rule rather than trusted. The engine mints `i01`, `i02`
 # and so on, and a published request id is that id unchanged.
@@ -843,14 +851,20 @@ def assert_issue_vocabulary() -> None:
     severities = words("ISSUE_SEVERITIES")
     statuses = words("ISSUE_STATUSES")
     missing = [w for w in (*REQUIRED_SEVERITIES, SUGGESTION_SEVERITY) if w not in severities]
-    missing += [w for w in CLOSED_STATUSES if w not in statuses]
+    missing += [w for w in ISSUE_STATUSES if w not in statuses]
+    # And the other direction, for the statuses alone. A release that added a
+    # sixth standing would have every row carrying it refused by
+    # `assert_publishable_issues`, with a message about a word the engine does
+    # write, so the gap is reported here instead and names the new word.
+    missing += [w for w in statuses if w not in ISSUE_STATUSES]
     if missing:
         raise CommandError(
-            "This pipeline sorts issues by words engine "
-            f"{ENGINE_PACKAGE} no longer uses: {', '.join(missing)}. Its "
-            f"severities are {', '.join(severities) or 'unreadable'} and its "
-            f"statuses are {', '.join(statuses) or 'unreadable'}. Update the "
-            "publish path before publishing a run from this release."
+            "This pipeline and engine "
+            f"{ENGINE_PACKAGE} do not agree on the issue words: "
+            f"{', '.join(sorted(set(missing)))}. The engine's severities are "
+            f"{', '.join(severities) or 'unreadable'} and its statuses are "
+            f"{', '.join(statuses) or 'unreadable'}. Update the publish path "
+            "before publishing a run from this release."
         )
 
 
@@ -1222,6 +1236,35 @@ def issue_members(issue: dict) -> list[dict]:
     return [m for m in _list(_dict(issue).get("members")) if isinstance(m, dict)]
 
 
+def surviving_passages(issue: dict) -> list[dict]:
+    """The prior issue's quoted passages the engine still found in this draft.
+
+    The engine writes one object per passage, `{finding_uid, block_id, quote}`,
+    so the quote is a field of the row and not the row itself. Taking the row
+    for the quote printed a Python dict into a real decision letter, under a
+    heading telling the authors that was the text still standing in their
+    manuscript. A row carrying no quote is dropped rather than printed empty.
+
+    What the engine means by one of these is narrow: the text a finding of an
+    earlier round quoted is still in this draft word for word. It is evidence
+    about the text and not a ruling, and where it sits under `resolved` the
+    editor agent had to say why the issue is fixed anyway.
+    """
+    passages = []
+    for row in _list(_dict(issue).get("surviving_quotes")):
+        if not isinstance(row, dict):
+            continue
+        quote = str(row.get("quote") or "").strip()
+        if not quote:
+            continue
+        passages.append({
+            "finding_uid": str(row.get("finding_uid") or ""),
+            "block_id": str(row.get("block_id") or ""),
+            "quote": quote,
+        })
+    return passages
+
+
 def finding_index(package: dict) -> dict[str, dict]:
     """The ledger by `finding_uid`, for joining a member back to its finding.
 
@@ -1449,8 +1492,8 @@ def method_paragraph(run: dict, models: dict[str, str]) -> str:
         shape += (
             f" {len(tracks)} specialist readers then checked it on one dimension "
             f"each ({', '.join(tracks)}), and an editor agent pooled every "
-            "finding, ruled on the ones a reviewer escalated, and chose which "
-            "belong in the body of the letter."
+            "finding, ruled on the ones a reviewer escalated, and wrote the "
+            "numbered issues the letter asks for."
         )
     elif arm:
         shape += f" The run used the {arm} arm, which convened no specialist readers."
@@ -1560,13 +1603,26 @@ def no_findings_note(run: dict) -> str:
     )
 
 
-def _issue_tags(issue: dict) -> str:
+def has_prior_round(package: dict) -> bool:
+    """Whether this run was given an earlier round's issues at all.
+
+    The engine records the prior round as the file it read and a digest of it,
+    and records nothing on a first round. Every status word is a standing
+    against that round, so on a first round there is no round for an issue to
+    stand against and the word is left off rather than printed: a first letter
+    announcing every item as `new` against a previous round that does not exist
+    told the authors a second round had happened.
+    """
+    return bool(str(_dict(package.get("prior_round")).get("file") or "").strip())
+
+
+def _issue_tags(issue: dict, package: dict) -> str:
     """How a reader should weigh one issue, in the engine's own vocabulary.
 
     The id first, because it is the id the authors answer and the id this issue
     keeps in every later round. Then the severity, the category the editor filed
-    it under, how many reviewer slots raised it, and its standing against the
-    prior round.
+    it under, how many reviewer slots raised it, and, where there was a previous
+    round, its standing against it.
     """
     parts = [f"`{str(issue.get('id') or 'no id')}`",
              str(issue.get("severity") or "unstated")]
@@ -1577,7 +1633,7 @@ def _issue_tags(issue: dict) -> str:
     if isinstance(raised, int) and raised:
         parts.append(f"raised by {raised} reader{'' if raised == 1 else 's'}")
     status = str(issue.get("status") or "")
-    if status:
+    if status and has_prior_round(package):
         parts.append(status)
     if issue_is_escalated(issue):
         parts.append("escalated")
@@ -1630,13 +1686,13 @@ def render_summary(preprint: Preprint, package: dict, provenance: dict) -> str:
         lines += ["## Required changes", ""]
         for number, issue in enumerate(required, 1):
             name = str(issue.get("name") or "Unnamed issue").strip()
-            lines.append(f"{number}. **{name}** ({_issue_tags(issue)})")
+            lines.append(f"{number}. **{name}** ({_issue_tags(issue, package)})")
         lines.append("")
     if suggestions:
         lines += ["## Suggestions", ""]
         for number, issue in enumerate(suggestions, 1):
             name = str(issue.get("name") or "Unnamed issue").strip()
-            lines.append(f"{number}. **{name}** ({_issue_tags(issue)})")
+            lines.append(f"{number}. **{name}** ({_issue_tags(issue, package)})")
         lines.append("")
     if closed:
         lines += [
@@ -1809,10 +1865,18 @@ def _closed_entry(issue: dict) -> list[str]:
     unchanged = str(issue.get("text_unchanged_reason") or "").strip()
     if unchanged:
         lines += [f"**On the manuscript text:** {unchanged}", ""]
-    surviving = [str(q).strip() for q in _list(issue.get("surviving_quotes")) if str(q).strip()]
+    surviving = surviving_passages(issue)
     if surviving:
-        lines += ["Passages the engine found still standing in the manuscript:", ""]
-        lines += [f"> {quote}" for quote in surviving]
+        # Labelled, because an unlabelled block quote under the editor agent's
+        # reason reads as part of that reason, and the authors could not tell
+        # whether they were being shown their own revision or the complaint the
+        # issue was raised with. This is the revision as it now reads.
+        lines += [
+            "**This draft, where the earlier finding's quoted text still reads "
+            "the same:**",
+            "",
+        ]
+        lines += [f"> {passage['quote']}" for passage in surviving]
         lines.append("")
     return lines
 
@@ -1842,7 +1906,7 @@ def _issue_entry(label: str, issue: dict, package: dict) -> list[str]:
         + "  "
     )
     status = str(issue.get("status") or "")
-    if status:
+    if status and has_prior_round(package):
         prior = str(issue.get("prior_id") or "")
         standing.append(
             f"**Against the previous round:** {status}"
@@ -2208,6 +2272,26 @@ def write_manifest(dest: Path) -> None:
     write_json(dest / "manifest.json", {"schema_version": 1, "files": files})
 
 
+def _closed_row(issue: dict) -> dict:
+    """One prior-round item as the round record carries it, ruling and evidence.
+
+    `text_unchanged_reason` and the surviving passages belong on a `resolved`
+    row as much as on an `unverified` one. The engine asks for that reason
+    exactly where the text a prior finding quoted still reads the same, so a
+    record that dropped it kept the ruling and threw away what the ruling had
+    to answer for.
+    """
+    return {
+        "id": str(issue.get("id") or ""),
+        "prior_id": str(issue.get("prior_id") or ""),
+        "prior_rank": prior_rank(issue),
+        "name": str(issue.get("name") or "").strip(),
+        "status_reason": str(issue.get("status_reason") or "").strip(),
+        "text_unchanged_reason": str(issue.get("text_unchanged_reason") or "").strip(),
+        "surviving_quotes": surviving_passages(issue),
+    }
+
+
 def write_round_record(
     dest: Path, preprint: Preprint, provenance: dict, package: dict
 ) -> None:
@@ -2267,31 +2351,18 @@ def write_round_record(
                 }
                 for issue in suggestion_issues(package)
             ],
+            # Both closed lists carry the same fields. A `resolved` row used to
+            # drop `text_unchanged_reason` and the surviving passages, which are
+            # the two things that say what the ruling was made against: the
+            # engine demands that reason precisely where the text a finding
+            # quoted still reads the same, so dropping it left the strongest
+            # ruling in the round as the one with no evidence recorded under it.
             "closed_issues": {
-                "resolved": [
-                    {
-                        "id": str(issue.get("id") or ""),
-                        "prior_id": str(issue.get("prior_id") or ""),
-                        "prior_rank": prior_rank(issue),
-                        "name": str(issue.get("name") or "").strip(),
-                        "status_reason": str(issue.get("status_reason") or "").strip(),
-                    }
-                    for issue in resolved_issues(package)
-                ],
-                "unverified": [
-                    {
-                        "id": str(issue.get("id") or ""),
-                        "prior_id": str(issue.get("prior_id") or ""),
-                        "prior_rank": prior_rank(issue),
-                        "name": str(issue.get("name") or "").strip(),
-                        "status_reason": str(issue.get("status_reason") or "").strip(),
-                        "surviving_quotes": [
-                            str(quote)
-                            for quote in _list(issue.get("surviving_quotes"))
-                        ],
-                    }
-                    for issue in unverified_issues(package)
-                ],
+                name: [_closed_row(issue) for issue in rulings]
+                for name, rulings in (
+                    ("resolved", resolved_issues(package)),
+                    ("unverified", unverified_issues(package)),
+                )
             },
             # Every item a later round still has to answer: this round's own
             # list plus the previous round's items nobody ruled fixed.
@@ -2416,6 +2487,7 @@ def prior_issues_file(prior: Path | None) -> Path | None:
     path = Path(prior) / REVIEW_ISSUES
     if not path.is_file():
         return None
+    assert_prior_items_are_the_published_bytes(path)
     open_items = [
         row
         for row in _list(maybe_json(path).get("issues"))
@@ -2424,6 +2496,43 @@ def prior_issues_file(prior: Path | None) -> Path | None:
         and str(row.get("status") or "") != RESOLVED_STATUS
     ]
     return path if open_items else None
+
+
+def assert_prior_items_are_the_published_bytes(path: Path) -> None:
+    """The prior round's items have to be the bytes that round published.
+
+    The file sits in a published bundle, in a public repository, and the next
+    round rules against it: an id, a statement and a severity in it become the
+    standing of a request the authors already answered. A row deleted or a
+    statement rewritten by hand would be read as the previous round's own words,
+    and the only sign of it would be in this file's history.
+
+    Every bundle hashes its own files into `manifest.json` when it is published,
+    so there is a recorded digest to check against, and it is checked here,
+    where the file is named as an input, rather than trusted because of where it
+    sits. A bundle whose manifest does not account for the file is refused the
+    same way: an unaccounted file and an edited one read identically from here.
+    """
+    path = Path(path)
+    recorded = _dict(maybe_json(path.parent / "manifest.json").get("files"))
+    stated = recorded.get(path.name)
+    if not isinstance(stated, str) or not stated:
+        raise CommandError(
+            f"The previous round at {path.parent.name} does not account for its "
+            f"own {path.name} in manifest.json, so there is no published digest "
+            "to check the items against. A later round rules against that file, "
+            "so it is not read until the bundle that published it says what it "
+            "held."
+        )
+    actual = digest(path.read_bytes())
+    if actual != stated:
+        raise CommandError(
+            f"The {path.name} of the previous round at {path.parent.name} is not "
+            f"the file that bundle published: it hashes to {actual[:16]} and the "
+            f"bundle's manifest records {stated[:16]}. The items in it are what "
+            "the authors were asked for and what this round would rule against, "
+            "so an edited copy is refused. Restore the published file from git."
+        )
 
 
 def cmd_prepare(args: argparse.Namespace) -> int:
@@ -2544,12 +2653,12 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 # operator whatever the reason it got there.
 #
 # A substring, not a bounded match, because every boundary turned out to be a
-# hole. `/home/ty` with a boundary on the left published `file:/home/ty/x.pdf`,
-# `box:/home/ty/x`, `//home/ty/x`, `a~/home/ty/x` and
-# `http://localhost:8000/home/ty/x`; `ty-ms-7c80` with one published
-# `node.ty-ms-7c80` and `run_ty-ms-7c80_1`; and the fields a fact was not read
+# hole. `/home/opal` with a boundary on the left published `file:/home/opal/x.pdf`,
+# `box:/home/opal/x`, `//home/opal/x`, `a~/home/opal/x` and
+# `http://localhost:8000/home/opal/x`; `lab-ws-01` with one published
+# `node.lab-ws-01` and `run_lab-ws-01_1`; and the fields a fact was not read
 # in published the host name as a JSON key and as an `id`. None of that needs
-# protecting from a substring test, because `/home/ty` and `ty-ms-7c80` cannot
+# protecting from a substring test, because `/home/opal` and `lab-ws-01` cannot
 # occur in a review of a paper, in this repository's own vocabulary, or in
 # anything but a reference to this machine.
 #
@@ -2700,6 +2809,55 @@ LOCAL_REFERENCE_PATTERNS = (
     ),
 )
 
+# A credential, which is not a path and not a machine name and has no business
+# in anything this repository publishes. These were not scanned for at all: the
+# scan was built to keep the operator's filesystem out of a published page, and
+# a key pasted into a refusal, printed by a tool into a run log, or sitting in
+# an environment line copied into a comment would have travelled with it.
+#
+# They are tier 1, like a specific fact: nothing waives one. A hit here is
+# either a live secret, in which case publishing it is the worst thing on this
+# page, or it is a dead or made-up one, in which case the cost of refusing is
+# that someone rewrites an example. That trade only goes one way.
+#
+# Each shape is a vendor's own prefix and length, so there is nothing for a
+# reviewer's prose to collide with. No generic `password = ...` rule is here on
+# purpose: it matches documentation, test fixtures and the word in a sentence,
+# and a rule that fires on those gets waived by habit, which is how the shapes
+# that matter stop being read.
+SECRET_PATTERNS = (
+    (
+        "an API key",
+        # `sk-` covers this project's own provider and the other vendors that
+        # copied the prefix, `sk-ant-api03-...` among them.
+        re.compile(r"(?<![\w-])sk-(?:[A-Za-z0-9_-]*-)?[A-Za-z0-9_-]{24,}"),
+    ),
+    (
+        "a GitHub token",
+        re.compile(r"(?<![\w-])(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[\w]{20,})"),
+    ),
+    (
+        "an AWS access key id",
+        re.compile(r"(?<![A-Z0-9])(?:AKIA|ASIA)[A-Z0-9]{16}(?![A-Z0-9])"),
+    ),
+    (
+        "a Google API key",
+        re.compile(r"(?<![\w-])AIza[A-Za-z0-9_-]{30,}"),
+    ),
+    (
+        "a Slack token",
+        re.compile(r"(?<![\w-])xox[abprs]-[A-Za-z0-9-]{10,}"),
+    ),
+    (
+        "a bearer token",
+        re.compile(r"(?i:bearer)\s+[A-Za-z0-9._~+/-]{24,}={0,2}(?![\w.~+/-])"),
+    ),
+    (
+        "a private key block",
+        re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+    ),
+)
+
 # How a path opens: a leading slash, or two, under the rules worked out for the
 # absolute path pattern above. Named here because the shapes below reuse it.
 _PATH_OPENER = r"(?:(?<![\w~./:])//|(?<![\w~./])/)"
@@ -2743,6 +2901,37 @@ UNWAIVABLE_PATH_SHAPES = (
         "a path in a Windows user profile",
         re.compile(rf"(?<![\w:])[A-Za-z]:[\\/]+(?i:users)[\\/]+{_SEGMENT}(?:[\\/]+{_SEGMENT})*"),
     ),
+    (
+        "a path inside an installed environment",
+        # `usr` and `run` are not roots of the absolute-path shape, for the
+        # reason given there: `/usr/bin` says nothing about the operator and
+        # reads as a word in a sentence too often to refuse review prose over.
+        # That left the longest paths on the machine unscanned, because the
+        # engine is installed under one:
+        # `/usr/lib/python3.12/site-packages/peerreviewagents/plugin/server.py`
+        # names the interpreter, its version and the layout of this install, and
+        # a traceback out of a run is full of them.
+        #
+        # So the marker is the install tree rather than the root. A segment
+        # called `site-packages`, `dist-packages`, `node_modules` or
+        # `virtualenvs` with a path on both sides of it is a file inside an
+        # installed environment, wherever that environment sits. It is here
+        # rather than among the waivable shapes for the same reason a home path
+        # is: no review of a paper contains one, so there is nothing for an
+        # allowance to be for.
+        re.compile(
+            rf"{_PATH_OPENER}{_SEGMENT}(?:/{_SEGMENT})*"
+            rf"/(?i:site-packages|dist-packages|node_modules|virtualenvs)"
+            rf"(?:/{_SEGMENT})+"
+        ),
+    ),
+    (
+        "a per-user runtime directory",
+        # `/run/user/1000` is where a session's sockets live, and the number in
+        # it is the operator's own account id, which is as specific to this
+        # machine as the home directory is.
+        re.compile(r"(?<![\w~./])/run/user/\d+(?:/[\w.+~%-]+)*"),
+    ),
 )
 
 
@@ -2758,7 +2947,7 @@ class Fact(NamedTuple):
 
     There is no field a fact is skipped in any more. A list of vocabulary fields
     existed to stop a host called `editor` refusing its own provenance record,
-    and it published `ty-MS-7C80` as a JSON key and as an `id`. Fixing which
+    and it published `lab-WS-01` as a JSON key and as an `id`. Fixing which
     facts are unwaivable is what removed the need for it.
     """
 
@@ -2807,8 +2996,8 @@ def host_pattern(name: str) -> "re.Pattern[str]":
     """How to find this machine's own name, which depends on what it is called.
 
     A specific name is matched as a plain substring, in either case and with no
-    boundary on either side. `ty-ms-7c80` typed in a comment is this machine as
-    surely as `ty-MS-7C80` is, and so are `node.ty-ms-7c80`, `run_ty-ms-7c80_1`
+    boundary on either side. `lab-ws-01` typed in a comment is this machine as
+    surely as `lab-WS-01` is, and so are `node.lab-ws-01`, `run_lab-ws-01_1`
     and a JSON key spelled with it, every one of which the bounded version
     published. Nothing has to be protected from this test, because no review of
     any paper contains this string.
@@ -2833,7 +3022,7 @@ def host_pattern(name: str) -> "re.Pattern[str]":
 def path_segments(text: str) -> int:
     """How many named segments a detected path has.
 
-    `/home/ty` has two, `/tmp` has one, and that count is the whole of the
+    `/home/opal` has two, `/tmp` has one, and that count is the whole of the
     specific-or-generic decision for a path. Two segments is a place on one
     disk. One segment is a word that happens to be a directory, and every
     system has it.
@@ -2854,12 +3043,12 @@ def machine_facts(
     A path of two or more segments, and a host name carrying a digit, a hyphen
     or a dot, are specific. They are matched as a plain case-insensitive
     substring, with no boundary on either side, everywhere, and nothing waives
-    one. There is nothing to protect from that test: `/home/ty` and `ty-ms-7c80`
+    one. There is nothing to protect from that test: `/home/opal` and `lab-ws-01`
     do not occur in a review of a paper or in this repository's own vocabulary,
     which is why the boundaries that were there to protect ordinary text are
-    gone, and with them every hole they left. `file:/home/ty/x.pdf`,
-    `//home/ty/x`, `a~/home/ty/x`, `http://localhost:8000/home/ty/x`,
-    `node.ty-ms-7c80`, `run_ty-ms-7c80_1` and the host as a JSON key were all
+    gone, and with them every hole they left. `file:/home/opal/x.pdf`,
+    `//home/opal/x`, `a~/home/opal/x`, `http://localhost:8000/home/opal/x`,
+    `node.lab-ws-01`, `run_lab-ws-01_1` and the host as a JSON key were all
     published by the bounded version.
 
     A one-segment path, a one-word host name and the bare account name are
@@ -2882,8 +3071,9 @@ def machine_facts(
 
         Only the resolved spelling was registered, so on a machine where the
         home directory, the temporary directory or the run folder is a symlink,
-        the name every tool prints was not a fact at all. `/home/ty` resolving
-        to `/export/people/ty` meant a run under `/home/ty` published `/home/ty`
+        the name every tool prints was not a fact at all. `/home/opal`
+        resolving to `/export/people/opal` meant a run under `/home/opal`
+        published `/home/opal`
         and refused only the target nobody ever types.
         """
         text = str(value or "")
@@ -2946,8 +3136,8 @@ def machine_facts(
         if path_segments(text) > 1:
             # Both spellings of the fact itself. The scan reads the raw string
             # and the canonical one, so a fact that canonicalises to something
-            # else has to be looked for in both: HOME written `/home//ty/.` is
-            # the same machine as HOME written `/home/ty`.
+            # else has to be looked for in both: HOME written `/home//opal/.`
+            # is the same machine as HOME written `/home/opal`.
             for spelling in dict.fromkeys((text, canonical_text(text))):
                 facts.append(Fact(why, re.compile(re.escape(spelling), re.IGNORECASE)))
             continue
@@ -3063,10 +3253,10 @@ def printed_in(text: str, document: str) -> bool:
 # FRACTION SLASH, U+29F8 BIG SOLIDUS, U+2216 SET MINUS, U+27CB MATHEMATICAL
 # RISING DIAGONAL, U+2571 BOX DRAWINGS LIGHT DIAGONAL and U+3033 VERTICAL KANA
 # REPEAT MARK all survive it. A backslash is a slash here too: `C:\Users\bob`
-# and `\home\ty\x` are the paths they read as, and the shapes that need the
+# and `\home\opal\x` are the paths they read as, and the shapes that need the
 # backslash itself still see it, because the raw string is scanned as well. The
 # hyphens matter for the host name, which is the one fact with a hyphen in it:
-# `ty‑MS‑7C80` written with U+2011 is this machine.
+# `lab‑WS‑01` written with U+2011 is this machine.
 _LOOKALIKES = str.maketrans(
     {
         "\\": "/",
@@ -3092,10 +3282,10 @@ _LOOKALIKES = str.maketrans(
     }
 )
 # A backslash in front of ASCII punctuation is an escape, not a path separator:
-# `\/home\/ty` out of a JSON string and `ty\-MS\-7C80` out of a regular
+# `\/home\/opal` out of a JSON string and `lab\-WS\-01` out of a regular
 # expression are both this machine, written by something that quoted them.
-# Dropped before the look-alikes are folded, so that `\home\ty\x` still becomes
-# `/home/ty/x` while `\/home` does not become `//home`.
+# Dropped before the look-alikes are folded, so that `\home\opal\x` still
+# becomes `/home/opal/x` while `\/home` does not become `//home`.
 _ESCAPED_PUNCTUATION = re.compile(r"\\([!-\/:-@\[-`{-~])")
 _DOT_SEGMENT = re.compile(r"/\.(?=/)")
 # Repeated slashes are one slash, except the pair that follows a scheme.
@@ -3110,7 +3300,7 @@ def canonical_text(text: str, *, escapes_first: bool = True) -> str:
 
     Every encoding this scan has been got past is undone here rather than in a
     list of special cases, and undone repeatedly, because each layer can reveal
-    another: `%252Fhome%252Fty` is a percent sign that decodes to a percent
+    another: `%252Fhome%252Fopal` is a percent sign that decodes to a percent
     sign, and `&#37;2Fhome` is an HTML entity hiding one. The steps are NFKC,
     HTML entities, percent-decoding, dropping the format characters that print
     as nothing (U+200B through U+200D, U+2060, U+FEFF and the soft hyphen are
@@ -3121,7 +3311,7 @@ def canonical_text(text: str, *, escapes_first: bool = True) -> str:
 
     A backslash is two things at once and the order decides which one it is
     read as, so there is no order that is right. With `escapes_first`, which is
-    the default, `\\/home\\/ty` is a quoted `/home/ty` and `ty\\-MS\\-7C80` is a
+    the default, `\\/home\\/opal` is a quoted `/home/opal` and `lab\\-WS\\-01` is a
     quoted host name. Without it, a backslash is a separator before anything
     else, and `\\opt\\.cache\\insilico` is `/opt/.cache/insilico` rather than
     the `/opt.cache/insilico` the other reading produces, which is a path on no
@@ -3163,7 +3353,7 @@ def _scan_forms(text: str) -> tuple[str, ...]:
     A handful of forms rather than a list of encodings. The raw string is read
     because the Windows share and the percent-encoded path are shapes in their
     own right, and the canonical form is read because `%2Fhome%2Fbob`,
-    `&#47;home&#47;ty`, `/home/./ty`, `\\/home\\/ty` and `∕home∕ty` are all the
+    `&#47;home&#47;opal`, `/home/./opal`, `\\/home\\/opal` and `∕home∕opal` are all the
     same path and none of them matches a pattern written in slashes. Both
     readings of a backslash are canonicalised, because a quoted separator and a
     quoted punctuation mark are written the same way and whichever reading holds
@@ -3180,12 +3370,19 @@ def names_a_specific_fact(text: str, facts: Sequence[Fact]) -> bool:
     reading `file:///<checkout>/scripts/local_review.py` in a refusal and
     passing it back waived a tier 1 fact, because the flag matched the hit and
     nothing looked at what the hit was made of.
+
+    A credential counts here too, though it is not a fact about this machine.
+    What the two have in common is the only thing this test is for: neither may
+    be published, and an allowance naming one would publish it.
     """
+    forms = _scan_forms(text)
+    if any(pattern.search(form) for _, pattern in SECRET_PATTERNS for form in forms):
+        return True
     return any(
         fact.pattern.search(form)
         for fact in facts
         if fact.specific
-        for form in _scan_forms(text)
+        for form in forms
     )
 
 
@@ -3217,6 +3414,15 @@ def local_references(
     # first and a hit that only the canonical form found is a different kind of
     # hit: it is the same disk written in an encoding, not a second one.
     found: list[tuple[Leak, bool]] = []
+    # A credential is reported in the same tier as a specific fact and before
+    # the shapes, so a key sitting inside a longer path or header is the hit
+    # that carries the tier rather than the path around it.
+    for why, pattern in SECRET_PATTERNS:
+        for index, form in enumerate(forms):
+            found += [
+                (Leak(why, match.group(0), True), index > 0)
+                for match in pattern.finditer(form)
+            ]
     for fact in facts:
         if not fact.specific:
             continue
@@ -3262,7 +3468,7 @@ def local_references(
     # and never hide a path. The line then names the spelling the file holds,
     # which is the one an editor can search for and the one `--allow-text` has
     # to match. A folded hit that no written hit covers is the whole point of
-    # folding, `%2Fhome%2Fty` being a path only once decoded, and it stays, in
+    # folding, `%2Fhome%2Fopal` being a path only once decoded, and it stays, in
     # the only spelling that shows what it is.
     written = [leak for leak in carrying if not only_folded.get(leak.text, False)]
     covers = [_scan_forms(leak.text) for leak in written]
@@ -3325,8 +3531,9 @@ def leak_refusal(leaks: Sequence[Leak]) -> str:
     if unwaivable:
         said += (
             f" {len(unwaivable)} of these name this machine itself, looked up"
-            " rather than recognised, or a path under a home or temporary"
-            " directory, and no flag and no manuscript waives one."
+            " rather than recognised, a path under a home or temporary"
+            " directory, or a credential, and no flag and no manuscript waives"
+            " one."
         )
     return said
 
@@ -3356,7 +3563,7 @@ def local_reference_fields(
     version switched the host name fact off in field names and in a list of
     fields whose values come from a fixed vocabulary, because a host called
     `editor` refused its own provenance record. That is what published
-    `ty-MS-7C80` as a JSON key and as an `id`, a `status` and a `basis`. The
+    `lab-WS-01` as a JSON key and as an `id`, a `status` and a `basis`. The
     tier split above is what makes a word-shaped host harmless, so nothing has
     to be switched off anywhere.
     """
@@ -3570,6 +3777,12 @@ def assert_publishable_issues(package: dict) -> None:
     `issue_ids_used` accounts for every id in the file. That last one is what
     stops a resolved issue's id being minted again for a different problem two
     rounds later.
+
+    Two more rules are about what the letter would say rather than what the next
+    round would read, and they are here because this is the one place every
+    published run passes through: a standing has to be one of the engine's five,
+    and a surviving passage has to be an object carrying the manuscript text it
+    quotes.
     """
     stamp = str(package.get("schema_version") or "")
     if not stamp:
@@ -3624,6 +3837,43 @@ def assert_publishable_issues(package: dict) -> None:
             "in the letter at all. Update the publish path before publishing a "
             "run from this release."
         )
+    # A standing outside the engine's five. The word is published in the letter
+    # and in the round record, and a reader takes it for the engine's own, so a
+    # run carrying `fixed` or `addressed` is refused and the word is named. The
+    # five are the engine's `ISSUE_STATUSES`, checked against the installed
+    # engine by `assert_issue_vocabulary`.
+    strange_status = sorted({
+        f"{_dict(row).get('id')} ({_dict(row).get('status') or 'no status'})"
+        for row in rows
+        if str(_dict(row).get("status") or "") not in ISSUE_STATUSES
+    })
+    if strange_status:
+        raise CommandError(
+            f"{len(strange_status)} issue(s) in this run carry a standing this "
+            f"engine does not write: {', '.join(strange_status[:5])}. The five "
+            f"are {', '.join(ISSUE_STATUSES)}, each of them a statement about "
+            "the previous round, and a word outside them would be published in "
+            "the letter as though the engine had ruled it."
+        )
+    # The surviving passages are objects, `{finding_uid, block_id, quote}`, and
+    # the letter prints the quote out of each one. A row that is not an object,
+    # or that carries no quote, is refused rather than published: a row read as
+    # a string printed a Python dict into a letter under a heading telling the
+    # authors that was their own text.
+    shapeless = sorted({
+        f"{_dict(row).get('id')} ({type(passage).__name__})"
+        for row in rows
+        for passage in _list(_dict(row).get("surviving_quotes"))
+        if not isinstance(passage, dict) or not str(passage.get("quote") or "").strip()
+    })
+    if shapeless:
+        raise CommandError(
+            f"{len(shapeless)} issue(s) in this run carry a surviving passage "
+            f"that holds no quote: {', '.join(shapeless[:5])}. The engine writes "
+            "one object per passage with the manuscript text in `quote`, the "
+            "letter prints that text, and a row without it would be published "
+            "as an empty quotation of the authors' own manuscript."
+        )
     used = {str(name) for name in _list(package.get("issue_ids_used"))}
     unlisted = sorted(set(identifiers) - used)
     if unlisted:
@@ -3633,6 +3883,83 @@ def assert_publishable_issues(package: dict) -> None:
             "the round and its own prior rounds spent, and a later round mints "
             "above it, so an id left out of it would be handed to a different "
             "problem once this one is resolved."
+        )
+
+
+def assert_the_round_ruled_against_its_prior(prepared: dict, package: dict) -> None:
+    """Did this run read the round it is about to be published after?
+
+    `prepare` works out the round number from the bundles already published and
+    names the previous round's items as the engine's `--prior-issues`. The
+    engine takes that file or it does not, and nothing joined the two up: a run
+    made without the flag published as round 3 with no prior round recorded,
+    every item `new`, and `i01` `i02` `i03` minted again for problems that had
+    nothing to do with the ones the authors were sent under those numbers. The
+    page promises the opposite, that an id is one problem for the life of the
+    manuscript, and that promise is what breaks first and most quietly.
+
+    So the two are compared here, at the one gate every published bundle passes.
+    The engine records the prior round as the file it read and a digest of it,
+    `sha256` of the file's text cut to sixteen characters, which was checked
+    against the engine's own code rather than assumed. A round above the first
+    whose plan names a prior file publishes only if the engine read a file and
+    the digest is of that file.
+
+    A round above the first whose plan names no prior file is a different case
+    and not an error: the previous bundle published no items, or ruled every one
+    of them fixed, and the engine refuses a prior file with nothing open in it.
+    What is refused there is the reverse surprise, a run that ruled against some
+    file the plan knows nothing about, because then nobody can say which round
+    the rulings in the letter are about.
+    """
+    round_number = int(prepared.get("round") or 1)
+    named = str(prepared.get("prior_issues") or "").strip()
+    prior = _dict(package.get("prior_round"))
+    read_file = str(prior.get("file") or "").strip()
+    read_digest = str(prior.get("digest") or "").strip()
+
+    if named and not read_file:
+        raise CommandError(
+            f"This is round {round_number} and the run was made without the "
+            "previous round's items: the engine records no prior round, so "
+            "every issue in it is new and its ids start again from the "
+            "beginning. The authors were already sent items under those "
+            "numbers. Re-run the review with --prior-issues "
+            f"{shlex.quote(named)}, which is the file prepare named."
+        )
+    if not named and read_file:
+        raise CommandError(
+            f"This run ruled against a prior round ({read_file}) that the plan "
+            f"for round {round_number} does not name. Either the previous round "
+            "published no open items, in which case there is nothing to rule "
+            "against, or some other file was passed, in which case nothing here "
+            "can say which round the rulings in this letter are about. Re-run "
+            "prepare, and pass the file it names or no file at all."
+        )
+    if not named:
+        return
+
+    source = Path(named)
+    if not source.is_file():
+        raise CommandError(
+            f"The previous round's items are no longer at {source.name}, so "
+            "what this run ruled against cannot be checked. The file is "
+            "published in a bundle in this repository. Restore it from git."
+        )
+    assert_prior_items_are_the_published_bytes(source)
+    # The engine's own digest of the prior file: `sha256` of the text it read,
+    # cut to sixteen characters. Read off the engine's source rather than
+    # guessed at, and it covers the whole file, so a row deleted or a statement
+    # rewritten moves it.
+    actual = digest(source.read_bytes())
+    if actual[: len(read_digest)] != read_digest:
+        raise CommandError(
+            f"This is round {round_number} and the file the run ruled against "
+            "is not the one the previous round published: the engine recorded "
+            f"{read_file} at {read_digest} and the published {source.name} "
+            f"hashes to {actual[:len(read_digest)]}. The rulings in the letter "
+            "would be about items the authors were never sent. Re-run the "
+            f"review with --prior-issues {shlex.quote(named)}."
         )
 
 
@@ -3830,12 +4157,12 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
     said `blocked`. Both produced a record that read like a clean review.
 
     The engine answers the question now. `read_run` sets `publishable` only
-    when the run finished, the findings came from a readable
-    `editor-package.json` rather than the ledger, a guard verdict was recorded,
-    the guards did not empty the review, and every run file could be read in
-    full. That is the whole gate, and it is the engine's own rule rather than a
-    second copy of it here, down to the words the refusal prints, which are the
-    engine's `not_publishable_reasons`.
+    when the run finished, the review came from a readable `issues.json` the
+    editor agent wrote rather than from the findings ledger, a guard verdict was
+    recorded, the guards did not empty the review, and every run file could be
+    read in full. That is the whole gate, and it is the engine's own rule rather
+    than a second copy of it here, down to the words the refusal prints, which
+    are the engine's `not_publishable_reasons`.
 
     No status is special-cased beside the flag. `complete-without-findings` is
     the finished state for a review written with no findings in it, and the two
@@ -3891,25 +4218,19 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
     if not reading.get("publishable"):
         # The engine names its own reasons, one sentence each, and that list is
         # never empty while the flag is false. Printing its words rather than a
-        # second copy of its rules is the only way the refusal here and the
-        # rule there cannot drift apart. The fallback covers an engine old
-        # enough to set the flag without carrying the list.
+        # second copy of its rules is the only way the refusal here and the rule
+        # there cannot drift apart. There used to be a fallback here that
+        # reconstructed a reason from the old flat-findings fields when the list
+        # was missing, for an engine too old to carry it. This release requires
+        # 0.10, which always carries it, and the fallback described a run shape
+        # the engine no longer writes, so an empty list is reported as what it
+        # is rather than explained by guesswork.
         reasons = [
             str(reason).strip()
             for reason in _list(reading.get("not_publishable_reasons"))
             if str(reason).strip()
         ]
-        # The lane lines are left out: a citation stage that did not answer is
-        # not a run file the engine could not read, and this fallback names
-        # them as exactly that.
-        lane = unfinished_lane_lines(reading)
-        problems = [
-            str(p).strip()
-            for p in _list(reading.get("problems"))
-            if str(p).strip() and str(p).strip() not in lane
-        ]
         cause = str(reading.get("cause") or "").strip()
-        source = str(reading.get("findings_source") or "none")
         detail = [f"The engine read it as {status or 'unknown'}."]
         if cause:
             detail.append(f"It stopped because: {cause}")
@@ -3917,16 +4238,11 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             detail.append("The engine holds it back because:")
             detail += [f"({n}) {reason}." for n, reason in enumerate(reasons, start=1)]
         else:
-            if source != "issues":
-                detail.append(
-                    f"Its findings came from {source}, which is not the "
-                    "editor's own issues."
-                )
-            if problems:
-                detail.append(
-                    f"{len(problems)} run file(s) could not be read in full: "
-                    + ", ".join(problems)
-                )
+            detail.append(
+                "It gave no reason for holding the run back, which this "
+                "release's engine does whenever it withholds a run, so read "
+                "the run folder before trusting anything in it."
+            )
         raise CommandError(
             "The engine does not read this run as publishable, so it is not a "
             "review this path can publish. "
@@ -4033,6 +4349,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
     if args.publish:
         require_complete_run(run_dir, run, reading)
         assert_publishable_issues(package)
+        assert_the_round_ruled_against_its_prior(prepared, package)
     workspace = resolve_workspace(run_dir, args.workspace)
     preprint_data = prepared.get("preprint")
     if preprint_data is None:
