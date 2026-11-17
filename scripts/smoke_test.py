@@ -29,6 +29,7 @@ from smoke_checks.local import (
     check_a_path_shaped_key_is_refused_rather_than_published_without_it,
     check_a_schema_pattern_means_what_the_repositorys_own_gate_means,
     check_a_rehearsal_claims_no_reading,
+    check_a_review_that_read_the_code_publishes_the_code_and_not_the_copy,
     check_a_version_is_only_recorded_when_it_looks_like_one,
     check_a_rehearsal_is_never_written_into_the_published_tree,
     check_an_attestation_needs_a_named_editor,
@@ -66,6 +67,7 @@ from smoke_checks.planning import (
 )
 from smoke_checks.sources import (
     check_a_rate_limit_is_waited_out_in_minutes,
+    check_a_submitted_code_link_is_only_ever_an_https_one,
     check_bare_doi_picks_the_right_server,
     check_download_is_bounded,
     check_full_text_source_hierarchy,
@@ -129,6 +131,8 @@ def main() -> int:
     print("ok  a bare DOI resolves to the server that actually holds it")
     check_submission_preview()
     print("ok  submission issues get one safe editor command preview")
+    check_a_submitted_code_link_is_only_ever_an_https_one()
+    print("ok  a submitted code link is accepted only as a public https address")
     check_full_text_source_hierarchy()
     print("ok  official full text is preferred and damaged PDF text falls back to OCR")
     check_metadata_fetch_retries_throttling()
@@ -190,6 +194,8 @@ def main() -> int:
     print("ok  the page shows each slot's model asked and model ran, from two fields")
     check_the_citation_section_prints_no_charge_nobody_made()
     print("ok  the citations section states each lookup state and sums none of them")
+    check_a_review_that_read_the_code_publishes_the_code_and_not_the_copy()
+    print("ok  a review that read the code publishes the code read and not the copy taken")
     check_an_attestation_needs_a_named_editor()
     print("ok  a true attestation needs a named editor and an actual reading")
     check_a_rehearsal_claims_no_reading()

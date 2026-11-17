@@ -13,6 +13,29 @@ Not a bare PDF link: a review has to name an exact, permanent version. A
 preprint server gives us a DOI, a version number and a file we can checksum. A
 bare link can go dead and leave a review pointing at nothing.
 
+## Offering the code behind the paper
+
+Optional, and one field on the form: a public `https://` link to the repository
+holding the analysis code. Give it and one more reviewer joins the panel, the
+one that reads your methods section against what the code actually does.
+
+What happens to the link:
+
+- **The review clones it, and nothing else does.** Read-only, shallow, no
+  credentials, hooks and submodules off, size-capped. Nothing in the
+  repository is ever run.
+- **Only its text is copied.** Data files, binaries and anything whose name
+  looks like it holds a secret are skipped, and the review records how many
+  files it left out.
+- **The link and the exact commit are published** with the review, so a reader
+  knows which code was read. The code itself is not republished: a finding
+  quotes the lines it is about, and the review carries those lines and no
+  others.
+
+SSH links, local-file URLs and paths on a machine are not accepted. If the code is not
+public, leave the field empty: a review published in public cannot rest on code
+nobody else can fetch.
+
 ## What we cannot read
 
 - Scanned or image-only PDFs that also fail the OCR fallback.

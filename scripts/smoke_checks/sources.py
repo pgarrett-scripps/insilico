@@ -447,6 +447,128 @@ Yes
     assert "no URL found" in bad
 
 
+def check_a_submitted_code_link_is_only_ever_an_https_one() -> None:
+    """A submission may name code to review, and only over the public web.
+
+    The review's own engine clones the link, read-only and with no credentials,
+    and nothing here ever fetches it. That holds only for an address anybody
+    can clone, so this is the edge that enforces it: an `https://` link is
+    accepted, an SSH link is turned down because reviewing code the public
+    cannot fetch would publish a claim nobody can check, and a path or a
+    `file://` link is turned down because from a submission it names a folder
+    on whichever machine is running the review rather than the authors' code.
+
+    A refused link is not a refused submission. The preview says which link was
+    turned down and why, prints it as text rather than as something to click,
+    and still carries the paper's own metadata and the editor's commands.
+    """
+    import fetch_preprint
+
+    accept = fetch_preprint.check_code_link
+    assert accept("https://github.com/lab/analysis") == "https://github.com/lab/analysis"
+    assert accept("  https://codeberg.org/lab/analysis  ") == (
+        "https://codeberg.org/lab/analysis"
+    )
+    # An untouched optional field, and the ways somebody writes "there is none".
+    for empty in ("", "   ", "_No response_", "none", "N/A", "no", "-"):
+        assert accept(empty) == "", f"{empty!r} is not a link and must read as none"
+
+    refusals = {
+        "git@github.com:lab/analysis.git": "SSH",
+        "ssh://git@github.com/lab/analysis": "SSH",
+        "git://github.com/lab/analysis": "SSH",
+        "file:///home/someone/analysis": "folder on a machine",
+        "/home/someone/analysis": "folder on a machine",
+        "~/analysis": "folder on a machine",
+        "./analysis": "folder on a machine",
+        "C:\\Users\\someone\\analysis": "folder on a machine",
+        "http://github.com/lab/analysis": "plain http",
+        "https:///lab/analysis": "no host",
+        "lab/analysis": "not a repository link",
+    }
+    for link, because in refusals.items():
+        try:
+            accept(link)
+        except fetch_preprint.CodeLinkRefused as refused:
+            assert because in str(refused), (
+                f"{link} was refused for the wrong reason: {refused}"
+            )
+        else:
+            raise AssertionError(f"{link} was accepted from a submission")
+
+    # Found under its own heading, by the words the issue form is pinned to.
+    body = """### Preprint link
+
+https://arxiv.org/abs/2608.12345
+
+### Link to the code behind the paper (optional)
+
+{code}
+
+### Are you an author of, or affiliated with, this paper?
+
+No
+"""
+    assert fetch_preprint.extract_code_link(
+        body.format(code="https://github.com/lab/analysis")
+    ) == "https://github.com/lab/analysis"
+    assert fetch_preprint.extract_code_link(body.format(code="_No response_")) == ""
+    assert fetch_preprint.extract_code_link("### Preprint link\n\nhttps://x\n") == "", (
+        "a submission predating the field offers no code rather than a bad link"
+    )
+    assert fetch_preprint.extract_url(
+        body.format(code="https://github.com/lab/analysis")
+    ) == "https://arxiv.org/abs/2608.12345", (
+        "the paper's own link is still the first one read out of the body"
+    )
+
+    preprint = Preprint(
+        url="https://arxiv.org/abs/2608.12345",
+        source="arxiv",
+        pdf_url="https://arxiv.org/pdf/2608.12345v1",
+        identifier="2608.12345",
+        title="A paper with code",
+        authors=["Ada Lovelace"],
+        version="1",
+    )
+
+    def fake_resolve(url: str) -> Preprint:
+        return preprint
+
+    with tempfile.TemporaryDirectory() as raw:
+        reviews = Path(raw)
+        offered = build_preview(
+            body.format(code="https://github.com/lab/analysis"),
+            resolver=fake_resolve,
+            reviews_root=reviews,
+        )
+        assert "| Code offered for review | https" in offered, (
+            f"the preview does not show the code it accepted: {offered}"
+        )
+        assert "](http" not in offered and "<http" not in offered, (
+            "a submitted address is shown as text, not as something to click"
+        )
+        assert "cloned by the review itself" in offered
+
+        none = build_preview(
+            body.format(code=""), resolver=fake_resolve, reviews_root=reviews
+        )
+        assert "| Code offered for review | None |" in none
+        assert "cloned by the review itself" not in none
+
+        turned_down = build_preview(
+            body.format(code="git@github.com:lab/analysis.git"),
+            resolver=fake_resolve,
+            reviews_root=reviews,
+        )
+        assert "The code link was not accepted" in turned_down
+        assert "SSH link" in turned_down
+        assert "Use `/review`" in turned_down, (
+            "a refused code link must not cost the submission its review"
+        )
+        assert "| Title | A paper with code |" in turned_down
+
+
 def _full_text_fixture(preprint: Preprint) -> str:
     body = " ".join(
         [

@@ -336,6 +336,57 @@
                 }
               },
               "additionalProperties": false
+            },
+            "code": {
+              "$comment": "Whether the code behind the paper was reviewed beside it, read from the engine's `code` block. It is written for every run, and `reviewed` false with nothing beside it is the ordinary case: a review of a paper with no code submitted, which the page states rather than leaving a reader to infer. Two of the engine's fields are deliberately never published. `snapshot` is the absolute path of the copy the engine took, on the machine that ran the review, and the bundle does not carry that folder, so the path names a stranger's computer and points at nothing. The snapshot's own manifest is not published either: it carries the origin as an absolute path and a digest per file, and what a reader of a finding needs out of it, the file and the lines and that file's digest, the finding carries in its own code_evidence. Nothing else from the copy is published anywhere in the bundle, because the right a review earns is to quote the lines it makes a claim about and not to redistribute somebody's repository.",
+              "type": "object",
+              "required": ["reviewed"],
+              "properties": {
+                "reviewed": { "type": "boolean" },
+                "kind": {
+                  "$comment": "How the engine got the code. git-clone is a repository it cloned itself, read-only and with nothing executed, which is the only way a submitted link is ever fetched. folder is a directory on the machine that ran the review, which is how a local run reviews code that was never published.",
+                  "enum": ["git-clone", "folder"]
+                },
+                "source": {
+                  "$comment": "The repository the engine cloned, published whole because it is the one fact that lets a reader fetch the same code and check the commit for themselves. A folder gets no source: its source in the engine's reading is a resolved path on one machine, so only its own name is published, under source_name.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source_name": {
+                  "$comment": "The name of the folder the code was read from, with no path above it, which is what the engine's own REVIEW.md prints for the same reason. It is weak provenance and it is honest about being weak: it says what the editor called the directory and nothing a reader can fetch.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "commit": {
+                  "$comment": "The revision that was read, so a reader knows exactly which code the findings are about. A folder that is not a checkout has none, and the page then says the run did not record a revision rather than implying one.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "branch": { "type": "string", "minLength": 1 },
+                "dirty": {
+                  "$comment": "Whether the checkout had uncommitted changes in it, which means the commit alone does not describe what was read. The engine answers None for a folder that is not a checkout, and that is published as the key being absent rather than as false, because a directory with no git in it is not a clean checkout.",
+                  "type": "boolean"
+                },
+                "truncated": {
+                  "$comment": "The engine's own words for why the copy it took is not the whole of the code, when it is not. A size cap reached is the usual reason.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "files_in_snapshot": { "type": "integer", "minimum": 0 },
+                "files_skipped": {
+                  "$comment": "How many paths were left out of the copy, which the engine skips by size, by kind and because they look like secrets. A skipped file is a file the code reader did not see, so the count is published beside the count it was taken from.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "opened": { "type": "integer", "minimum": 0 },
+                "searches": { "type": "integer", "minimum": 0 },
+                "files_opened": {
+                  "$comment": "Which files the code lane opened, by their path inside the copy. The counts say how much there was and how much was read, and this says which, because a code reader that opened the one file the paper names and no other is a narrower claim than its count can make.",
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              },
+              "additionalProperties": false
             }
           },
           "additionalProperties": false

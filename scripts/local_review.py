@@ -718,6 +718,82 @@ def citation_record(reading: dict) -> dict:
     return record
 
 
+# What the code under review was taken from, in the engine's words: a
+# repository it cloned, or a folder on the machine that ran the review. The
+# difference decides what a published record can say about where the code came
+# from, because one of the two is an address a reader can open and the other is
+# a directory on somebody's computer.
+CODE_CLONE = "git-clone"
+CODE_FOLDER = "folder"
+
+# The keys of the engine's code block that are a count or a word, copied as
+# they are. `snapshot` and `manifest` are deliberately not among them, which
+# `code_record` explains.
+CODE_COUNTS = ("files_in_snapshot", "files_skipped", "opened", "searches")
+
+
+def code_record(reading: dict) -> dict:
+    """Whether code was reviewed beside the paper, for the published record.
+
+    The engine answers this for every run, including every run that was given
+    no code, so the record answers it too rather than leaving a reader of a
+    review with no code block to wonder whether the question was asked. A run
+    with none publishes `reviewed: false` and nothing else, because the rest of
+    the engine's block is empty for it.
+
+    Two of the engine's fields are not published. `snapshot` is the absolute
+    path of `<run>/code/` on the machine that ran the review, and the bundle
+    does not carry that folder, so the path names a stranger's computer and
+    points at nothing a reader has. `manifest` is the snapshot's own manifest,
+    one row per file taken with its digest and one per path left out, and it
+    carries the origin as an absolute path as well. What a reader of a finding
+    needs out of it, the file and the lines and the digest of the file they were
+    read from, the finding itself carries.
+
+    Where the code came from is published as the caller named it only when that
+    is an address rather than a directory. A clone's source is the repository
+    URL, which is the one fact that lets a reader fetch the code and check the
+    commit for themselves, so it is published whole and beside the commit. A
+    folder's source is a resolved path on one machine, so only its own name is
+    published, which is what the engine's own REVIEW.md prints for the same
+    reason.
+    """
+    code = _dict(reading.get("code"))
+    if not code:
+        return {}
+    record: dict = {"reviewed": bool(code.get("reviewed"))}
+    if not record["reviewed"]:
+        return record
+    kind = str(code.get("kind") or "")
+    if kind:
+        record["kind"] = kind
+    source = str(code.get("source") or "").strip()
+    if source and kind == CODE_CLONE and not looks_like_a_path(source):
+        record["source"] = source
+    elif source:
+        record["source_name"] = Path(source).name
+    for key in ("commit", "branch", "truncated"):
+        value = str(code.get(key) or "").strip()
+        if value:
+            record[key] = value
+    # A folder that is not a checkout has no clean or dirty state to report, and
+    # the engine says so with `None` rather than with `False`.
+    if isinstance(code.get("dirty"), bool):
+        record["dirty"] = code["dirty"]
+    for key in CODE_COUNTS:
+        if isinstance(code.get(key), int) and not isinstance(code.get(key), bool):
+            record[key] = code[key]
+    # Which files the lane actually opened, by their path inside the snapshot.
+    # The counts above say how much there was to read and the engine counts the
+    # opening, and this says which files they were, because a code reader that
+    # opened the one file the paper names and no other is a narrower claim than
+    # the count alone can make.
+    opened = [str(path) for path in _list(code.get("files_opened")) if str(path).strip()]
+    if opened:
+        record["files_opened"] = opened
+    return record
+
+
 def model_map(agents: list[dict]) -> dict[str, str]:
     """Which model wrote which report, keyed by the slot that wrote it.
 
@@ -1055,6 +1131,11 @@ def run_record(reading: dict) -> dict:
             record[key] = runtime[key]
     put("completeness", completeness(reading.get("stages")))
     put("citations", citation_record(reading))
+    # Whether code was reviewed beside the paper. This one is published for
+    # every run and not only for the runs that had code, because `reviewed:
+    # false` is the answer a reader of a review of a computational paper needs
+    # and an absent block is not that answer.
+    put("code", code_record(reading))
     record["errors"] = run_errors(reading)
     return record
 
@@ -1597,6 +1678,57 @@ def citation_lane_report(run: dict) -> list[str]:
     return lines
 
 
+def code_lane_clause(run: dict) -> str:
+    """Whether the code behind the paper was read, for the method paragraph.
+
+    Both answers are published. A review that read the code says where the code
+    came from and which commit, because a reader who cannot tell which revision
+    was read cannot check anything the review says about it, and a review that
+    read none says so, because a reader of a computational paper would otherwise
+    have to guess whether the panel had the software in front of it. Guessing
+    wrong in that direction credits this review with work it did not do.
+
+    A record written by an engine with no code block at all gets no sentence.
+    That is a run read by a release older than the one that answers the
+    question, and inventing either answer for it would be making it up.
+    """
+    code = _dict(run.get("code"))
+    if not code:
+        return ""
+    if not code.get("reviewed"):
+        return (
+            " No code was reviewed beside the manuscript, so everything this "
+            "review says about what was computed rests on the manuscript's own "
+            "account of it."
+        )
+    source = str(code.get("source") or "").strip()
+    name = str(code.get("source_name") or "").strip()
+    commit = str(code.get("commit") or "").strip()
+    where = source or (f"the {name} folder" if name else "code the editor supplied")
+    at = f" at commit {commit[:12]}" if commit else " at a revision the run did not record"
+    dirty = ", which had uncommitted changes in it" if code.get("dirty") is True else ""
+    opened = code.get("opened")
+    held = code.get("files_in_snapshot")
+    read = ""
+    if isinstance(opened, int) and isinstance(held, int):
+        read = (
+            f" That reader opened {opened} of the {held} file(s) the engine took "
+            "a copy of, and a finding that rests on the code names the file and "
+            "the lines it read, checked against that copy."
+        )
+    skipped = code.get("files_skipped")
+    left = ""
+    if isinstance(skipped, int) and skipped:
+        left = (
+            f" {skipped} path(s) were left out of that copy, so the code reader "
+            "did not see them."
+        )
+    return (
+        f" The code behind the paper was reviewed beside it, from {where}{at}"
+        f"{dirty}, by one more specialist reading a copy the engine took.{read}{left}"
+    )
+
+
 def method_paragraph(run: dict, models: dict[str, str]) -> str:
     """Describe the run that happened, from what the run recorded.
 
@@ -1641,6 +1773,7 @@ def method_paragraph(run: dict, models: dict[str, str]) -> str:
     elif arm:
         shape += f" The run used the {arm} arm, which convened no specialist readers."
     shape += citation_lane_clause(run)
+    shape += code_lane_clause(run)
 
     ran = (
         f"and the models observed running were {model_phrase(models)}"
@@ -2315,6 +2448,48 @@ def _written_by_a_model(citation: dict) -> list[str]:
     ]
 
 
+def code_evidence_lines(finding: dict) -> list[str]:
+    """The lines of code one finding rests on, and nothing else from the copy.
+
+    A code-checked finding carries the file, the first and last line, the text
+    at those lines and the digest of the file they were read from, and the
+    engine refuses the finding if the text is not what stands at those lines in
+    the copy it took. So this is quotation of checked evidence, and what is
+    published is the quotation and the address of it: the file by its path
+    inside the copy, the lines by number, the digest so a reader who fetches the
+    same commit can confirm they are reading the same file.
+
+    No other part of the copy is published, here or anywhere else in the bundle.
+    The author's code is the author's, and a review earns the right to print the
+    lines it makes a claim about rather than the right to redistribute the
+    repository.
+    """
+    evidence = _dict(finding.get("code_evidence"))
+    path = str(evidence.get("path") or "").strip()
+    start = evidence.get("start_line")
+    if not path or not isinstance(start, int) or start <= 0:
+        return []
+    end = evidence.get("end_line")
+    where = f"lines {start}-{end}" if isinstance(end, int) and end > start else f"line {start}"
+    lines = [f"  **Checked in the code:** `{path}`, {where}.", ""]
+    text = str(evidence.get("text") or "")
+    if text:
+        # An indented block, so every character of the quoted code reads as
+        # code. A fence would be opened and closed by the code itself if the
+        # code happened to contain one.
+        lines += [f"      {row}" for row in text.replace("\t", "    ").splitlines()]
+        lines.append("")
+    digest = str(evidence.get("sha256") or "").strip()
+    if digest:
+        lines += [
+            f"  That file reads as `{digest[:16]}` in the copy the review read, "
+            "which is how a reader who fetches the same commit can tell they "
+            "have the same file in front of them.",
+            "",
+        ]
+    return lines
+
+
 def _member_entry(member: dict, package: dict, citations: dict | None = None) -> list[str]:
     """One finding behind an issue, as the reviewer wrote it."""
     finding = issue_finding(package, member)
@@ -2347,6 +2522,7 @@ def _member_entry(member: dict, package: dict, citations: dict | None = None) ->
                 "",
             ]
         lines += _written_by_a_model(citation)
+    lines += code_evidence_lines(row)
     comment = str(row.get("comment") or "").strip()
     if comment:
         lines += [f"  {comment}", ""]

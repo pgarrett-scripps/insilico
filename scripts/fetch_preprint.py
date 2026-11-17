@@ -297,6 +297,98 @@ def extract_authorship(text: str) -> str:
     return ""
 
 
+# The words a submitter writes when there is no code to look at, and the ones
+# an issue form leaves behind in an untouched optional field.
+NO_CODE_ANSWERS = ("", "none", "n/a", "na", "no", "no code", "not applicable",
+                   "_no response_", "-")
+
+
+class CodeLinkRefused(ValueError):
+    """A code link a submission may not hand to the review.
+
+    Its own class so a caller can say the link was refused and why, and still
+    publish the rest of the submission, rather than losing it all to the link.
+    """
+
+
+def check_code_link(value: str) -> str:
+    """The submitted code link, or a refusal naming what is wrong with it.
+
+    A submission may name code for the review to read, and the engine is the
+    only thing that ever fetches it: a read-only, shallow, credential-free
+    clone with nothing executed. That is only true of a link anybody can clone
+    over the public web, so this accepts `https://` and nothing else.
+
+    An `ssh://` or `git@host:owner/name` link asks for a key, which would mean
+    reviewing code the public cannot see and publishing a review of it. A path
+    or a `file://` link names a folder on whichever machine is running, which
+    from a submission means somebody else's machine and never the authors'
+    code. Both are refused here, at the edge, so no later step has to decide.
+    """
+    link = " ".join(str(value or "").split())
+    if link.lower() in NO_CODE_ANSWERS:
+        return ""
+    low = link.lower()
+    if low.startswith("https://"):
+        host = link[len("https://"):].split("/")[0]
+        if not host or "." not in host or "@" in host:
+            raise CodeLinkRefused(
+                f"{link} has no host a clone could reach. Give the repository's "
+                "own web address, as you would paste it into a browser."
+            )
+        return link
+    if low.startswith(("ssh://", "git+ssh://", "git://")) or re.match(
+        r"^[\w.+-]+@[\w.-]+:", link
+    ):
+        raise CodeLinkRefused(
+            f"{link} is an SSH link, and the review clones over the public web "
+            "with no credentials. Give the https:// address of the repository. "
+            "Code the public cannot clone cannot carry a public review."
+        )
+    if low.startswith("file://") or link.startswith(("/", "~", ".")) or re.match(
+        r"^[A-Za-z]:[\\/]", link
+    ):
+        raise CodeLinkRefused(
+            f"{link} names a folder on a machine rather than a repository. A "
+            "submission cannot point the review at a local path. Post the code "
+            "where it can be cloned and give the https:// address."
+        )
+    if low.startswith("http://"):
+        raise CodeLinkRefused(
+            f"{link} is plain http. Give the https:// address of the same "
+            "repository."
+        )
+    raise CodeLinkRefused(
+        f"{link} is not a repository link. Give an https:// address, or leave "
+        "the field empty."
+    )
+
+
+def extract_code_link(text: str) -> str:
+    """The code link a submission offered: a validated https:// URL, or ''.
+
+    Issue forms render as ``### Heading\n\nvalue``, so the answer is the first
+    non-empty line under the heading that asks for it. Returns '' when the
+    field is absent, left empty, or answered with a plain no, and raises
+    :class:`CodeLinkRefused` when a link is there but not one the engine may
+    clone, so a caller can tell a submission with no code from one whose link
+    was turned down.
+    """
+    lines = (text or "").splitlines()
+    for i, line in enumerate(lines):
+        if "link to the code" not in line.lower():
+            continue
+        for value in lines[i + 1:]:
+            value = value.strip()
+            if not value:
+                continue
+            if value.startswith("#"):
+                break
+            return check_code_link(value)
+        break
+    return ""
+
+
 def extract_url(text: str) -> str:
     """Pull the first plausible preprint URL out of free text (e.g. an issue body).
 

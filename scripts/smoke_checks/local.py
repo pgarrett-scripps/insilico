@@ -3706,6 +3706,208 @@ def check_the_method_paragraph_describes_the_run_that_happened() -> None:
         assert "—" not in text and ";" not in text, "the paragraph is authored prose"
 
 
+def _code_reading(**overrides) -> dict:
+    """A run's code block in the shape `read_run` writes one, for a clone.
+
+    The two fields the publish path must never carry are in it on purpose:
+    `snapshot` is where the copy sits on the machine that ran the review, and
+    `manifest` is that copy's own manifest with the origin path in it again.
+    """
+    block = {
+        "reviewed": True,
+        "kind": "git-clone",
+        "source": "https://github.com/fixture-lab/widget-pipeline",
+        "commit": "d" * 40,
+        "branch": "main",
+        "dirty": False,
+        "snapshot": "/home/somebody/runs/run-7/code",
+        "files_in_snapshot": 12,
+        "files_skipped": 3,
+        "truncated": "",
+        "files_opened": ["analysis/pipeline.py", "analysis/filters.py"],
+        "opened": 2,
+        "searches": 5,
+        "manifest": {
+            "origin": {"source": "/home/somebody/runs/run-7/code", "kind": "git-clone"},
+            "files": [{"path": "analysis/pipeline.py", "sha256": "a" * 64}],
+            "skipped": [{"path": "prod.env", "reason": "may hold secrets"}],
+        },
+    }
+    block.update(overrides)
+    return {"code": block}
+
+
+def check_a_review_that_read_the_code_publishes_the_code_and_not_the_copy() -> None:
+    """What the code lane publishes, and the two things it never publishes.
+
+    The engine takes its own copy of the code a run was given, into a folder
+    inside the run, and answers for every run whether code was reviewed. Three
+    questions decide what of that may be published. Where the code came from is
+    publishable when it is an address a reader can fetch and not when it is a
+    directory on the machine that ran the review, so a clone publishes its URL
+    and a folder publishes only its own name. The copy itself is not
+    publishable: the bundle does not carry it, the path to it is somebody's home
+    directory, and its manifest holds that path again beside a digest of every
+    file taken. And a finding that rests on the code publishes the lines it
+    quoted and nothing else of the file they came from.
+
+    The negative answer is published too. A reader of a computational paper who
+    is told nothing about code would have to guess whether the panel had the
+    software in front of it, and guessing wrong in that direction credits the
+    review with work nobody did.
+    """
+    clone = local_review.code_record(_code_reading())
+    assert clone["reviewed"] is True and clone["kind"] == "git-clone", (
+        f"a run that reviewed a clone does not say so: {clone}"
+    )
+    assert clone["source"] == "https://github.com/fixture-lab/widget-pipeline", (
+        f"the one address a reader could fetch was dropped: {clone}"
+    )
+    assert clone["commit"] == "d" * 40 and clone["branch"] == "main", (
+        f"the published record does not say which code was reviewed: {clone}"
+    )
+    assert clone["dirty"] is False, f"the clean state was lost: {clone}"
+    assert (clone["files_in_snapshot"], clone["files_skipped"]) == (12, 3), (
+        f"how much of the code was held and left out is not published: {clone}"
+    )
+    assert (clone["opened"], clone["searches"]) == (2, 5), (
+        f"what the reader did with the code is not published: {clone}"
+    )
+    assert clone["files_opened"] == ["analysis/pipeline.py", "analysis/filters.py"], (
+        f"the files the reader opened are not published: {clone}"
+    )
+    assert "truncated" not in clone, (
+        f"a copy nothing was cut from publishes no sentence about a cut: {clone}"
+    )
+    for name in ("snapshot", "manifest"):
+        assert name not in clone, (
+            f"the published record carries the copy the bundle does not hold: {clone}"
+        )
+    assert local_review.local_references(json.dumps(clone)) == [], (
+        f"the published code block carries a path off this machine: {clone}"
+    )
+
+    # A folder is a legitimate thing to review and its resolved path is one
+    # machine's directory, so what publishes is the name of the folder.
+    folder = local_review.code_record(
+        _code_reading(kind="folder", source="/home/somebody/papers/widget-pipeline",
+                      dirty=None, commit="", branch="")
+    )
+    assert folder["source_name"] == "widget-pipeline", (
+        f"a reviewed folder is published by name: {folder}"
+    )
+    assert "source" not in folder and "dirty" not in folder, (
+        f"a folder published its path, or a clean state nothing measured: {folder}"
+    )
+    assert "commit" not in folder and "branch" not in folder, (
+        f"a folder that is not a checkout published a revision nothing recorded: {folder}"
+    )
+    assert local_review.local_references(json.dumps(folder)) == [], (
+        f"a reviewed folder published a path: {folder}"
+    )
+
+    # A clone whose source is not an address is not published as one. The field
+    # is what the submitter typed, and the only reason to publish it whole is
+    # that a reader can fetch it.
+    disguised = local_review.code_record(_code_reading(source="file:///home/somebody/code"))
+    assert "source" not in disguised and "source_name" in disguised, (
+        f"a path was published as the address of a repository: {disguised}"
+    )
+    assert local_review.local_references(json.dumps(disguised)) == [], (
+        f"a path reached the record through the code source: {disguised}"
+    )
+
+    # Both of the other answers: a run given no code, and a run read by a
+    # release that never answered the question.
+    none = local_review.code_record({"code": {"reviewed": False, "kind": "", "source": "",
+                                              "commit": "", "snapshot": ""}})
+    assert none == {"reviewed": False}, (
+        f"a run with no code publishes the answer and nothing else: {none}"
+    )
+    assert local_review.code_record({}) == {}, (
+        "a reading with no code block at all has no answer to publish"
+    )
+
+    # The sentence on the page, which is the same three answers in prose.
+    read = local_review.code_lane_clause({"code": local_review.code_record(_code_reading())})
+    assert "https://github.com/fixture-lab/widget-pipeline" in read, (
+        f"the page does not say which code was read: {read}"
+    )
+    assert "at commit dddddddddddd" in read and "d" * 40 not in read, (
+        f"the page names the commit, short, and not the whole digest: {read}"
+    )
+    assert "opened 2 of the 12 file(s)" in read, (
+        f"the page does not say how much of the code was opened: {read}"
+    )
+    assert "3 path(s) were left out" in read, (
+        f"the page does not say that part of the code was not copied: {read}"
+    )
+    silent = local_review.code_lane_clause(
+        {"code": local_review.code_record({"code": {"reviewed": False}})}
+    )
+    assert "No code was reviewed beside the manuscript" in silent, (
+        f"a review that read no code has to say so: {silent}"
+    )
+    assert local_review.code_lane_clause({}) == "", (
+        "a run that answered nothing about code gets no sentence invented for it"
+    )
+    dirty = local_review.code_lane_clause(
+        {"code": local_review.code_record(_code_reading(dirty=True))}
+    )
+    assert "uncommitted changes" in dirty, (
+        f"code read in a dirty checkout is not the commit alone: {dirty}"
+    )
+    for text in (read, silent, dirty):
+        assert "—" not in text and ";" not in text, "the sentence is authored prose"
+
+    # And the finding, which is the only place any of the code itself is
+    # printed. The quoted lines are printed as code, the file and the lines are
+    # named, and the digest is the one a reader checks the file by.
+    rendered = local_review.code_evidence_lines(
+        {
+            "code_evidence": {
+                "path": "analysis/pipeline.py",
+                "start_line": 3,
+                "end_line": 4,
+                "text": "FDR_THRESHOLD = 0.05\nMIN_FEATURES = 3",
+                "sha256": "c" * 64,
+            }
+        }
+    )
+    block = "\n".join(rendered)
+    assert "`analysis/pipeline.py`, lines 3-4" in block, (
+        f"the finding does not say where in the code it reads: {block}"
+    )
+    for line in ("FDR_THRESHOLD = 0.05", "MIN_FEATURES = 3"):
+        assert f"      {line}" in block, (
+            f"the quoted code is not printed as code: {block}"
+        )
+    assert "`cccccccccccccccc`" in block and "c" * 64 not in block, (
+        f"the digest is printed short, as a reader compares it: {block}"
+    )
+    assert "```" not in block, (
+        "a fence around code the authors wrote can be closed by that code"
+    )
+    one = "\n".join(
+        local_review.code_evidence_lines(
+            {"code_evidence": {"path": "analysis/plot.R", "start_line": 2, "end_line": 2,
+                               "text": "plot(counts$retained)", "sha256": ""}}
+        )
+    )
+    assert "line 2" in one and "lines 2-2" not in one, (
+        f"one line is one line: {one}"
+    )
+    assert "reads as" not in one, (
+        f"a finding with no digest invents none: {one}"
+    )
+    assert local_review.code_evidence_lines({}) == [], (
+        "a finding that rests on no code renders no code"
+    )
+    assert local_review.code_evidence_lines({"code_evidence": {"path": "x.py"}}) == [], (
+        "evidence with no lines in it is not evidence anything was checked"
+    )
+
+
 def check_an_attestation_needs_a_named_editor() -> None:
     """`human_reviewed_before_merge: true` was a constant written before anyone acted.
 
@@ -6238,8 +6440,10 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
     exports, which is checked against the real `__all__` when the engine is
     importable here.
 
-    One allowance, for one file and one module. `fixtures/make_engine_rounds.py`
-    builds its two run folders by calling `peerreviewagents.plugin.server`,
+    One allowance, for one module and the two fixture generators that drive a
+    whole review. `fixtures/make_engine_rounds.py` builds its two run folders,
+    and `fixtures/make_code_round.py` the run that read the code behind the
+    paper, by calling `peerreviewagents.plugin.server`,
     which is the plugin an agent session calls and not a supported surface. The
     public way to produce a run folder is `review`, which starts a Claude Code
     session and spends a subscription on a model, so it is not something a check
@@ -6264,8 +6468,11 @@ def check_nothing_reaches_into_the_engines_internals() -> None:
         "hold the one allowance is a file this scan has to be reading"
     )
 
-    # The one allowance: this file, this module, this name, and nothing else.
-    allowed_private = {"make_engine_rounds.py": (f"{package}.plugin", ("server",))}
+    # The allowance: these files, this module, this name, and nothing else.
+    allowed_private = {
+        "make_engine_rounds.py": (f"{package}.plugin", ("server",)),
+        "make_code_round.py": (f"{package}.plugin", ("server",)),
+    }
     used = set()
 
     private = {}
@@ -9095,6 +9302,199 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
     )
 
 
+def _code_round(out: Path) -> dict:
+    """Drive the code-reviewing fixture generator and return what it wrote.
+
+    `scripts/fixtures/make_code_round.py` runs the engine's own plugin over a
+    PDF and a git checkout it builds, with no model and no network, and prints a
+    JSON line describing the run folder. One process, because the engine serves
+    one paper per process.
+    """
+    generator = Path(local_review.__file__).resolve().parent / "fixtures" / "make_code_round.py"
+    done = subprocess.run(
+        [sys.executable, str(generator), "--out", str(out)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=900,
+    )
+    assert done.returncode == 0, (
+        f"the code-round generator failed with exit {done.returncode}: "
+        f"{done.stdout[-1500:]}{done.stderr[-1500:]}"
+    )
+    return json.loads(done.stdout.strip().splitlines()[-1])
+
+
+def check_a_review_of_the_code_behind_the_paper_publishes_what_was_checked() -> None:
+    """Publish a review the engine wrote against the code the paper computes with.
+
+    The code lane is the one stage whose evidence is not in the manuscript, so
+    everything the publish path does with it rests on a run folder holding a
+    snapshot, and this check earns that folder rather than typing one. The
+    generator writes a paper saying features were accepted at one percent, a git
+    checkout whose pipeline accepts them at five, and drives the plugin through
+    the lane: the specialist searches the code, reads the file, and files a
+    finding quoting the line, which the engine stores only because that line is
+    the line its own copy holds.
+
+    Four things are asked of the bundle. The record says which code was
+    reviewed, at which commit, how much of it was copied and how much of it a
+    reviewer opened. It does not say where the copy sits, because the copy is a
+    folder inside somebody's run directory and the bundle does not carry it. The
+    letter prints the lines the finding quoted, as code, with the digest of the
+    file they came from. And it prints nothing else out of that file, because a
+    review earns the right to quote what it makes a claim about and not the
+    right to republish the authors' repository.
+    """
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "code-round"
+        wrote = _code_round(out)
+        run = Path(wrote["run"])
+        assert wrote["publishable"], f"the engine called its own run unpublishable: {wrote}"
+        assert re.fullmatch(r"[0-9a-f]{40}", wrote["code_commit"]), (
+            f"the run recorded no commit for the code it reviewed: {wrote}"
+        )
+        assert wrote["code_opened"] == ["analysis/pipeline.py"], (
+            f"the lane did not open the file its finding cites: {wrote}"
+        )
+        assert wrote["code_skipped"] > 0, (
+            "this fixture holds files a snapshot leaves out, so the run has to "
+            f"report some: {wrote}"
+        )
+
+        # The evidence the engine stored, which is what the bundle has to carry.
+        findings = [
+            json.loads(line)
+            for line in (run / "review" / "findings.jsonl").read_text(
+                encoding="utf-8"
+            ).splitlines()
+            if line.strip()
+        ]
+        checked = [row for row in findings if row.get("code_evidence")]
+        assert len(checked) == 1, (
+            f"the lane filed something other than one code-checked finding: {checked}"
+        )
+        evidence = checked[0]["code_evidence"]
+        assert checked[0]["basis"] == "code-checked", (
+            f"the engine did not call its own check a check: {checked[0]['basis']}"
+        )
+
+        _plugin_tree(run)
+        _session_evidence(run)
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            printed = io.StringIO()
+            with contextlib.redirect_stdout(printed):
+                code = _publish(
+                    _engine_prepared(
+                        Path(tmp) / "prepared",
+                        destination,
+                        run,
+                        Path(wrote["pdf"]),
+                        round=1,
+                        prior_issues="",
+                        plan_kind="first round",
+                    ),
+                    run,
+                    run / "manuscript",
+                    "--publish",
+                )
+            assert code == 0, (
+                f"a run that read the code should publish, got exit {code}: "
+                f"{printed.getvalue()}"
+            )
+            provenance = json.loads(
+                (destination / "provenance.json").read_text(encoding="utf-8")
+            )
+            published = provenance["generator"]["run"]["code"]
+            letter = (destination / "decision_letter.md").read_text(encoding="utf-8")
+            summary = (destination / "summary.md").read_text(encoding="utf-8")
+            issues = json.loads(
+                (destination / local_review.REVIEW_ISSUES).read_text(encoding="utf-8")
+            )
+            review_schema.assert_valid_provenance(provenance, source="the code round")
+            # The file the finding quoted, as the copy inside the run holds it,
+            # read before the run folder goes away.
+            quoted_file = (run / "code" / "files" / evidence["path"]).read_text(
+                encoding="utf-8"
+            )
+
+    # What was reviewed, from the run's own answer rather than from the plan.
+    assert published["reviewed"] is True and published["kind"] == "folder", (
+        f"the bundle does not say code was reviewed: {published}"
+    )
+    assert published["commit"] == wrote["code_commit"], (
+        f"the published commit is not the one the run read: {published}"
+    )
+    assert published["branch"] == wrote["code_branch"] and published["dirty"] is False, (
+        f"the state of the checkout did not travel: {published}"
+    )
+    assert published["source_name"] == "analysis-code", (
+        f"a reviewed folder is published by its own name: {published}"
+    )
+    assert (published["files_in_snapshot"], published["files_skipped"]) == (
+        wrote["code_files"], wrote["code_skipped"]
+    ), f"the counts the engine took are not the counts published: {published}"
+    assert published["files_opened"] == wrote["code_opened"], (
+        f"what the reader opened did not travel: {published}"
+    )
+
+    # And where the copy sits, which is nowhere a reader of the bundle can go.
+    for name in ("snapshot", "manifest", "source"):
+        assert name not in published, (
+            f"the record names a folder on the machine that ran the review: {published}"
+        )
+    assert local_review.local_references(json.dumps(published)) == [], (
+        f"the published code block carries a path: {published}"
+    )
+    assert str(run) not in json.dumps(provenance), (
+        "the run directory reached the record through the code block"
+    )
+
+    # The sentence a reader of the page gets.
+    assert "analysis-code" in summary and published["commit"][:12] in summary, (
+        f"the page does not say which code the review read: {summary}"
+    )
+    assert "No code was reviewed" not in summary, (
+        f"a review that read the code says it read none: {summary}"
+    )
+
+    # The finding, in the letter and in the file an app reads. An issue member
+    # carries the evidence fields of the manuscript and not of the code, so the
+    # ledger beside the issues is what the checked lines travel in, and the
+    # letter joins them back onto the member by uid.
+    carried = [row for row in issues["findings"] if row.get("code_evidence")]
+    assert len(carried) == 1 and carried[0]["code_evidence"] == evidence, (
+        f"the evidence the engine checked is not the evidence published: {carried}"
+    )
+    assert any(
+        str(one.get("finding_uid")) == str(carried[0]["finding_uid"])
+        for issue in issues["issues"]
+        for one in issue.get("members") or []
+    ), "the code-checked finding was published outside every issue"
+    where = f"`{evidence['path']}`, line {evidence['start_line']}"
+    assert where in letter, f"the letter does not say where in the code it reads: {where}"
+    assert f"      {evidence['text']}" in letter, (
+        "the letter does not print the quoted code as code"
+    )
+    assert evidence["sha256"][:16] in letter and evidence["sha256"] not in letter, (
+        "the letter prints the file's digest short, as a reader compares it"
+    )
+
+    # Nothing else of the file. The line below the quoted one is in the copy the
+    # lane read and in no published document, which is the line this draws.
+    unquoted = "MIN_FEATURES"
+    assert unquoted in quoted_file and unquoted not in evidence["text"], (
+        "this check rests on the quoted file holding a line the finding did not "
+        f"quote: {quoted_file}"
+    )
+    for document, text in (("decision_letter.md", letter), ("summary.md", summary),
+                           (local_review.REVIEW_ISSUES, json.dumps(issues))):
+        assert unquoted not in text, (
+            f"{document} republishes a part of the code no finding quoted"
+        )
+
+
 # The checks that read a run folder, which in 0.9 means the engine reads it.
 # They write a fixture run to disk and hand it to `peerreviewagents.read_run`,
 # so they are checks against the real reader, and there is nothing for them to
@@ -9136,6 +9536,10 @@ ENGINE_BACKED = (
     (
         check_every_specialist_report_reaches_the_bundle,
         "every specialist track report is copied into the bundle",
+    ),
+    (
+        check_a_review_of_the_code_behind_the_paper_publishes_what_was_checked,
+        "a review of the code behind the paper publishes the lines it checked",
     ),
     (
         check_the_run_folder_is_found_whichever_path_is_typed,

@@ -290,6 +290,26 @@ const citeWorkers = (Array.isArray(citations?.workers) ? citations.workers : [])
   .map((slot) => String(slot || "").trim())
   .filter(Boolean);
 
+// Whether the code behind the paper was read beside it. One line either way,
+// because a reader of a computational paper who is not told has to guess, and
+// the wrong guess credits this review with work it did not do. A record from a
+// release that did not answer the question gets no line at all rather than a
+// made-up one.
+//
+// Where the code came from is printed as text and never as a link. For a clone
+// it is an address somebody submitted, and turning submitted text into a
+// hyperlink on this site is how a submission starts sending readers somewhere.
+// A reader who wants the repository can copy it, having seen what it says.
+const codeRecord = runRecord.code || null;
+const codeReviewed = codeRecord?.reviewed === true;
+const codeSource = String(codeRecord?.source || "").trim();
+const codeName = String(codeRecord?.source_name || "").trim();
+const codeCommit = String(codeRecord?.commit || "").trim().slice(0, 12);
+const codeCount = (key) => (typeof codeRecord?.[key] === "number" ? codeRecord[key] : null);
+const codeOpened = codeCount("opened");
+const codeHeld = codeCount("files_in_snapshot");
+const codeSkipped = codeCount("files_skipped");
+
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""
 const configSha = configuration.sha256 ? String(configuration.sha256).slice(0, 12) : ""
@@ -804,6 +824,38 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         </p>
       )}
     </details>
+  )}
+
+  {generator && codeRecord && !codeReviewed && (
+    <p class="prov__note">
+      <strong>No code was reviewed beside this paper.</strong> Everything this
+      review says about what was computed rests on the manuscript's own account
+      of it.
+    </p>
+  )}
+
+  {generator && codeReviewed && (
+    <p class="prov__note">
+      <strong>The code behind this paper was reviewed beside it.</strong>
+      {" "}One more specialist read a copy the engine took from
+      {" "}{codeSource
+        ? <span class="mono">{codeSource}</span>
+        : codeName
+          ? <span>the <span class="mono">{codeName}</span> folder</span>
+          : <span>code the editor supplied</span>}
+      {codeCommit
+        ? <span> at commit <span class="mono">{codeCommit}</span></span>
+        : <span> at a revision the run did not record</span>}
+      {codeRecord.dirty === true && <span>, which had uncommitted changes in it</span>}
+      {". "}
+      {codeOpened !== null && codeHeld !== null && (
+        `That reader opened ${codeOpened} of the ${codeHeld} file${codeHeld === 1 ? "" : "s"} in the copy. `
+      )}
+      {codeSkipped ? `${codeSkipped} path${codeSkipped === 1 ? "" : "s"} were left out of it and the reader did not see them. ` : ""}
+      A finding that rests on the code names the file and the lines, and the
+      engine checked the quoted lines against that copy. Nothing else of the
+      code is published here.
+    </p>
   )}
 
   {singleModel && (

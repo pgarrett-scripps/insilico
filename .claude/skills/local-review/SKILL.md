@@ -147,6 +147,44 @@ any of them. The referees are not told which round it is either way: the prior
 items go to the editor agent alone, so what the letter reports as resolved is
 the editor's reading of the revision and not a referee's re-examination.
 
+### Reviewing the code behind the paper
+
+When a submission offered a code repository, or the user asks for the code to
+be read, add `--code`:
+
+```bash
+peerreview review \
+  runs/prepared-<slug>/<fetched>.pdf \
+  runs/<work> \
+  --arm full-two-track \
+  --reviewers 3 \
+  --literature-cutoff <today, YYYY-MM-DD> \
+  --code https://github.com/<owner>/<name>
+```
+
+One more lane joins the run and reads the paper's methods against the code,
+quoting both sides. The engine takes its own snapshot of the code's text into
+`<out>/code`, runs nothing in it, and skips files that look like they hold
+secrets. The published record names the link and the exact commit the snapshot
+was taken at, so a reader knows which code was reviewed.
+
+Four rules, and none of them bends:
+
+1. **The engine is the only thing that clones.** Do not run `git clone`,
+   `curl` or `gh repo clone` on a submitted link, and do not go browsing in
+   the snapshot folder. Pass the link to `--code` and let the engine fetch it.
+2. **From a submission, only an `https://` link.** The submission preview
+   prints the link it accepted. An SSH link, a `file://` URL and a local path
+   are refused at submission, so there is nothing to pass on. A local folder is
+   fine only when the user is reviewing their own code and names the path
+   themselves.
+3. **The arm has to run specialists.** `--code` on `single`,
+   `manuscript-only` or `reviewers-only` is refused by name. The default
+   `full-two-track` runs them.
+4. **Nothing of the snapshot is published but the lines a finding quotes.**
+   The bundle carries the link, the commit and those lines. Do not paste code
+   into the pull request or into your report to the user.
+
 There is no `--provider`, no single `--model` and no policy flag. Engine 0.10
 gives every slot a model of its own, and four flags move that plan:
 

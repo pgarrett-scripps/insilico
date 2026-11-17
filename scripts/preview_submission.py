@@ -13,7 +13,13 @@ import json
 from pathlib import Path
 from typing import Callable
 
-from fetch_preprint import Preprint, extract_url, resolve
+from fetch_preprint import (
+    CodeLinkRefused,
+    Preprint,
+    extract_code_link,
+    extract_url,
+    resolve,
+)
 
 REPO = Path(__file__).resolve().parent.parent
 REVIEWS = REPO / "docs" / "reviews"
@@ -140,6 +146,18 @@ def build_preview(
     except ValueError as exc:
         return _error_preview(str(exc))
 
+    # The code link is read apart from the preprint link, because a link this
+    # repository will not clone is a reason to say so and carry on, not a
+    # reason to lose the submission. It is printed as text rather than as a
+    # link: nobody reading the preview should be able to follow a submitted
+    # address by accident, and the engine is the only thing that fetches it.
+    code_link = ""
+    code_refusal = ""
+    try:
+        code_link = extract_code_link(issue_body)
+    except CodeLinkRefused as refused:
+        code_refusal = str(refused)
+
     current_draft = _draft(preprint)
     reviewed = _reviewed_drafts(preprint, reviews_root)
     history = ", ".join(f"v{number}" for number in reviewed) if reviewed else "None"
@@ -157,8 +175,24 @@ def build_preview(
         ("Posted", preprint.published or "Unavailable"),
         ("Current draft", f"v{current_draft}"),
         ("Published In Silico reviews", history),
+        ("Code offered for review", code_link or "None"),
     ]
     table = "\n".join(f"| {label} | {_cell(value)} |" for label, value in rows)
+
+    if code_refusal:
+        code_note = f"""
+> [!WARNING]
+> The code link was not accepted, and the review will read the manuscript
+> alone unless the issue is edited. {_cell(code_refusal)}
+"""
+    elif code_link:
+        code_note = """
+The code is cloned by the review itself, read-only and shallow, with no
+credentials and nothing run from it. The link and the exact commit read are
+published with the review.
+"""
+    else:
+        code_note = ""
 
     if not preprint.title:
         readiness = """
@@ -176,7 +210,7 @@ def build_preview(
 | Field | Value |
 |---|---|
 {table}
-{readiness}{commands}
+{code_note}{readiness}{commands}
 This preview uses public archive metadata and makes no model calls. Editing the issue refreshes it.
 """
 

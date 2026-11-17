@@ -85,6 +85,33 @@ function citations(overrides = {}) {
   };
 }
 
+// The code lane, for a run given a repository to read. The clone is the
+// engine's own and read-only, and what the record carries about it is where the
+// code came from, which revision, how much of it was copied and how much of
+// that copy was opened. The copy itself is on the machine that ran the review
+// and is published nowhere, so no field here names it.
+function code(overrides = {}) {
+  return {
+    reviewed: true,
+    kind: "git-clone",
+    source: "https://github.com/fixture-lab/widget-pipeline",
+    commit: "d".repeat(40),
+    branch: "main",
+    dirty: false,
+    files_in_snapshot: 12,
+    files_skipped: 3,
+    opened: 4,
+    searches: 6,
+    files_opened: [
+      "analysis/pipeline.py",
+      "analysis/thresholds.py",
+      "README.md",
+      "tests/test_pipeline.py",
+    ],
+    ...overrides,
+  };
+}
+
 function localRecord(overrides = {}) {
   return {
     schema_version: 4,
@@ -230,6 +257,7 @@ function localRecord(overrides = {}) {
           "1 reference(s) could not be checked because the lookups did not answer, which says nothing about whether they exist",
         ],
         citations: citations(),
+        code: code(),
       },
       advisory_verdict: {
         significance: "moderate",
@@ -901,6 +929,81 @@ rejects(laneCountsBelowZero, "no state of a reference can be held by fewer than 
 const laneBlankWorker = localRecord();
 laneBlankWorker.generator.run.citations.workers = [""];
 rejects(laneBlankWorker, "a worker slot with no name is not a slot");
+
+// The code lane. A review that read the code says where the code came from and
+// which revision, because a reader who cannot tell which revision was read
+// cannot check anything the review says about it. A review that read none says
+// so, in the one field that is required of every record that has the block at
+// all.
+const noCodeBlock = localRecord();
+delete noCodeBlock.generator.run.code;
+accepts(noCodeBlock, "a run read by a release that did not answer the question still reads");
+
+const noCodeReviewed = localRecord();
+noCodeReviewed.generator.run.code = { reviewed: false };
+accepts(noCodeReviewed, "a paper submitted with no code says so and carries nothing else");
+
+const silentAboutCode = localRecord();
+delete silentAboutCode.generator.run.code.reviewed;
+rejects(silentAboutCode, "a code block that does not say whether code was reviewed says nothing");
+
+const codeFromAFolder = localRecord();
+codeFromAFolder.generator.run.code = code({
+  kind: "folder",
+  source_name: "widget-pipeline",
+  commit: "e".repeat(40),
+});
+delete codeFromAFolder.generator.run.code.source;
+accepts(codeFromAFolder, "code read from a folder is published by the folder's own name");
+
+// The copy the engine took sits on the machine that ran the review, under an
+// absolute path, and the bundle does not carry it. A record naming it would
+// describe a stranger's computer and point at nothing a reader has.
+const codeNamesItsSnapshot = localRecord();
+codeNamesItsSnapshot.generator.run.code.snapshot =
+  "/home/someone/runs/local/fixture-paper/review/code";
+rejects(codeNamesItsSnapshot, "the copy the engine took is not part of a published record");
+
+// And its manifest is not published either. It carries the origin as an
+// absolute path and a digest per file, and what a reader of a finding needs out
+// of it travels on the finding instead.
+const codeCarriesItsManifest = localRecord();
+codeCarriesItsManifest.generator.run.code.manifest = {
+  origin: { source: "/home/someone/widget-pipeline" },
+  files: [{ path: "analysis/pipeline.py", sha256: HASH }],
+};
+rejects(codeCarriesItsManifest, "the copy's own manifest is not part of a published record");
+
+const codeFromNowhere = localRecord();
+codeFromNowhere.generator.run.code.kind = "tarball";
+rejects(codeFromNowhere, "the engine gets code two ways and a record may claim no third");
+
+const codeWithABlankSource = localRecord();
+codeWithABlankSource.generator.run.code.source = "";
+rejects(codeWithABlankSource, "a repository with no address is not where code came from");
+
+const codeOpenedAnUnnamedFile = localRecord();
+codeOpenedAnUnnamedFile.generator.run.code.files_opened = [""];
+rejects(codeOpenedAnUnnamedFile, "a file with no path is not a file the lane opened");
+
+const codeCountedAString = localRecord();
+codeCountedAString.generator.run.code.opened = "4";
+rejects(codeCountedAString, "a count written as text is not a number the page can state");
+
+const codeCountedBelowZero = localRecord();
+codeCountedBelowZero.generator.run.code.files_skipped = -1;
+rejects(codeCountedBelowZero, "no copy can leave out fewer than none of the files");
+
+// A directory that is not a checkout has no clean or dirty state, and the
+// engine answers that with nothing rather than with false. False would tell a
+// reader the code had been committed when nothing had.
+const codeFromAPlainFolder = localRecord();
+codeFromAPlainFolder.generator.run.code = code({ kind: "folder", source_name: "pipeline" });
+delete codeFromAPlainFolder.generator.run.code.source;
+delete codeFromAPlainFolder.generator.run.code.commit;
+delete codeFromAPlainFolder.generator.run.code.branch;
+delete codeFromAPlainFolder.generator.run.code.dirty;
+accepts(codeFromAPlainFolder, "a folder with no git in it is published without a revision");
 
 // The two tables that say who read the manuscript leave the workers out, and
 // the agent rows keep them. That split is the whole point: a reader counting
