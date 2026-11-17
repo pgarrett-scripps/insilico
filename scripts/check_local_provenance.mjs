@@ -288,8 +288,13 @@ function localRecord(overrides = {}) {
         attempt: 1,
         pages: 4,
         pages_viewed: 4,
-        actions: { repaired: 1, confirmed: 18, merged: 0, described: 1, added: 2 },
+        actions: { repaired: 1, confirmed: 18, merged: 0, described: 1, added: 2, reread: 2 },
         tool_calls: 11,
+        // The reader's own account of the document, which the record carries
+        // because what it holds is what nobody reading the text could work
+        // out. It is published as that model's account rather than as the
+        // authors' prose or a finding of the review.
+        note: "The equation on page 3 came through as one paragraph with the sentence after it. Page 4 converted to nothing and was read off the image.",
         lost_pages: [
           {
             page: 4,
@@ -303,7 +308,7 @@ function localRecord(overrides = {}) {
         ],
       },
       manuscript_state: "sealed-by-reader",
-      pieces_per_source: { text: 19, ai: 1, "ai-reconstructed": 1 },
+      pieces_per_source: { text: 19, ai: 1, "ai-reconstructed": 2 },
       source_values: {
         text: "the converter's own text layer",
         ai: "written by a model reading the page image",
@@ -317,12 +322,30 @@ function localRecord(overrides = {}) {
           source: "ai",
           page: 3,
         },
+        // The two lines the reader read one piece of the converter's as, which
+        // it had labelled as a paragraph: the equation it prints and the
+        // sentence that follows it. The pair of numbers is the whole fact, and
+        // the count of absorbed pieces says that the edge of the equation,
+        // emitted beside it as a piece of its own, went in here and is in the
+        // manuscript nowhere else.
         {
           document: "paper.md",
           lines: [23, 23],
           kind: "equation",
           source: "ai-reconstructed",
           page: 3,
+          part: 1,
+          of: 2,
+          absorbed: 1,
+        },
+        {
+          document: "paper.md",
+          lines: [25, 25],
+          kind: "paragraph",
+          source: "ai-reconstructed",
+          page: 3,
+          part: 2,
+          of: 2,
         },
       ],
     },
@@ -492,6 +515,49 @@ rejects(leakedLog, "the reader's log is not a field a published record carries")
 const strayLine = localRecord();
 strayLine.ingest.model_written[0].fingerprint = "0f0f0f";
 rejects(strayLine, "a model written row carries no field beyond where it reads");
+
+// Which part of a piece a line is, and how many parts there were, are each half
+// of one fact. A row carrying one of them says nothing a reader can use and
+// looks like a row that was edited rather than written.
+const halfSplit = localRecord();
+delete halfSplit.ingest.model_written[1].of;
+rejects(halfSplit, "a part of a re-read piece must say how many parts there were");
+
+const countlessSplit = localRecord();
+delete countlessSplit.ingest.model_written[1].part;
+rejects(countlessSplit, "a row saying how many parts there were must say which it is");
+
+// A part on its own is not a part. The engine writes the pair only where it read
+// one piece as several, so a row claiming to be the only one of one is a row
+// that lost the fact it was carrying.
+const lonePart = localRecord();
+lonePart.ingest.model_written[1].of = 1;
+rejects(lonePart, "a piece read as one piece was not read as several");
+
+// And a fold of nothing. The count exists to tell an author that something of
+// the converter's went into this line and is in the manuscript nowhere else, so
+// a zero is a claim with nothing behind it.
+const emptyFold = localRecord();
+emptyFold.ingest.model_written[1].absorbed = 0;
+rejects(emptyFold, "a line that absorbed nothing carries no count of what it absorbed");
+
+// The reader's note is published where there is one, and an empty string is not
+// one: published as a field it would read as a model that had nothing to say
+// about the paper rather than one that was never asked for an account.
+const emptyNote = localRecord();
+emptyNote.ingest.ai_read.note = "";
+rejects(emptyNote, "an empty note is not an account of the document");
+
+// And the whole of it travels. The engine caps what a reader may file, and a
+// record carrying more than the engine would keep is a record somebody wrote by
+// hand.
+const overlongNote = localRecord();
+overlongNote.ingest.ai_read.note = "a".repeat(2001);
+rejects(overlongNote, "a note longer than the engine keeps is not one the engine wrote");
+
+const longestNote = localRecord();
+longestNote.ingest.ai_read.note = "a".repeat(2000);
+accepts(longestNote, "a note the length the engine caps at is publishable");
 
 const emptyJudgement = localRecord();
 emptyJudgement.generator.advisory_verdict = {};

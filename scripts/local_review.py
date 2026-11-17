@@ -2436,8 +2436,10 @@ def render_read_stage(ingest: dict) -> list[str]:
         lines += [
             f"The pages of this paper were read by {model}{counted} before any "
             "reviewer was given the text. It repaired what the converter "
-            "misread, described the figures and transcribed what the converter "
-            "missed. Everything it wrote is listed here.",
+            "misread, re-read a piece the converter had labelled as the wrong "
+            "kind as the pieces the page actually prints, described the figures "
+            "and transcribed what the converter missed. Every line of the "
+            "result that is not the converter's own reading is listed here.",
             "",
         ]
         acted = _dict(read.get("actions"))
@@ -2447,7 +2449,13 @@ def render_read_stage(ingest: dict) -> list[str]:
             if isinstance(count, int) and count
         ]
         if done:
-            lines += [f"- Pieces of the paper it acted on, by action: {', '.join(done)}", ""]
+            lines += [
+                "- Pieces of the sealed manuscript by what the reader did to "
+                f"each: {', '.join(done)}. A piece it took back out of the "
+                "draft, or folded into the piece it was debris of, is not in "
+                "the manuscript and is counted in none of these.",
+                "",
+            ]
     else:
         reason = str(read.get("reason") or "").strip()
         because = f" The import's own reason: {reason}" if reason else ""
@@ -2479,6 +2487,22 @@ def render_read_stage(ingest: dict) -> list[str]:
                 f"no figure in the paper has a description behind it.{because}",
                 "",
             ]
+    note = " ".join(str(read.get("note") or "").split())
+    if note:
+        # What the reading model knew and no reviewer could find out. On the
+        # engine's first real run the reader knew the converter had dropped a
+        # table and garbled two others, and said so in a report that reached no
+        # file. It is served here under the same label the engine serves it
+        # under: that model's account of the document, and not a sentence of
+        # the paper or a finding of the review.
+        lines += [
+            "The model that read the pages left this note about the document. "
+            "It is that model's own account of what it found while reading "
+            "them, not the authors' text and not a finding of this review:",
+            "",
+            f"> {note}",
+            "",
+        ]
     for name, count in sorted(per_source.items()):
         description = str(said.get(name) or "").strip()
         about = f": {description}" if description else ""
@@ -2486,7 +2510,7 @@ def render_read_stage(ingest: dict) -> list[str]:
     if per_source:
         lines.append("")
     if written:
-        lines += ["Lines a model wrote:", ""]
+        lines += ["Lines that are not the converter's own reading of the paper:", ""]
         for row in written:
             piece = _dict(row)
             span = [n for n in _list(piece.get("lines")) if isinstance(n, int)]
@@ -2495,11 +2519,50 @@ def render_read_stage(ingest: dict) -> list[str]:
             )
             page = piece.get("page")
             printed = f", page {page} of the original" if isinstance(page, int) else ""
+            part, of = piece.get("part"), piece.get("of")
+            split = (
+                f", part {part} of {of} of one piece of the converter's"
+                if isinstance(part, int) and isinstance(of, int)
+                else ""
+            )
+            count = piece.get("absorbed")
+            folded = ""
+            if isinstance(count, int) and count:
+                many = "one piece" if count == 1 else f"{count} pieces"
+                folded = f", with {many} of the converter's folded into it"
             lines.append(
                 f"- {piece.get('document') or MAIN_DOCUMENT} line {where}, "
-                f"{piece.get('kind') or 'piece'}, `{piece.get('source')}`{printed}"
+                f"{piece.get('kind') or 'piece'}, `{piece.get('source')}`"
+                f"{split}{folded}{printed}"
             )
         lines.append("")
+        if any(isinstance(_dict(row).get("of"), int) for row in written):
+            # A part of a re-read is not the same claim as a transcription, and
+            # the difference is the whole point of how the engine does it. A
+            # table or an equation part was written from the page image. A prose
+            # part was not written at all: the reader named the spans to cut and
+            # the engine cut them, so the words left on the line are the
+            # converter's own. Saying "a model wrote this line" of one of those
+            # would tell an author their own sentence was a machine's.
+            lines += [
+                "A line given as a part of a piece is one of several the reader "
+                "read a single piece of the converter's as, because the "
+                "converter had labelled that piece as the wrong kind. Where "
+                "such a part is a table or an equation, the reader wrote it "
+                "from the page image. Where it is prose, the reader wrote "
+                "nothing: it named the spans to cut and the engine cut them, so "
+                "the words left on the line are the converter's own.",
+                "",
+            ]
+        if any(_dict(row).get("absorbed") for row in written):
+            lines += [
+                "A line given as holding folded pieces took in what the "
+                "converter had emitted beside it as pieces of their own, the "
+                "edge of a displayed equation or the numbers off a chart's "
+                "axis, which the reader read as part of this piece. Those "
+                "pieces are in the manuscript nowhere else.",
+                "",
+            ]
     lost = [_dict(row) for row in _list(read.get("lost_pages"))]
     if lost:
         numbers = ", ".join(str(row.get("page")) for row in lost)
@@ -2551,6 +2614,14 @@ AI_READ_FIELDS = (
     # would otherwise be told only that nothing read the pages.
     "ai_model",
     "ai_pieces",
+    # The reader's own account of the document, in its words. It exists because
+    # the things a reading model learns from the page images are things no
+    # reviewer can work out from the text: that the converter dropped a table,
+    # that two more came out garbled, that a footnote letter on a sideways page
+    # is a best guess. It is published, and labelled as that model's account
+    # rather than the authors' prose or a finding of the review, because a note
+    # kept in the engine's manifest alone reaches nobody who reads the review.
+    "note",
 )
 
 # What a map row's `source` says about where that row's text came from. The
@@ -2639,6 +2710,14 @@ def read_stage_record(manifest: dict) -> dict:
         name: account[name] for name in AI_READ_FIELDS if account.get(name) is not None
     }
     record["read"] = bool(account.get("read"))
+    # The note travels only where there is one. The engine writes the key on
+    # every seal and leaves it empty when the reader filed nothing, and an empty
+    # note published as a field reads as a model that had nothing to say about
+    # the paper rather than one that was never asked for an account.
+    note = " ".join(str(account.get("note") or "").split())
+    record.pop("note", None)
+    if note:
+        record["note"] = note
     lost = []
     for page in _list(account.get("lost_pages")):
         row = _dict(page)
@@ -2694,6 +2773,27 @@ def model_written_lines(workspace: Path) -> list[dict]:
         page = piece.get("page")
         if isinstance(page, int):
             entry["page"] = page
+        original = _dict(piece.get("original"))
+        part, of = original.get("part"), original.get("of")
+        if isinstance(part, int) and isinstance(of, int) and of > 1:
+            # This line is one of several the reader read a single piece of the
+            # converter's as, because the converter had labelled that piece as
+            # the wrong kind: a table emitted as a paragraph of run-together
+            # cells, an equation left in the prose after it. Which part of how
+            # many is what tells a reader of the review that the line beside
+            # this one came out of the same piece of the paper.
+            entry["part"] = part
+            entry["of"] = of
+        absorbed = _list(original.get("absorbed"))
+        if absorbed:
+            # How many pieces the converter emitted on their own were folded
+            # into this one as its debris, which is in the manuscript nowhere
+            # else. The count travels and the characters do not: they are the
+            # converter's reading of a few marks on a page with no line of the
+            # manuscript to cite, and the engine's own map is where they are
+            # kept. An author is told that something went in here and can find
+            # it on the page.
+            entry["absorbed"] = len(absorbed)
         rows.append(entry)
     return sorted(rows, key=lambda row: (row["document"], row["lines"]))
 

@@ -96,6 +96,22 @@ ISSUES_SCHEMA = "review-issues-v4"
 # which.
 MAIN_DOCUMENT = local_review.MAIN_DOCUMENT
 
+# What the converter made of the page where the fixture paper prints its one
+# displayed equation: the equation's symbols and the sentence after it as a
+# single paragraph, with the equation's left edge dropped out into a heading of
+# its own. Both are the converter's reading of that page and neither is a
+# model's, which is the point of keeping them: a line the reader re-read holds
+# the converter's whole reading of the piece it came out of, and a bundle
+# describing that line has to be able to say so.
+CONVERTER_READING = "n total 4 8 The cohort totals follow it."
+
+# The debris of that equation, as the converter emitted it: a heading holding
+# the opening brace and nothing else. The engine's reader folds a piece like
+# this into the displayed piece it belongs to and keeps its whole reading under
+# `original['absorbed']`, with the draft's own id for it. The id is here so the
+# publish path can be checked for dropping it: a bundle holds no piece ids.
+ABSORBED_DEBRIS = {"piece": "p0019", "kind": "heading", "text": "with {"}
+
 # The fixture paper, as the pieces an import is given rather than as the file
 # one writes: `_workspace` hands these to the engine's own `write_manuscript`,
 # which renders them into `paper.md` and writes the map and the manifest beside
@@ -178,6 +194,19 @@ PAPER_PIECES = (
         "text": "Two bars for each cohort, with panel b unlabelled on the "
         "vertical axis.",
     },
+    # The two halves of one piece the converter read as a single paragraph: a
+    # displayed equation with the sentence after it run together, and the edge
+    # of the equation emitted beside it as a heading of its own. Engine 0.10's
+    # reader re-reads a piece like that as the pieces the page actually prints,
+    # keeping the converter's whole reading on each part with `part` and `of`,
+    # and folds the debris into the piece it is debris of under
+    # `original['absorbed']`. No reader runs in this suite, so these two pieces
+    # are written in that shape by hand: what is being checked is what a bundle
+    # says about a manuscript a reader re-read, which is a property of the
+    # publish path. The prose part matters most. Its words are the converter's
+    # own, cut by the engine where the reader named the spans, so a record that
+    # called it a line a model wrote would be telling an author their own
+    # sentence was a machine's.
     {
         "kind": "equation",
         "section": "Results",
@@ -186,7 +215,21 @@ PAPER_PIECES = (
         "latex": "n_{total} = 48",
         "number": "1",
         "text": "",
-        "original": {"latex": "n total 4 8"},
+        "original": {
+            "kind": "paragraph",
+            "text": CONVERTER_READING,
+            "part": 1,
+            "of": 2,
+            "absorbed": [ABSORBED_DEBRIS],
+        },
+    },
+    {
+        "kind": "paragraph",
+        "section": "Results",
+        "page": 3,
+        "source": "ai-reconstructed",
+        "text": "The cohort totals follow it.",
+        "original": {"kind": "paragraph", "text": CONVERTER_READING, "part": 2, "of": 2},
     },
 )
 
@@ -208,6 +251,11 @@ TABLE_TOTAL_LINE = 19
 DESCRIPTION_LINE = 21
 EQUATION_LINE = 23
 
+# The prose half of the piece the reader re-read. It holds the converter's own
+# words, which is why it reads as a line of the manuscript like any other and
+# is still a line the record has to account for.
+SPLIT_LINE = 25
+
 # One line per piece above, in that order: where the fixture expects the engine
 # to have put it. The title is the first line of the file and is quoted by
 # nothing.
@@ -224,6 +272,7 @@ PIECE_LINES = (
     TABLE_TOTAL_LINE,
     DESCRIPTION_LINE,
     EQUATION_LINE,
+    SPLIT_LINE,
 )
 
 # Each piece's own words against the line the fixture expects it on, which is
@@ -239,9 +288,9 @@ PIECE_LINES = (
 # engine's rendering rather than copies of it: `_workspace` reads the file the
 # engine wrote and fails if the line does not hold these characters.
 RENDERED_TEXT = {
-    DESCRIPTION_LINE: "Figure description: " + str(PAPER_PIECES[-2]["text"]),
-    EQUATION_LINE: "$$ " + str(PAPER_PIECES[-1]["latex"])
-    + " \\tag{" + str(PAPER_PIECES[-1]["number"]) + "} $$",
+    DESCRIPTION_LINE: "Figure description: " + str(PAPER_PIECES[-3]["text"]),
+    EQUATION_LINE: "$$ " + str(PAPER_PIECES[-2]["latex"])
+    + " \\tag{" + str(PAPER_PIECES[-2]["number"]) + "} $$",
 }
 
 PIECE_TEXT = {
@@ -628,6 +677,17 @@ ISSUES = [
 PIECE_SOURCE = {
     DESCRIPTION_LINE: {"source": "ai", "page": 3, "kind": "figure-description"},
     EQUATION_LINE: {"source": "ai-reconstructed", "page": 3, "kind": "equation"},
+    SPLIT_LINE: {"source": "ai-reconstructed", "page": 3, "kind": "paragraph"},
+}
+
+# What a published row says beyond where the line came from, for the two lines
+# the reader read one piece of the converter's as. Kept apart from
+# `PIECE_SOURCE` because that map is also what a citation carries, and a
+# citation says where a quoted line came from rather than how the piece behind
+# it was split.
+PIECE_SPLIT = {
+    EQUATION_LINE: {"part": 1, "of": 2, "absorbed": 1},
+    SPLIT_LINE: {"part": 2, "of": 2},
 }
 
 CITATIONS = {
@@ -5529,8 +5589,30 @@ READER_ACCOUNT = {
     "attempt": 1,
     "pages": 4,
     "pages_viewed": 4,
-    "actions": {"repaired": 1, "confirmed": 6, "merged": 0, "described": 1, "added": 2},
+    # The pieces of the sealed manuscript by what the reader did to each, as the
+    # engine tallies them. `reread` counts the parts a re-read piece became,
+    # which is why there are two of them for one piece of the converter's. There
+    # is no count of what the reader withdrew or folded in, and this fixture
+    # carries none: the engine tallies the pieces still in the documents, and a
+    # withdrawn piece and an absorbed one are both gone from them.
+    "actions": {
+        "repaired": 1,
+        "confirmed": 6,
+        "merged": 0,
+        "described": 1,
+        "added": 2,
+        "reread": 2,
+    },
     "tool_calls": 11,
+    # The reader's own account of the document, which the engine keeps on every
+    # seal and this pipeline publishes. It is the thing a reading model knows
+    # that no reviewer could work out from the text, and it is served as that
+    # model's account rather than as the authors' prose or a finding.
+    "note": (
+        "The equation on page 3 came through as one paragraph with the sentence "
+        "after it, and its left edge as a heading of its own. Page 4 converted "
+        "to nothing and was read off the image."
+    ),
     # What the reader added off the page the converter returned nothing from,
     # in the shape the engine writes at the seal: the draft's own id for each
     # piece, the document it landed in and the lines it became. The lines are
@@ -5593,6 +5675,7 @@ INGEST_READ = {
             "kind": row["kind"],
             "source": row["source"],
             "page": row["page"],
+            **PIECE_SPLIT.get(line, {}),
         }
         for line, row in sorted(PIECE_SOURCE.items())
     ],
@@ -5609,11 +5692,22 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
     number like any other and printed in the letter in the same type.
 
     So a bundle that published only the character count and a digest would be
-    publishing a review of a text it did not describe. Two facts are owed to
+    publishing a review of a text it did not describe. Four facts are owed to
     anyone reading it: which lines of the manuscript a model wrote, which is
-    what makes a quotation checkable against the list, and which pages of the
-    paper exist in the review only because a model read them off an image.
-    Both are published here from the import's own files.
+    what makes a quotation checkable against the list, which pages of the paper
+    exist in the review only because a model read them off an image, which lines
+    came out of one piece the converter had labelled as the wrong kind, and what
+    the reader itself said about the document. All four are published here from
+    the import's own files.
+
+    The re-read is the one of those that can be got wrong in the direction that
+    matters. Where the reader read a paragraph of the converter's as a table or
+    an equation and the prose after it, the prose part is not a line a model
+    composed: the reader named the spans to cut and the engine cut them, so the
+    words are the authors' as the converter read them. A record calling that a
+    line a model wrote would tell an author their own sentence was a machine's,
+    so the row says which part of how many and what kind of piece it is, and the
+    page says what that means in words.
 
     The account of the stage is a whitelist of the engine's fields rather than
     a copy of its object. A release that put a path in it would otherwise
@@ -5662,6 +5756,21 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             assert "reader_log" not in read, (
                 f"a field this release does not publish by name reached a bundle: {read}"
             )
+            # The reader's own note, which is the one thing in the account that
+            # is prose rather than a count. It is published because what it
+            # holds is what nobody reading the text could work out, and the
+            # whole of it travels: a note cut to fit a page would be this
+            # repository summarising a model's account of someone's paper.
+            assert read["note"] == READER_ACCOUNT["note"], (
+                f"the reader's account of the document was not published: {read}"
+            )
+            assert read["actions"]["reread"] == 2, (
+                f"the parts a re-read piece became were not counted: {read['actions']}"
+            )
+            assert "withdrawn" not in read["actions"] and "absorbed" not in read["actions"], (
+                "the engine tallies the pieces still in the documents, so a "
+                f"withdrawn or absorbed piece cannot be counted: {read['actions']}"
+            )
 
             # The per-line facts, which are what a quotation can be checked
             # against. The counts come from the import and the lines from the
@@ -5670,11 +5779,11 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             assert ingest["pieces_per_source"]["ai"] == 1, (
                 f"the pieces a model wrote were not counted: {ingest['pieces_per_source']}"
             )
-            assert ingest["pieces_per_source"]["ai-reconstructed"] == 1, (
+            assert ingest["pieces_per_source"]["ai-reconstructed"] == 2, (
                 f"a repaired piece was counted as the converter's: {ingest['pieces_per_source']}"
             )
             written = {row["lines"][0]: row for row in ingest["model_written"]}
-            assert sorted(written) == [DESCRIPTION_LINE, EQUATION_LINE], (
+            assert sorted(written) == [DESCRIPTION_LINE, EQUATION_LINE, SPLIT_LINE], (
                 f"the lines a model wrote were not published: {ingest['model_written']}"
             )
             assert written[DESCRIPTION_LINE]["source"] == "ai", (
@@ -5685,6 +5794,39 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             )
             assert written[EQUATION_LINE]["kind"] == "equation", (
                 f"what kind of piece a model wrote was dropped: {written}"
+            )
+            # The two lines the reader read one piece of the converter's as. The
+            # pair of numbers is what tells an author comparing the archive
+            # source with the text that these two lines came out of one
+            # paragraph there, and neither number is a fact without the other.
+            assert (written[EQUATION_LINE]["part"], written[EQUATION_LINE]["of"]) == (1, 2), (
+                f"which part of a re-read piece this line is was dropped: {written}"
+            )
+            assert (written[SPLIT_LINE]["part"], written[SPLIT_LINE]["of"]) == (2, 2), (
+                f"the second part of a re-read piece was not published: {written}"
+            )
+            # The prose part is the converter's own words, cut where the reader
+            # named the spans, which is why the record says what kind of piece
+            # it is rather than claiming a model composed the sentence.
+            assert written[SPLIT_LINE]["kind"] == "paragraph", (
+                f"a cut prose part was published as something else: {written}"
+            )
+            # And the debris of the equation, as a count. The characters stay in
+            # the engine's own map: a bundle carries no text that has no line of
+            # the manuscript to cite, and the count is what says something of
+            # the converter's went in here and is nowhere else.
+            assert written[EQUATION_LINE]["absorbed"] == 1, (
+                f"a piece folded into this one was not reported: {written}"
+            )
+            assert "absorbed" not in written[SPLIT_LINE], (
+                f"a part that absorbed nothing was published as if it had: {written}"
+            )
+            assert ABSORBED_DEBRIS["piece"] not in json.dumps(record), (
+                "a draft's own piece id reached a bundle through the absorbed debris"
+            )
+            assert CONVERTER_READING not in json.dumps(record), (
+                "the converter's reading of a re-read piece reached a bundle, "
+                "where it has no line of the manuscript to cite"
             )
 
             # And the same facts in the document a person reads, because a
@@ -5702,6 +5844,21 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
                 f"- Page 4: {MAIN_DOCUMENT} lines {DESCRIPTION_LINE} to {DESCRIPTION_LINE}, "
                 f"{MAIN_DOCUMENT} lines {EQUATION_LINE} to {EQUATION_LINE}" in stats
             ), f"the statistics page does not say where a lost page landed: {stats}"
+            # The note, under the label it is owed. A model's account of
+            # someone's paper printed without one would read as a finding of the
+            # review or as a sentence of the manuscript, and it is neither.
+            assert READER_ACCOUNT["note"] in stats, (
+                f"the statistics page does not carry the reader's note: {stats}"
+            )
+            assert "not the authors' text and not a finding of this review" in stats, (
+                f"the reader's note is printed with no account of what it is: {stats}"
+            )
+            assert "part 1 of 2" in stats and "part 2 of 2" in stats, (
+                f"the statistics page does not say a piece was read as two: {stats}"
+            )
+            assert "with one piece of the converter's folded into it" in stats, (
+                f"the statistics page does not say what was folded in: {stats}"
+            )
             assert local_review.bundle_local_path_leaks(destination) == [], (
                 "the account of the Read stage carried a path into the bundle"
             )
@@ -5722,6 +5879,13 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
         )
         assert account["lost_pages"] == [], (
             f"a workspace with no reader cannot name a lost page: {account}"
+        )
+        # And it carries no note. The engine writes the key on every seal and
+        # leaves it empty where no reader filed one, and an empty note published
+        # as a field would read as a model that had nothing to say about the
+        # paper rather than one that was never asked for an account.
+        assert "note" not in account, (
+            f"a manuscript no model read published an empty note: {account}"
         )
         assert account["ai_model"] == OPUS, (
             f"the model that wrote the composed pieces was not published: {account}"
@@ -6277,12 +6441,28 @@ def check_a_record_the_schema_refuses_is_never_written() -> None:
     # record sound that nobody checked.
     try:
         review_schema.provenance_problems(
-            {"schema_version": 4}, {"type": "object", "dependentRequired": {"a": ["b"]}}
+            {"schema_version": 4}, {"type": "object", "propertyNames": {"maxLength": 4}}
         )
     except review_schema.UnsupportedSchema as stopped:
-        assert "dependentRequired" in str(stopped), f"it has to name the keyword: {stopped}"
+        assert "propertyNames" in str(stopped), f"it has to name the keyword: {stopped}"
     else:
         raise AssertionError("an unsupported schema keyword was quietly ignored")
+
+    # And the keyword the published schema gained, which says that two fields
+    # are each half of one fact. A row carrying one of them lost the other, and
+    # the refusal names both so the reader of it knows which half is missing
+    # rather than being told a field is absent.
+    paired = {"type": "object", "dependentRequired": {"part": ["of"], "of": ["part"]}}
+    assert review_schema.provenance_problems({"part": 1, "of": 2}, paired) == [], (
+        "a row carrying both halves of the fact was refused"
+    )
+    assert review_schema.provenance_problems({}, paired) == [], (
+        "a row carrying neither half was refused, though neither is required"
+    )
+    half = review_schema.provenance_problems({"part": 1}, paired)
+    assert half and "of" in half[0] and "part" in half[0], (
+        f"a row that lost half of a two-part fact was accepted: {half}"
+    )
 
     # And through publish, with the word in the run rather than in the record:
     # nothing is written, and the refusal says so.

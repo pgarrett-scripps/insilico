@@ -553,14 +553,34 @@ converter's own layer, `ai-reconstructed` for a line the converter printed and a
 model repaired, with the converter's reading kept beside it, and `ai` for words
 no converter produced.
 
+The reader can also re-read a piece the converter labelled as the wrong kind, a
+table emitted as a paragraph of run-together cells or an equation left in the
+prose after it, as the several pieces the page actually prints. Each part keeps
+the converter's whole reading of the piece it came out of, with which part of
+how many it is, under `original.part` and `original.of`. Where the converter
+emitted the debris of a displayed piece beside it, the edge of an equation or
+the numbers off a chart's axis, the reader folds that piece into the one it is
+debris of and the engine keeps its reading under `original.absorbed`. A prose
+part of a re-read holds no model-written words: the reader names the spans to
+cut and the engine cuts them, so the characters left on the line are the
+converter's own.
+
 `publish` measures that workspace with no model and records what the reviewer
 was handed: the character count, a hash of the converted text, how many lines
 and how many mapped pieces it holds, the importer that produced them, and the
 import's own account of the Read stage. That account is the reader's model and
 how many pages it viewed, how many pieces came from each source, the lines a
-model wrote rather than the converter, and the pages that reached the review
-only because a model read them off the image, each with the lines of `paper.md`
-its transcription became. The record also carries the engine's own name for how
+model wrote rather than the converter, which of those lines came out of one
+piece the converter had labelled as the wrong kind and how many pieces were
+folded into each, the pages that reached the review only because a model read
+them off the image, each with the lines of `paper.md` its transcription became,
+and the reader's own free-text note on the document. The note is published
+because what it holds is what nobody reading the text could work out, and it is
+rendered as that model's account rather than as the authors' prose or a finding
+of the review. The engine writes the field on every seal and leaves it empty
+where the reader filed nothing, and an empty note is not published: a published
+empty string would read as a model that had nothing to say about the paper. The
+record also carries the engine's own name for how
 the folder was sealed, `sealed-by-reader` or `sealed-without-read`, taken from
 the run rather than worked out at publish time, and carried only where the run
 is talking about the folder being published.

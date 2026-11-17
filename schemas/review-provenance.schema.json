@@ -567,6 +567,12 @@
                   "tool_calls": { "type": "integer", "minimum": 0 },
                   "ai_model": { "type": "string", "minLength": 1 },
                   "ai_pieces": { "type": "integer", "minimum": 1 },
+                  "note": {
+                    "$comment":"The reader's own account of the document, in its words, as the manifest keeps it. It is published because what it holds is what no reviewer could work out from the text, and it is rendered as that model's account rather than the authors' prose or a finding of the review. The engine writes the key on every seal and leaves it empty when the reader filed none, so an empty note is not published: a published empty string would read as a model that had nothing to say rather than one that said nothing. The length is the cap the engine keeps.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
                   "lost_pages": {
                     "$comment":"A page the converter returned nothing from, which reached the review only because a model read it off the image, with the lines of the manuscript its transcription became. The lines are what a reader checks a quotation against: a page number alone says which page of the authors' own PDF nothing was converted from and not which sentences of the review came off it.",
                     "type": "array",
@@ -639,9 +645,18 @@
                     },
                     "kind": { "type": "string" },
                     "source": { "type": "string", "minLength": 1 },
-                    "page": { "type": "integer", "minimum": 1 }
+                    "page": { "type": "integer", "minimum": 1 },
+                    "part": { "type": "integer", "minimum": 1 },
+                    "of": { "type": "integer", "minimum": 2 },
+                    "absorbed": {
+                      "$comment":"How many pieces the converter emitted on their own were folded into this one as its debris. They are in the manuscript nowhere else, so the count is what tells an author comparing the archive source with the text the panel read that the edge of an equation or a chart's axis numbers went in here. The characters stay in the engine's own map: a bundle carries no text with no line to cite.",
+                      "type": "integer",
+                      "minimum": 1
+                    }
                   },
-                  "additionalProperties": false
+                  "additionalProperties": false,
+                  "$comment":"`part` and `of` say that this line is one of several the reader read a single piece of the converter's as, so neither is a fact without the other and a row carrying one of them is a row that lost the other.",
+                  "dependentRequired": { "part": ["of"], "of": ["part"] }
                 }
               },
               "manuscript_state": {
