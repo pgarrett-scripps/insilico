@@ -560,10 +560,22 @@ the converter's whole reading of the piece it came out of, with which part of
 how many it is, under `original.part` and `original.of`. Where the converter
 emitted the debris of a displayed piece beside it, the edge of an equation or
 the numbers off a chart's axis, the reader folds that piece into the one it is
-debris of and the engine keeps its reading under `original.absorbed`. A prose
-part of a re-read holds no model-written words: the reader names the spans to
-cut and the engine cuts them, so the characters left on the line are the
-converter's own.
+debris of and the engine keeps its reading under `original.absorbed`. Where the
+re-read wrote several parts, that fold is recorded on one of them, the part the
+debris was printed as part of, because one fold is one fold. A prose part of a
+re-read holds no model-written words: the reader names the spans to cut and the
+engine cuts them, so the characters left on the line are the converter's own.
+
+A piece can also leave the manuscript. A folded piece is in no document any
+more, an equation the converter split in two is one piece again once the reader
+merges the halves, and a piece the stage added can be withdrawn. The engine
+counts the pieces of the sealed manuscript by what the reader did to each, under
+`ai_read.actions`, and that count walks the documents, so none of those three is
+in it. It counts them as they go instead, under `ai_read.gone`, keyed by
+`absorbed`, `merged` and `withdrawn`, leaving out a key nothing happened under.
+The two do not add up with each other: a fold moves a piece out of the first and
+into the second, and `merged` is in both counting different things, the one
+equation the reader wrote against the halves that went into it.
 
 `publish` measures that workspace with no model and records what the reviewer
 was handed: the character count, a hash of the converted text, how many lines
@@ -572,7 +584,8 @@ import's own account of the Read stage. That account is the reader's model and
 how many pages it viewed, how many pieces came from each source, the lines a
 model wrote rather than the converter, which of those lines came out of one
 piece the converter had labelled as the wrong kind and how many pieces were
-folded into each, the pages that reached the review only because a model read
+folded into each, how many pieces are no longer in the manuscript and why they
+left it, the pages that reached the review only because a model read
 them off the image, each with the lines of `paper.md` its transcription became,
 and the reader's own free-text note on the document. The note is published
 because what it holds is what nobody reading the text could work out, and it is

@@ -155,6 +155,18 @@ model wrote. A review of a paper no model read says that instead, and says why.
 Where a quoted line is one a model wrote, the letter says so under the quotation
 rather than leaving an author to find out from the record.
 
+Pieces also leave the manuscript, and the page counts those too. A piece the
+converter emitted beside a displayed equation and the model read as part of it
+is in no line of its own afterwards, the halves of an equation the converter
+split are one piece again once the model puts them back together, and a piece
+the stage added can be taken out again. The page counts the pieces of the sealed
+manuscript by what the model did to each, and counts these separately as they
+left it, saying why each one did. The two counts do not add up with one another
+and the page says so, because a reader adding them and finding a disagreement
+would have no way to tell which of the two was wrong. An author comparing the
+reviewed text against their own PDF would otherwise find a heading of theirs
+missing from it with no number anywhere saying it had gone.
+
 The model that reads the pages may also leave a note on the document, and we
 publish it. What a reading model learns from the page images is what no reviewer
 can work out from the text: that the converter dropped a table, that two more

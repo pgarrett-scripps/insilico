@@ -561,8 +561,14 @@
                   "pages": { "type": "integer", "minimum": 0 },
                   "pages_viewed": { "type": "integer", "minimum": 0 },
                   "actions": {
+                    "$comment":"The pieces the sealed manuscript holds, counted by what the reader did to each. It is a count of the manuscript, so a piece the reader folded into another or took back out is in no document to be counted here and is in `gone` instead.",
                     "type": "object",
                     "additionalProperties": { "type": "integer", "minimum": 0 }
+                  },
+                  "gone": {
+                    "$comment":"The pieces that left the manuscript, counted as they went: `absorbed` a converter piece folded into the piece it was debris of, `merged` the other halves of an equation the converter split, `withdrawn` a piece the stage added and took out again. The engine leaves a key with no count out, and the publish path leaves out a count that is not a positive number, so a key here is a thing that happened at least once. These do not add up with `actions`: a fold moves a piece out of that count and into this one, and the piece holding the fold is counted there under what was done to it.",
+                    "type": "object",
+                    "additionalProperties": { "type": "integer", "minimum": 1 }
                   },
                   "tool_calls": { "type": "integer", "minimum": 0 },
                   "ai_model": { "type": "string", "minLength": 1 },

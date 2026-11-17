@@ -5591,10 +5591,8 @@ READER_ACCOUNT = {
     "pages_viewed": 4,
     # The pieces of the sealed manuscript by what the reader did to each, as the
     # engine tallies them. `reread` counts the parts a re-read piece became,
-    # which is why there are two of them for one piece of the converter's. There
-    # is no count of what the reader withdrew or folded in, and this fixture
-    # carries none: the engine tallies the pieces still in the documents, and a
-    # withdrawn piece and an absorbed one are both gone from them.
+    # which is why there are two of them for one piece of the converter's. It
+    # counts the manuscript, so nothing the reader took out of it is in here.
     "actions": {
         "repaired": 1,
         "confirmed": 6,
@@ -5603,6 +5601,13 @@ READER_ACCOUNT = {
         "added": 2,
         "reread": 2,
     },
+    # And the pieces that are no longer in the manuscript, which the engine
+    # counts as they go because the tally above cannot see them. This reader
+    # folded the equation's left edge into the equation and took back out one of
+    # the pieces it had added. It merged no split equation, so there is no key
+    # for that: the engine leaves out a reason nothing happened under, which is
+    # why a fixture that carried zeroes would not be the engine's shape.
+    "gone": {"absorbed": 1, "withdrawn": 1},
     "tool_calls": 11,
     # The reader's own account of the document, which the engine keeps on every
     # seal and this pipeline publishes. It is the thing a reading model knows
@@ -5692,13 +5697,20 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
     number like any other and printed in the letter in the same type.
 
     So a bundle that published only the character count and a digest would be
-    publishing a review of a text it did not describe. Four facts are owed to
+    publishing a review of a text it did not describe. Five facts are owed to
     anyone reading it: which lines of the manuscript a model wrote, which is
     what makes a quotation checkable against the list, which pages of the paper
     exist in the review only because a model read them off an image, which lines
-    came out of one piece the converter had labelled as the wrong kind, and what
-    the reader itself said about the document. All four are published here from
-    the import's own files.
+    came out of one piece the converter had labelled as the wrong kind, which
+    pieces are not in the manuscript at all because the reader folded them into
+    another or took them back out, and what the reader itself said about the
+    document. All five are published here from the import's own files.
+
+    The two counts of pieces are kept apart on purpose. The engine's `actions`
+    walks the pieces the sealed documents hold, so a fold moves a piece out of
+    it, and `gone` is counted at the act instead. They do not add up with each
+    other, and the page says so: a reader who adds them and finds a
+    disagreement has no way to tell which of the two was wrong.
 
     The re-read is the one of those that can be got wrong in the direction that
     matters. Where the reader read a paragraph of the converter's as a table or
@@ -5767,9 +5779,23 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             assert read["actions"]["reread"] == 2, (
                 f"the parts a re-read piece became were not counted: {read['actions']}"
             )
+            # What the reader took out of the manuscript, which the tally above
+            # cannot hold: it walks the pieces the sealed documents have, and
+            # these are the ones they do not. The engine counts them as they go
+            # and a bundle publishes the counts, because a stage that folded
+            # three headings away and said so nowhere leaves an author to find
+            # the gap by reading the manuscript against their own PDF.
+            assert read["gone"] == {"absorbed": 1, "withdrawn": 1}, (
+                f"the pieces that left the manuscript were not published: {read}"
+            )
             assert "withdrawn" not in read["actions"] and "absorbed" not in read["actions"], (
                 "the engine tallies the pieces still in the documents, so a "
-                f"withdrawn or absorbed piece cannot be counted: {read['actions']}"
+                f"withdrawn or absorbed piece is counted in `gone` alone: {read['actions']}"
+            )
+            # A reason nothing happened under is left out rather than published
+            # as a zero, which is the engine's own rule for this object.
+            assert "merged" not in read["gone"], (
+                f"a reason no piece left the manuscript for was published: {read['gone']}"
             )
 
             # The per-line facts, which are what a quotation can be checked
@@ -5859,6 +5885,16 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             assert "with one piece the converter emitted beside it folded in" in stats, (
                 f"the statistics page does not say what was folded in: {stats}"
             )
+            # And the pieces that are not in the manuscript at all, with the
+            # warning that they do not add up with the counts above them. A
+            # reader adding the two rows together and finding them disagree
+            # would have no way to tell which of the two was wrong.
+            assert "absorbed: 1, withdrawn: 1" in stats, (
+                f"the statistics page does not count what left the manuscript: {stats}"
+            )
+            assert "These do not add up with the counts above" in stats, (
+                f"the page lets two counts of the same pieces look like one: {stats}"
+            )
             assert local_review.bundle_local_path_leaks(destination) == [], (
                 "the account of the Read stage carried a path into the bundle"
             )
@@ -5887,6 +5923,12 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
         assert "note" not in account, (
             f"a manuscript no model read published an empty note: {account}"
         )
+        # And no count of pieces that left it. Nothing read it, so nothing was
+        # folded in or taken out, and an empty object published as a field reads
+        # as a reader that folded nothing rather than as no reader at all.
+        assert "gone" not in account, (
+            f"a manuscript no model read published what left it: {account}"
+        )
         assert account["ai_model"] == OPUS, (
             f"the model that wrote the composed pieces was not published: {account}"
         )
@@ -5905,6 +5947,189 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             f"a manuscript holding a model's own lines was reported as all "
             f"converted text: {said}"
         )
+
+
+def _read_manuscript(out: Path) -> dict:
+    """Seal a manuscript a model read, through the engine's own scripted reader.
+
+    `scripts/fixtures/make_read_manuscript.py` drives the Read stage over a PDF
+    it writes by hand, with the reader's tools called from a script rather than
+    by a model, and prints one JSON line naming the folders it sealed. One
+    process, because the engine serves one paper per process.
+    """
+    generator = (
+        Path(local_review.__file__).resolve().parent / "fixtures" / "make_read_manuscript.py"
+    )
+    done = subprocess.run(
+        [sys.executable, str(generator), "--out", str(out)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=900,
+    )
+    assert done.returncode == 0, (
+        f"the read-manuscript generator failed with exit {done.returncode}: "
+        f"{done.stdout[-1500:]}{done.stderr[-1500:]}"
+    )
+    return json.loads(done.stdout.strip().splitlines()[-1])
+
+
+def check_a_read_the_engine_sealed_publishes_as_the_engine_wrote_it() -> None:
+    """Publish the account of a read the engine itself performed.
+
+    Every other check of the Read stage in this file reads a workspace whose
+    `ai_read` this suite typed out. `_workspace` says so in its own docstring:
+    an account of a manuscript a model read is written into the manifest after
+    the import rather than earned, because reading one means a model looking at
+    page images and no model runs in this suite. That leaves the published shape
+    resting on what this repository believes the engine writes, and the belief
+    was wrong once already. This pipeline published a sentence saying a folded
+    piece was counted in none of the engine's tallies, and the engine had been
+    counting it all along, in an object nothing here read.
+
+    So this check earns the account instead. The engine's `scripted_read` drives
+    the stage with the reader's tools called from a script, which is a read with
+    no model in it, and the generator does to a paper everything the published
+    record has something to say about: a piece read as the two pieces the page
+    prints, a piece the converter emitted beside it folded in as its debris, a
+    figure described, the two halves of a split equation put back together, and
+    a piece added and then withdrawn. What the publish path reads is the
+    engine's own manifest and the engine's own map.
+
+    Four things are asked of that folder. The whole of the account travels,
+    field for field, so a release that writes a field this pipeline publishes
+    under another name fails here rather than publishing it as absent. The two
+    counts of pieces say different things, and this read is the case that tells
+    them apart: one fold, one merge and one withdrawal left the manuscript, and
+    none of the three is in the tally of what the reader did to the pieces still
+    in it. One fold is recorded on one line, the line the debris was printed as
+    part of. And the record passes the published schema, because a shape the
+    engine writes and the schema refuses would otherwise be caught by
+    `npm run check:schema` after a bundle had been written.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        sealed = _read_manuscript(Path(tmp) / "read")
+        workspace = Path(sealed["workspace"])
+        manifest = json.loads((workspace / "manifest.json").read_text(encoding="utf-8"))
+        account = manifest["ai_read"]
+        assert account.get("read") is True, (
+            f"the scripted reader sealed a manuscript it says it did not read: {account}"
+        )
+
+        states = local_review.engine_public(
+            "MANUSCRIPT_STATES", "the manuscript states cannot be read"
+        )
+        state = "sealed-by-reader"
+        assert state in states, (
+            f"the engine does not list the state a manuscript a reader sealed is in: {states}"
+        )
+        ingest = local_review.ingest_record(workspace, state)
+        read = ingest["ai_read"]
+
+        # The whole of the engine's account, field for field. The publish path
+        # takes the fields it publishes by name, because a release that put a
+        # path in the object would otherwise publish this machine's directories
+        # with everything else, and a name this release does not know is a fact
+        # the engine wrote that no reader of the review is ever told.
+        unpublished = sorted(set(account) - set(read))
+        assert not unpublished, (
+            f"the engine's account of the read carries fields this release does "
+            f"not publish: {unpublished}"
+        )
+        invented = sorted(set(read) - set(account))
+        assert not invented, (
+            f"the published account carries fields the engine never wrote: {invented}"
+        )
+        for name, value in account.items():
+            if name == "lost_pages":
+                # Reshaped on the way out rather than copied: the engine records
+                # the draft's own piece ids and the publish path replaces them
+                # with the lines they became, which is what a bundle can cite.
+                continue
+            assert read[name] == value, (
+                f"the published {name} is not what the engine wrote: "
+                f"{read[name]!r} against {value!r}"
+            )
+        assert local_review.local_references(json.dumps(ingest)) == [], (
+            f"the account of a read the engine sealed carried a path: {ingest}"
+        )
+
+        # The two counts of pieces, which is what this check exists for. The
+        # reader folded one piece in, merged the two halves of an equation and
+        # withdrew one piece it had added, so three pieces left the manuscript
+        # and the tally of what was done to the pieces still in it holds none
+        # of them.
+        assert read["gone"] == {"absorbed": 1, "merged": 1, "withdrawn": 1}, (
+            f"the pieces that left the manuscript were not published as the "
+            f"engine counted them: {read}"
+        )
+        for name in ("absorbed", "withdrawn"):
+            assert name not in read["actions"], (
+                f"a piece that left the manuscript was counted among the pieces "
+                f"it holds: {read['actions']}"
+            )
+        # `merged` is in both objects and counts two different things, which is
+        # why they are published side by side rather than added up: the tally
+        # counts the one equation the reader wrote, and `gone` counts the halves
+        # the converter had emitted and the reader put back together.
+        assert read["actions"]["merged"] == 1 and read["gone"]["merged"] == 1, (
+            f"the merge is not counted on both sides of the seal: {read}"
+        )
+        assert read["actions"]["reread"] == 2, (
+            f"the parts a re-read piece became were not counted: {read['actions']}"
+        )
+
+        # The fold, on the one line the debris was printed as part of. A re-read
+        # that wrote two lines records one fold, and a count on both would tell
+        # an author that two pieces of their paper went into those lines.
+        written = ingest["model_written"]
+        folded = [row for row in written if row.get("absorbed")]
+        assert len(folded) == 1, (
+            f"one fold was recorded on {len(folded)} lines of the manuscript: {written}"
+        )
+        assert (folded[0].get("part"), folded[0].get("of")) == (1, 2), (
+            f"the fold was not recorded on the part the debris belonged to: {folded}"
+        )
+        assert folded[0]["kind"] == "equation" and folded[0]["source"] == "ai-reconstructed", (
+            f"the line that holds the fold is not the one the reader wrote: {folded}"
+        )
+        parts = sorted(row["part"] for row in written if "part" in row)
+        assert parts == [1, 2], (
+            f"the parts of the re-read piece did not both reach the record: {written}"
+        )
+        assert ingest["pieces_per_source"]["ai"] == 1, (
+            f"the figure the reader described was not counted: {ingest['pieces_per_source']}"
+        )
+
+        # And the page a person reads, which is where these counts are owed in
+        # words rather than as a field of a JSON file nobody opens.
+        said = "\n".join(local_review.render_read_stage(ingest))
+        assert "absorbed: 1, merged: 1, withdrawn: 1" in said, (
+            f"the statistics page does not count what left the manuscript: {said}"
+        )
+        assert "These do not add up with the counts above" in said, (
+            f"the page lets two counts of the same pieces look like one: {said}"
+        )
+        assert account["note"] in said, (
+            f"the reader's own note did not reach the page: {said}"
+        )
+
+        # And the record the published schema has to accept, with this account
+        # in place of the one the rest of this file types out.
+        with _stub_engine():
+            record = local_review.build_provenance(
+                **_build_arguments(
+                    editor="fixture-editor",
+                    human_reviewed=True,
+                    publishing=True,
+                    ingest=dict(
+                        ingest,
+                        format="markdown",
+                        tool="peerreviewagents import_paper",
+                    ),
+                )
+            )
+        review_schema.assert_valid_provenance(record, source="engine-sealed")
 
 
 def check_the_locked_engine_release_is_the_one_declared() -> None:
@@ -8984,6 +9209,10 @@ ENGINE_BACKED = (
     (
         check_a_run_of_one_paper_cannot_be_published_as_another,
         "a run is bound to the paper that was prepared, through the engine's own reader",
+    ),
+    (
+        check_a_read_the_engine_sealed_publishes_as_the_engine_wrote_it,
+        "the account of a read the engine sealed publishes as the engine wrote it",
     ),
 )
 

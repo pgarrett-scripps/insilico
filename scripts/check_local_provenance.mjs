@@ -289,6 +289,12 @@ function localRecord(overrides = {}) {
         pages: 4,
         pages_viewed: 4,
         actions: { repaired: 1, confirmed: 18, merged: 0, described: 1, added: 2, reread: 2 },
+        // The pieces that are no longer in the manuscript, which the count
+        // above cannot hold: it walks the pieces the sealed documents have.
+        // One heading was folded into the equation it was the edge of, and one
+        // piece this stage added was taken back out. Nothing was merged, so
+        // there is no key for it.
+        gone: { absorbed: 1, withdrawn: 1 },
         tool_calls: 11,
         // The reader's own account of the document, which the record carries
         // because what it holds is what nobody reading the text could work
@@ -558,6 +564,24 @@ rejects(overlongNote, "a note longer than the engine keeps is not one the engine
 const longestNote = localRecord();
 longestNote.ingest.ai_read.note = "a".repeat(2000);
 accepts(longestNote, "a note the length the engine caps at is publishable");
+
+// The pieces that left the manuscript are counted where something left it. The
+// engine leaves out a reason with no count and the publish path leaves out a
+// count that is not a positive number, so a zero here is a stage claiming it
+// folded something away and folded nothing.
+const emptyDeparture = localRecord();
+emptyDeparture.ingest.ai_read.gone.withdrawn = 0;
+rejects(emptyDeparture, "a reason no piece left the manuscript for carries no count");
+
+const countlessDeparture = localRecord();
+countlessDeparture.ingest.ai_read.gone.absorbed = "one";
+rejects(countlessDeparture, "a count of the pieces that left the manuscript is a number");
+
+// A manuscript nothing left is the ordinary case, and it says so by having no
+// counts at all rather than by a row of zeroes.
+const nothingGone = localRecord();
+nothingGone.ingest.ai_read.gone = {};
+accepts(nothingGone, "a reader that folded nothing away publishes no departures");
 
 const emptyJudgement = localRecord();
 emptyJudgement.generator.advisory_verdict = {};

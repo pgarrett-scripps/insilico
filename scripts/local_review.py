@@ -2403,6 +2403,28 @@ def render_stats(preprint: Preprint, ingest: dict, generator: dict) -> str:
     return "\n".join(lines + render_read_stage(ingest))
 
 
+# What each reason a piece left the manuscript means, in the words a reader of
+# the review is owed. The engine names the reason and counts it. The account of
+# what was done to the paper is this repository's to give, because `absorbed`
+# and `merged` are the engine's vocabulary and not an author's.
+GONE_MEANINGS = {
+    "absorbed": (
+        "A piece counted as `absorbed` is one the converter emitted on its own "
+        "that the reader read as debris of another piece, folded into that "
+        "piece."
+    ),
+    "merged": (
+        "A piece counted as `merged` is a half of an equation the converter "
+        "split, put back into the whole, which is counted above under what the "
+        "reader did to the whole."
+    ),
+    "withdrawn": (
+        "A piece counted as `withdrawn` is one this stage added and took out "
+        "again."
+    ),
+}
+
+
 def render_read_stage(ingest: dict) -> list[str]:
     """What a model wrote into the manuscript, for the statistics page.
 
@@ -2451,9 +2473,48 @@ def render_read_stage(ingest: dict) -> list[str]:
         if done:
             lines += [
                 "- Pieces of the sealed manuscript by what the reader did to "
-                f"each: {', '.join(done)}. A piece it took back out of the "
-                "draft, or folded into the piece it was debris of, is not in "
-                "the manuscript and is counted in none of these.",
+                f"each: {', '.join(done)}. This counts the manuscript, so a "
+                "piece that is no longer in it is counted below instead.",
+                "",
+            ]
+        gone = _dict(read.get("gone"))
+        left = [
+            f"{name}: {count}"
+            for name, count in sorted(gone.items())
+            if isinstance(count, int) and count
+        ]
+        if left:
+            # The pieces the reader took out of the paper, which the count above
+            # cannot hold: it walks the pieces the sealed documents have, and
+            # these are the ones they do not. A stage that folded three headings
+            # away and said so nowhere would leave an author to find the gap by
+            # comparing the manuscript against their own PDF.
+            # And only the reasons this record carries are explained. A page
+            # that glossed every reason the engine knows would tell an author
+            # about a merge that never happened to their paper.
+            held = [
+                name
+                for name in sorted(gone)
+                if isinstance(gone[name], int) and gone[name]
+            ]
+            meanings = [GONE_MEANINGS[name] for name in held if name in GONE_MEANINGS]
+            unnamed = [name for name in held if name not in GONE_MEANINGS]
+            if unnamed:
+                # A release that counted a new kind of departure would otherwise
+                # print a bare word, and an author cannot be left to guess what
+                # was done to a piece of their own paper.
+                meanings.append(
+                    "A piece counted as "
+                    + " or ".join(f"`{name}`" for name in unnamed)
+                    + " left the manuscript for a reason this release has no "
+                    "account of, and what that was can be read from the engine "
+                    "release named in the record."
+                )
+            lines += [
+                "- Pieces that are no longer in the manuscript, by why they "
+                f"left it: {', '.join(left)}. {' '.join(meanings)} These do not "
+                "add up with the counts above, because the piece that holds a "
+                "fold is counted there under what was done to it.",
                 "",
             ]
     else:
@@ -2560,7 +2621,9 @@ def render_read_stage(ingest: dict) -> list[str]:
                 "converter had emitted beside it as pieces of their own, the "
                 "edge of a displayed equation or the numbers off a chart's "
                 "axis, which the reader read as part of this piece. Those "
-                "pieces are in the manuscript nowhere else.",
+                "pieces are in the manuscript nowhere else. Where a re-read "
+                "wrote several lines, the fold is counted on the one the debris "
+                "was printed as part of, because one fold is one fold.",
                 "",
             ]
     lost = [_dict(row) for row in _list(read.get("lost_pages"))]
@@ -2605,6 +2668,13 @@ AI_READ_FIELDS = (
     "pages",
     "pages_viewed",
     "actions",
+    # The pieces that are no longer in the manuscript, by why they left it. The
+    # counts above are the pieces the sealed documents hold, counted by what was
+    # done to each, so a piece folded into the one it was debris of, or added and
+    # taken back out, is in no document to be counted there. The engine keeps
+    # these as the pieces go, and a stage that folded three headings away would
+    # otherwise leave no number anywhere saying it had.
+    "gone",
     "tool_calls",
     # A manuscript composed from an application's own source reads `read: false`
     # and still holds lines a model wrote: a description of a figure, an
@@ -2718,6 +2788,18 @@ def read_stage_record(manifest: dict) -> dict:
     record.pop("note", None)
     if note:
         record["note"] = note
+    # The pieces that left the manuscript, kept only where there is a number to
+    # keep. The engine leaves out a reason nothing happened under, and a count
+    # that is not a positive number is nothing happening written down, so what
+    # travels is the reasons a piece actually left this manuscript.
+    gone = {
+        str(why): count
+        for why, count in _dict(account.get("gone")).items()
+        if isinstance(count, int) and count > 0
+    }
+    record.pop("gone", None)
+    if gone:
+        record["gone"] = gone
     lost = []
     for page in _list(account.get("lost_pages")):
         row = _dict(page)
@@ -2788,7 +2870,10 @@ def model_written_lines(workspace: Path) -> list[dict]:
         if absorbed:
             # How many pieces the converter emitted on their own were folded
             # into this one as its debris, which is in the manuscript nowhere
-            # else. The count travels and the characters do not: they are the
+            # else. A re-read that wrote several lines records the fold on one
+            # of them, the line the debris was printed as part of, so the count
+            # here is a fold and not a fold once per line the re-read wrote.
+            # The count travels and the characters do not: they are the
             # converter's reading of a few marks on a page with no line of the
             # manuscript to cite, and the engine's own map is where they are
             # kept. An author is told that something went in here and can find
