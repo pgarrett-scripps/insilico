@@ -8914,11 +8914,12 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
         # How the folder came to be sealed, which the engine answers for the
         # run rather than leaving a consumer to work out from the files. The
         # two sealed states hold the same files and are not the same
-        # manuscript: one was read by a model and one is the converter's
-        # reading throughout. These rounds import with the reader off, so this
-        # is the second of them, and the name is checked against the engine's
-        # own list so a release that renamed a state fails here rather than
-        # being published under a word nothing else uses.
+        # manuscript: one was read through the page images and one is the
+        # converter's reading throughout. Every PDF review runs the Read stage
+        # now, and the generator drives it from a script, so this is the first
+        # of them. The name is checked against the engine's own list so a
+        # release that renamed a state fails here rather than being published
+        # under a word nothing else uses.
         run_reading = local_review.engine_reading(run)
         state = run_reading["manuscript"]
         states = local_review.engine_public(
@@ -8927,11 +8928,17 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
         assert state["state"] in states, (
             f"the engine reports a manuscript state it does not list: {state}"
         )
-        assert state["state"] == "sealed-without-read", (
-            f"these rounds import with no reader and the engine says otherwise: {state}"
+        assert state["state"] == "sealed-by-reader", (
+            f"these rounds seal through the Read stage and the engine says otherwise: {state}"
         )
-        assert state["sealed"] and not state["reader_model"], (
-            f"a manuscript nothing read cannot name a reader: {state}"
+        # The reader slot of these rounds is the generator, and the name here is
+        # the model the run planned for that slot rather than one that answered:
+        # nothing in this fixture calls a model. What is being checked is that
+        # the engine reports the slot it sealed with and that the name travels,
+        # since a bundle whose reader model went missing would read as a paper
+        # the panel was handed unread.
+        assert state["sealed"] and state["reader_model"], (
+            f"a manuscript the Read stage sealed has to name the reader's model: {state}"
         )
 
         with _published_tree(Path(tmp) / "reviews") as reviews:

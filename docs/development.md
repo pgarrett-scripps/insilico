@@ -553,6 +553,16 @@ converter's own layer, `ai-reconstructed` for a line the converter printed and a
 model repaired, with the converter's reading kept beside it, and `ai` for words
 no converter produced.
 
+There is no setting that skips the stage. Every review of a PDF reads its pages,
+because the converter's equations and tables are its reading of a picture of
+them, a figure is a caption with nothing behind it, and a page the text layer
+returns nothing from cannot be imported at all without a reader to transcribe
+it. A sealed manuscript no page of which was read is reached two ways only: a
+reader that failed twice, which the engine seals as converted and gives a
+reason for, and an application's own source, which never went through a
+converter. A local run therefore spends a reader slot, and `sealed-without-read`
+in a record of a PDF review means the stage was attempted and failed.
+
 The reader can also re-read a piece the converter labelled as the wrong kind, a
 table emitted as a paragraph of run-together cells or an equation left in the
 prose after it, as the several pieces the page actually prints. Each part keeps

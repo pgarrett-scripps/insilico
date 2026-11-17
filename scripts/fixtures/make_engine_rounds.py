@@ -16,10 +16,12 @@ resolved whose quoted sentence still reads the same in the revision, a prior
 issue nobody raised again, and a second round whose `prior_round` record names
 the first round's file and digest.
 
-No model and no network. The reviewers, the editor and the recorder here are
-this script: it claims each slot with the claim code the run minted, reads the
-whole paper, files findings quoted verbatim out of it, groups them into issues,
-rules on the round before and asks the recorder to write the review. The
+No model and no network. The reader, the reviewers, the editor and the recorder
+here are all this script: it drives the Read stage through the engine's public
+`scripted_read`, views every page and seals the manuscript, then claims each
+slot with the claim code the run minted, reads the whole paper, files findings
+quoted verbatim out of it, groups them into issues, rules on the round before
+and asks the recorder to write the review. The
 manuscript is a PDF built here out of the sentences below, so there is no paper
 to fetch and nothing to look up. The `reviewers-only` arm is the smallest arm
 whose issues an editor writes, which is what `publishable` asks about.
@@ -498,16 +500,29 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
     pdf = out / ("revision.pdf" if revision else "manuscript.pdf")
     pdf.write_bytes(manuscript(revision))
 
-    # `ai_read=False` because no model runs here. Engine 0.10 imports a paper
-    # into a draft and holds it there until a reader slot has looked at the page
-    # images and sealed it, and no other slot may claim before the seal, so a
-    # fixture that left the reader on would be refused at the first claim. The
-    # import seals the draft itself instead and records `read: false` with the
-    # reason, which is what every bundle built from this fixture then says about
-    # the text its panel was handed.
-    opened = server.ingest(str(pdf), str(run_dir), reviewers=REVIEWERS, arm=ARM,
-                           title=TITLE, prior_issues=prior, ai_read=False)
-    refused(opened, "ingest")
+    # Every PDF review reads the pages, and there is no setting that turns the
+    # stage off: the import holds the paper in a draft until the reader slot has
+    # looked at the page images and sealed it, and no other slot may claim
+    # before the seal. No model runs here, so the reader is this script, through
+    # the engine's own `scripted_read`: it views every page of the fixture and
+    # seals. What the panel below reads is therefore a manuscript the engine's
+    # reader wrote, and the bundle says a reader sealed it.
+    #
+    # The handle is deliberately left open. Closing it puts back the run that
+    # was attached before, and the slots below claim against the codes this
+    # import minted, so the round goes on in the run the read opened.
+    read = engine.scripted_read(pdf, run_dir, title=TITLE, reviewers=REVIEWERS,
+                                arm=ARM, prior_issues=prior)
+    # The pages of this fixture are the ones it wrote the PDF from, and a seal
+    # is refused while any page is unopened, because a piece the converter
+    # dropped is only visible on its page.
+    for page in range(1, len(PAGES) + 1):
+        read.view_page(page)
+    # No note. A note is the reader's own account of the document, and the
+    # reader here is a script with nothing to report that the page images told
+    # it.
+    read.seal()
+    opened = read.opened
     codes = {row["slot"]: row["claim_code"] for row in opened["claim_codes"]}
 
     uids: dict[str, str] = {}
