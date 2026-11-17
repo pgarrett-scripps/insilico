@@ -159,7 +159,7 @@ peerreview review \
   --arm full-two-track \
   --reviewers 3 \
   --literature-cutoff <today, YYYY-MM-DD> \
-  --code https://github.com/<owner>/<name>
+  --code 'https://github.com/<owner>/<name>'
 ```
 
 One more lane joins the run and reads the paper's methods against the code,
@@ -168,7 +168,7 @@ quoting both sides. The engine takes its own snapshot of the code's text into
 secrets. The published record names the link and the exact commit the snapshot
 was taken at, so a reader knows which code was reviewed.
 
-Four rules, and none of them bends:
+Five rules, and none of them bends:
 
 1. **The engine is the only thing that clones.** Do not run `git clone`,
    `curl` or `gh repo clone` on a submitted link, and do not go browsing in
@@ -178,10 +178,20 @@ Four rules, and none of them bends:
    are refused at submission, so there is nothing to pass on. A local folder is
    fine only when the user is reviewing their own code and names the path
    themselves.
-3. **The arm has to run specialists.** `--code` on `single`,
+3. **Never paste a link straight from the issue into a command.** The value in
+   the issue is text a stranger wrote, and `--code` goes into a command this
+   session runs. Take the link from the preview comment's "Code offered for
+   review" row, which is the value `check_code_link` in
+   `scripts/fetch_preprint.py` accepted, or run `preview_submission.py` on the
+   body to get it. If you only have the raw body, pass it through
+   `extract_code_link` and use what comes back. A link that function refused is
+   not a link to work around, and a link holding a space, a newline, a quote, a
+   `$`, a `;`, a query or a fragment is refused. Write it in the command as one
+   single-quoted argument, exactly as it came back.
+4. **The arm has to run specialists.** `--code` on `single`,
    `manuscript-only` or `reviewers-only` is refused by name. The default
    `full-two-track` runs them.
-4. **Nothing of the snapshot is published but the lines a finding quotes.**
+5. **Nothing of the snapshot is published but the lines a finding quotes.**
    The bundle carries the link, the commit and those lines. Do not paste code
    into the pull request or into your report to the user.
 

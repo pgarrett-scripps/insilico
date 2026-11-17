@@ -473,6 +473,16 @@ def check_a_submitted_code_link_is_only_ever_an_https_one() -> None:
     for empty in ("", "   ", "_No response_", "none", "N/A", "no", "-"):
         assert accept(empty) == "", f"{empty!r} is not a link and must read as none"
 
+    # Accepted exactly as written, because what is handed on has to be what the
+    # submitter wrote and not a tidied version of it.
+    for exact in (
+        "https://github.com/lab/analysis.git",
+        "https://gitlab.example.org/group/sub/analysis",
+        "https://codeberg.org:443/lab/analysis",
+        "https://github.com/lab/analysis-2.0_final~1",
+    ):
+        assert accept(exact) == exact, f"{exact} did not come back unchanged"
+
     refusals = {
         "git@github.com:lab/analysis.git": "SSH",
         "ssh://git@github.com/lab/analysis": "SSH",
@@ -485,6 +495,32 @@ def check_a_submitted_code_link_is_only_ever_an_https_one() -> None:
         "http://github.com/lab/analysis": "plain http",
         "https:///lab/analysis": "no host",
         "lab/analysis": "not a repository link",
+        # One link and a second argument. This value ends up in a command an
+        # editor's own session runs, so a space is not a typo to tidy up.
+        "https://github.com/a/b --upload-pack=x": "space, a line break",
+        "https://github.com/a/b\nfoo": "space, a line break",
+        "https://github.com/a/b\tfoo": "space, a line break",
+        "https://github.com/a/b\x00": "space, a line break",
+        # Characters a repository address does not need, and a shell does.
+        "https://example.com/a?x=$(id)": "characters a repository address does",
+        "https://example.com/a;id": "characters a repository address does",
+        "https://example.com/a&id": "characters a repository address does",
+        "https://example.com/a'b": "characters a repository address does",
+        "https://example.com/a#frag": "characters a repository address does",
+        "https://user@example.com/a": "characters a repository address does",
+        "https://example.com\\a": "characters a repository address does",
+        # Hosts on whichever network the review is running in.
+        "https://192.168.2.17/x": "address on a network",
+        "https://127.0.0.1/x": "address on a network",
+        "https://[::1]/x": "characters a repository address does",
+        "https://localhost/x": "host inside one network",
+        "https://gitbox/x": "host inside one network",
+        "https://gitbox.local/x": "host inside one network",
+        "https://files.internal/x": "host inside one network",
+        "https://host.lan/x": "host inside one network",
+        "https://box.home.arpa/x": "host inside one network",
+        "https://example.c/x": "does not end in a domain",
+        "https://example.4/x": "does not end in a domain",
     }
     for link, because in refusals.items():
         try:
@@ -521,6 +557,16 @@ No
     ) == "https://arxiv.org/abs/2608.12345", (
         "the paper's own link is still the first one read out of the body"
     )
+    try:
+        fetch_preprint.extract_code_link(
+            body.format(code="https://github.com/lab/analysis\nhttps://evil.example/x")
+        )
+    except fetch_preprint.CodeLinkRefused as refused:
+        assert "more than one line" in str(refused), refused
+    else:
+        raise AssertionError(
+            "a two-line answer must be refused rather than read as its first line"
+        )
 
     preprint = Preprint(
         url="https://arxiv.org/abs/2608.12345",
@@ -567,6 +613,19 @@ No
             "a refused code link must not cost the submission its review"
         )
         assert "| Title | A paper with code |" in turned_down
+
+        smuggled = build_preview(
+            body.format(code="https://github.com/a/b --upload-pack=x"),
+            resolver=fake_resolve,
+            reviews_root=reviews,
+        )
+        assert "The code link was not accepted" in smuggled
+        assert "--upload-pack" not in smuggled, (
+            "a refused link's extra argument must not be echoed into the comment"
+        )
+        assert "| Code offered for review | None |" in smuggled, (
+            "a link that was not accepted is not a link the review was offered"
+        )
 
 
 def _full_text_fixture(preprint: Preprint) -> str:
