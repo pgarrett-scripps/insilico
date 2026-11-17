@@ -5856,7 +5856,7 @@ def check_a_bundle_says_which_lines_a_model_wrote() -> None:
             assert "part 1 of 2" in stats and "part 2 of 2" in stats, (
                 f"the statistics page does not say a piece was read as two: {stats}"
             )
-            assert "with one piece of the converter's folded into it" in stats, (
+            assert "with one piece the converter emitted beside it folded in" in stats, (
                 f"the statistics page does not say what was folded in: {stats}"
             )
             assert local_review.bundle_local_path_leaks(destination) == [], (

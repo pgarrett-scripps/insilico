@@ -2529,7 +2529,7 @@ def render_read_stage(ingest: dict) -> list[str]:
             folded = ""
             if isinstance(count, int) and count:
                 many = "one piece" if count == 1 else f"{count} pieces"
-                folded = f", with {many} of the converter's folded into it"
+                folded = f", with {many} the converter emitted beside it folded in"
             lines.append(
                 f"- {piece.get('document') or MAIN_DOCUMENT} line {where}, "
                 f"{piece.get('kind') or 'piece'}, `{piece.get('source')}`"
