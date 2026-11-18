@@ -997,6 +997,11 @@ PACKAGE = {
     "findings_submitted": 6,
     "quarantined_findings_count": 0,
     "quarantined_findings": [],
+    # `None` is what a run given no code writes. This fixture is a manuscript
+    # review with no snapshot, so there was no code-check stage at all, and a
+    # null is the engine's own answer for that rather than a record of a stage
+    # that ran and found nothing to say.
+    "code_check": None,
 }
 
 # What `review_package` hands the renderers for the run `_run_directory`
@@ -2838,6 +2843,55 @@ def check_a_standing_this_release_never_publishes_is_refused() -> None:
         raise AssertionError("a surviving passage that is not a row of the engine's was accepted")
 
     # The fixture itself passes both, or the refusals above prove nothing.
+    local_review.assert_publishable_issues(PACKAGE)
+
+
+def check_a_finding_the_code_check_threw_out_is_never_an_ask() -> None:
+    """An issue resting on a contradicted finding is refused, not quietly thinned.
+
+    The code-check stage reads the code at the passage a finding asserts, and a
+    contradicted finding is one the code answered against. The engine will not
+    let its own editor group one into an issue, so an issue holding one means the
+    editor's grouping and the code check disagree about what this review found.
+    Dropping the member would publish an issue whose stated support is not the
+    support it was pooled from, and the letter is what the authors answer, so the
+    gate refuses the bundle and names the finding and the issue carrying it.
+    """
+    member = ISSUES[0]["members"][0]
+    thrown = {
+        "finding_uid": member["finding_uid"],
+        "verdict": "contradicted",
+        "title": member["title"],
+        "note": "The code applies no such step at the passage the finding reads.",
+    }
+    record = {
+        "cap": 12,
+        "checked": 1,
+        "over_cap": 0,
+        "counts": {"contradicted": 1, "confirmed": 0, "not-shown": 0},
+        "checks": [thrown],
+    }
+    try:
+        local_review.assert_publishable_issues(dict(PACKAGE, code_check=record))
+    except local_review.CommandError as refusal:
+        message = str(refusal)
+        assert member["finding_uid"] in message and ISSUES[0]["id"] in message, (
+            f"the refusal has to name the finding and the issue resting on it: {message}"
+        )
+    else:
+        raise AssertionError("an issue resting on a contradicted finding was accepted")
+
+    # A finding the code bore out or did not settle is an ask like any other, and
+    # a run with no code check at all is most runs.
+    for verdict in ("confirmed", "not-shown"):
+        local_review.assert_publishable_issues(
+            dict(PACKAGE, code_check=dict(
+                record,
+                counts={"contradicted": 0, "confirmed": 0, "not-shown": 0,
+                        verdict: 1},
+                checks=[dict(thrown, verdict=verdict)],
+            ))
+        )
     local_review.assert_publishable_issues(PACKAGE)
 
 
@@ -6839,6 +6893,42 @@ def check_a_draft_check_run_is_refused_as_the_arm_it_is() -> None:
             assert "reviewers" not in message.split("draft-check")[0], (
                 f"the arm is refused before the reviewer count, not through it: {message!r}"
             )
+            # What the arm runs is the engine's own answer, quoted, rather than a
+            # list of arm names kept here. A new arm with no core track is
+            # refused the day the engine ships it.
+            arms = local_review.planned_arms()
+            assert arms and arms["draft-check"]["reviewers"] == 0, (
+                f"this check rests on the engine calling draft-check core-less: {arms}"
+            )
+            assert arms["draft-check"]["summary"] in message, (
+                f"the refusal does not say what the engine says the arm runs: {message!r}"
+            )
+
+    # And an arm this engine has never heard of is refused as that, because a
+    # record saying what an arm did rests on the arm being one the engine runs.
+    with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
+        with _published_tree(Path(tmp) / "reviews") as reviews:
+            run = _run_directory(
+                Path(tmp) / "run",
+                **{
+                    "protocol.json": _protocol(mode="chosen-few", arm="chosen-few"),
+                    "progress.json": _progress(arm="chosen-few"),
+                },
+            )
+            destination = reviews / "2026" / "fixture-paper" / "v1" / "r1"
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), contextlib.redirect_stdout(io.StringIO()):
+                code = _publish(
+                    _prepared(Path(tmp) / "prepared", destination),
+                    run,
+                    _workspace(Path(tmp) / "workspace"),
+                    "--publish",
+                )
+            message = stderr.getvalue()
+            assert code == 2, f"an arm the engine does not define published, exit {code}"
+            assert "chosen-few" in message and "does not define" in message, (
+                f"the refusal has to name the arm the engine has never run: {message!r}"
+            )
 
 
 def check_a_record_the_schema_refuses_is_never_written() -> None:
@@ -9337,7 +9427,7 @@ def check_a_review_of_the_code_behind_the_paper_publishes_what_was_checked() -> 
     finding quoting the line, which the engine stores only because that line is
     the line its own copy holds.
 
-    Four things are asked of the bundle. The record says which code was
+    Six things are asked of the bundle. The record says which code was
     reviewed, at which commit, how much of it was copied and how much of it a
     reviewer opened. It does not say where the copy sits, because the copy is a
     folder inside somebody's run directory and the bundle does not carry it. The
@@ -9345,6 +9435,16 @@ def check_a_review_of_the_code_behind_the_paper_publishes_what_was_checked() -> 
     file they came from. And it prints nothing else out of that file, because a
     review earns the right to quote what it makes a claim about and not the
     right to republish the authors' repository.
+
+    The last two are what this engine added. The page states how many of the
+    data files the snapshot listed were fetched and how many came back as a head
+    of the file only, because a finding about a partial file rests on the lines
+    that were served and on nothing past the cut. And the finding the code check
+    contradicted appears nowhere as an ask: not in an issue, not among the
+    required changes, not among the suggestions. It is published in the letter's
+    own thrown-out section, with the lines of code that answered it, because a
+    reviewer's finding that was read against the code and dropped is part of the
+    record rather than something to make disappear.
     """
     with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / "code-round"
@@ -9354,8 +9454,17 @@ def check_a_review_of_the_code_behind_the_paper_publishes_what_was_checked() -> 
         assert re.fullmatch(r"[0-9a-f]{40}", wrote["code_commit"]), (
             f"the run recorded no commit for the code it reviewed: {wrote}"
         )
-        assert wrote["code_opened"] == ["analysis/pipeline.py"], (
-            f"the lane did not open the file its finding cites: {wrote}"
+        # The source file the finding cites, and the two data tables the lane
+        # fetched: a listed data file is opened by being asked for, so the files
+        # the reader opened are the file it read and the data it pulled.
+        assert wrote["code_opened"] == [
+            "analysis/pipeline.py", "instrument-counts.csv", "measurements.csv"
+        ], f"the lane did not open the file its finding cites: {wrote}"
+        assert (wrote["data_listed"], wrote["data_fetched"], wrote["data_partial"]) == (
+            2, 2, 1
+        ), (
+            "this fixture lists two data files, fetches both and is served one "
+            f"of them as a head only: {wrote}"
         )
         assert wrote["code_skipped"] > 0, (
             "this fixture holds files a snapshot leaves out, so the run has to "
@@ -9493,6 +9602,90 @@ def check_a_review_of_the_code_behind_the_paper_publishes_what_was_checked() -> 
         assert unquoted not in text, (
             f"{document} republishes a part of the code no finding quoted"
         )
+
+    # The data the code ships. The snapshot lists it and the reader fetches what
+    # a finding needs, so the page says how many were fetched and how many came
+    # back cut, which is the difference between a finding about a file and a
+    # finding about the head of one.
+    assert (published["data_listed"], published["data_fetched"],
+            published["data_partial"], published["data_refused"]) == (
+        wrote["data_listed"], wrote["data_fetched"],
+        wrote["data_partial"], wrote["data_refused"]
+    ), f"the data the reader fetched did not travel into the record: {published}"
+    assert published["data_bytes"] > 0, (
+        f"two files were fetched and the record spent no bytes on them: {published}"
+    )
+    for said in ("listed 2 data file(s)", "fetched 2",
+                 "1 of those came back as a head of the file only"):
+        assert said in summary, (
+            f"the page does not say what the code reader did with the data: {said!r} "
+            f"is not in {summary}"
+        )
+
+    # The code check, which is the one stage that can take a finding away again.
+    record = issues["code_check"]
+    assert record["checked"] == 3 and record["counts"] == {
+        "contradicted": 1, "confirmed": 1, "not-shown": 1
+    }, f"the three checks the fixture ran are not the checks published: {record}"
+    assert record["over_cap"] == 0 and record["cap"] > 0, (
+        f"the fixture asked for fewer checks than the cap and the record says "
+        f"otherwise: {record}"
+    )
+    assert "recorded" not in json.dumps(record), (
+        "the published record times each check, which tells a reader nothing"
+    )
+
+    thrown = next(row for row in record["checks"] if row["verdict"] == "contradicted")
+    assert thrown["finding_uid"] == wrote["checked"]["contradicted"]["finding_uid"], (
+        f"the published contradiction is not the one the run recorded: {thrown}"
+    )
+
+    # A contradicted finding is in no issue, in no required change and in no
+    # suggestion. It is published once, in the letter's own section, with the
+    # code that answered it.
+    assert not any(
+        str(one.get("finding_uid")) == thrown["finding_uid"]
+        for issue in issues["issues"]
+        for one in issue.get("members") or []
+    ), f"a finding the code check threw out is an issue member: {thrown}"
+    head, _, tail = letter.partition("## Checked against the code")
+    assert tail, f"the letter does not print what was checked against the code: {letter}"
+    assert "### Thrown out: the code does not do what the finding said" in tail, (
+        f"the thrown-out findings have no section of their own: {tail}"
+    )
+    for said in (thrown["title"], thrown["finding_uid"]):
+        assert said not in head, (
+            f"a finding the code check threw out reads as an open ask: {said!r}"
+        )
+        assert said in tail, (
+            f"a finding the code check threw out is not published at all: {said!r}"
+        )
+    quoted = "\n".join(
+        f"      {line}" if line else ""
+        for line in thrown["code_evidence"]["text"].splitlines()
+    )
+    assert quoted in tail, (
+        "the thrown-out finding is printed without the code that answered it"
+    )
+    assert thrown["note"] in tail, (
+        "the letter drops the reason the finding was thrown out"
+    )
+
+    # And the one the code neither bore out nor contradicted, which stands on
+    # its reviewer's reading with what was searched printed beside it.
+    unsettled = next(row for row in record["checks"] if row["verdict"] == "not-shown")
+    assert unsettled["title"] in tail and not unsettled.get("code_evidence"), (
+        f"a check that showed nothing published code anyway: {unsettled}"
+    )
+    for query in unsettled["searches"]:
+        assert f"`{query}`" in tail, (
+            f"the letter does not say the code was searched for {query!r}"
+        )
+    assert any(
+        str(one.get("finding_uid")) == unsettled["finding_uid"]
+        for issue in issues["issues"]
+        for one in issue.get("members") or []
+    ), f"a finding the code did not settle was dropped from the asks: {unsettled}"
 
 
 # The checks that read a run folder, which in 0.9 means the engine reads it.

@@ -309,6 +309,18 @@ const codeCount = (key) => (typeof codeRecord?.[key] === "number" ? codeRecord[k
 const codeOpened = codeCount("opened");
 const codeHeld = codeCount("files_in_snapshot");
 const codeSkipped = codeCount("files_skipped");
+// The data the code ships is listed and not copied, and a file is pulled in
+// only when a reviewer asks to read it. So the two numbers are separate claims:
+// how many there were to ask for, and how many were read. A file too large to
+// serve whole comes back as its first lines, and a finding about it rests on
+// those lines alone, which is why a partial read is named and not counted in
+// with the rest. source_cut is the one skip that costs the review something: a
+// cap that stopped the snapshot before it held all of the program source.
+const codeListed = codeCount("data_listed");
+const codeFetched = codeCount("data_fetched");
+const codePartial = codeCount("data_partial");
+const codeRefused = codeCount("data_refused");
+const codeCut = codeCount("source_cut");
 
 const sha = pipeline.sha ? String(pipeline.sha).slice(0, 8) : "";
 const journalSha = journalProfile.sha256 ? String(journalProfile.sha256).slice(0, 12) : ""
@@ -852,6 +864,16 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         `That reader opened ${codeOpened} of the ${codeHeld} file${codeHeld === 1 ? "" : "s"} in the copy. `
       )}
       {codeSkipped ? `${codeSkipped} path${codeSkipped === 1 ? "" : "s"} were left out of it and the reader did not see them. ` : ""}
+      {codeCut ? `A size cap left ${codeCut} program source file${codeCut === 1 ? "" : "s"} out of the copy, so the code reader read part of the code and not all of it. ` : ""}
+      {codeListed && codeFetched !== null ? (
+        `The snapshot listed ${codeListed} data file${codeListed === 1 ? "" : "s"} the code ships, of which the reader fetched ${codeFetched}. `
+      ) : ""}
+      {codeListed && codePartial ? (
+        `${codePartial} of those came back as a head of the file only, so a finding about one quotes the stored lines and nothing past the cut. `
+      ) : ""}
+      {codeListed && codeRefused ? (
+        `${codeRefused} was not served at all, and the report says so rather than treating it as read. `
+      ) : ""}
       A finding that rests on the code names the file and the lines, and the
       engine checked the quoted lines against that copy. Nothing else of the
       code is published here.

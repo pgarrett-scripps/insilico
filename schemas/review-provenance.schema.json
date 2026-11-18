@@ -380,6 +380,36 @@
                 },
                 "opened": { "type": "integer", "minimum": 0 },
                 "searches": { "type": "integer", "minimum": 0 },
+                "source_cut": {
+                  "$comment": "How many program source files a size cap left out of the copy. It is the count that bounds what the code reader could possibly have read: above zero, the reader read part of the code and not all of it, and nothing from the lane can be taken as saying the code never does something.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_listed": {
+                  "$comment": "How many data files the snapshot listed. Engine 0.10 stopped copying data and lists it instead, so the copy holds the code and the names of the data beside it, and a data file reaches the reader only when the reader asks for that one.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_fetched": {
+                  "$comment": "How many of those listed data files the code reader actually asked for and received. Published beside data_listed because the difference is the point: a lane that listed forty files and read one made a claim about one.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_partial": {
+                  "$comment": "How many of the fetched data files came back as a head of the file rather than the whole of it, because the file was larger than the lane serves. A finding about such a file rests on the lines that were stored and on no part of the file past the cut, and the page says so rather than leaving a reader to assume a whole file was read.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_refused": {
+                  "$comment": "How many data fetches the engine refused outright, by kind or by size. A refused file was never opened by anything, which is a stronger statement than a partial read and is counted apart from one.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_bytes": {
+                  "$comment": "How many bytes of data the lane was served in total. It bounds the whole data side of the review in one number, and it is bytes served rather than bytes on disk, because what the reader read is what the review rests on.",
+                  "type": "integer",
+                  "minimum": 0
+                },
                 "files_opened": {
                   "$comment": "Which files the code lane opened, by their path inside the copy. The counts say how much there was and how much was read, and this says which, because a code reader that opened the one file the paper names and no other is a narrower claim than its count can make.",
                   "type": "array",

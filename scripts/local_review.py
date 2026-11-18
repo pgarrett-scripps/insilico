@@ -175,21 +175,25 @@ WITHOUT_FINDINGS_STATUS = "complete-without-findings"
 # transport this path can describe is the one the plugin runs on.
 PUBLISHABLE_PROVIDERS = ("claude-code",)
 
-# The engine arms that are not a review of somebody else's manuscript, and so
-# are not a thing this path can publish as one. `draft-check` is what the engine
-# runs on a draft of your own: the engine's own arm table calls it "not a study
-# arm", it convenes no core reviewers, and nothing in it was written by a reader
-# of a submitted paper.
+# An arm that convenes no core reviewers is not a review of somebody else's
+# manuscript, and so is not a thing this path can publish as one. `draft-check`
+# is the one the engine ships: what it runs on a draft of your own, chosen
+# specialists and no core track, with nothing in it written by a reader of a
+# submitted paper.
 #
-# It has to be named here because the engine does not hold such a run back. Its
-# publishability rule reads the status, the findings source and the guards, none
-# of which a finished draft check fails, so `not_publishable_reasons` comes back
-# empty for one and there is no engine sentence to print. What refused it before
-# was the panel rule further down, "a published review needs at least one
+# The rule has to live here because the engine does not hold such a run back.
+# Its publishability rule reads the status, the findings source and the guards,
+# none of which a finished draft check fails, so `not_publishable_reasons` comes
+# back empty for one and there is no engine sentence to print. What refused it
+# before was the panel rule further down, "a published review needs at least one
 # reviewer", which is true but reads as a broken run rather than as the wrong
-# kind of run, and it would stop refusing the moment an arm with no reviewers
-# became publishable for some other reason.
-UNPUBLISHABLE_ARMS = ("draft-check",)
+# kind of run.
+#
+# The arm names themselves are the engine's, read from `review_arms()` rather
+# than copied into a list here. A list went stale in one direction only, and
+# silently: a new arm with no core track would have published as a peer review
+# until somebody noticed the name was missing.
+NO_REVIEWERS = 0
 
 # The route this pipeline bills on, named in every published record. The engine
 # has no billing policy of its own: it runs inside whatever subscription the
@@ -309,6 +313,66 @@ def engine_public(name: str, why: str):
             "PeerReviewAgents 0.10.0 or newer, or run this with the virtual "
             "environment the review ran in."
         ) from exc
+
+
+def planned_arms() -> dict | None:
+    """The engine's own table of what each arm runs, or `None` with no engine.
+
+    `review_arms()` is the engine's public answer to "what does this arm do",
+    one row per arm, and it is the only honest source for whether an arm
+    convenes core reviewers at all. `None` rather than a refusal because the
+    gate below has a second source for that one fact, the reviewer count the
+    run itself recorded, and refusing a publish over a missing arm table would
+    turn a question this path can still answer into a dead end.
+    """
+    try:
+        arms = getattr(importlib.import_module(ENGINE_PACKAGE), "review_arms")
+    except (ImportError, AttributeError):
+        return None
+    table = arms()
+    return table if isinstance(table, dict) else None
+
+
+def not_a_review_arm(run: dict, arms: dict | None) -> str:
+    """Why this run's arm is no review of a submitted manuscript, or "".
+
+    Two sources for one fact, in order. The engine's table says what the arm
+    convenes, which is the answer for any run on any machine with the engine
+    installed, and it names an arm the installed engine does not define rather
+    than waving it through. Without a table the run's own recorded reviewer
+    count stands in: it is the same number for the arms that ship, and a run
+    that convened nobody is not a review whichever source said so.
+    """
+    arm = str(run.get("arm") or "")
+    if arms is None:
+        reviewers = run.get("reviewers")
+        if isinstance(reviewers, int) and not isinstance(reviewers, bool):
+            if reviewers > NO_REVIEWERS:
+                return ""
+        else:
+            return ""
+        described = "an arm that convenes no core reviewers"
+    else:
+        planned = arms.get(arm)
+        if planned is None:
+            return (
+                f"This run used the {arm} arm, which the installed engine does "
+                f"not define. It runs {', '.join(sorted(arms))}. Publish with "
+                "the engine the review ran on, so what the record says the arm "
+                "did is what the arm does."
+            )
+        if planned.get("reviewers") != NO_REVIEWERS:
+            return ""
+        described = str(planned.get("summary") or "").strip() or (
+            "an arm that convenes no core reviewers"
+        )
+    return (
+        f"This run used the {arm} arm, which the engine describes as "
+        f"\"{described}\". It convenes no core reviewers, so nobody outside the "
+        "authorship read the paper and there is no review in it to publish. Run "
+        "the review arm the study asks for, or drop --publish to keep this "
+        "bundle as a rehearsal."
+    )
 
 
 def engine_record() -> dict:
@@ -729,7 +793,16 @@ CODE_FOLDER = "folder"
 # The keys of the engine's code block that are a count or a word, copied as
 # they are. `snapshot` and `manifest` are deliberately not among them, which
 # `code_record` explains.
-CODE_COUNTS = ("files_in_snapshot", "files_skipped", "opened", "searches")
+#
+# `source_cut` is the count that limits what the review may claim: above zero a
+# cap left program source out of the snapshot, so the code reader did not have
+# the whole of the code and no finding from it may say the code never does
+# something. The five `data_` counts are the data the code ships, which the
+# engine lists rather than copies and fetches only when a reviewer asks for a
+# file, so what was there and what was read are two different numbers and the
+# second is the one that says what the review rests on.
+CODE_COUNTS = ("files_in_snapshot", "files_skipped", "opened", "searches", "source_cut",
+               "data_listed", "data_fetched", "data_partial", "data_refused", "data_bytes")
 
 
 def code_record(reading: dict) -> dict:
@@ -960,7 +1033,91 @@ def issues_document(reading: dict) -> dict:
     return {
         "schema_version": stamp,
         "issue_ids_used": [str(i) for i in _list(document.get("issue_ids_used"))],
+        # The code check lives in this document and nowhere else a reader of the
+        # run can reach: `read_run` answers the review, and the rows that say
+        # which findings the code threw out are written here beside the issues.
+        "code_check": code_check_record(document),
     }
+
+
+# How the code check can answer one finding. `contradicted` is the one with
+# teeth: the code does not do what the finding said, the engine refuses the
+# editor if it groups such a finding into an issue, and so this pipeline may
+# never print one as something the authors have to change.
+CODE_CHECK_VERDICTS = ("contradicted", "confirmed", "not-shown")
+
+# What one answer of the code check publishes. `recorded`, the moment the row
+# was written, is deliberately not among them: the run record already says when
+# the run happened, and the minute one finding was answered tells a reader of
+# the review nothing it can use.
+CODE_CHECK_FIELDS = ("finding_uid", "verdict", "slot", "track", "title", "severity",
+                     "document", "line", "end_line", "quote", "finding_slot",
+                     "finding_track", "basis", "assumed_method", "note")
+
+# The fields of the code the check read to decide one finding, which the engine
+# verified against the snapshot before it stored the row. The quoted text and
+# its address, and nothing else of the file.
+CODE_EVIDENCE_FIELDS = ("path", "start_line", "end_line", "text", "sha256")
+
+
+def code_check_record(document: dict) -> dict | None:
+    """What reading the code did to the findings that rested on a method.
+
+    `None` on a run that was given no code, which is the engine's own answer
+    for one and is kept as `None` rather than as an empty record: a review with
+    no snapshot had no such stage, and an empty block would read as a stage
+    that ran and found nothing to say.
+
+    Every row is copied field by field rather than passed through. The rows are
+    the only place a thrown-out finding appears at all, so they go into the
+    published bundle, and a bundle is read by strangers: what is published is
+    the finding the check was about, the verdict, the quoted lines of code that
+    decided it and the note written for the authors. The timestamps and the
+    engine's own bookkeeping stay in the run folder.
+    """
+    record = _dict(document.get("code_check"))
+    if not document.get("code_check") or not record:
+        return None
+    rows = []
+    for row in _list(record.get("checks")):
+        row = _dict(row)
+        kept = {key: row.get(key) for key in CODE_CHECK_FIELDS if row.get(key) not in (None, "")}
+        kept["verdict"] = str(row.get("verdict") or "")
+        evidence = _dict(row.get("code_evidence"))
+        if evidence:
+            kept["code_evidence"] = {
+                key: evidence.get(key) for key in CODE_EVIDENCE_FIELDS
+                if evidence.get(key) not in (None, "")
+            }
+        searched = [str(one).strip() for one in _list(row.get("searches")) if str(one).strip()]
+        if searched:
+            kept["searches"] = searched
+        rows.append(kept)
+    counts = _dict(record.get("counts"))
+    return {
+        "cap": record.get("cap"),
+        "checked": record.get("checked"),
+        "over_cap": record.get("over_cap"),
+        "counts": {word: counts.get(word, 0) for word in CODE_CHECK_VERDICTS},
+        "checks": rows,
+    }
+
+
+def contradicted_findings(package: dict) -> set[str]:
+    """Every finding the code check threw out, by uid.
+
+    One set, read by the publish gate and by the renderer. A finding in it was
+    raised by a reviewer, read against the code, and found to rest on a claim
+    the code contradicts. It stays on the ledger and in this review's own
+    account of what was thrown out, and it may not appear anywhere in the
+    bundle as something the authors are being asked to do.
+    """
+    record = _dict(package.get("code_check"))
+    return {
+        str(_dict(row).get("finding_uid") or "")
+        for row in _list(record.get("checks"))
+        if str(_dict(row).get("verdict") or "") == "contradicted"
+    } - {""}
 
 
 def assert_issue_vocabulary() -> None:
@@ -1044,6 +1201,11 @@ def review_package(reading: dict) -> dict:
         "review_guard_status": reading.get("guard_status"),
         "findings_source": reading.get("findings_source"),
         "quarantined_findings": _list(reading.get("quarantined")),
+        # What the code check did, or `None` on a run that was given no code.
+        # It is carried in the package rather than derived at render time
+        # because a thrown-out finding appears nowhere else: it is in no issue,
+        # and the next round is handed this bundle.
+        "code_check": document.get("code_check"),
     }
 
 
@@ -1726,6 +1888,67 @@ def code_lane_clause(run: dict) -> str:
     return (
         f" The code behind the paper was reviewed beside it, from {where}{at}"
         f"{dirty}, by one more specialist reading a copy the engine took.{read}{left}"
+        f"{code_data_clause(code)}{code_cut_clause(code)}"
+    )
+
+
+def code_data_clause(code: dict) -> str:
+    """How much of the data the code ships the reviewer actually read.
+
+    The engine lists a repository's data files and copies one in only when a
+    reviewer asks to read it, because the data can run to gigabytes while one
+    small table may hold the answer to a finding. So there are two numbers and
+    they are not the same claim: how many data files were there to ask for, and
+    how many were fetched. A file too large to serve whole comes back as its
+    first lines only, and a finding may quote nothing but the lines that were
+    stored, which is why a partial read is named rather than counted in with
+    the rest. A refused one was never opened at all.
+
+    A run whose snapshot listed no data file gets no sentence. There is nothing
+    to report and a sentence saying zero of zero would read as a limitation of
+    the review rather than as a fact about the repository.
+    """
+    listed = code.get("data_listed")
+    fetched = code.get("data_fetched")
+    if not isinstance(listed, int) or not listed or not isinstance(fetched, int):
+        return ""
+    clause = (
+        f" The snapshot listed {listed} data file(s) the code ships, of which the "
+        f"code reader fetched {fetched}"
+    )
+    partial = code.get("data_partial")
+    refused = code.get("data_refused")
+    said = []
+    if isinstance(partial, int) and partial:
+        said.append(
+            f"{partial} of those came back as a head of the file only, so a finding "
+            "about one may quote only the lines that were stored"
+        )
+    if isinstance(refused, int) and refused:
+        said.append(f"{refused} were refused and never opened")
+    if said:
+        return clause + ": " + ", and ".join(said) + "."
+    return clause + "."
+
+
+def code_cut_clause(code: dict) -> str:
+    """What a size cap left out of the snapshot, where it cut the code itself.
+
+    `files_skipped` counts paths left out for every reason, most of them
+    reasons that change nothing about the review: a binary, a file the
+    repository does not track, a folder of this tool's own runs. `source_cut`
+    is the one that does change something. Above zero, a cap stopped the
+    snapshot before it held all of the program source, so the code reader read
+    part of the code, and a reader of this review has to be told that before
+    reading anything the review says the code does not do.
+    """
+    cut = code.get("source_cut")
+    if not isinstance(cut, int) or isinstance(cut, bool) or cut <= 0:
+        return ""
+    return (
+        f" A size cap left {cut} program source file(s) out of that copy, so the "
+        "code reader read part of the code and not all of it, and nothing here "
+        "can be read as saying the code never does something."
     )
 
 
@@ -2176,6 +2399,7 @@ def render_decision_letter(
             "",
         ]
     lines += _prior_round_section(package)
+    lines += _code_check_section(package)
     rulings = [r for r in _list(package.get("escalation_rulings")) if isinstance(r, dict)]
     if rulings:
         index = finding_index(package)
@@ -2197,6 +2421,112 @@ def render_decision_letter(
             if text:
                 lines += [text, ""]
     return "\n".join(lines)
+
+
+def _code_check_section(package: dict) -> list[str]:
+    """What the code said about the findings that rested on a method claim.
+
+    Nothing at all on a run with no code, and nothing on a run whose code check
+    answered nothing and left nothing over its cap.
+
+    The section exists for the thrown-out findings. A finding the code
+    contradicts is in no issue, in no required change and in no suggestion, so
+    without this section an author would never learn that it was raised at all,
+    or that it was read against the code and dropped. Each one is printed with
+    the sentence of the paper it was raised against, the lines of code that
+    decided it and the note the check wrote, because the reason a finding was
+    dropped is itself something an author may want to argue with. The confirmed
+    ones are printed too, with their code, so an author can see that a method
+    claim in the letter was not taken on trust, and the unsettled ones say what
+    was searched rather than leaving the code's silence to be read as a verdict.
+    """
+    record = _dict(package.get("code_check"))
+    if not package.get("code_check"):
+        return []
+    rows = [_dict(row) for row in _list(record.get("checks"))]
+    over_cap = record.get("over_cap")
+    over_cap = over_cap if isinstance(over_cap, int) and not isinstance(over_cap, bool) else 0
+    if not rows and not over_cap:
+        return []
+    lines = [
+        "## Checked against the code",
+        "",
+        "Each finding below asserted how something was computed, sampled, "
+        "filtered or selected. The code behind the paper was read at the "
+        "passage that decides it, before the finding was allowed to become one "
+        "of this review's asks.",
+        "",
+    ]
+    headings = {
+        "contradicted": "Thrown out: the code does not do what the finding said",
+        "confirmed": "Confirmed by the code",
+        "not-shown": "The code does not settle it",
+    }
+    leads = {
+        "contradicted": (
+            "These are in no issue above, in no required change and in no "
+            "suggestion. They are printed here because they were raised, and "
+            "because the reason they were dropped is itself something an author "
+            "may want to argue with."
+        ),
+        "confirmed": (
+            "The code says what the finding said it says. These findings are in "
+            "the letter above like any other, and the code they were checked "
+            "against is printed here."
+        ),
+        "not-shown": (
+            "The code neither bore these out nor contradicted them. What was "
+            "searched is printed so the silence is not read as a verdict either "
+            "way, and each finding stands on its reviewer's reading of the "
+            "manuscript alone."
+        ),
+    }
+    for verdict in CODE_CHECK_VERDICTS:
+        group = [row for row in rows if str(row.get("verdict") or "") == verdict]
+        if not group:
+            continue
+        lines += [f"### {headings[verdict]}", "", leads[verdict], ""]
+        for row in group:
+            lines += _code_check_entry(row)
+    if over_cap:
+        lines += [
+            f"**Not checked:** {over_cap} further finding(s) rested on a method "
+            "claim and fell past the limit on this stage. They were left exactly "
+            "as their reviewers filed them, and the code was not read against "
+            "them, which is neither a check nor a clearance.",
+            "",
+        ]
+    return lines
+
+
+def _code_check_entry(row: dict) -> list[str]:
+    """One answer of the code check, with the code it rests on.
+
+    The tags describe the finding and not the lane that checked it. A check row
+    carries two slots and two tracks, its own and the finding's, and reading its
+    own would label every entry here as the work of the code reader rather than
+    of the reviewer who raised it.
+    """
+    title = str(row.get("title") or "Untitled finding").strip()
+    about = dict(row, track=row.get("finding_track") or "", slot=row.get("finding_slot") or "")
+    lines = [f"- **{title}** ({_tags(about)})", ""]
+    quote = str(row.get("quote") or "").strip()
+    if quote:
+        lines += [f"  > {quote}", ""]
+    assumed = str(row.get("assumed_method") or "").strip()
+    if assumed:
+        lines += [f"  **The step it assumed:** {assumed}", ""]
+    lines += code_evidence_lines(row)
+    searched = [str(one) for one in _list(row.get("searches")) if str(one).strip()]
+    if searched:
+        lines += [f"  **Searched for:** {', '.join(f'`{one}`' for one in searched)}", ""]
+    note = str(row.get("note") or "").strip()
+    if note:
+        lines += [f"  {note}", ""]
+    uid = str(row.get("finding_uid") or "").strip()
+    if uid:
+        lines += [f"  `{uid}`", ""]
+    return lines
 
 
 def _prior_round_section(package: dict) -> list[str]:
@@ -4916,6 +5246,34 @@ def assert_publishable_issues(package: dict) -> None:
             "above it, so an id left out of it would be handed to a different "
             "problem once this one is resolved."
         )
+    # A finding the code check threw out may not be published as an ask. The
+    # engine refuses the editor that groups one, so a bundle holding one is a
+    # bundle built from something the engine would not have accepted, and the
+    # answer is to refuse it here rather than to drop the member quietly: a
+    # letter is what the authors read, and a required change resting on a
+    # finding the code contradicts is the one mistake this stage exists to
+    # prevent. The finding is still published, in the thrown-out section, which
+    # is where a reader can see both the claim and the code that answered it.
+    thrown_out = contradicted_findings(package)
+    if thrown_out:
+        published = sorted({
+            f"{_dict(row).get('id')} ({uid})"
+            for row in rows
+            for member in _list(_dict(row).get("members"))
+            for uid in [str(_dict(member).get("finding_uid") or "")]
+            if uid in thrown_out
+        })
+        if published:
+            raise CommandError(
+                f"{len(published)} issue member(s) in this run name a finding "
+                f"the code check threw out: {', '.join(published[:5])}. The code "
+                "was read at the passage that decides the claim and does not do "
+                "what the finding said, so the finding is published in the "
+                "thrown-out section of the letter and in no issue. An issue "
+                "holding one would put it to the authors as a change they have "
+                "to make. Re-run the review on an engine that refuses the "
+                "grouping rather than publishing this bundle."
+            )
 
 
 def assert_the_round_ruled_against_its_prior(prepared: dict, package: dict) -> None:
@@ -5237,16 +5595,9 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             "is a claim about a Claude subscription, so a run on another "
             "transport cannot be published through it."
         )
-    arm = str(run.get("arm") or "")
-    if arm in UNPUBLISHABLE_ARMS:
-        raise CommandError(
-            f"This run used the {arm} arm, which is what the engine runs on a "
-            "draft of your own rather than a review of a submitted manuscript. "
-            "It convenes no core reviewers and nobody outside the authorship "
-            "read the paper, so there is no review in it to publish. Run the "
-            "review arm the study asks for, or drop --publish to keep this "
-            "bundle as a rehearsal."
-        )
+    refusal = not_a_review_arm(run, planned_arms())
+    if refusal:
+        raise CommandError(refusal)
     if not reading.get("publishable"):
         # The engine names its own reasons, one sentence each, and that list is
         # never empty while the flag is false. Printing its words rather than a

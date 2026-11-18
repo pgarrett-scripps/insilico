@@ -16,6 +16,7 @@ from smoke_checks.environment import check_environment_is_portable_and_secret_fr
 from smoke_checks.local import (
     check_a_credential_or_an_installed_path_is_a_fact_and_never_prose,
     check_a_destination_outside_its_tree_is_refused,
+    check_a_finding_the_code_check_threw_out_is_never_an_ask,
     check_a_first_round_claims_no_standing_against_a_round_that_never_ran,
     check_a_hand_edited_prior_file_is_not_the_one_that_round_published,
     check_a_home_or_temporary_path_is_refused_on_anybodys_machine,
@@ -158,6 +159,8 @@ def main() -> int:
     print("ok  an issue carrying a severity this release cannot sort is refused")
     check_a_standing_this_release_never_publishes_is_refused()
     print("ok  a standing outside the engine's five words is refused by name")
+    check_a_finding_the_code_check_threw_out_is_never_an_ask()
+    print("ok  an issue resting on a finding the code check threw out is refused")
     check_a_surviving_quote_is_printed_as_the_authors_own_words()
     print("ok  a passage that still reads the same is printed as the authors wrote it")
     check_a_first_round_claims_no_standing_against_a_round_that_never_ran()

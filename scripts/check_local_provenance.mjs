@@ -102,6 +102,15 @@ function code(overrides = {}) {
     files_skipped: 3,
     opened: 4,
     searches: 6,
+    // The copy held all of the program source, and the two data files the
+    // repository ships were both listed, one of them fetched, and that one was
+    // small enough to come back whole.
+    source_cut: 0,
+    data_listed: 2,
+    data_fetched: 1,
+    data_partial: 0,
+    data_refused: 0,
+    data_bytes: 4096,
     files_opened: [
       "analysis/pipeline.py",
       "analysis/thresholds.py",

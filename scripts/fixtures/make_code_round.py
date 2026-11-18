@@ -22,6 +22,11 @@ What the publish path gets out of this that it cannot get anywhere else:
   what was held and what a reviewer opened;
 * one finding carrying `code_evidence`, which the engine stored only because the
   quoted lines are the lines the snapshot holds;
+* a data file fetched whole and a second one too large to be served whole, so
+  the counts the page states about data are counts of something that happened;
+* a code check that answered three findings three different ways, one of them
+  contradicted, which is the finding the publish path has to keep out of every
+  issue and still account for;
 * a snapshot folder inside the run, whose absolute path the record must never
   publish.
 
@@ -56,6 +61,10 @@ from make_engine_rounds import pdf_bytes, quoted_once, refused, whole_paper  # n
 # planned in, with one core reviewer and one specialist track beside the code
 # one so the run is the smallest one that has a code lane at all.
 ARM = "full-two-track"
+# The slot this engine plans on a run with code beside the paper. It reads the
+# code behind every finding that rests on how something was computed and files
+# no finding of its own.
+CHECK_SLOT = "code-check"
 REVIEWERS = 1
 TRACKS = ["stats"]
 TITLE = "Features Accepted At One Percent: A Fixture Manuscript"
@@ -83,10 +92,33 @@ RESULTS = (
 
 PAGES = (("Abstract", ABSTRACT), ("Methods", METHODS), ("Results", RESULTS))
 
+# The data behind the counts, which this engine lists rather than copies: a data
+# file reaches a reviewer only when the reviewer asks for that one file. Two of
+# them, because the fact the page has to state about data is how much of what
+# was listed came back whole. The small table is served as it stands. The wide
+# one is larger than the lane serves in one answer, so it comes back as a head
+# of itself, and a finding about it may quote only the lines that were served.
+SMALL_DATA = "measurements.csv"
+WIDE_DATA = "instrument-counts.csv"
+# Enough rows to put the file over the per-file cap the lane serves whole,
+# which is what makes the fetch of it a partial one. The number is here rather
+# than inline because the fact the fixture needs is the size and not the rows.
+WIDE_DATA_ROWS = 9000
+
+
+def wide_table() -> str:
+    """A data file too large to be served whole, built rather than pasted."""
+    rows = ["instrument,feature,fdr,retained"]
+    for number in range(1, WIDE_DATA_ROWS + 1):
+        rows.append(f"inst-{number % 3 + 1},feature-{number},0.0{number % 9 + 1},1")
+    return "\n".join(rows) + "\n"
+
+
 # The code behind the paper, as a folder a run can be given. Four files are text
-# source and are copied into the snapshot. Three are not: a reading of
-# measurements, a binary note and a file whose name says it may hold a secret,
-# which the snapshot leaves out by name before it looks at the contents.
+# source and are copied into the snapshot. Two data tables are listed beside
+# them and fetched only if asked for. Two files are neither: a binary note and a
+# file whose name says it may hold a secret, which the snapshot leaves out by
+# name before it looks at the contents.
 THRESHOLD_LINE = "FDR_THRESHOLD = 0.05"
 CODE_FILES = {
     "analysis/pipeline.py": (
@@ -107,7 +139,8 @@ CODE_FILES = {
         "\n"
         "Run `python -m analysis.pipeline` to reproduce every count in the paper.\n"
     ),
-    "measurements.csv": "feature,fdr\n1,0.004\n2,0.031\n",
+    SMALL_DATA: "feature,fdr\n1,0.004\n2,0.031\n",
+    WIDE_DATA: wide_table(),
     "notes.dat": "not text source either\n",
     "prod.env": "TOKEN=not-a-real-token\n",
 }
@@ -130,6 +163,12 @@ STATS_FINDING = {
     "comment": "Three counts with no spread around them cannot be compared. "
                "Report the counts with their uncertainty, or say that each is a "
                "single measurement.",
+    # The step this finding takes for granted, which is what sends it to the
+    # code check: a reviewer saying the paper reports no spread is reading the
+    # paper, and a reviewer saying the pipeline computes none is reading code it
+    # has not opened.
+    "assumed_method": "The pipeline computes no spread around the per "
+                      "instrument counts anywhere in it.",
 }
 CODE_FINDING = {
     "title": "The code accepts five percent where the paper says one",
@@ -142,6 +181,24 @@ CODE_FINDING = {
                "counts were taken with the wrong one.",
     "code_path": "analysis/pipeline.py",
     "code_quote": THRESHOLD_LINE,
+    "assumed_method": "The threshold the pipeline applies is the one the "
+                      "counts in the paper were taken under.",
+}
+# The finding the code throws out. It is filed like any other, by a reviewer
+# reading the manuscript, and the step it assumes is one the pipeline does not
+# take: nothing in the code drops an instrument. A fixture needs it because a
+# contradicted finding is the one case the publish path has to get right
+# without the engine's help, being in no issue and so in nothing the letter
+# prints as an ask.
+DROPPED_FINDING = {
+    "title": "The totals leave out the instrument with the fewest features",
+    "sentence": RESULTS[0],
+    "severity": "moderate",
+    "comment": "If the lowest instrument is dropped before the totals are "
+               "taken, the totals are of two instruments and the paper reports "
+               "them as three. Say which instruments each total covers.",
+    "assumed_method": "The pipeline drops the instrument with the fewest "
+                      "retained features before the totals are taken.",
 }
 
 ISSUES = (
@@ -173,6 +230,46 @@ ISSUES = (
         "statement": "State the acceptance threshold where the counts are "
                      "reported as well as in the methods section.",
         "members": (CORE_FINDING["title"],),
+    },
+)
+
+
+# What the code check answers, one row per finding it is handed. The three
+# verdicts are all exercised on purpose: a confirmed finding stays in the
+# letter with the code printed beside it, a contradicted one is thrown out of
+# every issue and published only as a thrown-out finding, and a not-shown one
+# stands on its reviewer's reading of the manuscript with the searches printed
+# so the code's silence is not read as a verdict. `code_lines` is a line range
+# of the fixture file above, so the quote is the snapshot's own text rather than
+# text typed twice, which is the only kind of quote the engine stores.
+CHECKS = (
+    {
+        "finding": CODE_FINDING,
+        "verdict": "confirmed",
+        "code_path": "analysis/pipeline.py",
+        "code_lines": (THRESHOLD_LINE, THRESHOLD_LINE),
+        "note": "The pipeline sets the accepted false discovery rate to five "
+                "percent at the line quoted here, and every count in the paper "
+                "was taken through that filter.",
+    },
+    {
+        "finding": DROPPED_FINDING,
+        "verdict": "contradicted",
+        "code_path": "analysis/pipeline.py",
+        "code_lines": ("def keep(rows):", "return [row for row"),
+        "note": "The only filter the pipeline applies is on the false "
+                "discovery rate of a row. Nothing in it drops an instrument, "
+                "ranks the instruments or counts features per instrument, so "
+                "the totals are not of two instruments out of three.",
+    },
+    {
+        "finding": STATS_FINDING,
+        "verdict": "not-shown",
+        "searches": ("std", "stderr", "confidence", "analysis/pipeline.py"),
+        "note": "Nothing in the copy computes a spread, and the copy holds four "
+                "source files out of a repository that may hold more. The "
+                "finding stands on the paper reporting none, which is what its "
+                "reviewer read.",
     },
 )
 
@@ -244,6 +341,20 @@ def line_of(path: str, needle: str) -> int:
     raise SystemExit(f"{needle} is not in the fixture {path}")
 
 
+def code_slice(path: str, first: str, last: str) -> tuple[int, int, str]:
+    """The lines of the fixture file at *path* from *first* through *last*.
+
+    A verdict carries the passage of the snapshot that decides it, quoted
+    exactly as the snapshot holds it, and the engine stores the verdict only if
+    the text is what stands at those lines. So the range is found by its own
+    content and the text is cut out of the fixture, which is the same file the
+    snapshot was taken from.
+    """
+    start, end = line_of(path, first), line_of(path, last)
+    rows = CODE_FILES[path].splitlines()[start - 1:end]
+    return start, end, "\n".join(rows)
+
+
 def file_a_finding(server, token: str, slot: str, paper: str, filing: dict) -> str:
     """One finding, with its code evidence where the filing carries some."""
     quoted_once(paper, filing["sentence"])
@@ -252,6 +363,8 @@ def file_a_finding(server, token: str, slot: str, paper: str, filing: dict) -> s
         line = line_of(filing["code_path"], filing["code_quote"])
         extra = {"code_path": filing["code_path"], "code_start_line": line,
                  "code_end_line": line, "code_quote": filing["code_quote"]}
+    if filing.get("assumed_method"):
+        extra["assumed_method"] = filing["assumed_method"]
     stored = server.submit_finding(
         token, title=filing["title"], quote=filing["sentence"],
         comment=filing["comment"], severity=filing["severity"], kind="question",
@@ -280,13 +393,14 @@ def one_run(out: Path, run_dir: Path) -> dict:
     read.seal()
     codes = {row["slot"]: row["claim_code"] for row in read.opened["claim_codes"]}
     planned = sorted(codes)
-    for slot in ("core-1", "spec-stats", "spec-code", "editor", "recorder"):
+    for slot in ("core-1", "spec-stats", "spec-code", CHECK_SLOT, "editor", "recorder"):
         if slot not in codes:
             raise SystemExit(f"the run planned {planned}, which has no {slot} to claim")
 
     uids: dict[str, str] = {}
-    for slot, filing in (("core-1", CORE_FINDING), ("spec-stats", STATS_FINDING),
-                         ("spec-code", CODE_FINDING)):
+    for slot, filings in (("core-1", (CORE_FINDING, DROPPED_FINDING)),
+                          ("spec-stats", (STATS_FINDING,)),
+                          ("spec-code", (CODE_FINDING,))):
         claim = server.claim_agent(slot, codes[slot])
         refused(claim, f"claim {slot}")
         token = claim["agent_token"]
@@ -299,13 +413,60 @@ def one_run(out: Path, run_dir: Path) -> dict:
             refused(found, "search_code")
             served = server.read_code(token, path=CODE_FINDING["code_path"])
             refused(served, "read_code")
-        uids[filing["title"]] = file_a_finding(server, token, slot, paper, filing)
+            # The data the counts were taken from, which the snapshot lists and
+            # does not copy. Reading one is what fetches it: the small table
+            # comes back whole and the wide one comes back as a head of itself,
+            # which is the pair of facts the published page has to state.
+            for name in (SMALL_DATA, WIDE_DATA):
+                fetched = server.read_code(token, path=name)
+                refused(fetched, f"read_code {name}")
+                if name == WIDE_DATA and not fetched.get("partial"):
+                    raise SystemExit(
+                        f"{name} is meant to be larger than the lane serves "
+                        f"whole, and it came back entire: {sorted(fetched)}"
+                    )
+        for filing in filings:
+            uids[filing["title"]] = file_a_finding(server, token, slot, paper, filing)
         closed = server.submit_report(
             token,
-            summary=f"{slot} read the manuscript and filed one finding.",
-            limitations=["No code was run and no data was obtained."],
+            summary=f"{slot} read the manuscript and filed {len(filings)} finding(s).",
+            limitations=["No code was run."],
         )
         refused(closed, f"submit_report {slot}")
+
+    # The code check, which runs before the editor because its verdicts decide
+    # what the editor may group: a finding the code contradicts is out of the
+    # issues, and the engine refuses an editor that puts one in.
+    checker = server.claim_agent(CHECK_SLOT, codes[CHECK_SLOT])
+    refused(checker, f"claim {CHECK_SLOT}")
+    token = checker["agent_token"]
+    queue = server.method_claims(token)
+    refused(queue, "method_claims")
+    queued = {str(row["finding_uid"]) for row in queue["claims"]}
+    for check in CHECKS:
+        title = check["finding"]["title"]
+        uid = uids[title]
+        if uid not in queued:
+            raise SystemExit(
+                f"{title!r} was meant to reach the code check and the queue "
+                f"holds {len(queued)} other finding(s): {queue['claims']}"
+            )
+        if check["verdict"] == "not-shown":
+            extra = {"searches": list(check["searches"])}
+        else:
+            start, end, text = code_slice(check["code_path"], *check["code_lines"])
+            extra = {"code_path": check["code_path"], "code_start_line": start,
+                     "code_end_line": end, "code_quote": text}
+        answered = server.submit_code_check(
+            token, finding_uid=uid, verdict=check["verdict"], note=check["note"], **extra,
+        )
+        refused(answered, f"submit_code_check {check['verdict']}")
+    closed = server.submit_report(
+        token,
+        summary=f"{CHECK_SLOT} read the code behind three findings and answered each one.",
+        limitations=["The code was read and never run."],
+    )
+    refused(closed, f"submit_report {CHECK_SLOT}")
 
     editor = server.claim_agent("editor", codes["editor"])
     refused(editor, "claim editor")
@@ -367,6 +528,23 @@ def one_run(out: Path, run_dir: Path) -> dict:
         "code_skipped": block.get("files_skipped", 0),
         "code_opened": sorted(block.get("files_opened") or []),
         "code_evidence_finding": CODE_FINDING["title"],
+        # What the data side of the lane did, which the engine counts and the
+        # published page states: how much was listed, how much of it was
+        # fetched, and how much of that came back as a head of the file only.
+        "data_listed": block.get("data_listed", 0),
+        "data_fetched": block.get("data_fetched", 0),
+        "data_partial": block.get("data_partial", 0),
+        "data_refused": block.get("data_refused", 0),
+        # The findings the code check answered, by verdict, so a check reading
+        # this run knows which uid is meant to be thrown out of the issues and
+        # which is meant to survive them.
+        "checked": {
+            check["verdict"]: {
+                "title": check["finding"]["title"],
+                "finding_uid": uids[check["finding"]["title"]],
+            }
+            for check in CHECKS
+        },
     }
 
 
