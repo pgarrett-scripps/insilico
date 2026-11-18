@@ -16,7 +16,7 @@ docs/                     # the record, written by the pipeline
 └── reviews/<year>/<slug>/v<N>/r<M>/ # manuscript draft, then review attempt
     ├── provenance.json   # decision, models, code and configuration fingerprints
     ├── manifest.json     # SHA-256 for every published artifact
-    ├── round.json        # machine-readable record a later round rules on
+    ├── round.json        # machine-readable record of what this review required
     ├── summary.md  decision_letter.md  manuscript_stats.md
     ├── review_*.md       # one per core reviewer
     ├── audit_*.md        # one per specialist track
@@ -32,7 +32,7 @@ src/                      # the site
 
 scripts/
 ├── fetch_preprint.py     # URL to PDF and metadata
-├── preview_submission.py # issue metadata and editor command preview
+├── preview_submission.py # issue metadata and next-review preview
 ├── local_review.py       # the current route: prepare, then publish a local run
 ├── review_plan.py        # where a review of a given draft belongs
 ├── review_bundle.py      # writes a bundle the site can render
@@ -44,7 +44,6 @@ scripts/
 
 .github/workflows/
 ├── submission-preview.yml # metadata preview on new or edited submissions
-├── review.yml            # retired stub, points at the local-review skill
 ├── ci.yml                # checks the data contract and that the site builds
 ├── publish.yml           # builds and deploys on merge
 └── check-updates.yml     # monthly sweep for stale reviews
@@ -89,9 +88,9 @@ name its own decision, and `provenance.generator.decision_source` is pinned to
 
 Reviews published before this route ran on a GitHub runner against a paid API
 key, as a desk screen, a five-reviewer panel, two audits and a debate. That path
-is retired. `.github/workflows/review.yml` is now a manual-only stub that fails
-with a pointer here, and the `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY`
-repository secrets are no longer read by anything. `.env.example` is gone with
+is retired. The workflow that dispatched it is gone, nothing under
+`.github/workflows/` can start a review at all, and the `ANTHROPIC_API_KEY` and
+`OPENROUTER_API_KEY` repository secrets are no longer read by anything. `.env.example` is gone with
 them. It told a contributor to paste an Anthropic key into `.env`, which no
 code here reads any more and which the local route forbids outright.
 
@@ -115,9 +114,9 @@ Opening or editing an issue with the `submission` label runs
 `submission-preview.yml`. The workflow resolves public archive metadata without
 downloading the PDF or calling a model. It then creates or updates one bot
 comment. The comment reports the title, authors, posting date, current draft,
-and any published In Silico drafts. It also recommends `/review`, `/review
-replace`, or a revision round based on the archive version and the bundles
-already in `docs/reviews/`.
+and any published In Silico drafts. It also says which review of the paper is
+the one to run next, based on the archive version and the bundles already in
+`docs/reviews/`.
 
 The comment carries a hidden marker, so an edit refreshes the existing comment
 instead of adding another. The issue body is untrusted input. It reaches Python
@@ -138,17 +137,20 @@ there to design against. No fixtures or seeding are needed. `npm run build` writ
 Everything visual is a token in `src/styles/global.css`, redefined for light and
 dark. Change a token and it moves everywhere it is used.
 
-## Editor commands
+## Picking the next review
 
-An editor no longer triggers a review from the submission issue. The command
-preview still appears on new submissions, because it records which draft is
-current and whether this repository has reviewed it, but acting on it means
-running the `local-review` skill in a checkout.
+An editor no longer triggers a review from the submission issue, and nothing
+reads a command typed on one. The preview still appears on new submissions,
+because it records which draft is current, whether this repository has reviewed
+it and which review is the one to run next, and acting on it means running the
+`local-review` skill in a checkout. That skill's own first step lists the open
+`submission` issues oldest first and reads these previews, so the queue is the
+issue list rather than a second record kept somewhere else.
 
-Whether a run is a first look or a revision round is still not something an
-editor declares. The archive version selects `v<N>`. A same-draft re-review
-requires `--replace` and creates the next `r<M>`. No published attempt is ever
-replaced or edited.
+Where a run lands is still not something an editor declares. The archive version
+selects `v<N>`. A same-draft re-review requires `--replace` and creates the next
+`r<M>`. No published attempt is ever replaced or edited, and no run is given an
+earlier review of the paper to rule against.
 
 ## Running a review
 
@@ -249,7 +251,7 @@ $PY scripts/local_review.py publish \
 
 `publish` writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`, one
 `audit_<track>.md` for each of the six specialist tracks the run reported on,
-`editor-package.json`, `round.json`, `provenance.json` and `manifest.json`. A
+`issues.json`, `round.json`, `provenance.json` and `manifest.json`. A
 track the arm asked for with no report in the run is named as a gap on the
 rendered page rather than quietly left out. It refuses to overwrite an existing
 bundle.
@@ -311,8 +313,8 @@ scheme's `//` survives the collapse, because `https://home/x` is a URL and
 
 A backslash is two characters at once and nothing in the text says which one it
 is, so the canonical form is built twice and a hit from either counts. In one
-reading the escape is dropped first, which is what `\/home\/ty\/x` and
-`ty\-MS\-7C80` need. In the other the backslash is folded to a separator first,
+reading the escape is dropped first, which is what `\/home\/opal\/x` and
+`lab\-WS\-01` need. In the other the backslash is folded to a separator first,
 which is what `\opt\.cache\insilico` needs, since dropping the escape first
 would eat the separator in front of a segment that starts with `.`, `-` or `_`
 and turn the path into `/opt.cache/insilico`. Neither reading is the right one
@@ -321,7 +323,7 @@ and the scan does not try to pick.
 There is
 no left or right boundary on the match, no
 vocabulary that is exempt and no prose-only mode, because a string like
-`/home/ty` or `ty-ms-7c80` cannot turn up in a review of a paper or in this
+`/home/opal` or `lab-ws-01` cannot turn up in a review of a paper or in this
 repository's own vocabulary. Nothing waives one. No flag reaches it, an
 allowance that merely contains one is itself refused before the scan runs, and
 finding the same text in the manuscript does not excuse it either, because a
@@ -372,29 +374,43 @@ dropped when it does not. That happens only when the value is actually shaped
 like a path, so a reviewer's `/ 2 is the wrong denominator` in such a field is
 published as written.
 
-Every publish prints one line about `editor-package.json`, because the bundle's
-copy is not the engine's file with a few strings scrubbed. It is rebuilt from the
-same reading by `review_package`, and that rebuild is the intended projection:
-the engine's package carries the whole run and the bundle publishes the parts a
-reader of the review needs. The line compares the two sets of top-level keys and
-names what the bundle does not carry, such as `stages` and `reviewer_provenance`,
-what it adds, which today is `findings_source`, and any path field that was
-rewritten or dropped. It is computed from the engine's own file read back off the
-run folder rather than from a list in this repository, so the next engine release
-changes the line instead of making it wrong. A path used as a JSON
-*field name* is refused outright, inside this checkout or outside it. Engine
-0.9 writes no mapping keyed by a path, so a rewrite there would be faithful to
-nothing, and dropping the key would publish an artifact missing an entry the
-engine wrote. `publish` names the key and the flag that publishes it as it
-stands.
+Every publish prints one line about `issues.json`, because the bundle's copy is
+not the engine's file with a few strings scrubbed. It is rebuilt from the same
+reading by `review_package`, and that rebuild is the intended projection: the
+engine's file carries the whole run and the bundle publishes the parts a reader
+of the review needs. The line compares the two sets of top-level keys and names
+what the bundle does not carry, such as `stages`, what it adds, which today is
+the findings ledger the issues were pooled from plus `findings_source`,
+`issues_source` and `review_guard_status`, and any path field that was rewritten
+or dropped. It is computed from the engine's own file read back off the run
+folder rather than from a list in this repository, so the next engine release
+changes the line instead of making it wrong.
+
+The bundle keeps the engine's name for that file on purpose. It is the same
+document narrowed, and the issue ids in it are the ids the engine minted, so a
+reader who sees `i03` in the letter can look it up in the file. Before writing
+it, `publish` checks the file it is about to write: the document carries a
+schema stamp, every row is an object, every id is of the engine's form, no id
+appears twice, and no row carries a field that rules on an earlier review. A
+bundle that would not survive those rules is refused now rather than found
+later, with the ids already printed in a decision letter.
+
+A path used as a JSON *field name* is refused outright, inside this checkout or
+outside it. Engine 0.10 writes no mapping keyed by a path, so a rewrite there
+would be faithful to nothing, and dropping the key would publish an artifact
+missing an entry the engine wrote. `publish` names the key and the flag that
+publishes it as it stands.
 
 The imported manuscript is what ties the steps together. `prepare` hashes the
-PDF it fetched, the engine's importer hashes the bytes it was handed into
-`paper.json`, and the run records the paper it reviewed. `publish` reads that
-`paper.json` from the manuscript folder beside the run, compares all three, and
-refuses when they disagree, so a run of one paper cannot be published as a
-review of another. `--workspace` points at that folder when it is somewhere
-else.
+PDF it fetched, the engine's importer hashes the bytes it was handed into the
+workspace's `manifest.json`, and the run records the paper it reviewed.
+`publish` reads that workspace through the engine's own `verify_workspace`,
+which re-digests every file the import listed, compares all three identities,
+and refuses when they disagree, so a run of one paper cannot be published as a
+review of another and a folder whose `paper.md` was edited after the import is
+refused by name. That last one matters because a finding cites a line of that
+file: edit it and every citation in the review points at text nobody read.
+`--workspace` points at that folder when it is somewhere else.
 
 `--editor` and `--human-reviewed` have no defaults. The published record carries
 an attestation that a named person read the run before it was merged, and that
@@ -520,17 +536,89 @@ OpenRouter asking for a Claude alias it does not serve.
 ## Manuscript text hierarchy
 
 On the current path the engine's own `import` command reads the manuscript. It
-takes the PDF `prepare` downloaded and writes a workspace holding the converted
-text and the evidence-linked source blocks the reviewer quotes from. Quotations
-in a review are validated against those blocks before the run is saved, so a
-finding cannot cite a passage the manuscript does not contain.
+takes the PDF `prepare` downloaded and writes a workspace holding the whole
+paper as one Markdown file, `paper.md`, with one piece of it per numbered line,
+a `map.json` recording each piece's lines, kind, section and page, and a
+`manifest.json` digesting all of it. A reviewer reads that text and quotes it:
+the engine finds the quote, records the line it reads on, and quarantines a
+quote it cannot place or places twice, so a finding cannot cite a passage the
+manuscript does not contain.
+
+The import no longer hands that text straight to the panel. It writes a draft
+and holds it there until the Read stage has been through it: a reader slot looks
+at the page images, repairs an equation or a table the converter mangled,
+describes every figure, transcribes a page the converter returned no text from
+at all, and only then seals the folder. No reviewer may claim a slot before the
+seal. Each row of `map.json` says where its words came from: `text` for the
+converter's own layer, `ai-reconstructed` for a line the converter printed and a
+model repaired, with the converter's reading kept beside it, and `ai` for words
+no converter produced.
+
+There is no setting that skips the stage. Every review of a PDF reads its pages,
+because the converter's equations and tables are its reading of a picture of
+them, a figure is a caption with nothing behind it, and a page the text layer
+returns nothing from cannot be imported at all without a reader to transcribe
+it. A sealed manuscript no page of which was read is reached two ways only: a
+reader that failed twice, which the engine seals as converted and gives a
+reason for, and an application's own source, which never went through a
+converter. A local run therefore spends a reader slot, and `sealed-without-read`
+in a record of a PDF review means the stage was attempted and failed.
+
+The reader can also re-read a piece the converter labelled as the wrong kind, a
+table emitted as a paragraph of run-together cells or an equation left in the
+prose after it, as the several pieces the page actually prints. Each part keeps
+the converter's whole reading of the piece it came out of, with which part of
+how many it is, under `original.part` and `original.of`. Where the converter
+emitted the debris of a displayed piece beside it, the edge of an equation or
+the numbers off a chart's axis, the reader folds that piece into the one it is
+debris of and the engine keeps its reading under `original.absorbed`. Where the
+re-read wrote several parts, that fold is recorded on one of them, the part the
+debris was printed as part of, because one fold is one fold. A prose part of a
+re-read holds no model-written words: the reader names the spans to cut and the
+engine cuts them, so the characters left on the line are the converter's own.
+
+A piece can also leave the manuscript. A folded piece is in no document any
+more, an equation the converter split in two is one piece again once the reader
+merges the halves, and a piece the stage added can be withdrawn. The engine
+counts the pieces of the sealed manuscript by what the reader did to each, under
+`ai_read.actions`, and that count walks the documents, so none of those three is
+in it. It counts them as they go instead, under `ai_read.gone`, keyed by
+`absorbed`, `merged` and `withdrawn`, leaving out a key nothing happened under.
+The two do not add up with each other: a fold moves a piece out of the first and
+into the second, and `merged` is in both counting different things, the one
+equation the reader wrote against the halves that went into it.
 
 `publish` measures that workspace with no model and records what the reviewer
-was handed: the character count, a hash of the converted text, the block count,
-and the importer that produced them. Those numbers go into
-`manuscript_stats.md` and into `provenance.json` under `ingest`. They reach no
-prompt, because an agent handed "8.4 boosters per 1000 words" writes a finding
-about it.
+was handed: the character count, a hash of the converted text, how many lines
+and how many mapped pieces it holds, the importer that produced them, and the
+import's own account of the Read stage. That account is the reader's model and
+how many pages it viewed, how many pieces came from each source, the lines a
+model wrote rather than the converter, which of those lines came out of one
+piece the converter had labelled as the wrong kind and how many pieces were
+folded into each, how many pieces are no longer in the manuscript and why they
+left it, the pages that reached the review only because a model read
+them off the image, each with the lines of `paper.md` its transcription became,
+and the reader's own free-text note on the document. The note is published
+because what it holds is what nobody reading the text could work out, and it is
+rendered as that model's account rather than as the authors' prose or a finding
+of the review. The engine writes the field on every seal and leaves it empty
+where the reader filed nothing, and an empty note is not published: a published
+empty string would read as a model that had nothing to say about the paper. The
+record also carries the engine's own name for how
+the folder was sealed, `sealed-by-reader` or `sealed-without-read`, taken from
+the run rather than worked out at publish time, and carried only where the run
+is talking about the folder being published.
+
+A manuscript an application composed from its own source is a third case. No
+stage read a page, so the account reads `read: false`, and some of its pieces
+can still be a model's work, a description of a figure or an equation the
+application rebuilt. The engine refuses to write one of those unless the caller
+names the model, and the record carries that name with how many pieces it wrote.
+Those numbers go into
+`manuscript_stats.md` and into `provenance.json` under `ingest`, which is where
+a reader of a published review finds out whether a quoted line is the authors'
+own words. They reach no prompt, because an agent handed "8.4 boosters per 1000
+words" writes a finding about it.
 
 ### Retired: the four-source hierarchy
 

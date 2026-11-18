@@ -297,6 +297,196 @@ def extract_authorship(text: str) -> str:
     return ""
 
 
+# The words a submitter writes when there is no code to look at, and the ones
+# an issue form leaves behind in an untouched optional field.
+NO_CODE_ANSWERS = ("", "none", "n/a", "na", "no", "no code", "not applicable",
+                   "_no response_", "-")
+
+
+class CodeLinkRefused(ValueError):
+    """A code link a submission may not hand to the review.
+
+    Its own class so a caller can say the link was refused and why, and still
+    publish the rest of the submission, rather than losing it all to the link.
+    """
+
+
+# Everything a repository address needs and nothing a shell or a URL parser
+# would read as more than an address: no space, no quote, no `$`, no `&`, no
+# `?`, no `#`, no `@`, no backslash. A link that needs one of those to be
+# reachable is not a link this review will clone.
+CODE_LINK_CHARACTERS = re.compile(r"^[A-Za-z0-9\-._~/:%+]+$")
+# Any whitespace or control character at all, including the ones that would
+# split one link into a command and an argument.
+CODE_LINK_BREAKS = re.compile(r"[\s\x00-\x1f\x7f-\x9f]")
+# Names that resolve inside a network rather than on the public web. A review
+# cannot be published against code only the machine that ran it could fetch.
+PRIVATE_HOST_SUFFIXES = (".local", ".internal", ".lan", ".home.arpa", ".localdomain")
+PRIVATE_HOST_NAMES = ("localhost",)
+
+
+def _public_code_host(link: str, host: str) -> None:
+    """Refuse a code link whose host is not a public domain name.
+
+    An IP literal, a single-label name and a private suffix all name something
+    reachable from where the review runs rather than something anybody can
+    clone. `https://192.168.2.17/x` in a submission is a request to have the
+    reviewer's own machine fetch from the reviewer's own network, and a review
+    published against it rests on code no reader can check.
+    """
+    if not host:
+        raise CodeLinkRefused(
+            f"{link} has no host a clone could reach. Give the repository's "
+            "own web address, as you would paste it into a browser."
+        )
+    if host.startswith("["):
+        raise CodeLinkRefused(
+            f"{link} names an address rather than a host. Give the repository's "
+            "own domain name."
+        )
+    name, _, port = host.partition(":")
+    if port and not port.isdigit():
+        raise CodeLinkRefused(f"{link} has no port a clone could reach.")
+    low = name.lower()
+    if re.fullmatch(r"[0-9.]+", low):
+        raise CodeLinkRefused(
+            f"{link} names an address on a network rather than a public "
+            "repository host. Give the repository's own domain name."
+        )
+    labels = low.split(".")
+    if len(labels) < 2:
+        raise CodeLinkRefused(
+            f"{link} names a host inside one network rather than a public "
+            "repository. Give the repository's own domain name."
+        )
+    if any(not part or part.startswith("-") or part.endswith("-") for part in labels):
+        raise CodeLinkRefused(
+            f"{link} has no host a clone could reach. Give the repository's "
+            "own web address, as you would paste it into a browser."
+        )
+    if not labels[-1].isalpha() or len(labels[-1]) < 2:
+        raise CodeLinkRefused(
+            f"{link} does not end in a domain a clone could resolve. Give the "
+            "repository's own domain name."
+        )
+    if low in PRIVATE_HOST_NAMES or low.endswith(PRIVATE_HOST_SUFFIXES):
+        raise CodeLinkRefused(
+            f"{link} names a host inside one network rather than a public "
+            "repository. Give the repository's own domain name."
+        )
+
+
+def check_code_link(value: str) -> str:
+    """The submitted code link, or a refusal naming what is wrong with it.
+
+    A submission may name code for the review to read, and the engine is the
+    only thing that ever fetches it: a read-only, shallow, credential-free
+    clone with nothing executed. That is only true of a link anybody can clone
+    over the public web, so this accepts `https://` and nothing else.
+
+    A code link is one https URL and nothing else. Whatever a submitter wrote
+    is either exactly that, and comes back unchanged, or it is refused. Nothing
+    is repaired, because the one thing this value goes on to be is an argument
+    in a command an editor's own session runs: a space makes it two arguments,
+    a newline makes it two lines, and `$(...)` makes it a command. Collapsing
+    the whitespace to tidy it up would hand on a link the submitter never
+    wrote, which is the one outcome worse than a refusal.
+
+    An `ssh://` or `git@host:owner/name` link asks for a key, which would mean
+    reviewing code the public cannot see and publishing a review of it. A path
+    or a `file://` link names a folder on whichever machine is running, which
+    from a submission means somebody else's machine and never the authors'
+    code. Both are refused here, at the edge, so no later step has to decide.
+    """
+    # Only the outer whitespace of a form field is dropped. Everything inside
+    # the value is the value.
+    link = str(value or "").strip()
+    if link.lower() in NO_CODE_ANSWERS:
+        return ""
+    low = link.lower()
+    if low.startswith("https://"):
+        if CODE_LINK_BREAKS.search(link):
+            raise CodeLinkRefused(
+                "That code link holds a space, a line break or a control "
+                "character, so it is not one address. Give one https:// link "
+                "on its own, with nothing after it."
+            )
+        if not CODE_LINK_CHARACTERS.match(link):
+            raise CodeLinkRefused(
+                "That code link holds characters a repository address does not "
+                "need, such as a quote, a query, a fragment or a shell "
+                "character. Give the plain https:// address of the repository, "
+                "as a browser shows it."
+            )
+        _public_code_host(link, link[len("https://"):].split("/")[0])
+        return link
+    # A refusal is quoted back to the submitter, so what it quotes is one
+    # tidied, shortened line rather than whatever bytes arrived. This value is
+    # never handed on: the only value this function hands on is one it accepted.
+    shown = " ".join(link.split())[:120]
+    if low.startswith(("ssh://", "git+ssh://", "git://")) or re.match(
+        r"^[\w.+-]+@[\w.-]+:", link
+    ):
+        raise CodeLinkRefused(
+            f"{shown} is an SSH link, and the review clones over the public web "
+            "with no credentials. Give the https:// address of the repository. "
+            "Code the public cannot clone cannot carry a public review."
+        )
+    if low.startswith("file://") or link.startswith(("/", "~", ".")) or re.match(
+        r"^[A-Za-z]:[\\/]", link
+    ):
+        raise CodeLinkRefused(
+            f"{shown} names a folder on a machine rather than a repository. A "
+            "submission cannot point the review at a local path. Post the code "
+            "where it can be cloned and give the https:// address."
+        )
+    if low.startswith("http://"):
+        raise CodeLinkRefused(
+            f"{shown} is plain http. Give the https:// address of the same "
+            "repository."
+        )
+    raise CodeLinkRefused(
+        f"{shown} is not a repository link. Give an https:// address, or leave "
+        "the field empty."
+    )
+
+
+def extract_code_link(text: str) -> str:
+    """The code link a submission offered: a validated https:// URL, or ''.
+
+    Issue forms render as ``### Heading\n\nvalue``, so the answer is the first
+    non-empty line under the heading that asks for it. Returns '' when the
+    field is absent, left empty, or answered with a plain no, and raises
+    :class:`CodeLinkRefused` when a link is there but not one the engine may
+    clone, so a caller can tell a submission with no code from one whose link
+    was turned down.
+
+    The field is one line of a form, so a second line under the same heading is
+    refused rather than quietly dropped: dropping it would read one link out of
+    an answer that offered two and hand that one on as what the submitter
+    wrote.
+    """
+    lines = (text or "").splitlines()
+    for i, line in enumerate(lines):
+        if "link to the code" not in line.lower():
+            continue
+        answer = ""
+        for value in lines[i + 1:]:
+            value = value.strip()
+            if not value:
+                continue
+            if value.startswith("#"):
+                break
+            if answer:
+                raise CodeLinkRefused(
+                    "That answer holds more than one line. Give one https:// "
+                    "link on its own, or leave the field empty."
+                )
+            answer = value
+        return check_code_link(answer)
+    return ""
+
+
 def extract_url(text: str) -> str:
     """Pull the first plausible preprint URL out of free text (e.g. an issue body).
 
@@ -325,8 +515,8 @@ def _resolve_arxiv(url: str, arxiv_id: str) -> Preprint:
     way: resolve to current, and record which version that was.
 
     That also makes revisions work. Without a version on the record, nothing
-    can tell that a manuscript has moved on — the update check has nothing to
-    compare and a revision round would re-review the draft it already read.
+    can tell that a manuscript has moved on: the update check has nothing to
+    compare, and a review of the new draft would read the one already reviewed.
     """
     bare = arxiv_id.split("v")[0] if re.match(r"^\d{4}\.", arxiv_id) else arxiv_id
     pp = Preprint(

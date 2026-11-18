@@ -51,10 +51,11 @@ from typing import NamedTuple
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fetch_preprint import Preprint, download, resolve  # noqa: E402
-from review_paths import REPO, REVIEWS, ROUND_RECORD, RUNS  # noqa: E402
+from review_paths import REPO, REVIEW_ISSUES, REVIEWS, ROUND_RECORD, RUNS  # noqa: E402
 from review_plan import (  # noqa: E402
     CommandError,
     draft_number,
+    existing_bundles,
     find_paper_dir,
     paper_slug,
     plan_review,
@@ -74,6 +75,16 @@ DECISIONS = ("accept", "minor", "major", "reject")
 # `--workspace` has a sibling to default to.
 REVIEW_DIRECTORY = "review"
 MANUSCRIPT_DIRECTORY = "manuscript"
+# What the engine calls the manuscript itself inside that folder. Engine 0.10
+# writes the whole paper as one Markdown file, one piece of it per line, and a
+# finding cites a line of this file by name; a supplement is a document of its
+# own beside it. The engine publishes the name on its own surface, and this copy
+# exists because half of this pipeline reads a published bundle with no engine
+# installed and still has to say which document a line belongs to. The copy is
+# checked against the engine's own in `bind_run_to_input`, so a release that
+# renamed the file is refused there rather than published under a label this
+# file invented.
+MAIN_DOCUMENT = "paper.md"
 
 # The six specialist tracks the plugin ships, each writing one `audit_<track>.md`
 # report into the run. Named here so a bundle can say which reports are missing
@@ -108,6 +119,25 @@ UNREAD_STATEMENT = (
 
 SEVERITY_ORDER = {"major": 0, "moderate": 1, "minor": 2}
 REQUIRED_SEVERITIES = ("major", "moderate")
+SUGGESTION_SEVERITY = "minor"
+# The fields a run would carry if it had been handed an earlier review to rule
+# against. The engine stopped writing them in 0.10, and this pipeline hands it
+# no earlier review, so a run carrying one was not written by the engine this
+# release publishes. They are refused at the publish gate rather than printed,
+# because a letter telling the authors an item persists from a review this one
+# never read is a standing nobody ruled on.
+RULED_ON_ANOTHER_REVIEW = (
+    "status",
+    "status_reason",
+    "prior_id",
+    "prior_rank",
+    "text_unchanged_reason",
+    "surviving_quotes",
+)
+# What an issue id looks like, so a published record can be checked against the
+# engine's own minting rule rather than trusted. The engine mints `i01`, `i02`
+# and so on, and a published request id is that id unchanged.
+ISSUE_ID_PATTERN = re.compile(r"^i\d{2,}$")
 
 # The two states a run can finish in, which are the engine's own
 # `COMPLETE_STATUSES`. `complete` is a review with findings in it, and
@@ -138,21 +168,25 @@ WITHOUT_FINDINGS_STATUS = "complete-without-findings"
 # transport this path can describe is the one the plugin runs on.
 PUBLISHABLE_PROVIDERS = ("claude-code",)
 
-# The engine arms that are not a review of somebody else's manuscript, and so
-# are not a thing this path can publish as one. `draft-check` is what the engine
-# runs on a draft of your own: the engine's own arm table calls it "not a study
-# arm", it convenes no core reviewers, and nothing in it was written by a reader
-# of a submitted paper.
+# An arm that convenes no core reviewers is not a review of somebody else's
+# manuscript, and so is not a thing this path can publish as one. `draft-check`
+# is the one the engine ships: what it runs on a draft of your own, chosen
+# specialists and no core track, with nothing in it written by a reader of a
+# submitted paper.
 #
-# It has to be named here because the engine does not hold such a run back. Its
-# publishability rule reads the status, the findings source and the guards, none
-# of which a finished draft check fails, so `not_publishable_reasons` comes back
-# empty for one and there is no engine sentence to print. What refused it before
-# was the panel rule further down, "a published review needs at least one
+# The rule has to live here because the engine does not hold such a run back.
+# Its publishability rule reads the status, the findings source and the guards,
+# none of which a finished draft check fails, so `not_publishable_reasons` comes
+# back empty for one and there is no engine sentence to print. What refused it
+# before was the panel rule further down, "a published review needs at least one
 # reviewer", which is true but reads as a broken run rather than as the wrong
-# kind of run, and it would stop refusing the moment an arm with no reviewers
-# became publishable for some other reason.
-UNPUBLISHABLE_ARMS = ("draft-check",)
+# kind of run.
+#
+# The arm names themselves are the engine's, read from `review_arms()` rather
+# than copied into a list here. A list went stale in one direction only, and
+# silently: a new arm with no core track would have published as a peer review
+# until somebody noticed the name was missing.
+NO_REVIEWERS = 0
 
 # The route this pipeline bills on, named in every published record. The engine
 # has no billing policy of its own: it runs inside whatever subscription the
@@ -212,6 +246,23 @@ def maybe_json(path: Path) -> dict:
     return value if isinstance(value, dict) else {}
 
 
+def maybe_json_list(path: Path) -> list:
+    """What one run file holds when it holds a list, and nothing otherwise.
+
+    The same reading as `maybe_json`, for the files the engine writes as an
+    array rather than an object. `map.json` is one: a row per piece of the
+    manuscript, in the order they were laid down.
+    """
+    path = Path(path)
+    if not path.is_file():
+        return []
+    try:
+        value = read_json(path)
+    except (OSError, ValueError):
+        return []
+    return value if isinstance(value, list) else []
+
+
 def _dict(value: object) -> dict:
     return value if isinstance(value, dict) else {}
 
@@ -232,7 +283,7 @@ def engine_module(why: str):
     except ImportError as exc:
         raise CommandError(
             f"{ENGINE_PACKAGE} is not importable, so {why}. Install "
-            "PeerReviewAgents 0.9.0 or newer, or run this with the virtual "
+            "PeerReviewAgents 0.10.0 or newer, or run this with the virtual "
             "environment the review ran in."
         ) from exc
 
@@ -252,9 +303,69 @@ def engine_public(name: str, why: str):
     except AttributeError as exc:
         raise CommandError(
             f"{ENGINE_PACKAGE}.{name} is not importable, so {why}. Install "
-            "PeerReviewAgents 0.9.0 or newer, or run this with the virtual "
+            "PeerReviewAgents 0.10.0 or newer, or run this with the virtual "
             "environment the review ran in."
         ) from exc
+
+
+def planned_arms() -> dict | None:
+    """The engine's own table of what each arm runs, or `None` with no engine.
+
+    `review_arms()` is the engine's public answer to "what does this arm do",
+    one row per arm, and it is the only honest source for whether an arm
+    convenes core reviewers at all. `None` rather than a refusal because the
+    gate below has a second source for that one fact, the reviewer count the
+    run itself recorded, and refusing a publish over a missing arm table would
+    turn a question this path can still answer into a dead end.
+    """
+    try:
+        arms = getattr(importlib.import_module(ENGINE_PACKAGE), "review_arms")
+    except (ImportError, AttributeError):
+        return None
+    table = arms()
+    return table if isinstance(table, dict) else None
+
+
+def not_a_review_arm(run: dict, arms: dict | None) -> str:
+    """Why this run's arm is no review of a submitted manuscript, or "".
+
+    Two sources for one fact, in order. The engine's table says what the arm
+    convenes, which is the answer for any run on any machine with the engine
+    installed, and it names an arm the installed engine does not define rather
+    than waving it through. Without a table the run's own recorded reviewer
+    count stands in: it is the same number for the arms that ship, and a run
+    that convened nobody is not a review whichever source said so.
+    """
+    arm = str(run.get("arm") or "")
+    if arms is None:
+        reviewers = run.get("reviewers")
+        if isinstance(reviewers, int) and not isinstance(reviewers, bool):
+            if reviewers > NO_REVIEWERS:
+                return ""
+        else:
+            return ""
+        described = "an arm that convenes no core reviewers"
+    else:
+        planned = arms.get(arm)
+        if planned is None:
+            return (
+                f"This run used the {arm} arm, which the installed engine does "
+                f"not define. It runs {', '.join(sorted(arms))}. Publish with "
+                "the engine the review ran on, so what the record says the arm "
+                "did is what the arm does."
+            )
+        if planned.get("reviewers") != NO_REVIEWERS:
+            return ""
+        described = str(planned.get("summary") or "").strip() or (
+            "an arm that convenes no core reviewers"
+        )
+    return (
+        f"This run used the {arm} arm, which the engine describes as "
+        f"\"{described}\". It convenes no core reviewers, so nobody outside the "
+        "authorship read the paper and there is no review in it to publish. Run "
+        "the review arm the study asks for, or drop --publish to keep this "
+        "bundle as a rehearsal."
+    )
 
 
 def engine_record() -> dict:
@@ -468,12 +579,12 @@ def resolve_workspace(review_dir: Path, flag: str) -> Path:
     if flag:
         return Path(flag).resolve()
     sibling = Path(review_dir).resolve().parent / MANUSCRIPT_DIRECTORY
-    if (sibling / "paper.json").is_file():
+    if (sibling / "manifest.json").is_file():
         return sibling
     raise CommandError(
         f"No manuscript workspace at {sibling}, so this run cannot be tied to "
         "the paper that was prepared. Pass --workspace with the folder holding "
-        "paper.json."
+        "manifest.json beside paper.md and map.json."
     )
 
 
@@ -543,10 +654,39 @@ def agent_rows(reading: dict) -> list[dict]:
 # quoted in the review.
 CITATION_WORKER_ROLE = "citation-worker"
 
+# The role engine 0.10 gives the slot that reads the manuscript against its own
+# page images before any reviewer starts. The reader rewrites an equation the
+# converter mangled, describes each figure, transcribes a page the converter
+# returned nothing from, and then the manuscript is sealed and its line numbers
+# stop moving. It files no finding and writes no report, so it did not review
+# the paper and is not counted among the agents that did. What it did is
+# published in `ingest` instead, beside the other measurements of the text the
+# panel was handed, because that is what it is a statement about.
+READER_ROLE = "reader"
+
 
 def is_citation_worker(row: dict) -> bool:
     """Whether this agent row is a citation lane worker rather than a reviewer."""
     return str(_dict(row).get("role") or "") == CITATION_WORKER_ROLE
+
+
+def is_reader(row: dict) -> bool:
+    """Whether this agent row read the manuscript rather than reviewed it."""
+    return str(_dict(row).get("role") or "") == READER_ROLE
+
+
+def reader_slots(agents: list[dict]) -> list[str]:
+    """The slots that read the manuscript against its pages, by name.
+
+    Named rather than counted, for the same reason the citation lane's workers
+    are: a reader of the model table needs to be able to find those rows and see
+    that the model beside them wrote no part of the review.
+    """
+    return sorted(
+        str(row.get("slot"))
+        for row in _list(agents)
+        if is_reader(row) and _dict(row).get("slot")
+    )
 
 
 def citation_workers(agents: list[dict]) -> list[str]:
@@ -566,15 +706,23 @@ def citation_workers(agents: list[dict]) -> list[str]:
 
 
 def reviewing_agents(agents: list[dict]) -> list[dict]:
-    """The rows that wrote some part of the review, workers left out.
+    """The rows that wrote some part of the review, workers and reader left out.
 
-    Every statement about who read the manuscript is counted over this rather
-    than over every row: how many agents ran, which models wrote the review, and
-    whether one model wrote all of it. Four citation workers on a cheaper model
-    would otherwise make a panel look more varied than it was, which is the
-    wrong answer in the one direction that matters.
+    Every statement about who reviewed the manuscript is counted over this
+    rather than over every row: how many agents ran, which models wrote the
+    review, and whether one model wrote all of it. Four citation workers on a
+    cheaper model would otherwise make a panel look more varied than it was,
+    which is the wrong answer in the one direction that matters.
+
+    The reader is left out for a second reason as well. The published model map
+    says which model wrote which report, and the reader wrote none: it produced
+    the text the panel then read. Its model is published where that fact
+    belongs, in the manuscript's own record.
     """
-    return [row for row in _list(agents) if not is_citation_worker(row)]
+    return [
+        row for row in _list(agents)
+        if not is_citation_worker(row) and not is_reader(row)
+    ]
 
 
 def citation_record(reading: dict) -> dict:
@@ -624,6 +772,91 @@ def citation_record(reading: dict) -> dict:
     workers = citation_workers(reading.get("agents"))
     if workers:
         record["workers"] = workers
+    return record
+
+
+# What the code under review was taken from, in the engine's words: a
+# repository it cloned, or a folder on the machine that ran the review. The
+# difference decides what a published record can say about where the code came
+# from, because one of the two is an address a reader can open and the other is
+# a directory on somebody's computer.
+CODE_CLONE = "git-clone"
+CODE_FOLDER = "folder"
+
+# The keys of the engine's code block that are a count or a word, copied as
+# they are. `snapshot` and `manifest` are deliberately not among them, which
+# `code_record` explains.
+#
+# `source_cut` is the count that limits what the review may claim: above zero a
+# cap left program source out of the snapshot, so the code reader did not have
+# the whole of the code and no finding from it may say the code never does
+# something. The five `data_` counts are the data the code ships, which the
+# engine lists rather than copies and fetches only when a reviewer asks for a
+# file, so what was there and what was read are two different numbers and the
+# second is the one that says what the review rests on.
+CODE_COUNTS = ("files_in_snapshot", "files_skipped", "opened", "searches", "source_cut",
+               "data_listed", "data_fetched", "data_partial", "data_refused", "data_bytes")
+
+
+def code_record(reading: dict) -> dict:
+    """Whether code was reviewed beside the paper, for the published record.
+
+    The engine answers this for every run, including every run that was given
+    no code, so the record answers it too rather than leaving a reader of a
+    review with no code block to wonder whether the question was asked. A run
+    with none publishes `reviewed: false` and nothing else, because the rest of
+    the engine's block is empty for it.
+
+    Two of the engine's fields are not published. `snapshot` is the absolute
+    path of `<run>/code/` on the machine that ran the review, and the bundle
+    does not carry that folder, so the path names a stranger's computer and
+    points at nothing a reader has. `manifest` is the snapshot's own manifest,
+    one row per file taken with its digest and one per path left out, and it
+    carries the origin as an absolute path as well. What a reader of a finding
+    needs out of it, the file and the lines and the digest of the file they were
+    read from, the finding itself carries.
+
+    Where the code came from is published as the caller named it only when that
+    is an address rather than a directory. A clone's source is the repository
+    URL, which is the one fact that lets a reader fetch the code and check the
+    commit for themselves, so it is published whole and beside the commit. A
+    folder's source is a resolved path on one machine, so only its own name is
+    published, which is what the engine's own REVIEW.md prints for the same
+    reason.
+    """
+    code = _dict(reading.get("code"))
+    if not code:
+        return {}
+    record: dict = {"reviewed": bool(code.get("reviewed"))}
+    if not record["reviewed"]:
+        return record
+    kind = str(code.get("kind") or "")
+    if kind:
+        record["kind"] = kind
+    source = str(code.get("source") or "").strip()
+    if source and kind == CODE_CLONE and not looks_like_a_path(source):
+        record["source"] = source
+    elif source:
+        record["source_name"] = Path(source).name
+    for key in ("commit", "branch", "truncated"):
+        value = str(code.get(key) or "").strip()
+        if value:
+            record[key] = value
+    # A folder that is not a checkout has no clean or dirty state to report, and
+    # the engine says so with `None` rather than with `False`.
+    if isinstance(code.get("dirty"), bool):
+        record["dirty"] = code["dirty"]
+    for key in CODE_COUNTS:
+        if isinstance(code.get(key), int) and not isinstance(code.get(key), bool):
+            record[key] = code[key]
+    # Which files the lane actually opened, by their path inside the snapshot.
+    # The counts above say how much there was to read and the engine counts the
+    # opening, and this says which files they were, because a code reader that
+    # opened the one file the paper names and no other is a narrower claim than
+    # the count alone can make.
+    opened = [str(path) for path in _list(code.get("files_opened")) if str(path).strip()]
+    if opened:
+        record["files_opened"] = opened
     return record
 
 
@@ -756,18 +989,188 @@ def startup_stamp(reading: dict) -> str | None:
     return str(maybe_json(Path(str(stamped))).get("at") or "") or None
 
 
+def issues_document(reading: dict) -> dict:
+    """The facts about `issues.json` that belong to the file, not the review.
+
+    `read_run` answers everything about the review itself, and a bundle needs
+    two things that are properties of the document instead: the schema it was
+    stamped with, and the code check written beside the issues.
+
+    The file is located through `reading['reports']`, the engine's own map of
+    what is on disk, the same way `startup_stamp` locates `startup.json`.
+    Nothing else is read out of it. The status rule, the issues and the
+    findings all stay the engine's reading, so there is still one reader.
+
+    The stamp is checked rather than copied. A document written under a schema
+    this release does not publish may mean something else by the same field
+    names, and a letter rendered from a half-understood file is worse than no
+    letter, so an unknown stamp is a refusal here as it is in the engine.
+    """
+    why = "an issues document cannot be checked"
+    path = _dict(reading.get("reports")).get("issues")
+    document = maybe_json(Path(str(path))) if path else {}
+    if not document:
+        return {}
+    stamp = str(document.get("schema_version") or "")
+    known = str(engine_public("ISSUES_SCHEMA_VERSION", why) or "")
+    if stamp != known:
+        raise CommandError(
+            f"The run's issues.json is stamped {stamp or 'with nothing'} and this "
+            f"pipeline publishes {known}. The engine that wrote the run and the "
+            "engine installed here are different releases. Install the release "
+            "the run was written by, or rerun the review."
+        )
+    return {
+        "schema_version": stamp,
+        # The code check lives in this document and nowhere else a reader of the
+        # run can reach: `read_run` answers the review, and the rows that say
+        # which findings the code threw out are written here beside the issues.
+        "code_check": code_check_record(document),
+    }
+
+
+# How the code check can answer one finding. `contradicted` is the one with
+# teeth: the code does not do what the finding said, the engine refuses the
+# editor if it groups such a finding into an issue, and so this pipeline may
+# never print one as something the authors have to change.
+CODE_CHECK_VERDICTS = ("contradicted", "confirmed", "not-shown")
+
+# What one answer of the code check publishes. `recorded`, the moment the row
+# was written, is deliberately not among them: the run record already says when
+# the run happened, and the minute one finding was answered tells a reader of
+# the review nothing it can use.
+CODE_CHECK_FIELDS = ("finding_uid", "verdict", "slot", "track", "title", "severity",
+                     "document", "line", "end_line", "quote", "finding_slot",
+                     "finding_track", "basis", "assumed_method", "note")
+
+# The fields of the code the check read to decide one finding, which the engine
+# verified against the snapshot before it stored the row. The quoted text and
+# its address, and nothing else of the file.
+CODE_EVIDENCE_FIELDS = ("path", "start_line", "end_line", "text", "sha256")
+
+
+def code_check_record(document: dict) -> dict | None:
+    """What reading the code did to the findings that rested on a method.
+
+    `None` on a run that was given no code, which is the engine's own answer
+    for one and is kept as `None` rather than as an empty record: a review with
+    no snapshot had no such stage, and an empty block would read as a stage
+    that ran and found nothing to say.
+
+    Every row is copied field by field rather than passed through. The rows are
+    the only place a thrown-out finding appears at all, so they go into the
+    published bundle, and a bundle is read by strangers: what is published is
+    the finding the check was about, the verdict, the quoted lines of code that
+    decided it and the note written for the authors. The timestamps and the
+    engine's own bookkeeping stay in the run folder.
+    """
+    record = _dict(document.get("code_check"))
+    if not document.get("code_check") or not record:
+        return None
+    rows = []
+    for row in _list(record.get("checks")):
+        row = _dict(row)
+        kept = {key: row.get(key) for key in CODE_CHECK_FIELDS if row.get(key) not in (None, "")}
+        kept["verdict"] = str(row.get("verdict") or "")
+        evidence = _dict(row.get("code_evidence"))
+        if evidence:
+            kept["code_evidence"] = {
+                key: evidence.get(key) for key in CODE_EVIDENCE_FIELDS
+                if evidence.get(key) not in (None, "")
+            }
+        searched = [str(one).strip() for one in _list(row.get("searches")) if str(one).strip()]
+        if searched:
+            kept["searches"] = searched
+        rows.append(kept)
+    counts = _dict(record.get("counts"))
+    return {
+        "cap": record.get("cap"),
+        "checked": record.get("checked"),
+        "over_cap": record.get("over_cap"),
+        "counts": {word: counts.get(word, 0) for word in CODE_CHECK_VERDICTS},
+        "checks": rows,
+    }
+
+
+def contradicted_findings(package: dict) -> set[str]:
+    """Every finding the code check threw out, by uid.
+
+    One set, read by the publish gate and by the renderer. A finding in it was
+    raised by a reviewer, read against the code, and found to rest on a claim
+    the code contradicts. It stays on the ledger and in this review's own
+    account of what was thrown out, and it may not appear anywhere in the
+    bundle as something the authors are being asked to do.
+    """
+    record = _dict(package.get("code_check"))
+    return {
+        str(_dict(row).get("finding_uid") or "")
+        for row in _list(record.get("checks"))
+        if str(_dict(row).get("verdict") or "") == "contradicted"
+    } - {""}
+
+
+def assert_issue_vocabulary() -> None:
+    """Check this file's copies of the issue words against the engine's own.
+
+    The ordering rules below are a line each and they are written here rather
+    than imported: `peerreviewagents.issues` is a module inside the engine, and
+    the surface the engine supports is the package, so importing it would be
+    reaching into internals that are free to move between releases.
+
+    What that costs is the risk of the words drifting apart, so the words are
+    checked instead of trusted. A release that renamed a severity would
+    otherwise file every issue as a suggestion, silently. This refuses instead,
+    naming the word that moved.
+    """
+    why = "the issue vocabularies cannot be checked"
+    # The engine publishes these as tuples, and `_list` is for values read out
+    # of JSON, where a tuple cannot appear. Reading them with it found no words
+    # at all and refused every run, so the sequence is taken as it comes and a
+    # value that is not one is reported as unreadable below.
+    def words(name: str) -> list[str]:
+        value = engine_public(name, why)
+        if isinstance(value, (list, tuple)):
+            return [str(word) for word in value]
+        return []
+
+    severities = words("ISSUE_SEVERITIES")
+    missing = [w for w in (*REQUIRED_SEVERITIES, SUGGESTION_SEVERITY) if w not in severities]
+    if missing:
+        raise CommandError(
+            "This pipeline and engine "
+            f"{ENGINE_PACKAGE} do not agree on the issue words: "
+            f"{', '.join(sorted(set(missing)))}. The engine's severities are "
+            f"{', '.join(severities) or 'unreadable'}. Update the publish path "
+            "before publishing a run from this release."
+        )
+
+
 def review_package(reading: dict) -> dict:
     """The editor's review, in the shape the documents are rendered from.
 
-    `read_run` returns the editor's placement and judgement as separate keys,
-    de-duplicated per `finding_uid` and with a finding the editor put in both
-    lists counted once. This gathers them back into one record, which is what
-    the bundle publishes beside the documents so a reader can check a quotation
-    against the structured finding it came from.
+    Engine 0.10.0 reports one review rather than a letter and an appendix: the
+    issues the editor raised, each carrying the findings it was raised from.
+    Nothing is placed out of sight any more, so there are no two lists to
+    gather. The major and moderate issues in `rank` order are the required
+    changes and the minor ones are the suggestions.
+
+    The findings ledger is carried beside the issues because an issue member
+    holds the evidence fields and not the reviewer's own words: `comment`,
+    `basis_reason` and `counterevidence` are on the finding, and the letter
+    joins them back on by `finding_uid`.
+
+    `schema_version` comes from the document rather than the reading. It is
+    published because it is what the engine stamped the document with, and a
+    reader checking an id in the letter against the file reads it.
     """
+    document = issues_document(reading)
     return {
-        "findings": _list(reading.get("body")),
-        "appendix": _list(reading.get("appendix")),
+        "schema_version": document.get("schema_version"),
+        "issues_source": reading.get("issues_source"),
+        "issues": [_dict(issue) for issue in _list(reading.get("issues"))],
+        # The ledger, de-duplicated by the engine, in full. Every issue member
+        # names a row in it.
+        "findings": [_dict(finding) for finding in _list(reading.get("findings"))],
         "summary": reading.get("summary"),
         "verdict": _dict(reading.get("verdict")),
         "limitations": _list(reading.get("limitations")),
@@ -775,6 +1178,11 @@ def review_package(reading: dict) -> dict:
         "review_guard_status": reading.get("guard_status"),
         "findings_source": reading.get("findings_source"),
         "quarantined_findings": _list(reading.get("quarantined")),
+        # What the code check did, or `None` on a run that was given no code.
+        # It is carried in the package rather than derived at render time
+        # because a thrown-out finding appears nowhere else: it is in no issue,
+        # and the letter is the only place a reader meets it.
+        "code_check": document.get("code_check"),
     }
 
 
@@ -862,6 +1270,11 @@ def run_record(reading: dict) -> dict:
             record[key] = runtime[key]
     put("completeness", completeness(reading.get("stages")))
     put("citations", citation_record(reading))
+    # Whether code was reviewed beside the paper. This one is published for
+    # every run and not only for the runs that had code, because `reviewed:
+    # false` is the answer a reader of a review of a computational paper needs
+    # and an absent block is not that answer.
+    put("code", code_record(reading))
     record["errors"] = run_errors(reading)
     return record
 
@@ -985,14 +1398,71 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
 
     The chain is: the hash prepare took of the fetched bytes, the hash the
     importer took of the bytes it was given, and the paper id the run recorded.
+
+    The workspace is read through the engine's own `verify_workspace`, which
+    re-digests every file the import manifest lists before it answers. A folder
+    whose `paper.md` was edited after the import is refused there by name, and
+    that matters more now than it did: a finding cites a line of that file, so
+    an edited manuscript turns every citation in the review into a line number
+    about text nobody reviewed.
     """
-    paper = maybe_json(Path(workspace) / "paper.json")
-    if not paper:
-        raise CommandError(
-            f"No paper.json in {workspace}. Point --workspace at the manuscript "
-            "folder the run imported."
+    manifest_path = Path(workspace) / "manifest.json"
+    why = "this run cannot be tied to the paper that was prepared"
+    if not manifest_path.is_file():
+        legacy = (
+            " It holds paper.json, which is an import from before the engine "
+            "wrote paper.md, and this pipeline does not read it: re-import the "
+            "manuscript."
+            if (Path(workspace) / "paper.json").is_file() else ""
         )
-    imported = str(paper.get("source_sha256") or "")
+        raise CommandError(
+            f"No manifest.json in {workspace}, so {why}. Point --workspace at "
+            "the manuscript folder the run imported, the one holding paper.md, "
+            f"map.json and manifest.json.{legacy}"
+        )
+    verify = engine_public("verify_workspace", why)
+    try:
+        base = verify(str(workspace))
+    except (ValueError, KeyError, OSError) as exc:
+        raise CommandError(
+            f"The engine refused the manuscript workspace at {workspace}, so "
+            f"{why}: {exc}. Every finding in this run cites a line of that "
+            "folder's paper.md, so a folder that no longer matches its own "
+            "import manifest cannot be published as what was reviewed."
+        ) from exc
+    paper = _dict(getattr(base, "manifest", None))
+    # The engine's own name for the main document, against the copy this file
+    # keeps for the engine-free half. Checked here rather than trusted: a
+    # release that renamed the file would otherwise be refused below for holding
+    # no paper.md, which names the wrong problem and sends the operator looking
+    # at their own import.
+    engine_main = str(engine_public("MAIN_DOCUMENT", why) or "")
+    if engine_main != MAIN_DOCUMENT:
+        raise CommandError(
+            f"The engine calls a manuscript's main document {engine_main} and "
+            f"this pipeline reads {MAIN_DOCUMENT}, so {why}. The engine that "
+            "wrote the run and the publish path here are different releases. "
+            "Update the publish path before publishing a run from this release."
+        )
+    # What shape the folder is in is the engine's question, and `verify_workspace`
+    # answers it above: it refuses a base stamped `paper-base-v1`, a manifest
+    # carrying no stamp at all and a base with no manifest beside it, each by
+    # name. What this pipeline needs from that stamp is what the engine needs
+    # from it, since a v1 map records where every piece sits and not where its
+    # text came from, so a review published over one could not say which of its
+    # lines a model wrote. Reading the field again here would be this
+    # repository's second opinion about a folder the engine has already refused,
+    # in wording the operator would then see twice.
+    documents = [str(name) for name in _list(base.document_names())]
+    if MAIN_DOCUMENT not in documents:
+        raise CommandError(
+            f"The manuscript workspace at {workspace} holds no {MAIN_DOCUMENT}, "
+            f"so {why}. It holds {', '.join(documents) or 'no documents'}. This "
+            "publish path names the manuscript's own document when it prints "
+            "where a passage stands, and naming a file the import does not hold "
+            "would tell the authors to look in a document that is not there."
+        )
+    imported = str(_dict(paper.get("source")).get("sha256") or "")
     expected = str(prepared["input"]["sha256"])
     if not imported:
         raise CommandError(
@@ -1006,11 +1476,11 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
             f"{imported}. Review the PDF that prepare fetched, or prepare the "
             "paper this workspace holds."
         )
-    workspace_paper_id = str(paper.get("id") or "")
+    workspace_paper_id = str(getattr(base, "paper_id", "") or paper.get("paper_id") or "")
     run_paper_id = str(run.get("paper_id") or "")
     if not workspace_paper_id:
         raise CommandError(
-            f"The paper.json in {workspace} records no paper id, so this run "
+            f"The manifest.json in {workspace} records no paper id, so this run "
             "cannot be tied to the manuscript that was imported. Import the "
             "paper again."
         )
@@ -1026,34 +1496,104 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
             f"The run reviewed paper {run_paper_id} but --workspace holds paper "
             f"{workspace_paper_id}. Point --run and --workspace at the same review."
         )
-    manifest = Path(workspace) / "manifest.json"
     return {
-        "workspace_manifest_sha256": digest(manifest.read_bytes()) if manifest.is_file() else None,
+        "workspace_manifest_sha256": digest(manifest_path.read_bytes()),
         "paper_id": workspace_paper_id,
     }
 
 
-def sorted_findings(package: dict) -> list[dict]:
-    """The findings the editor put in the body of the letter, worst first."""
-    findings = [f for f in _list(package.get("findings")) if isinstance(f, dict)]
-    return sorted(findings, key=lambda f: SEVERITY_ORDER.get(str(f.get("severity")), 9))
+def issue_rank(issue: dict) -> int:
+    """One issue's place in the editor's order, or last for a row without one.
 
-
-def appendix_findings(package: dict) -> list[dict]:
-    """The findings the editor kept but did not place in the letter's body.
-
-    The plugin caps the body at eight. Everything else a reviewer raised and the
-    editor accepted goes to the appendix rather than being dropped, so the
-    bundle publishes both and says which is which.
+    The engine ranks the issues a review raised from 1. A row with no rank is
+    sorted last rather than dropped, because an unranked item is still an ask
+    the authors are owed.
     """
-    findings = [f for f in _list(package.get("appendix")) if isinstance(f, dict)]
-    return sorted(findings, key=lambda f: SEVERITY_ORDER.get(str(f.get("severity")), 9))
+    rank = _dict(issue).get("rank")
+    return rank if isinstance(rank, int) else 10 ** 6
 
 
-def severity_counts(findings: list[dict]) -> dict[str, int]:
+def all_issues(package: dict) -> list[dict]:
+    """Every issue row the run reported, in the order the document holds them."""
+    return [i for i in _list(package.get("issues")) if isinstance(i, dict)]
+
+
+def ranked_issues(package: dict) -> list[dict]:
+    """Every issue this review raised, in the editor's rank order."""
+    return sorted(all_issues(package), key=issue_rank)
+
+
+def required_issues(package: dict) -> list[dict]:
+    """The required changes: the major and moderate issues, in rank order.
+
+    This is the whole list. Nothing is capped and nothing is held back, which is
+    why there is no appendix any more.
+    """
+    return [i for i in ranked_issues(package)
+            if str(i.get("severity")) in REQUIRED_SEVERITIES]
+
+
+def suggestion_issues(package: dict) -> list[dict]:
+    """The suggestions: the minor issues, in rank order."""
+    return [i for i in ranked_issues(package)
+            if str(i.get("severity")) == SUGGESTION_SEVERITY]
+
+
+def issue_members(issue: dict) -> list[dict]:
+    """The findings one issue is raised from, as the issue keeps them."""
+    return [m for m in _list(_dict(issue).get("members")) if isinstance(m, dict)]
+
+
+def finding_index(package: dict) -> dict[str, dict]:
+    """The ledger by `finding_uid`, for joining a member back to its finding.
+
+    A member carries the evidence fields and not the reviewer's own prose. The
+    comment, what the basis rests on and the strongest counterpoint are on the
+    finding in the ledger, and this is how the letter gets them back.
+    """
+    index: dict[str, dict] = {}
+    for finding in _list(package.get("findings")):
+        uid = str(_dict(finding).get("finding_uid") or "")
+        if uid:
+            index[uid] = _dict(finding)
+    return index
+
+
+def issue_finding(package: dict, member: dict) -> dict:
+    """The ledger row behind one member, or the member itself as a fallback.
+
+    A run whose ledger file is gone is read by the engine off the issue members
+    themselves, so the member is all there is, and rendering from it loses the
+    prose rather than the finding.
+    """
+    uid = str(_dict(member).get("finding_uid") or "")
+    return finding_index(package).get(uid) or _dict(member)
+
+
+def issue_slots(issue: dict) -> list[str]:
+    """The reviewer slots that raised one issue, in order and without repeats."""
+    slots: list[str] = []
+    for member in issue_members(issue):
+        slot = str(member.get("slot") or "").strip()
+        if slot and slot not in slots:
+            slots.append(slot)
+    return slots
+
+
+def issue_is_escalated(issue: dict) -> bool:
+    """Whether any reviewer escalated a finding this issue is raised from."""
+    return any(member.get("escalate") for member in issue_members(issue))
+
+
+def escalated_issues(issues: list[dict]) -> list[dict]:
+    return [i for i in issues if issue_is_escalated(i)]
+
+
+def severity_counts(rows: list[dict]) -> dict[str, int]:
+    """Major, moderate and minor over issues or findings, which share the word."""
     counts = {"major": 0, "moderate": 0, "minor": 0}
-    for finding in findings:
-        severity = str(finding.get("severity") or "")
+    for row in rows:
+        severity = str(_dict(row).get("severity") or "")
         if severity in counts:
             counts[severity] += 1
     return counts
@@ -1064,11 +1604,23 @@ def escalated(findings: list[dict]) -> list[dict]:
 
 
 def _location(finding: dict) -> str:
+    """Where in the manuscript one finding was placed, as the engine placed it.
+
+    Engine 0.10 anchors a quote in the manuscript text itself and records the
+    line it reads on, the last line where it runs over several, and the document
+    when that is a supplement rather than the paper. A finding with no line is
+    not located, which is what an unplaced quote is.
+    """
     placement = finding.get("placement")
     if placement not in (None, "anchored"):
         return f"unplaced ({placement})"
-    block = finding.get("block_id")
-    return f"block {block}" if block else "not located"
+    line = finding.get("line")
+    if not isinstance(line, int) or line <= 0:
+        return "not located"
+    end = finding.get("end_line")
+    where = f"lines {line}-{end}" if isinstance(end, int) and end > line else f"line {line}"
+    document = str(finding.get("document") or "")
+    return f"{where} of {document}" if document and document != MAIN_DOCUMENT else where
 
 
 def _tags(finding: dict) -> str:
@@ -1193,6 +1745,118 @@ def citation_lane_report(run: dict) -> list[str]:
     return lines
 
 
+def code_lane_clause(run: dict) -> str:
+    """Whether the code behind the paper was read, for the method paragraph.
+
+    Both answers are published. A review that read the code says where the code
+    came from and which commit, because a reader who cannot tell which revision
+    was read cannot check anything the review says about it, and a review that
+    read none says so, because a reader of a computational paper would otherwise
+    have to guess whether the panel had the software in front of it. Guessing
+    wrong in that direction credits this review with work it did not do.
+
+    A record written by an engine with no code block at all gets no sentence.
+    That is a run read by a release older than the one that answers the
+    question, and inventing either answer for it would be making it up.
+    """
+    code = _dict(run.get("code"))
+    if not code:
+        return ""
+    if not code.get("reviewed"):
+        return (
+            " No code was reviewed beside the manuscript, so everything this "
+            "review says about what was computed rests on the manuscript's own "
+            "account of it."
+        )
+    source = str(code.get("source") or "").strip()
+    name = str(code.get("source_name") or "").strip()
+    commit = str(code.get("commit") or "").strip()
+    where = source or (f"the {name} folder" if name else "code the editor supplied")
+    at = f" at commit {commit[:12]}" if commit else " at a revision the run did not record"
+    dirty = ", which had uncommitted changes in it" if code.get("dirty") is True else ""
+    opened = code.get("opened")
+    held = code.get("files_in_snapshot")
+    read = ""
+    if isinstance(opened, int) and isinstance(held, int):
+        read = (
+            f" That reader opened {opened} of the {held} file(s) the engine took "
+            "a copy of, and a finding that rests on the code names the file and "
+            "the lines it read, checked against that copy."
+        )
+    skipped = code.get("files_skipped")
+    left = ""
+    if isinstance(skipped, int) and skipped:
+        left = (
+            f" {skipped} path(s) were left out of that copy, so the code reader "
+            "did not see them."
+        )
+    return (
+        f" The code behind the paper was reviewed beside it, from {where}{at}"
+        f"{dirty}, by one more specialist reading a copy the engine took.{read}{left}"
+        f"{code_data_clause(code)}{code_cut_clause(code)}"
+    )
+
+
+def code_data_clause(code: dict) -> str:
+    """How much of the data the code ships the reviewer actually read.
+
+    The engine lists a repository's data files and copies one in only when a
+    reviewer asks to read it, because the data can run to gigabytes while one
+    small table may hold the answer to a finding. So there are two numbers and
+    they are not the same claim: how many data files were there to ask for, and
+    how many were fetched. A file too large to serve whole comes back as its
+    first lines only, and a finding may quote nothing but the lines that were
+    stored, which is why a partial read is named rather than counted in with
+    the rest. A refused one was never opened at all.
+
+    A run whose snapshot listed no data file gets no sentence. There is nothing
+    to report and a sentence saying zero of zero would read as a limitation of
+    the review rather than as a fact about the repository.
+    """
+    listed = code.get("data_listed")
+    fetched = code.get("data_fetched")
+    if not isinstance(listed, int) or not listed or not isinstance(fetched, int):
+        return ""
+    clause = (
+        f" The snapshot listed {listed} data file(s) the code ships, of which the "
+        f"code reader fetched {fetched}"
+    )
+    partial = code.get("data_partial")
+    refused = code.get("data_refused")
+    said = []
+    if isinstance(partial, int) and partial:
+        said.append(
+            f"{partial} of those came back as a head of the file only, so a finding "
+            "about one may quote only the lines that were stored"
+        )
+    if isinstance(refused, int) and refused:
+        said.append(f"{refused} were refused and never opened")
+    if said:
+        return clause + ": " + ", and ".join(said) + "."
+    return clause + "."
+
+
+def code_cut_clause(code: dict) -> str:
+    """What a size cap left out of the snapshot, where it cut the code itself.
+
+    `files_skipped` counts paths left out for every reason, most of them
+    reasons that change nothing about the review: a binary, a file the
+    repository does not track, a folder of this tool's own runs. `source_cut`
+    is the one that does change something. Above zero, a cap stopped the
+    snapshot before it held all of the program source, so the code reader read
+    part of the code, and a reader of this review has to be told that before
+    reading anything the review says the code does not do.
+    """
+    cut = code.get("source_cut")
+    if not isinstance(cut, int) or isinstance(cut, bool) or cut <= 0:
+        return ""
+    return (
+        f" A size cap left {cut} program source file(s) out of that copy, so the "
+        "code reader read part of the code and not all of it, and nothing here "
+        "can be read as saying the code never does something."
+    )
+
+
 def method_paragraph(run: dict, models: dict[str, str]) -> str:
     """Describe the run that happened, from what the run recorded.
 
@@ -1231,12 +1895,13 @@ def method_paragraph(run: dict, models: dict[str, str]) -> str:
         shape += (
             f" {len(tracks)} specialist readers then checked it on one dimension "
             f"each ({', '.join(tracks)}), and an editor agent pooled every "
-            "finding, ruled on the ones a reviewer escalated, and chose which "
-            "belong in the body of the letter."
+            "finding, ruled on the ones a reviewer escalated, and wrote the "
+            "numbered issues the letter asks for."
         )
     elif arm:
         shape += f" The run used the {arm} arm, which convened no specialist readers."
     shape += citation_lane_clause(run)
+    shape += code_lane_clause(run)
 
     ran = (
         f"and the models observed running were {model_phrase(models)}"
@@ -1342,14 +2007,35 @@ def no_findings_note(run: dict) -> str:
     )
 
 
-def render_summary(
-    preprint: Preprint, package: dict, provenance: dict, findings: list[dict]
-) -> str:
-    counts = severity_counts(findings)
+def _issue_tags(issue: dict, package: dict) -> str:
+    """How a reader should weigh one issue, in the engine's own vocabulary.
+
+    The id first, because it is the id the authors answer and the id the
+    document in this bundle holds it under. Then the severity, the category the
+    editor filed it under, and how many reviewer slots raised it. No standing,
+    because this review read the manuscript in front of it and no earlier
+    review, so every item in it is one this review raises for itself.
+    """
+    parts = [f"`{str(issue.get('id') or 'no id')}`",
+             str(issue.get("severity") or "unstated")]
+    category = str(issue.get("category") or "")
+    if category:
+        parts.append(category)
+    raised = issue.get("raised_by")
+    if isinstance(raised, int) and raised:
+        parts.append(f"raised by {raised} reader{'' if raised == 1 else 's'}")
+    if issue_is_escalated(issue):
+        parts.append("escalated")
+    return ", ".join(parts)
+
+
+def render_summary(preprint: Preprint, package: dict, provenance: dict) -> str:
     generator = provenance["generator"]
     run = generator["run"]
-    appendix = appendix_findings(package)
-    escalations = escalated(findings) + escalated(appendix)
+    required = required_issues(package)
+    suggestions = suggestion_issues(package)
+    counts = severity_counts(required)
+    escalations = escalated_issues([*required, *suggestions])
     lines = [
         f"# Review Summary: {preprint.title or 'Untitled submission'}",
         "",
@@ -1358,9 +2044,9 @@ def render_summary(
         f"**Generated by:** {generator['engine']['name']} {generator['engine']['version']}, "
         f"{generator['plugin']['workflow_version']}, run locally on the "
         f"{run.get('arm') or 'unrecorded'} arm",
-        f"**Findings in this letter:** {len(findings)} "
-        f"({counts['major']} major, {counts['moderate']} moderate, {counts['minor']} minor)"
-        + (f", with {len(appendix)} more in the appendix" if appendix else ""),
+        f"**Required changes:** {len(required)} "
+        f"({counts['major']} major, {counts['moderate']} moderate)",
+        f"**Suggestions:** {len(suggestions)}",
         f"**Escalated by a reviewer:** {len(escalations)}",
         "",
         "## How this review was produced",
@@ -1373,7 +2059,7 @@ def render_summary(
     tracks = _dict(run.get("findings_by_track"))
     if tracks:
         lines += [
-            "Findings raised per track, before the editor pooled them: "
+            "Findings raised per track, before the editor pooled them into issues: "
             + ", ".join(f"{track} {count}" for track, count in sorted(tracks.items()))
             + ".",
             "",
@@ -1382,25 +2068,19 @@ def render_summary(
     if summary:
         lines += ["## The editor agent's summary of the review", "", summary, ""]
     lines += verdict_section(package.get("verdict"))
-    if not findings and not appendix:
+    if not required and not suggestions:
         lines += ["## What the review found", "", no_findings_note(run), ""]
-    if findings:
-        lines += ["## Findings in the letter", ""]
-        for number, finding in enumerate(findings, 1):
-            title = str(finding.get("title") or "Untitled finding").strip()
-            lines.append(f"{number}. **{title}** ({_tags(finding)})")
+    if required:
+        lines += ["## Required changes", ""]
+        for number, issue in enumerate(required, 1):
+            name = str(issue.get("name") or "Unnamed issue").strip()
+            lines.append(f"{number}. **{name}** ({_issue_tags(issue, package)})")
         lines.append("")
-    if appendix:
-        lines += [
-            "## Findings in the appendix",
-            "",
-            "Accepted by the editor agent and kept out of the letter's body, "
-            "which the workflow caps at a fixed number of findings.",
-            "",
-        ]
-        for number, finding in enumerate(appendix, 1):
-            title = str(finding.get("title") or "Untitled finding").strip()
-            lines.append(f"{number}. **{title}** ({_tags(finding)})")
+    if suggestions:
+        lines += ["## Suggestions", ""]
+        for number, issue in enumerate(suggestions, 1):
+            name = str(issue.get("name") or "Unnamed issue").strip()
+            lines.append(f"{number}. **{name}** ({_issue_tags(issue, package)})")
         lines.append("")
     limitations = [str(v).strip() for v in _list(package.get("limitations")) if str(v).strip()]
     if limitations:
@@ -1410,12 +2090,140 @@ def render_summary(
     return "\n".join(lines)
 
 
+def manuscript_citations(workspace: Path, package: dict) -> dict:
+    """The manuscript's own line under every quote the issues cite, by finding.
+
+    Engine 0.10 records where a quote reads: the line, and the start and end of
+    the quoted characters within it. That is what lets the letter mark the words
+    in the line they stand in rather than name a line number and leave the
+    authors to find the sentence.
+
+    The characters come back from the engine's own `cited_text` instead of being
+    searched for here. The engine placed the quote against its normal form of
+    the document, so a second search in this script would pick the wrong one of
+    two identical sentences, would miss a quote whose spacing the normal form
+    folded, and would not follow a quote over a line break at all. A finding
+    with no placement, or one whose offsets the engine left null, gets no row
+    and is cited at its line as before.
+    """
+    why = "the manuscript lines the findings cite cannot be read"
+    read_manuscript = engine_public("read_manuscript", why)
+    cited_text = engine_public("cited_text", why)
+    base = read_manuscript(str(workspace))
+    rows: dict[str, dict] = {}
+    for issue in _list(package.get("issues")):
+        for member in issue_members(issue):
+            uid = str(_dict(member).get("finding_uid") or "")
+            if not uid or uid in rows:
+                continue
+            row = _citation_row(base, cited_text, _dict(member))
+            if row:
+                rows[uid] = row
+    return rows
+
+
+def _citation_row(base: object, cited_text: object, member: dict) -> dict:
+    """One member's quote, with the line of the manuscript it was read on."""
+    line = member.get("line")
+    start = member.get("start")
+    end = member.get("end")
+    if not isinstance(line, int) or line <= 0:
+        return {}
+    if not isinstance(start, int) or not isinstance(end, int) or end <= start:
+        return {}
+    document = str(member.get("document") or MAIN_DOCUMENT)
+    text = str(base.line_text(line, document) or "")  # type: ignore[attr-defined]
+    if not text or start >= len(text):
+        return {}
+    anchored = str(cited_text(base, member) or "")  # type: ignore[operator]
+    if not anchored:
+        return {}
+    end_line = member.get("end_line")
+    row = {
+        "document": document,
+        "line": line,
+        "end_line": end_line if isinstance(end_line, int) and end_line > line else line,
+        "start": start,
+        "end": end,
+        "line_text": text,
+        "anchor_text": anchored,
+    }
+    # Where this line came from, carried from the map the import wrote. A line
+    # a model wrote is quoted the same way as any other and reads the same in
+    # the letter, so the fact has to travel with the quote or the letter cannot
+    # tell the authors which of the two they are being asked about.
+    piece = _dict(base.piece_at(line, document))  # type: ignore[attr-defined]
+    source = str(piece.get("source") or "")
+    if source:
+        row["source"] = source
+    if isinstance(piece.get("page"), int):
+        row["page"] = piece["page"]
+    kind = str(piece.get("kind") or "")
+    if kind:
+        row["kind"] = kind
+    return row
+
+
+def _quoted_line(citation: dict) -> list[str]:
+    """The line a quote was read on, with the quoted characters underlined.
+
+    Printed as code, with a row of carets beneath, because the offsets count
+    characters of the line as the engine converted it and only a monospaced
+    block puts a caret under the character it marks. A line holding a tab would
+    still be marked a column out, which is why the block is the manuscript's
+    line rather than a claim about where on the page it sits.
+
+    A quote that runs over a line break is underlined to the end of the line it
+    starts on and the line it ends on is named: one row of carets cannot reach
+    across two lines, and silently marking only the first part without saying so
+    would make a part-quote read as the whole of it.
+    """
+    text = str(citation.get("line_text") or "")
+    start = citation.get("start")
+    end = citation.get("end")
+    line = citation.get("line")
+    if not text or not isinstance(start, int) or not isinstance(end, int):
+        return []
+    if not isinstance(line, int) or line <= 0 or start >= len(text) or end <= start:
+        return []
+    end_line = citation.get("end_line")
+    runs_on = isinstance(end_line, int) and end_line > line
+    stop = len(text) if runs_on else min(end, len(text))
+    document = str(citation.get("document") or "")
+    where = f"Line {line}"
+    if document and document != MAIN_DOCUMENT:
+        where = f"Line {line} of {document}"
+    # A fence longer than any run of backticks the line itself holds, so a
+    # manuscript quoting code cannot close the block early.
+    longest = max((len(run) for run in re.findall(r"`+", text)), default=0)
+    fence = "`" * max(3, longest + 1)
+    lines = [
+        f"  {where} of the manuscript as the engine converted it, "
+        "with the quoted words marked:",
+        "",
+        f"  {fence}text",
+        f"  {text}",
+        f"  {' ' * start}{'^' * (stop - start)}",
+        f"  {fence}",
+        "",
+    ]
+    if runs_on:
+        lines += [
+            f"  The quote runs on to line {end_line}, and the marks above reach "
+            "only to the end of the line it starts on.",
+            "",
+        ]
+    return lines
+
+
 def render_decision_letter(
-    preprint: Preprint, package: dict, provenance: dict, findings: list[dict]
+    preprint: Preprint,
+    package: dict,
+    provenance: dict,
+    citations: dict | None = None,
 ) -> str:
-    required = [f for f in findings if str(f.get("severity")) in REQUIRED_SEVERITIES]
-    optional = [f for f in findings if str(f.get("severity")) == "minor"]
-    appendix = appendix_findings(package)
+    required = required_issues(package)
+    optional = suggestion_issues(package)
     attestation = provenance["generator"]["attestation"]
     if attestation.get("human_reviewed_before_merge"):
         standing = (
@@ -1442,33 +2250,37 @@ def render_decision_letter(
     if summary:
         lines += ["## Assessment", "", summary, ""]
     if required:
-        lines += ["## Required changes", ""]
-        for number, finding in enumerate(required, 1):
-            lines += _letter_entry(f"R{number}", finding)
+        lines += [
+            "## Required changes",
+            "",
+            "Numbered in the editor agent's own order of priority. The id in "
+            "brackets is the id the engine minted for this item, and it is what "
+            "names it in the machine-readable record published beside this "
+            "letter.",
+            "",
+        ]
+        for number, issue in enumerate(required, 1):
+            lines += _issue_entry(f"{number}", issue, package, citations)
     if optional:
-        lines += ["## Suggestions", ""]
-        for number, finding in enumerate(optional, 1):
-            lines += _letter_entry(f"S{number}", finding)
-    if not findings:
+        lines += [
+            "## Suggestions",
+            "",
+            "Worth doing, and not conditions of the decision.",
+            "",
+        ]
+        for number, issue in enumerate(optional, 1):
+            lines += _issue_entry(f"S{number}", issue, package, citations)
+    if not required and not optional:
         lines += [
             "## Findings",
             "",
             no_findings_note(provenance["generator"]["run"]),
             "",
         ]
-    if appendix:
-        lines += [
-            "## Appendix",
-            "",
-            "Findings the editor agent accepted and left out of the body above. "
-            "They are not withdrawn, and they are listed in full here.",
-            "",
-        ]
-        for number, finding in enumerate(appendix, 1):
-            lines += _letter_entry(f"A{number}", finding)
+    lines += _code_check_section(package)
     rulings = [r for r in _list(package.get("escalation_rulings")) if isinstance(r, dict)]
     if rulings:
-        by_uid = {str(f.get("finding_uid") or ""): f for f in [*findings, *appendix]}
+        index = finding_index(package)
         lines += [
             "## Rulings on escalated findings",
             "",
@@ -1479,7 +2291,7 @@ def render_decision_letter(
         ]
         for ruling in rulings:
             uid = str(ruling.get("finding_uid") or "")
-            title = str(_dict(by_uid.get(uid)).get("title") or "").strip()
+            title = str(_dict(index.get(uid)).get("title") or "").strip()
             lines += [f"### {title or uid or 'Unidentified finding'}", ""]
             if uid:
                 lines += [f"`{uid}`", ""]
@@ -1489,45 +2301,314 @@ def render_decision_letter(
     return "\n".join(lines)
 
 
-def _letter_entry(label: str, finding: dict) -> list[str]:
-    title = str(finding.get("title") or "Untitled finding").strip()
+def _code_check_section(package: dict) -> list[str]:
+    """What the code said about the findings that rested on a method claim.
+
+    Nothing at all on a run with no code, and nothing on a run whose code check
+    answered nothing and left nothing over its cap.
+
+    The section exists for the thrown-out findings. A finding the code
+    contradicts is in no issue, in no required change and in no suggestion, so
+    without this section an author would never learn that it was raised at all,
+    or that it was read against the code and dropped. Each one is printed with
+    the sentence of the paper it was raised against, the lines of code that
+    decided it and the note the check wrote, because the reason a finding was
+    dropped is itself something an author may want to argue with. The confirmed
+    ones are printed too, with their code, so an author can see that a method
+    claim in the letter was not taken on trust, and the unsettled ones say what
+    was searched rather than leaving the code's silence to be read as a verdict.
+    """
+    record = _dict(package.get("code_check"))
+    if not package.get("code_check"):
+        return []
+    rows = [_dict(row) for row in _list(record.get("checks"))]
+    over_cap = record.get("over_cap")
+    over_cap = over_cap if isinstance(over_cap, int) and not isinstance(over_cap, bool) else 0
+    if not rows and not over_cap:
+        return []
     lines = [
-        f"### {label}. {title}",
+        "## Checked against the code",
         "",
-        f"**Severity:** {str(finding.get('severity') or 'unstated')}  ",
-        f"**Raised by:** {str(finding.get('slot') or 'an unrecorded slot')} "
-        f"on track {str(finding.get('track') or 'unrecorded')}  ",
-        f"**Location:** {_location(finding)}",
+        "Each finding below asserted how something was computed, sampled, "
+        "filtered or selected. The code behind the paper was read at the "
+        "passage that decides it, before the finding was allowed to become one "
+        "of this review's asks.",
         "",
     ]
-    if finding.get("escalate"):
+    headings = {
+        "contradicted": "Thrown out: the code does not do what the finding said",
+        "confirmed": "Confirmed by the code",
+        "not-shown": "The code does not settle it",
+    }
+    leads = {
+        "contradicted": (
+            "These are in no issue above, in no required change and in no "
+            "suggestion. They are printed here because they were raised, and "
+            "because the reason they were dropped is itself something an author "
+            "may want to argue with."
+        ),
+        "confirmed": (
+            "The code says what the finding said it says. These findings are in "
+            "the letter above like any other, and the code they were checked "
+            "against is printed here."
+        ),
+        "not-shown": (
+            "The code neither bore these out nor contradicted them. What was "
+            "searched is printed so the silence is not read as a verdict either "
+            "way, and each finding stands on its reviewer's reading of the "
+            "manuscript alone."
+        ),
+    }
+    for verdict in CODE_CHECK_VERDICTS:
+        group = [row for row in rows if str(row.get("verdict") or "") == verdict]
+        if not group:
+            continue
+        lines += [f"### {headings[verdict]}", "", leads[verdict], ""]
+        for row in group:
+            lines += _code_check_entry(row)
+    if over_cap:
         lines += [
-            "**The reviewer escalated this finding as bearing on the paper's "
-            "central claim.**",
+            f"**Not checked:** {over_cap} further finding(s) rested on a method "
+            "claim and fell past the limit on this stage. They were left exactly "
+            "as their reviewers filed them, and the code was not read against "
+            "them, which is neither a check nor a clearance.",
             "",
         ]
-    lines += basis_note(finding)
-    quote = str(finding.get("quote") or "").strip()
+    return lines
+
+
+def _code_check_entry(row: dict) -> list[str]:
+    """One answer of the code check, with the code it rests on.
+
+    The tags describe the finding and not the lane that checked it. A check row
+    carries two slots and two tracks, its own and the finding's, and reading its
+    own would label every entry here as the work of the code reader rather than
+    of the reviewer who raised it.
+    """
+    title = str(row.get("title") or "Untitled finding").strip()
+    about = dict(row, track=row.get("finding_track") or "", slot=row.get("finding_slot") or "")
+    lines = [f"- **{title}** ({_tags(about)})", ""]
+    quote = str(row.get("quote") or "").strip()
     if quote:
-        lines += ["Manuscript passage:", "", f"> {quote}", ""]
-    comment = str(finding.get("comment") or "").strip()
-    if comment:
-        lines += [comment, ""]
-    replacement = str(finding.get("replacement") or "").strip()
-    if replacement:
-        lines += ["Suggested replacement:", "", f"> {replacement}", ""]
-    counter = str(finding.get("counterevidence") or "").strip()
-    if counter:
-        lines += [f"**Strongest counterpoint:** {counter}", ""]
-    reason = str(finding.get("editor_reason") or "").strip()
-    if reason:
-        lines += [f"**The editor agent's reason for placing it here:** {reason}", ""]
-    raising = finding.get("reviewers_raising")
-    if isinstance(raising, int) and raising > 1:
-        lines += [f"**Raised independently by {raising} reviewers.**", ""]
-    uid = str(finding.get("finding_uid") or "").strip()
+        lines += [f"  > {quote}", ""]
+    assumed = str(row.get("assumed_method") or "").strip()
+    if assumed:
+        lines += [f"  **The step it assumed:** {assumed}", ""]
+    lines += code_evidence_lines(row)
+    searched = [str(one) for one in _list(row.get("searches")) if str(one).strip()]
+    if searched:
+        lines += [f"  **Searched for:** {', '.join(f'`{one}`' for one in searched)}", ""]
+    note = str(row.get("note") or "").strip()
+    if note:
+        lines += [f"  {note}", ""]
+    uid = str(row.get("finding_uid") or "").strip()
     if uid:
-        lines += [f"`{uid}`", ""]
+        lines += [f"  `{uid}`", ""]
+    return lines
+
+
+def _issue_entry(
+    label: str, issue: dict, package: dict, citations: dict | None = None
+) -> list[str]:
+    """One issue, with every finding it was raised from under it.
+
+    The issue carries the editor agent's statement of what has to change. The
+    evidence under it is the reviewers' own: the member holds the quote and the
+    lines it was read on, and the reviewer's comment and what the finding rests
+    on are joined back on from the ledger by `finding_uid`.
+    """
+    name = str(issue.get("name") or "Unnamed issue").strip()
+    identifier = str(issue.get("id") or "")
+    heading = f"### {label}. {name}"
+    if identifier:
+        heading += f" [`{identifier}`]"
+    lines = [heading, ""]
+    slots = issue_slots(issue)
+    standing = [f"**Severity:** {str(issue.get('severity') or 'unstated')}  "]
+    category = str(issue.get("category") or "")
+    if category:
+        standing.append(f"**Category:** {category}  ")
+    standing.append(
+        "**Raised by:** "
+        + (", ".join(slots) if slots else "an unrecorded slot")
+        + "  "
+    )
+    lines += standing + [""]
+    if issue_is_escalated(issue):
+        lines += [
+            "**A reviewer escalated a finding behind this item as bearing on "
+            "the paper's central claim.**",
+            "",
+        ]
+    statement = str(issue.get("statement") or "").strip()
+    if statement:
+        lines += [statement, ""]
+    rebuttal = str(issue.get("rebuttal_quote") or "").strip()
+    if rebuttal:
+        line = issue.get("rebuttal_line")
+        # Which file the passage reads in. A manuscript can be imported as more
+        # than one document, and the engine carries the rebuttal's document as
+        # a field of its own, empty for the main one. An author sent to a line
+        # number with no file beside it would look for it in the paper, which
+        # is the wrong file whenever the passage is in a supplement.
+        document = str(issue.get("rebuttal_document") or "").strip() or MAIN_DOCUMENT
+        at = f", on line {line}" if isinstance(line, int) and line > 0 else ""
+        if document != MAIN_DOCUMENT:
+            at = f"{at}, in {document}" if at else f", in {document}"
+        lines += [
+            f"What the manuscript says about it{at}:",
+            "",
+            f"> {rebuttal}",
+            "",
+        ]
+    audits = [str(a).strip() for a in _list(issue.get("audits")) if str(a).strip()]
+    if audits:
+        lines += [
+            "**Specialist audits behind it:** " + ", ".join(f"`{a}`" for a in audits),
+            "",
+        ]
+    members = issue_members(issue)
+    if members:
+        lines += [
+            f"**Raised from {len(members)} finding"
+            f"{'' if len(members) == 1 else 's'}:**",
+            "",
+        ]
+    for member in members:
+        lines += _member_entry(member, package, citations)
+    return lines
+
+
+def _written_by_a_model(citation: dict) -> list[str]:
+    """What to say under a quote that reads on a line a model wrote.
+
+    An author answering a finding has to know whose words it is about. A figure
+    description is a model's account of a picture and appears nowhere in the
+    paper, so a finding against it is a finding about the reading rather than
+    about the manuscript, and the answer to it is not a revision. A repaired
+    equation is printed in the paper and was rewritten because the converter
+    misread the page, so the finding is about the authors' own line and the
+    marked characters are the model's transcription of it.
+
+    Anything else carrying a source this release does not know by name is
+    reported for what the map says and nothing more, which is the only honest
+    reading of a word that was added after this code was written.
+    """
+    source = str(_dict(citation).get("source") or "")
+    if not source or source == CONVERTER_SOURCE:
+        return []
+    page = citation.get("page")
+    where = f", page {page} of the original" if isinstance(page, int) else ""
+    if source == "ai":
+        return [
+            "  These are not the authors' words. The line was written by a "
+            f"model reading the page image{where}, as a description of a figure "
+            "or as text the converter did not return, and it is not printed in "
+            "the manuscript.",
+            "",
+        ]
+    if source == "ai-reconstructed":
+        return [
+            "  This line is printed in the manuscript and the converter misread "
+            f"it, so a model rewrote it from the page image{where}. The marked "
+            "characters are the model's transcription, and the converter's own "
+            "reading is kept beside it in the imported manuscript.",
+            "",
+        ]
+    return [
+        f"  The imported manuscript records this line's source as `{source}`, "
+        "which this release does not know by name. It is not the converter's "
+        "own text layer, so the line may not be the authors' words.",
+        "",
+    ]
+
+
+def code_evidence_lines(finding: dict) -> list[str]:
+    """The lines of code one finding rests on, and nothing else from the copy.
+
+    A code-checked finding carries the file, the first and last line, the text
+    at those lines and the digest of the file they were read from, and the
+    engine refuses the finding if the text is not what stands at those lines in
+    the copy it took. So this is quotation of checked evidence, and what is
+    published is the quotation and the address of it: the file by its path
+    inside the copy, the lines by number, the digest so a reader who fetches the
+    same commit can confirm they are reading the same file.
+
+    No other part of the copy is published, here or anywhere else in the bundle.
+    The author's code is the author's, and a review earns the right to print the
+    lines it makes a claim about rather than the right to redistribute the
+    repository.
+    """
+    evidence = _dict(finding.get("code_evidence"))
+    path = str(evidence.get("path") or "").strip()
+    start = evidence.get("start_line")
+    if not path or not isinstance(start, int) or start <= 0:
+        return []
+    end = evidence.get("end_line")
+    where = f"lines {start}-{end}" if isinstance(end, int) and end > start else f"line {start}"
+    lines = [f"  **Checked in the code:** `{path}`, {where}.", ""]
+    text = str(evidence.get("text") or "")
+    if text:
+        # An indented block, so every character of the quoted code reads as
+        # code. A fence would be opened and closed by the code itself if the
+        # code happened to contain one.
+        lines += [f"      {row}" for row in text.replace("\t", "    ").splitlines()]
+        lines.append("")
+    digest = str(evidence.get("sha256") or "").strip()
+    if digest:
+        lines += [
+            f"  That file reads as `{digest[:16]}` in the copy the review read, "
+            "which is how a reader who fetches the same commit can tell they "
+            "have the same file in front of them.",
+            "",
+        ]
+    return lines
+
+
+def _member_entry(member: dict, package: dict, citations: dict | None = None) -> list[str]:
+    """One finding behind an issue, as the reviewer wrote it."""
+    finding = issue_finding(package, member)
+    # The member's own values win where it has one, and a field it carries as
+    # null does not blank out the ledger's: every member field is present on
+    # every member, so a plain merge would hide what the finding recorded.
+    row = dict(finding)
+    row.update({k: v for k, v in _dict(member).items() if v not in (None, "", [])})
+    title = str(row.get("title") or "Untitled finding").strip()
+    uid = str(member.get("finding_uid") or "").strip()
+    lines = [f"- **{title}** ({_tags(row)})", ""]
+    quote = str(row.get("quote") or "").strip()
+    if quote:
+        lines += [f"  > {quote}", ""]
+    # Where those words read, marked in the line itself. `quote` is what the
+    # reviewer typed and `anchor_text` is the manuscript's own characters, which
+    # can differ in a dash or a capital, so when they differ the letter says
+    # which of the two is marked rather than leaving an author to wonder why
+    # the underlined words are not the quoted ones.
+    citation = _dict(_dict(citations).get(str(member.get("finding_uid") or "")))
+    marked = _quoted_line(citation)
+    if marked:
+        lines += marked
+        anchor = str(citation.get("anchor_text") or "").strip()
+        if quote and anchor and anchor != quote:
+            lines += [
+                "  The marked characters are the manuscript's own. The quotation "
+                "above it is the reviewer's, and the two differ in how they are "
+                "written rather than in where they read.",
+                "",
+            ]
+        lines += _written_by_a_model(citation)
+    lines += code_evidence_lines(row)
+    comment = str(row.get("comment") or "").strip()
+    if comment:
+        lines += [f"  {comment}", ""]
+    for label, key in (("What it rests on", "basis_reason"),
+                       ("Suggested replacement", "replacement"),
+                       ("Strongest counterpoint", "counterevidence")):
+        text = str(row.get(key) or "").strip()
+        if text:
+            lines += [f"  **{label}:** {text}", ""]
+    if uid:
+        lines += [f"  `{uid}`", ""]
     return lines
 
 
@@ -1552,38 +2633,505 @@ def render_stats(preprint: Preprint, ingest: dict, generator: dict) -> str:
         lines.append(f"- Manuscript text: {chars} characters")
     if ingest.get("text_sha256"):
         lines.append(f"- Manuscript text sha256: `{ingest['text_sha256']}`")
-    blocks = ingest.get("blocks")
-    if blocks:
-        lines.append(f"- Source blocks: {blocks}")
+    pieces = ingest.get("pieces")
+    if pieces:
+        lines.append(f"- Pieces of the paper mapped: {pieces}")
+    text_lines = ingest.get("lines")
+    if text_lines:
+        lines.append(f"- Numbered lines of {MAIN_DOCUMENT}: {text_lines}")
     lines += [
         "",
         "## How the text was read",
         "",
-        f"Imported by {ingest.get('tool') or 'the engine importer'} into "
-        "evidence-linked source blocks. Quotations in this review were validated "
-        "against those blocks before the review was saved.",
+        f"Imported by {ingest.get('tool') or 'the engine importer'} into one "
+        f"Markdown file, {MAIN_DOCUMENT}, holding one piece of the paper per "
+        "numbered line, with a map recording each piece's kind, section and "
+        "page in the original. Every quotation in this review was found in that "
+        "text, and the line it reads on was recorded, before the review was "
+        "saved.",
         "",
     ]
-    return "\n".join(lines)
+    return "\n".join(lines + render_read_stage(ingest))
 
 
-def ingest_record(workspace: Path | None) -> dict:
-    """What the reviewers were handed, measured off the workspace with no model."""
+# What each reason a piece left the manuscript means, in the words a reader of
+# the review is owed. The engine names the reason and counts it. The account of
+# what was done to the paper is this repository's to give, because `absorbed`
+# and `merged` are the engine's vocabulary and not an author's.
+GONE_MEANINGS = {
+    "absorbed": (
+        "A piece counted as `absorbed` is one the converter emitted on its own "
+        "that the reader read as debris of another piece, folded into that "
+        "piece."
+    ),
+    "merged": (
+        "A piece counted as `merged` is a half of an equation the converter "
+        "split, put back into the whole, which is counted above under what the "
+        "reader did to the whole."
+    ),
+    "withdrawn": (
+        "A piece counted as `withdrawn` is one this stage added and took out "
+        "again."
+    ),
+}
+
+
+def render_read_stage(ingest: dict) -> list[str]:
+    """What a model wrote into the manuscript, for the statistics page.
+
+    The converted text is not all the converter's. Before any reviewer saw this
+    paper a model read its page images, rewrote what the converter mangled,
+    wrote a description under every figure and transcribed the pages the
+    converter returned nothing from. A reader of the review is owed both halves
+    of that: which lines of the manuscript it was, so a quotation can be checked
+    against the list, and which pages of the paper exist in the review only
+    because a model read them.
+
+    A manuscript nothing read is reported just as plainly. That the equations
+    in it are a converter's reading of a picture, and that its figures reached
+    the panel as captions with nothing behind them, is as much a limit on what
+    the review can be trusted to have seen.
+    """
+    read = _dict(ingest.get("ai_read"))
+    per_source = _dict(ingest.get("pieces_per_source"))
+    said = _dict(ingest.get("source_values"))
+    written = [row for row in _list(ingest.get("model_written")) if _dict(row)]
+    if not read and not per_source and not written:
+        return []
+    lines = ["## What a model wrote", ""]
+    if read.get("read"):
+        model = str(read.get("reader_model") or "an unnamed model")
+        viewed = read.get("pages_viewed")
+        pages = read.get("pages")
+        counted = ""
+        if isinstance(viewed, int) and isinstance(pages, int) and pages:
+            counted = f", which looked at {viewed} of its {pages} pages"
+        lines += [
+            f"The pages of this paper were read by {model}{counted} before any "
+            "reviewer was given the text. It repaired what the converter "
+            "misread, re-read a piece the converter had labelled as the wrong "
+            "kind as the pieces the page actually prints, described the figures "
+            "and transcribed what the converter missed. Every line of the "
+            "result that is not the converter's own reading is listed here.",
+            "",
+        ]
+        acted = _dict(read.get("actions"))
+        done = [
+            f"{name}: {count}"
+            for name, count in sorted(acted.items())
+            if isinstance(count, int) and count
+        ]
+        if done:
+            lines += [
+                "- Pieces of the sealed manuscript by what the reader did to "
+                f"each: {', '.join(done)}. This counts the manuscript, so a "
+                "piece that is no longer in it is counted below instead.",
+                "",
+            ]
+        gone = _dict(read.get("gone"))
+        left = [
+            f"{name}: {count}"
+            for name, count in sorted(gone.items())
+            if isinstance(count, int) and count
+        ]
+        if left:
+            # The pieces the reader took out of the paper, which the count above
+            # cannot hold: it walks the pieces the sealed documents have, and
+            # these are the ones they do not. A stage that folded three headings
+            # away and said so nowhere would leave an author to find the gap by
+            # comparing the manuscript against their own PDF.
+            # And only the reasons this record carries are explained. A page
+            # that glossed every reason the engine knows would tell an author
+            # about a merge that never happened to their paper.
+            held = [
+                name
+                for name in sorted(gone)
+                if isinstance(gone[name], int) and gone[name]
+            ]
+            meanings = [GONE_MEANINGS[name] for name in held if name in GONE_MEANINGS]
+            unnamed = [name for name in held if name not in GONE_MEANINGS]
+            if unnamed:
+                # A release that counted a new kind of departure would otherwise
+                # print a bare word, and an author cannot be left to guess what
+                # was done to a piece of their own paper.
+                meanings.append(
+                    "A piece counted as "
+                    + " or ".join(f"`{name}`" for name in unnamed)
+                    + " left the manuscript for a reason this release has no "
+                    "account of, and what that was can be read from the engine "
+                    "release named in the record."
+                )
+            lines += [
+                "- Pieces that are no longer in the manuscript, by why they "
+                f"left it: {', '.join(left)}. {' '.join(meanings)} These do not "
+                "add up with the counts above, because the piece that holds a "
+                "fold is counted there under what was done to it.",
+                "",
+            ]
+    else:
+        reason = str(read.get("reason") or "").strip()
+        because = f" The import's own reason: {reason}" if reason else ""
+        composed = str(read.get("ai_model") or "").strip()
+        pieces = read.get("ai_pieces")
+        if composed:
+            # A manuscript an application composed from its own source, rather
+            # than one converted from a page image. Nothing read a page, and
+            # some of the text is still a model's: saying only that no model
+            # read the pages would leave a reader to assume the rest is the
+            # authors' own words.
+            many = (
+                f"{pieces} pieces of it were"
+                if isinstance(pieces, int) and pieces != 1
+                else "one piece of it was"
+            )
+            lines += [
+                "No model read the pages of this paper, because this manuscript "
+                "was not converted from page images. It was written from an "
+                f"application's own source, and {many} written by {composed} "
+                f"rather than taken from that source.{because}",
+                "",
+            ]
+        else:
+            lines += [
+                "No model read the pages of this paper. Every line of the text "
+                "is the converter's, which means an equation or a table in a "
+                "quotation is the converter's reading of a picture of it, and "
+                f"no figure in the paper has a description behind it.{because}",
+                "",
+            ]
+    note = " ".join(str(read.get("note") or "").split())
+    if note:
+        # What the reading model knew and no reviewer could find out. On the
+        # engine's first real run the reader knew the converter had dropped a
+        # table and garbled two others, and said so in a report that reached no
+        # file. It is served here under the same label the engine serves it
+        # under: that model's account of the document, and not a sentence of
+        # the paper or a finding of the review.
+        lines += [
+            "The model that read the pages left this note about the document. "
+            "It is that model's own account of what it found while reading "
+            "them, not the authors' text and not a finding of this review:",
+            "",
+            f"> {note}",
+            "",
+        ]
+    for name, count in sorted(per_source.items()):
+        description = str(said.get(name) or "").strip()
+        about = f": {description}" if description else ""
+        lines.append(f"- `{name}`, {count} pieces{about}")
+    if per_source:
+        lines.append("")
+    if written:
+        lines += ["Lines that are not the converter's own reading of the paper:", ""]
+        for row in written:
+            piece = _dict(row)
+            span = [n for n in _list(piece.get("lines")) if isinstance(n, int)]
+            where = str(span[0]) if len(span) == 2 and span[0] == span[1] else (
+                f"{span[0]} to {span[1]}" if len(span) == 2 else "unrecorded"
+            )
+            page = piece.get("page")
+            printed = f", page {page} of the original" if isinstance(page, int) else ""
+            part, of = piece.get("part"), piece.get("of")
+            split = (
+                f", part {part} of {of} of one piece of the converter's"
+                if isinstance(part, int) and isinstance(of, int)
+                else ""
+            )
+            count = piece.get("absorbed")
+            folded = ""
+            if isinstance(count, int) and count:
+                many = "one piece" if count == 1 else f"{count} pieces"
+                folded = f", with {many} the converter emitted beside it folded in"
+            lines.append(
+                f"- {piece.get('document') or MAIN_DOCUMENT} line {where}, "
+                f"{piece.get('kind') or 'piece'}, `{piece.get('source')}`"
+                f"{split}{folded}{printed}"
+            )
+        lines.append("")
+        if any(isinstance(_dict(row).get("of"), int) for row in written):
+            # A part of a re-read is not the same claim as a transcription, and
+            # the difference is the whole point of how the engine does it. A
+            # table or an equation part was written from the page image. A prose
+            # part was not written at all: the reader named the spans to cut and
+            # the engine cut them, so the words left on the line are the
+            # converter's own. Saying "a model wrote this line" of one of those
+            # would tell an author their own sentence was a machine's.
+            lines += [
+                "A line given as a part of a piece is one of several the reader "
+                "read a single piece of the converter's as, because the "
+                "converter had labelled that piece as the wrong kind. Where "
+                "such a part is a table or an equation, the reader wrote it "
+                "from the page image. Where it is prose, the reader wrote "
+                "nothing: it named the spans to cut and the engine cut them, so "
+                "the words left on the line are the converter's own.",
+                "",
+            ]
+        if any(_dict(row).get("absorbed") for row in written):
+            lines += [
+                "A line given as holding folded pieces took in what the "
+                "converter had emitted beside it as pieces of their own, the "
+                "edge of a displayed equation or the numbers off a chart's "
+                "axis, which the reader read as part of this piece. Those "
+                "pieces are in the manuscript nowhere else. Where a re-read "
+                "wrote several lines, the fold is counted on the one the debris "
+                "was printed as part of, because one fold is one fold.",
+                "",
+            ]
+    lost = [_dict(row) for row in _list(read.get("lost_pages"))]
+    if lost:
+        numbers = ", ".join(str(row.get("page")) for row in lost)
+        lines += [
+            f"Pages the converter returned no text from at all: {numbers}. What "
+            "those pages contribute to this review was transcribed from the page "
+            "image by the model named above, so nothing on them is the "
+            "converter's reading and no part of them was checked against a text "
+            "layer. Where each of those pages landed in the text:",
+            "",
+        ]
+        for row in lost:
+            # The lines are the point. A page number tells a reader which page
+            # of their own PDF nothing was converted from, and the lines tell
+            # them which sentences of the review's manuscript came off it, which
+            # is what a quotation in the letter can be checked against.
+            places = [
+                f"{_dict(place).get('document') or MAIN_DOCUMENT} lines "
+                f"{_list(_dict(place).get('lines'))[0]} to "
+                f"{_list(_dict(place).get('lines'))[1]}"
+                for place in _list(row.get("added"))
+                if len(_list(_dict(place).get("lines"))) == 2
+            ]
+            where = ", ".join(places) if places else "nowhere the import recorded"
+            lines.append(f"- Page {row.get('page')}: {where}")
+        lines.append("")
+    return lines
+
+
+# The fields of the import's own account of the Read stage that a bundle
+# publishes. Taken by name rather than copied whole: the account is the
+# engine's object and a release that added a path to it would otherwise publish
+# this machine's directories with everything else.
+AI_READ_FIELDS = (
+    "read",
+    "reason",
+    "reader_model",
+    "reader_slot",
+    "attempt",
+    "pages",
+    "pages_viewed",
+    "actions",
+    # The pieces that are no longer in the manuscript, by why they left it. The
+    # counts above are the pieces the sealed documents hold, counted by what was
+    # done to each, so a piece folded into the one it was debris of, or added and
+    # taken back out, is in no document to be counted there. The engine keeps
+    # these as the pieces go, and a stage that folded three headings away would
+    # otherwise leave no number anywhere saying it had.
+    "gone",
+    "tool_calls",
+    # A manuscript composed from an application's own source reads `read: false`
+    # and still holds lines a model wrote: a description of a figure, an
+    # equation the application rebuilt. The engine refuses to write one without
+    # the model's name, and records it here with how many pieces it wrote. A
+    # bundle publishes both, because a reader asking who wrote a marked line
+    # would otherwise be told only that nothing read the pages.
+    "ai_model",
+    "ai_pieces",
+    # The reader's own account of the document, in its words. It exists because
+    # the things a reading model learns from the page images are things no
+    # reviewer can work out from the text: that the converter dropped a table,
+    # that two more came out garbled, that a footnote letter on a sideways page
+    # is a best guess. It is published, and labelled as that model's account
+    # rather than the authors' prose or a finding of the review, because a note
+    # kept in the engine's manifest alone reaches nobody who reads the review.
+    "note",
+)
+
+# What a map row's `source` says about where that row's text came from. The
+# engine publishes its own sentence for each value in the manifest, under
+# `source_values`, and that is what a bundle carries: a second wording here
+# would be this repository's belief about the engine rather than the engine's
+# own account of what it wrote.
+CONVERTER_SOURCE = "text"
+
+
+def ingest_record(workspace: Path | None, manuscript_state: str = "") -> dict:
+    """What the reviewers were handed, measured off the workspace with no model.
+
+    Some of those measurements are about a model. Engine 0.10 reads a manuscript
+    before any reviewer sees it: a model looks at the page images, rewrites an
+    equation the converter mangled, writes a description under every figure, and
+    transcribes a page the converter returned no text from at all. So a line the
+    panel quoted can be a model's words rather than the authors', and a page of
+    the paper can have reached the review only because a model read it off the
+    image.
+
+    Both are recorded here, from two places that are written separately. The
+    manifest's `ai_read` is the stage's own account of itself, including the
+    pages nothing was converted from. The `source` on each row of `map.json` is
+    the per-line fact, and it is the one the letter marks a quote against, so
+    the record carries the lines and not only the tally.
+
+    `manuscript_state` is the engine's own name for how the folder came to be
+    sealed, read off the run rather than worked out here. A base sealed by a
+    reader and one sealed with no page read at all hold the same files and are
+    not the same manuscript, and the three roads to the second of them look
+    alike from the outside: the Read stage was switched off, a reader failed and
+    the run sealed what the converter had, or the pieces are an application's
+    own source. `ai_read['reason']` is the engine's sentence for which.
+    """
     record = {"format": "markdown", "tool": "peerreviewagents import_paper"}
+    if manuscript_state:
+        record["manuscript_state"] = str(manuscript_state)
     if workspace is None:
         return record
     workspace = Path(workspace)
-    manuscript = workspace / "manuscript.md"
+    manuscript = workspace / MAIN_DOCUMENT
     if manuscript.is_file():
         text = manuscript.read_text(encoding="utf-8")
         record["chars"] = len(text)
         record["text_sha256"] = digest(text.encode())
-    paper = workspace / "paper.json"
-    if paper.is_file():
-        blocks = maybe_json(paper).get("blocks")
-        if isinstance(blocks, list):
-            record["blocks"] = len(blocks)
+        record["lines"] = len(text.splitlines())
+    manifest = maybe_json(workspace / "manifest.json")
+    pieces = _dict(manifest.get("counts")).get("pieces")
+    if isinstance(pieces, int):
+        record["pieces"] = pieces
+    record["base_schema_version"] = str(manifest.get("schema_version") or "")
+    record["ai_read"] = read_stage_record(manifest)
+    record["pieces_per_source"] = {
+        str(name): count
+        for name, count in _dict(manifest.get("pieces_per_source")).items()
+        if isinstance(count, int)
+    }
+    record["source_values"] = {
+        str(name): str(said)
+        for name, said in _dict(manifest.get("source_values")).items()
+    }
+    record["model_written"] = model_written_lines(workspace)
     return record
+
+
+def read_stage_record(manifest: dict) -> dict:
+    """The import's account of the Read stage, as a bundle publishes it.
+
+    A workspace that was never read carries `read: false` and the import's own
+    reason, which is as much a fact about the review as a reader's model is: it
+    says the equations in every quotation are the converter's reading of a
+    picture of them and that no figure in the paper has a description behind it.
+
+    `lost_pages` is reshaped rather than copied. Each page the engine lists
+    carries the pieces it added off it, each one with the draft's own id for it,
+    the document it landed in and the lines it became. The id names nothing in a
+    bundle, since `map.json` has no ids and a citation is a document and a line,
+    so what travels is the page, the words the converter found on it and where
+    each transcribed piece ended up. A reader of the review can then go from a
+    page the converter returned nothing from to the lines of the manuscript that
+    exist only because a model read it, and quote them against the letter.
+    """
+    account = _dict(manifest.get("ai_read"))
+    record = {
+        name: account[name] for name in AI_READ_FIELDS if account.get(name) is not None
+    }
+    record["read"] = bool(account.get("read"))
+    # The note travels only where there is one. The engine writes the key on
+    # every seal and leaves it empty when the reader filed nothing, and an empty
+    # note published as a field reads as a model that had nothing to say about
+    # the paper rather than one that was never asked for an account.
+    note = " ".join(str(account.get("note") or "").split())
+    record.pop("note", None)
+    if note:
+        record["note"] = note
+    # The pieces that left the manuscript, kept only where there is a number to
+    # keep. The engine leaves out a reason nothing happened under, and a count
+    # that is not a positive number is nothing happening written down, so what
+    # travels is the reasons a piece actually left this manuscript.
+    gone = {
+        str(why): count
+        for why, count in _dict(account.get("gone")).items()
+        if isinstance(count, int) and count > 0
+    }
+    record.pop("gone", None)
+    if gone:
+        record["gone"] = gone
+    lost = []
+    for page in _list(account.get("lost_pages")):
+        row = _dict(page)
+        number = row.get("page")
+        if not isinstance(number, int):
+            continue
+        added = []
+        for piece in _list(row.get("added")):
+            place = _dict(piece)
+            span = [int(n) for n in _list(place.get("lines")) if isinstance(n, int)]
+            if len(span) != 2:
+                continue
+            added.append(
+                {"document": str(place.get("document") or MAIN_DOCUMENT), "lines": span}
+            )
+        entry = {
+            "page": number,
+            "pieces": len(_list(row.get("added"))),
+            "added": sorted(added, key=lambda place: (place["document"], place["lines"])),
+        }
+        words = row.get("words")
+        if isinstance(words, int):
+            entry["words"] = words
+        lost.append(entry)
+    record["lost_pages"] = sorted(lost, key=lambda row: row["page"])
+    return record
+
+
+def model_written_lines(workspace: Path) -> list[dict]:
+    """Every line of the manuscript a model wrote rather than the converter.
+
+    One row per piece whose `source` is not the converter's own text layer, with
+    the lines it occupies, what kind of piece it is and the page it was read
+    off. The lines are published and not only counted because they are what a
+    reader of the review can check: a quotation in the letter sits on one of
+    them or it does not.
+    """
+    rows = []
+    for row in _list(maybe_json_list(workspace / "map.json")):
+        piece = _dict(row)
+        source = str(piece.get("source") or "")
+        if not source or source == CONVERTER_SOURCE:
+            continue
+        span = [int(n) for n in _list(piece.get("lines")) if isinstance(n, int)]
+        if len(span) != 2:
+            continue
+        entry = {
+            "document": str(piece.get("document") or MAIN_DOCUMENT),
+            "lines": span,
+            "kind": str(piece.get("kind") or ""),
+            "source": source,
+        }
+        page = piece.get("page")
+        if isinstance(page, int):
+            entry["page"] = page
+        original = _dict(piece.get("original"))
+        part, of = original.get("part"), original.get("of")
+        if isinstance(part, int) and isinstance(of, int) and of > 1:
+            # This line is one of several the reader read a single piece of the
+            # converter's as, because the converter had labelled that piece as
+            # the wrong kind: a table emitted as a paragraph of run-together
+            # cells, an equation left in the prose after it. Which part of how
+            # many is what tells a reader of the review that the line beside
+            # this one came out of the same piece of the paper.
+            entry["part"] = part
+            entry["of"] = of
+        absorbed = _list(original.get("absorbed"))
+        if absorbed:
+            # How many pieces the converter emitted on their own were folded
+            # into this one as its debris, which is in the manuscript nowhere
+            # else. A re-read that wrote several lines records the fold on one
+            # of them, the line the debris was printed as part of, so the count
+            # here is a fold and not a fold once per line the re-read wrote.
+            # The count travels and the characters do not: they are the
+            # converter's reading of a few marks on a page with no line of the
+            # manuscript to cite, and the engine's own map is where they are
+            # kept. An author is told that something went in here and can find
+            # it on the page.
+            entry["absorbed"] = len(absorbed)
+        rows.append(entry)
+    return sorted(rows, key=lambda row: (row["document"], row["lines"]))
 
 
 def track_reports(run_dir: Path) -> dict[str, Path]:
@@ -1613,12 +3161,8 @@ def review_kind(plan_kind: str, baseline_eligible: bool) -> str:
     `review.kind` is printed on the provenance panel and read by Notices.astro,
     so this reuses the hosted panel's words rather than inventing one. The rule
     there is that an ungraded run is an experiment whatever else it is, and a
-    run on this path is ungraded unless the editor claims it. A revision round
-    keeps its own name, because what it is measured against matters more than
-    how it was produced.
+    run on this path is ungraded unless the editor claims it.
     """
-    if plan_kind == "revision round":
-        return "revision"
     if not baseline_eligible:
         return "experiment"
     if plan_kind == "same-draft re-review":
@@ -1661,8 +3205,7 @@ def build_provenance(
     advisory judgement, and the attestation that a person read the run before it
     was merged.
     """
-    findings = sorted_findings(package)
-    appendix = appendix_findings(package)
+    raised = ranked_issues(package)
     # Recorded only when somebody actually submitted the paper. A review an
     # editor started themselves was solicited by nobody, and writing an empty
     # claim for it would be read as a claim we failed to collect.
@@ -1679,9 +3222,18 @@ def build_provenance(
     # states an intention and the run states what happened, and when the two
     # disagree the run is the one that is true.
     run_record = {key: value for key, value in run.items() if key != "engine_source"}
-    run_record["findings"] = len(findings)
-    run_record["appendix_findings"] = len(appendix)
-    run_record["escalated_in_bundle"] = len(escalated(findings) + escalated(appendix))
+    # What this bundle published, counted off the issues it published rather
+    # than off the findings the reviewers wrote. The two are different numbers
+    # and always were: the editor agent pools findings into issues, so a round
+    # with six findings can publish four items, and the old `findings` count
+    # described neither the letter nor the ledger once pooling existed. The
+    # ledger's own total stays in `findings_delivered`, which the engine sets.
+    run_record["issues"] = len(raised)
+    run_record["required"] = len(required_issues(package))
+    run_record["suggestions"] = len(suggestion_issues(package))
+    run_record["escalated_in_bundle"] = len(escalated_issues(raised))
+    run_record["issues_source"] = str(package.get("issues_source") or "")
+    run_record["issues_schema_version"] = str(package.get("schema_version") or "")
     # The provider is the run's too. It used to be a constant at the top level
     # and another constant inside the transport, so a record could say
     # claude-code twice over a run on another transport, and nothing in the file
@@ -1777,7 +3329,12 @@ def build_provenance(
         "assigned_models": assigned,
         "decision": decision,
         "desk_rejected": False,
-        "round": 1,
+        # How many reviews of this paper have been published here, this one
+        # counted, taken by the prepare step from the drafts already reviewed.
+        # It is a position in the paper's page and nothing more: every review
+        # reads the manuscript in front of it and no earlier review, so nothing
+        # in this bundle is measured against an earlier one.
+        "round": int(prepared.get("round") or 1),
         "ingest": ingest,
         "panel": [],
         # A subscription has no per-review price. Null says there is no figure,
@@ -1790,53 +3347,70 @@ def build_provenance(
 
 
 def write_manifest(dest: Path) -> None:
-    """Hash every file in the bundle, so a later edit to one is visible."""
+    """Hash every file in the bundle, so a later edit to one is visible.
+
+    Every file but the bundle's own manifest, which cannot hold its own digest.
+    A file named `manifest.json` anywhere below the bundle is hashed like any
+    other: excluding it by name would let a copied workspace manifest sit inside
+    a published bundle as the one file nothing covers.
+    """
     dest = Path(dest)
+    own = dest / "manifest.json"
     files = {
         path.relative_to(dest).as_posix(): digest(path.read_bytes())
         for path in sorted(dest.rglob("*"))
-        if path.is_file() and path.name != "manifest.json"
+        if path.is_file() and path != own
     }
     write_json(dest / "manifest.json", {"schema_version": 1, "files": files})
 
 
 def write_round_record(
-    dest: Path, preprint: Preprint, provenance: dict, findings: list[dict]
+    dest: Path, preprint: Preprint, provenance: dict, package: dict
 ) -> None:
-    """The machine-readable round record a later revision round is measured against.
+    """The machine-readable record of what this review required, item by item.
 
-    Each required revision carries the engine's own `finding_uid` now. A
-    revision round has to say which of the previous round's findings it is
-    answering, and an `R1-03` that means nothing outside this file could not be
-    matched back to the finding the reviewer wrote.
+    Every item is named by the engine's own issue id, and that is the whole
+    point of the file. `R1-01` was minted here, counted from the top of the
+    list, so the file renamed every item the moment the list was reordered and
+    an id in it matched nothing in the letter beside it. The engine's id is
+    minted once and printed in the letter under the same name, so an `i03` here
+    is the `i03` the authors were asked about.
     """
-    required = [
+    rows = [
         {
-            "id": f"R1-{number:02d}",
-            "finding_uid": str(finding.get("finding_uid") or ""),
-            "track": str(finding.get("track") or ""),
-            "basis": str(finding.get("basis") or ""),
-            "escalated": bool(finding.get("escalate")),
-            "text": str(finding.get("comment") or finding.get("title") or "").strip(),
-            "source_reviewer": str(finding.get("slot") or ""),
+            "id": str(issue.get("id") or ""),
+            "severity": str(issue.get("severity") or ""),
+            "category": str(issue.get("category") or ""),
+            "rank": issue_rank(issue),
+            "name": str(issue.get("name") or "").strip(),
+            "text": str(issue.get("statement") or issue.get("name") or "").strip(),
+            "finding_uids": [
+                str(_dict(member).get("finding_uid") or "")
+                for member in issue_members(issue)
+                if str(_dict(member).get("finding_uid") or "")
+            ],
+            "raised_by": issue_slots(issue),
+            "escalated": issue_is_escalated(issue),
             "blocking": False,
         }
-        for number, finding in enumerate(
-            [f for f in findings if str(f.get("severity")) in REQUIRED_SEVERITIES], 1
-        )
+        for issue in required_issues(package)
     ]
     write_json(
         dest / ROUND_RECORD,
         {
             "schema_version": 1,
-            "round": 1,
+            "round": int(provenance.get("round") or 1),
             "manuscript_title": preprint.title,
             "decision": provenance["decision"],
-            "required_revisions": required,
+            "required_revisions": rows,
             "minor_suggestions": [
-                str(f.get("comment") or f.get("title") or "").strip()
-                for f in findings
-                if str(f.get("severity")) == "minor"
+                {
+                    "id": str(issue.get("id") or ""),
+                    "rank": issue_rank(issue),
+                    "name": str(issue.get("name") or "").strip(),
+                    "text": str(issue.get("statement") or issue.get("name") or "").strip(),
+                }
+                for issue in suggestion_issues(package)
             ],
             "manuscript_text_sha256": provenance["ingest"].get("text_sha256", ""),
             "manuscript_file_sha256": provenance["generator"]["input"]["sha256"],
@@ -1881,6 +3455,19 @@ def claude_version() -> str | None:
     return reported if VERSION_SHAPE.match(reported) else None
 
 
+# Poppler's pdftotext, which the engine's converter runs to read a PDF. It is
+# an operating system package rather than a dependency the lock can pin, so the
+# preflight reports it: a missing one surfaces as the engine raising
+# PopplerMissing in the middle of a prepared run, which is the wrong moment for
+# an editor to learn they need to install something.
+PDF_TEXT_PROGRAM = "pdftotext"
+
+
+def pdf_text_program_installed() -> bool:
+    """Whether the program the engine converts a PDF with is on PATH."""
+    return shutil.which(PDF_TEXT_PROGRAM) is not None
+
+
 def cmd_fingerprint(args: argparse.Namespace) -> int:
     """Preflight. Prints what is installed, and calls no model."""
     manifest = installed_code_manifest()
@@ -1891,6 +3478,11 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
             manifest, "installed_engine", prefix=PLUGIN_PREFIX
         ),
         "workflow_sha256": manifest.get(WORKFLOW_FILE),
+        "pdf_text": {
+            "program": PDF_TEXT_PROGRAM,
+            "required": True,
+            "installed": pdf_text_program_installed(),
+        },
         "transport": {
             "provider": TRANSPORT_PROVIDER,
             "executable": "claude",
@@ -1906,7 +3498,37 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
             "PATH and signed in to the subscription account.",
             file=sys.stderr,
         )
+    if not record["pdf_text"]["installed"]:
+        print(
+            f"\n{PDF_TEXT_PROGRAM} is not on PATH. The engine converts the "
+            "manuscript with it, so install Poppler before preparing a paper: "
+            "sudo apt install poppler-utils on Debian or Ubuntu, brew install "
+            "poppler on macOS.",
+            file=sys.stderr,
+        )
     return 0
+
+
+def review_round(paper_dir: Path, draft: int) -> int:
+    """Which round of review this is for the manuscript, counting from one.
+
+    A round is a review of a draft, so the number is one more than the number of
+    earlier drafts of this paper that have been reviewed here. A new draft
+    increments it and a second attempt on the same draft does not: a re-review
+    of identical text is this round read again, and numbering it as a new one
+    would tell the authors they had been through a round they were never sent.
+
+    Nothing in the review depends on this. Every review reads the manuscript in
+    front of it and no earlier review, and every item is named by the engine's
+    own id. The number is published because a reader asks which review of the
+    paper they are looking at, and the record used to answer 1 whatever the
+    answer was.
+    """
+    try:
+        published = existing_bundles(Path(paper_dir))
+    except OSError:
+        return 1
+    return 1 + len([number for number in published if number < int(draft)])
 
 
 def cmd_prepare(args: argparse.Namespace) -> int:
@@ -1970,14 +3592,27 @@ def cmd_prepare(args: argparse.Namespace) -> int:
         record["draft"] = plan.draft
         record["attempt"] = plan.attempt
         record["plan_kind"] = plan.kind
+        record["round"] = review_round(paper_dir, plan.draft)
     else:
         record["destination"] = str(RUNS / f"local-{digest(data)[:12]}")
         record["draft"] = 1
         record["attempt"] = 1
         record["plan_kind"] = "unpublishable local run"
+        record["round"] = 1
 
     write_json(out / "prepared.json", record)
     print(json.dumps(record, indent=2))
+    if record.get("publishable") and int(record.get("round") or 1) > 1:
+        # Said out loud because the number in the record is the only thing that
+        # changes between a first review and a later one. Every review reads the
+        # manuscript in front of it and nothing else, so there is nothing for
+        # the operator to pass in and no earlier round to rule against.
+        print(
+            "\nThis is review "
+            f"{record['round']} of this paper. It is a fresh read of the draft "
+            "in front of it, with no knowledge of any earlier review.",
+            file=sys.stderr,
+        )
     if not publishable:
         print(
             "\nThis run cannot be published. A review has to name the exact "
@@ -2002,12 +3637,12 @@ def cmd_prepare(args: argparse.Namespace) -> int:
 # operator whatever the reason it got there.
 #
 # A substring, not a bounded match, because every boundary turned out to be a
-# hole. `/home/ty` with a boundary on the left published `file:/home/ty/x.pdf`,
-# `box:/home/ty/x`, `//home/ty/x`, `a~/home/ty/x` and
-# `http://localhost:8000/home/ty/x`; `ty-ms-7c80` with one published
-# `node.ty-ms-7c80` and `run_ty-ms-7c80_1`; and the fields a fact was not read
+# hole. `/home/opal` with a boundary on the left published `file:/home/opal/x.pdf`,
+# `box:/home/opal/x`, `//home/opal/x`, `a~/home/opal/x` and
+# `http://localhost:8000/home/opal/x`; `lab-ws-01` with one published
+# `node.lab-ws-01` and `run_lab-ws-01_1`; and the fields a fact was not read
 # in published the host name as a JSON key and as an `id`. None of that needs
-# protecting from a substring test, because `/home/ty` and `ty-ms-7c80` cannot
+# protecting from a substring test, because `/home/opal` and `lab-ws-01` cannot
 # occur in a review of a paper, in this repository's own vocabulary, or in
 # anything but a reference to this machine.
 #
@@ -2158,6 +3793,132 @@ LOCAL_REFERENCE_PATTERNS = (
     ),
 )
 
+# A credential, which is not a path and not a machine name and has no business
+# in anything this repository publishes. These were not scanned for at all: the
+# scan was built to keep the operator's filesystem out of a published page, and
+# a key pasted into a refusal, printed by a tool into a run log, or sitting in
+# an environment line copied into a comment would have travelled with it.
+#
+# They are tier 1, like a specific fact: nothing waives one. A hit here is
+# either a live secret, in which case publishing it is the worst thing on this
+# page, or it is a dead or made-up one, in which case the cost of refusing is
+# that someone rewrites an example. That trade only goes one way.
+#
+# Each shape is a vendor's own prefix and length, so there is nothing for a
+# reviewer's prose to collide with. No generic `password = ...` rule is here on
+# purpose: it matches documentation, test fixtures and the word in a sentence,
+# and a rule that fires on those gets waived by habit, which is how the shapes
+# that matter stop being read.
+SECRET_PATTERNS = (
+    (
+        "an API key",
+        # `sk-` covers this project's own provider and the other vendors that
+        # copied the prefix, `sk-ant-api03-...` among them.
+        re.compile(r"(?<![\w-])sk-(?:[A-Za-z0-9_-]*-)?[A-Za-z0-9_-]{24,}"),
+    ),
+    (
+        "a GitHub token",
+        re.compile(r"(?<![\w-])(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[\w]{20,})"),
+    ),
+    (
+        "an AWS access key id",
+        re.compile(r"(?<![A-Z0-9])(?:AKIA|ASIA)[A-Z0-9]{16}(?![A-Z0-9])"),
+    ),
+    (
+        "a Google API key",
+        re.compile(r"(?<![\w-])AIza[A-Za-z0-9_-]{30,}"),
+    ),
+    (
+        "a Slack token",
+        re.compile(r"(?<![\w-])xox[abprs]-[A-Za-z0-9-]{10,}"),
+    ),
+    (
+        "a bearer token",
+        re.compile(r"(?i:bearer)\s+[A-Za-z0-9._~+/-]{24,}={0,2}(?![\w.~+/-])"),
+    ),
+    (
+        "a private key block",
+        re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----"),
+    ),
+)
+
+# How a path opens: a leading slash, or two, under the rules worked out for the
+# absolute path pattern above. Named here because the shapes below reuse it.
+_PATH_OPENER = r"(?:(?<![\w~./:])//|(?<![\w~./])/)"
+
+# A path under somebody's home directory or a temporary directory, whoever's
+# machine it is on. These are tier 1 wherever they appear, and nothing waives
+# one: not `--allow-text`, not the manuscript printing it.
+#
+# The machine facts below cover this machine's own home and temporary
+# directories, looked up at publish time. These cover the rest: `/home/runner`
+# from a CI log, `/Users/someone` from a collaborator's laptop, `/tmp/pdf-cache`
+# from a container the run passed through. The absolute path pattern already
+# finds all of them, as tier 2, which meant any of them could be published by
+# reading the refusal and passing the path back, and a path in a home or
+# temporary directory is never the review's own words. There is nothing in a
+# review of a paper for this to be wrong about: a manuscript does not quote
+# `/home/<name>/<file>`, and if one ever does, the answer is to edit the run's
+# own copy rather than to publish a path.
+UNWAIVABLE_PATH_SHAPES = (
+    (
+        "a path in a home directory",
+        re.compile(rf"{_PATH_OPENER}(?i:home|users)(?:/{_SEGMENT})+/?"),
+    ),
+    (
+        "a path in a temporary directory",
+        re.compile(
+            rf"{_PATH_OPENER}"
+            r"(?i:tmp|temp|var/tmp|var/folders|private/tmp|private/var/folders)"
+            rf"(?:/{_SEGMENT})+/?"
+        ),
+    ),
+    (
+        "a path in a home directory",
+        re.compile(rf"(?<![\w/])~(?:{_SEGMENT})?/{_FIRST_SEGMENT}(?:/{_SEGMENT})*"),
+    ),
+    (
+        "a path under $HOME",
+        re.compile(rf"\$(?:HOME|\{{HOME\}})/{_SEGMENT}(?:/{_SEGMENT})*"),
+    ),
+    (
+        "a path in a Windows user profile",
+        re.compile(rf"(?<![\w:])[A-Za-z]:[\\/]+(?i:users)[\\/]+{_SEGMENT}(?:[\\/]+{_SEGMENT})*"),
+    ),
+    (
+        "a path inside an installed environment",
+        # `usr` and `run` are not roots of the absolute-path shape, for the
+        # reason given there: `/usr/bin` says nothing about the operator and
+        # reads as a word in a sentence too often to refuse review prose over.
+        # That left the longest paths on the machine unscanned, because the
+        # engine is installed under one:
+        # `/usr/lib/python3.12/site-packages/peerreviewagents/plugin/server.py`
+        # names the interpreter, its version and the layout of this install, and
+        # a traceback out of a run is full of them.
+        #
+        # So the marker is the install tree rather than the root. A segment
+        # called `site-packages`, `dist-packages`, `node_modules` or
+        # `virtualenvs` with a path on both sides of it is a file inside an
+        # installed environment, wherever that environment sits. It is here
+        # rather than among the waivable shapes for the same reason a home path
+        # is: no review of a paper contains one, so there is nothing for an
+        # allowance to be for.
+        re.compile(
+            rf"{_PATH_OPENER}{_SEGMENT}(?:/{_SEGMENT})*"
+            rf"/(?i:site-packages|dist-packages|node_modules|virtualenvs)"
+            rf"(?:/{_SEGMENT})+"
+        ),
+    ),
+    (
+        "a per-user runtime directory",
+        # `/run/user/1000` is where a session's sockets live, and the number in
+        # it is the operator's own account id, which is as specific to this
+        # machine as the home directory is.
+        re.compile(r"(?<![\w~./])/run/user/\d+(?:/[\w.+~%-]+)*"),
+    ),
+)
+
+
 class Fact(NamedTuple):
     """One string that names this machine, with the rule for finding it.
 
@@ -2170,7 +3931,7 @@ class Fact(NamedTuple):
 
     There is no field a fact is skipped in any more. A list of vocabulary fields
     existed to stop a host called `editor` refusing its own provenance record,
-    and it published `ty-MS-7C80` as a JSON key and as an `id`. Fixing which
+    and it published `lab-WS-01` as a JSON key and as an `id`. Fixing which
     facts are unwaivable is what removed the need for it.
     """
 
@@ -2219,8 +3980,8 @@ def host_pattern(name: str) -> "re.Pattern[str]":
     """How to find this machine's own name, which depends on what it is called.
 
     A specific name is matched as a plain substring, in either case and with no
-    boundary on either side. `ty-ms-7c80` typed in a comment is this machine as
-    surely as `ty-MS-7C80` is, and so are `node.ty-ms-7c80`, `run_ty-ms-7c80_1`
+    boundary on either side. `lab-ws-01` typed in a comment is this machine as
+    surely as `lab-WS-01` is, and so are `node.lab-ws-01`, `run_lab-ws-01_1`
     and a JSON key spelled with it, every one of which the bounded version
     published. Nothing has to be protected from this test, because no review of
     any paper contains this string.
@@ -2245,7 +4006,7 @@ def host_pattern(name: str) -> "re.Pattern[str]":
 def path_segments(text: str) -> int:
     """How many named segments a detected path has.
 
-    `/home/ty` has two, `/tmp` has one, and that count is the whole of the
+    `/home/opal` has two, `/tmp` has one, and that count is the whole of the
     specific-or-generic decision for a path. Two segments is a place on one
     disk. One segment is a word that happens to be a directory, and every
     system has it.
@@ -2266,12 +4027,12 @@ def machine_facts(
     A path of two or more segments, and a host name carrying a digit, a hyphen
     or a dot, are specific. They are matched as a plain case-insensitive
     substring, with no boundary on either side, everywhere, and nothing waives
-    one. There is nothing to protect from that test: `/home/ty` and `ty-ms-7c80`
+    one. There is nothing to protect from that test: `/home/opal` and `lab-ws-01`
     do not occur in a review of a paper or in this repository's own vocabulary,
     which is why the boundaries that were there to protect ordinary text are
-    gone, and with them every hole they left. `file:/home/ty/x.pdf`,
-    `//home/ty/x`, `a~/home/ty/x`, `http://localhost:8000/home/ty/x`,
-    `node.ty-ms-7c80`, `run_ty-ms-7c80_1` and the host as a JSON key were all
+    gone, and with them every hole they left. `file:/home/opal/x.pdf`,
+    `//home/opal/x`, `a~/home/opal/x`, `http://localhost:8000/home/opal/x`,
+    `node.lab-ws-01`, `run_lab-ws-01_1` and the host as a JSON key were all
     published by the bounded version.
 
     A one-segment path, a one-word host name and the bare account name are
@@ -2294,8 +4055,9 @@ def machine_facts(
 
         Only the resolved spelling was registered, so on a machine where the
         home directory, the temporary directory or the run folder is a symlink,
-        the name every tool prints was not a fact at all. `/home/ty` resolving
-        to `/export/people/ty` meant a run under `/home/ty` published `/home/ty`
+        the name every tool prints was not a fact at all. `/home/opal`
+        resolving to `/export/people/opal` meant a run under `/home/opal`
+        published `/home/opal`
         and refused only the target nobody ever types.
         """
         text = str(value or "")
@@ -2358,8 +4120,8 @@ def machine_facts(
         if path_segments(text) > 1:
             # Both spellings of the fact itself. The scan reads the raw string
             # and the canonical one, so a fact that canonicalises to something
-            # else has to be looked for in both: HOME written `/home//ty/.` is
-            # the same machine as HOME written `/home/ty`.
+            # else has to be looked for in both: HOME written `/home//opal/.`
+            # is the same machine as HOME written `/home/opal`.
             for spelling in dict.fromkeys((text, canonical_text(text))):
                 facts.append(Fact(why, re.compile(re.escape(spelling), re.IGNORECASE)))
             continue
@@ -2415,6 +4177,13 @@ def machine_facts(
                 specific=False,
             )
         )
+    # The shapes nothing waives, carried as facts so that one scan reads them
+    # with everything else: the same canonical forms, the same longest-hit
+    # folding, the same refusal. Registering them as specific is also what makes
+    # `names_a_specific_fact` refuse an allowance that contains one, so an
+    # editor cannot publish a home directory by passing the refusal's own text
+    # back on the command line.
+    facts += [Fact(why, pattern) for why, pattern in UNWAIVABLE_PATH_SHAPES]
     return tuple(facts)
 
 
@@ -2440,7 +4209,7 @@ def manuscript_text(workspace: Path | str | None) -> str:
     """
     if workspace is None:
         return ""
-    manuscript = Path(workspace) / "manuscript.md"
+    manuscript = Path(workspace) / MAIN_DOCUMENT
     try:
         return manuscript.read_text(encoding="utf-8", errors="replace")
     except OSError:
@@ -2468,10 +4237,10 @@ def printed_in(text: str, document: str) -> bool:
 # FRACTION SLASH, U+29F8 BIG SOLIDUS, U+2216 SET MINUS, U+27CB MATHEMATICAL
 # RISING DIAGONAL, U+2571 BOX DRAWINGS LIGHT DIAGONAL and U+3033 VERTICAL KANA
 # REPEAT MARK all survive it. A backslash is a slash here too: `C:\Users\bob`
-# and `\home\ty\x` are the paths they read as, and the shapes that need the
+# and `\home\opal\x` are the paths they read as, and the shapes that need the
 # backslash itself still see it, because the raw string is scanned as well. The
 # hyphens matter for the host name, which is the one fact with a hyphen in it:
-# `ty‑MS‑7C80` written with U+2011 is this machine.
+# `lab‑WS‑01` written with U+2011 is this machine.
 _LOOKALIKES = str.maketrans(
     {
         "\\": "/",
@@ -2497,10 +4266,10 @@ _LOOKALIKES = str.maketrans(
     }
 )
 # A backslash in front of ASCII punctuation is an escape, not a path separator:
-# `\/home\/ty` out of a JSON string and `ty\-MS\-7C80` out of a regular
+# `\/home\/opal` out of a JSON string and `lab\-WS\-01` out of a regular
 # expression are both this machine, written by something that quoted them.
-# Dropped before the look-alikes are folded, so that `\home\ty\x` still becomes
-# `/home/ty/x` while `\/home` does not become `//home`.
+# Dropped before the look-alikes are folded, so that `\home\opal\x` still
+# becomes `/home/opal/x` while `\/home` does not become `//home`.
 _ESCAPED_PUNCTUATION = re.compile(r"\\([!-\/:-@\[-`{-~])")
 _DOT_SEGMENT = re.compile(r"/\.(?=/)")
 # Repeated slashes are one slash, except the pair that follows a scheme.
@@ -2515,7 +4284,7 @@ def canonical_text(text: str, *, escapes_first: bool = True) -> str:
 
     Every encoding this scan has been got past is undone here rather than in a
     list of special cases, and undone repeatedly, because each layer can reveal
-    another: `%252Fhome%252Fty` is a percent sign that decodes to a percent
+    another: `%252Fhome%252Fopal` is a percent sign that decodes to a percent
     sign, and `&#37;2Fhome` is an HTML entity hiding one. The steps are NFKC,
     HTML entities, percent-decoding, dropping the format characters that print
     as nothing (U+200B through U+200D, U+2060, U+FEFF and the soft hyphen are
@@ -2526,7 +4295,7 @@ def canonical_text(text: str, *, escapes_first: bool = True) -> str:
 
     A backslash is two things at once and the order decides which one it is
     read as, so there is no order that is right. With `escapes_first`, which is
-    the default, `\\/home\\/ty` is a quoted `/home/ty` and `ty\\-MS\\-7C80` is a
+    the default, `\\/home\\/opal` is a quoted `/home/opal` and `lab\\-WS\\-01` is a
     quoted host name. Without it, a backslash is a separator before anything
     else, and `\\opt\\.cache\\insilico` is `/opt/.cache/insilico` rather than
     the `/opt.cache/insilico` the other reading produces, which is a path on no
@@ -2568,7 +4337,7 @@ def _scan_forms(text: str) -> tuple[str, ...]:
     A handful of forms rather than a list of encodings. The raw string is read
     because the Windows share and the percent-encoded path are shapes in their
     own right, and the canonical form is read because `%2Fhome%2Fbob`,
-    `&#47;home&#47;ty`, `/home/./ty`, `\\/home\\/ty` and `∕home∕ty` are all the
+    `&#47;home&#47;opal`, `/home/./opal`, `\\/home\\/opal` and `∕home∕opal` are all the
     same path and none of them matches a pattern written in slashes. Both
     readings of a backslash are canonicalised, because a quoted separator and a
     quoted punctuation mark are written the same way and whichever reading holds
@@ -2585,12 +4354,19 @@ def names_a_specific_fact(text: str, facts: Sequence[Fact]) -> bool:
     reading `file:///<checkout>/scripts/local_review.py` in a refusal and
     passing it back waived a tier 1 fact, because the flag matched the hit and
     nothing looked at what the hit was made of.
+
+    A credential counts here too, though it is not a fact about this machine.
+    What the two have in common is the only thing this test is for: neither may
+    be published, and an allowance naming one would publish it.
     """
+    forms = _scan_forms(text)
+    if any(pattern.search(form) for _, pattern in SECRET_PATTERNS for form in forms):
+        return True
     return any(
         fact.pattern.search(form)
         for fact in facts
         if fact.specific
-        for form in _scan_forms(text)
+        for form in forms
     )
 
 
@@ -2622,6 +4398,15 @@ def local_references(
     # first and a hit that only the canonical form found is a different kind of
     # hit: it is the same disk written in an encoding, not a second one.
     found: list[tuple[Leak, bool]] = []
+    # A credential is reported in the same tier as a specific fact and before
+    # the shapes, so a key sitting inside a longer path or header is the hit
+    # that carries the tier rather than the path around it.
+    for why, pattern in SECRET_PATTERNS:
+        for index, form in enumerate(forms):
+            found += [
+                (Leak(why, match.group(0), True), index > 0)
+                for match in pattern.finditer(form)
+            ]
     for fact in facts:
         if not fact.specific:
             continue
@@ -2667,7 +4452,7 @@ def local_references(
     # and never hide a path. The line then names the spelling the file holds,
     # which is the one an editor can search for and the one `--allow-text` has
     # to match. A folded hit that no written hit covers is the whole point of
-    # folding, `%2Fhome%2Fty` being a path only once decoded, and it stays, in
+    # folding, `%2Fhome%2Fopal` being a path only once decoded, and it stays, in
     # the only spelling that shows what it is.
     written = [leak for leak in carrying if not only_folded.get(leak.text, False)]
     covers = [_scan_forms(leak.text) for leak in written]
@@ -2730,7 +4515,9 @@ def leak_refusal(leaks: Sequence[Leak]) -> str:
     if unwaivable:
         said += (
             f" {len(unwaivable)} of these name this machine itself, looked up"
-            " rather than recognised, and no flag and no manuscript waives one."
+            " rather than recognised, a path under a home or temporary"
+            " directory, or a credential, and no flag and no manuscript waives"
+            " one."
         )
     return said
 
@@ -2760,7 +4547,7 @@ def local_reference_fields(
     version switched the host name fact off in field names and in a list of
     fields whose values come from a fixed vocabulary, because a host called
     `editor` refused its own provenance record. That is what published
-    `ty-MS-7C80` as a JSON key and as an `id`, a `status` and a `basis`. The
+    `lab-WS-01` as a JSON key and as an `id`, a `status` and a `basis`. The
     tier split above is what makes a word-shaped host harmless, so nothing has
     to be switched off anywhere.
     """
@@ -2870,8 +4657,8 @@ def without_local_paths(
 ) -> object:
     """The same JSON with the engine's own path fields made relative or dropped.
 
-    `editor-package.json` is the engine's own output copied into the bundle, and
-    a run folder records absolute paths in several places. Only a value in one
+    `issues.json` is the engine's own output copied into the bundle, and a run
+    folder records absolute paths in several places. Only a value in one
     of `PATH_FIELDS` that is actually a path is touched, so the review's own
     words reach the reader as the reviewer wrote them. Every change is appended
     to `projected`, which the caller prints: a published artifact that differs
@@ -2881,7 +4668,7 @@ def without_local_paths(
     A key is never rewritten. A mapping keyed by a path leaks through the key
     rather than the value, and the version that rewrote a key inside this
     repository to a relative one turned `<checkout>/docs/figs/a.png` into
-    `docs/figs/a.png` with nothing said. Engine 0.9 writes no mapping keyed by
+    `docs/figs/a.png` with nothing said. Engine 0.10 writes no mapping keyed by
     an absolute path at all, so there is no engine behaviour behind the rewrite
     to preserve, and a path-shaped key is refused here instead.
 
@@ -2958,13 +4745,132 @@ def without_local_paths(
     return value
 
 
+def assert_publishable_issues(package: dict) -> None:
+    """The published items have to name each ask once, in the engine's own form.
+
+    The letter and the machine-readable record beside it name every item by its
+    id, and that is the whole use of the file: an author reads `i03` in one and
+    looks it up in the other. A file that cannot carry that is refused before it
+    exists rather than published and found later, with the ids already printed
+    in a decision letter.
+
+    The rules are few and none of them is a guess: the document carries the
+    schema stamp this pipeline publishes, every row is an object with an id in
+    the engine's own form, and no id appears twice.
+
+    One more rule is about what the letter would say rather than what the file
+    holds, and it is here because this is the one place every published run
+    passes through: no row may carry a field that rules on an earlier review,
+    because no review here reads one.
+    """
+    stamp = str(package.get("schema_version") or "")
+    if not stamp:
+        raise CommandError(
+            f"The run's {REVIEW_ISSUES} carries no schema_version, so a later "
+            "round could not tell what the ids in it mean and would refuse the "
+            "file. Re-run the review on an engine that writes the issues "
+            "document."
+        )
+    rows = _list(package.get("issues"))
+    strange = [type(row).__name__ for row in rows if not isinstance(row, dict)]
+    if strange:
+        raise CommandError(
+            f"{len(strange)} issue row(s) in this run are not objects "
+            f"({', '.join(sorted(set(strange)))}), so the published "
+            f"{REVIEW_ISSUES} would not be a file anything can read."
+        )
+    identifiers = [str(_dict(row).get("id") or "") for row in rows]
+    malformed = sorted({name or "(absent)" for name in identifiers
+                        if not ISSUE_ID_PATTERN.match(name)})
+    if malformed:
+        raise CommandError(
+            f"{len(malformed)} issue(s) in this run carry an id that is not an "
+            f"id of this engine ({', '.join(malformed[:5])}). An id is text of "
+            "the form i01 upwards, and it is what names the item in the letter, "
+            "so a bundle cannot publish one that names nothing."
+        )
+    repeated = sorted({name for name in identifiers if identifiers.count(name) > 1})
+    if repeated:
+        raise CommandError(
+            f"The issue id(s) {', '.join(repeated)} appear more than once in "
+            "this run. One id is one item of this review, so a file holding the "
+            "same id twice cannot say which item the letter means."
+        )
+    # A severity this release does not sort is an issue that would appear in
+    # neither list: not a required change, not a suggestion, and so not in the
+    # letter at all. The engine's vocabulary can grow, and the answer to a word
+    # this pipeline has no place for is to refuse and name it, never to publish
+    # a letter that quietly drops an issue the editor agent raised.
+    known = (*REQUIRED_SEVERITIES, SUGGESTION_SEVERITY)
+    unsorted_rows = [
+        f"{row.get('id')} ({row.get('severity') or 'no severity'})"
+        for row in ranked_issues(package)
+        if str(_dict(row).get("severity")) not in known
+    ]
+    if unsorted_rows:
+        raise CommandError(
+            f"{len(unsorted_rows)} issue(s) in this run carry a severity this "
+            f"pipeline does not sort: {', '.join(unsorted_rows[:5])}. It sorts "
+            f"{', '.join(known)}, and an issue outside that list would be "
+            "neither a required change nor a suggestion, so it would not appear "
+            "in the letter at all. Update the publish path before publishing a "
+            "run from this release."
+        )
+    # A row claiming a ruling on an earlier review. The engine this release
+    # publishes writes no such field, and nothing here hands it an earlier
+    # review to rule against, so a row carrying one came from somewhere else and
+    # would print in the letter as a standing nobody ruled on.
+    ruled = sorted({
+        f"{_dict(row).get('id')} ({field})"
+        for row in rows
+        for field in RULED_ON_ANOTHER_REVIEW
+        if field in _dict(row)
+    })
+    if ruled:
+        raise CommandError(
+            f"{len(ruled)} issue(s) in this run claim a ruling on an earlier "
+            f"review: {', '.join(ruled[:5])}. Every review here reads the draft "
+            "in front of it and no earlier review of the paper, so a field that "
+            "rules on one is a field the engine this release publishes does not "
+            "write."
+        )
+    # A finding the code check threw out may not be published as an ask. The
+    # engine refuses the editor that groups one, so a bundle holding one is a
+    # bundle built from something the engine would not have accepted, and the
+    # answer is to refuse it here rather than to drop the member quietly: a
+    # letter is what the authors read, and a required change resting on a
+    # finding the code contradicts is the one mistake this stage exists to
+    # prevent. The finding is still published, in the thrown-out section, which
+    # is where a reader can see both the claim and the code that answered it.
+    thrown_out = contradicted_findings(package)
+    if thrown_out:
+        published = sorted({
+            f"{_dict(row).get('id')} ({uid})"
+            for row in rows
+            for member in _list(_dict(row).get("members"))
+            for uid in [str(_dict(member).get("finding_uid") or "")]
+            if uid in thrown_out
+        })
+        if published:
+            raise CommandError(
+                f"{len(published)} issue member(s) in this run name a finding "
+                f"the code check threw out: {', '.join(published[:5])}. The code "
+                "was read at the passage that decides the claim and does not do "
+                "what the finding said, so the finding is published in the "
+                "thrown-out section of the letter and in no issue. An issue "
+                "holding one would put it to the authors as a change they have "
+                "to make. Re-run the review on an engine that refuses the "
+                "grouping rather than publishing this bundle."
+            )
+
+
 def projection_report(
     *,
     engine_package: dict,
     published: dict,
     projected: Sequence[str] = (),
 ) -> str:
-    """How the published editor-package.json differs from the engine's own.
+    """How the published issues.json differs from the engine's own.
 
     The bundle's copy is not the engine's file with a few strings scrubbed. It
     is rebuilt by `review_package` from the same reading, and the rebuild is the
@@ -2982,8 +4888,8 @@ def projection_report(
     parts: list[str] = []
     if not engine_keys:
         parts.append(
-            "the engine's own editor-package.json could not be read, so the "
-            "keys carried into the bundle were not compared with it"
+            f"the engine's own {REVIEW_ISSUES} could not be read, so the keys "
+            "carried into the bundle were not compared with it"
         )
     if left_out:
         parts.append(f"not carried: {', '.join(left_out)}")
@@ -2993,7 +4899,7 @@ def projection_report(
         parts.append(f"path fields projected: {', '.join(projected)}")
     if engine_keys and not left_out and not added and not projected:
         parts.append("every key the engine wrote, published as written")
-    return "editor-package.json, " + ". ".join(parts)
+    return f"{REVIEW_ISSUES}, " + ". ".join(parts)
 
 
 # Every file in a bundle is scanned. The two JSON forms are parsed first, the
@@ -3152,12 +5058,12 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
     said `blocked`. Both produced a record that read like a clean review.
 
     The engine answers the question now. `read_run` sets `publishable` only
-    when the run finished, the findings came from a readable
-    `editor-package.json` rather than the ledger, a guard verdict was recorded,
-    the guards did not empty the review, and every run file could be read in
-    full. That is the whole gate, and it is the engine's own rule rather than a
-    second copy of it here, down to the words the refusal prints, which are the
-    engine's `not_publishable_reasons`.
+    when the run finished, the review came from a readable `issues.json` the
+    editor agent wrote rather than from the findings ledger, a guard verdict was
+    recorded, the guards did not empty the review, and every run file could be
+    read in full. That is the whole gate, and it is the engine's own rule rather
+    than a second copy of it here, down to the words the refusal prints, which
+    are the engine's `not_publishable_reasons`.
 
     No status is special-cased beside the flag. `complete-without-findings` is
     the finished state for a review written with no findings in it, and the two
@@ -3200,38 +5106,25 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             "is a claim about a Claude subscription, so a run on another "
             "transport cannot be published through it."
         )
-    arm = str(run.get("arm") or "")
-    if arm in UNPUBLISHABLE_ARMS:
-        raise CommandError(
-            f"This run used the {arm} arm, which is what the engine runs on a "
-            "draft of your own rather than a review of a submitted manuscript. "
-            "It convenes no core reviewers and nobody outside the authorship "
-            "read the paper, so there is no review in it to publish. Run the "
-            "review arm the study asks for, or drop --publish to keep this "
-            "bundle as a rehearsal."
-        )
+    refusal = not_a_review_arm(run, planned_arms())
+    if refusal:
+        raise CommandError(refusal)
     if not reading.get("publishable"):
         # The engine names its own reasons, one sentence each, and that list is
         # never empty while the flag is false. Printing its words rather than a
-        # second copy of its rules is the only way the refusal here and the
-        # rule there cannot drift apart. The fallback covers an engine old
-        # enough to set the flag without carrying the list.
+        # second copy of its rules is the only way the refusal here and the rule
+        # there cannot drift apart. There used to be a fallback here that
+        # reconstructed a reason from the old flat-findings fields when the list
+        # was missing, for an engine too old to carry it. This release requires
+        # 0.10, which always carries it, and the fallback described a run shape
+        # the engine no longer writes, so an empty list is reported as what it
+        # is rather than explained by guesswork.
         reasons = [
             str(reason).strip()
             for reason in _list(reading.get("not_publishable_reasons"))
             if str(reason).strip()
         ]
-        # The lane lines are left out: a citation stage that did not answer is
-        # not a run file the engine could not read, and this fallback names
-        # them as exactly that.
-        lane = unfinished_lane_lines(reading)
-        problems = [
-            str(p).strip()
-            for p in _list(reading.get("problems"))
-            if str(p).strip() and str(p).strip() not in lane
-        ]
         cause = str(reading.get("cause") or "").strip()
-        source = str(reading.get("findings_source") or "none")
         detail = [f"The engine read it as {status or 'unknown'}."]
         if cause:
             detail.append(f"It stopped because: {cause}")
@@ -3239,16 +5132,11 @@ def require_complete_run(run_dir: Path, run: dict, reading: dict | None = None) 
             detail.append("The engine holds it back because:")
             detail += [f"({n}) {reason}." for n, reason in enumerate(reasons, start=1)]
         else:
-            if source != "editor-package":
-                detail.append(
-                    f"Its findings came from {source}, which is not the editor's "
-                    "own placement of them."
-                )
-            if problems:
-                detail.append(
-                    f"{len(problems)} run file(s) could not be read in full: "
-                    + ", ".join(problems)
-                )
+            detail.append(
+                "It gave no reason for holding the run back, which this "
+                "release's engine does whenever it withholds a run, so read "
+                "the run folder before trusting anything in it."
+            )
         raise CommandError(
             "The engine does not read this run as publishable, so it is not a "
             "review this path can publish. "
@@ -3344,10 +5232,17 @@ def cmd_publish(args: argparse.Namespace) -> int:
             "own copy instead."
         )
 
+    # The words this pipeline sorts and publishes by, checked against the
+    # engine's own public vocabulary before anything is read with them. A
+    # severity or a status that moved in the engine would otherwise sort every
+    # issue into the wrong list silently, which is the one failure a published
+    # review cannot carry.
+    assert_issue_vocabulary()
     package = review_package(reading)
     run = run_record(reading)
     if args.publish:
         require_complete_run(run_dir, run, reading)
+        assert_publishable_issues(package)
     workspace = resolve_workspace(run_dir, args.workspace)
     preprint_data = prepared.get("preprint")
     if preprint_data is None:
@@ -3358,7 +5253,17 @@ def cmd_publish(args: argparse.Namespace) -> int:
     binding = bind_run_to_input(prepared, workspace, run)
     if binding["workspace_manifest_sha256"]:
         prepared["input"]["workspace_manifest_sha256"] = binding["workspace_manifest_sha256"]
-    ingest = ingest_record(workspace)
+    # The engine says what state the run's own manuscript folder is in, and it
+    # means that folder. `--workspace` may name another one, and two folders can
+    # agree on the paper by hash without being the same seal, so the state
+    # travels only where the run is talking about the folder being published.
+    # The folder itself never travels, being a path on this machine.
+    reported = _dict(reading.get("manuscript"))
+    named = str(reported.get("folder") or "")
+    published_state = ""
+    if named and Path(named).resolve() == Path(workspace).resolve():
+        published_state = str(reported.get("state") or "")
+    ingest = ingest_record(workspace, published_state)
 
     # The fingerprint is the engine's own record of every file it loaded, taken
     # at the moment the run started, not a re-hash of whatever is installed now.
@@ -3440,7 +5345,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # off the run folder for the comparison rather than described from memory.
     if args.publish:
         engine_package = maybe_json(
-            Path(str(_dict(reading.get("files")).get("editor-package.json") or ""))
+            Path(str(_dict(reading.get("reports")).get("issues") or ""))
         )
         print(
             projection_report(
@@ -3485,8 +5390,12 @@ def cmd_publish(args: argparse.Namespace) -> int:
     # unscrubbed one put the paths back: a reviewer's `source_review_path` was
     # dropped from the JSON and then printed in decision_letter.md, where no
     # scan was looking for it.
-    findings = sorted_findings(published_package)
     reports = track_reports(run_dir)
+    # The manuscript's own lines under the quotes this round cites, read back
+    # through the engine from the folder the run was bound to above. The letter
+    # marks each quote where it stands, so the authors see the sentence rather
+    # than a line number to go and look up.
+    citations = manuscript_citations(workspace, published_package)
     if dest.exists() and any(dest.iterdir()):
         raise CommandError(f"Refusing to overwrite an existing review bundle: {dest}")
 
@@ -3498,10 +5407,12 @@ def cmd_publish(args: argparse.Namespace) -> int:
         stage = Path(staging)
 
         (stage / "summary.md").write_text(
-            render_summary(preprint, published_package, provenance, findings), encoding="utf-8"
+            render_summary(preprint, published_package, provenance), encoding="utf-8"
         )
         (stage / "decision_letter.md").write_text(
-            render_decision_letter(preprint, published_package, provenance, findings),
+            render_decision_letter(
+                preprint, published_package, provenance, citations=citations
+            ),
             encoding="utf-8",
         )
         (stage / "manuscript_stats.md").write_text(
@@ -3514,10 +5425,11 @@ def cmd_publish(args: argparse.Namespace) -> int:
         for name, path in reports.items():
             shutil.copyfile(path, stage / name)
         write_json(stage / "provenance.json", provenance)
-        write_round_record(stage, preprint, provenance, findings)
+        write_round_record(stage, preprint, provenance, published_package)
         # Kept beside the documents so a reader can check a quotation against
-        # the structured record the reviewers actually produced.
-        write_json(stage / "editor-package.json", published_package)
+        # the structured record the reviewers actually produced, and so the next
+        # round can be handed this round's items by name.
+        write_json(stage / REVIEW_ISSUES, published_package)
 
         # Read back what is actually on disk before the manifest fixes it. This
         # is the check that cannot be fooled by a file nobody thought to scrub,
@@ -3537,11 +5449,14 @@ def cmd_publish(args: argparse.Namespace) -> int:
         for path in sorted(stage.iterdir()):
             shutil.move(str(path), str(dest / path.name))
 
+    counts = _dict(provenance["generator"]["run"])
     print(f"bundle   {dest}")
+    print(f"round    {provenance['round']}")
     print(f"decision {provenance['decision']} (chosen by {args.editor})")
     print(
-        f"findings {len(findings)} in the letter, "
-        f"{provenance['generator']['run']['appendix_findings']} in the appendix"
+        f"items    {counts.get('required', 0)} required change(s) and "
+        f"{counts.get('suggestions', 0)} suggestion(s), pooled by the editor "
+        f"agent from {counts.get('findings_delivered', 0)} finding(s)"
     )
     print(f"reports  {len(reports)} specialist track report(s) copied in")
     print(
@@ -3600,7 +5515,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--workspace",
         default="",
         help="The imported manuscript workspace. Defaults to the manuscript "
-        "folder beside the run, whose paper.json is what ties this run to the "
+        "folder beside the run, whose manifest.json is what ties this run to the "
         "paper that was prepared",
     )
     p.add_argument(

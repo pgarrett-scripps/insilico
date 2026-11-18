@@ -160,7 +160,7 @@
           }
         },
         "run": {
-          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the findings came from, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose, and `cause` is not on it: the engine writes a cause only for a run that stopped, which it never calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it. `problems` is a different matter and is allowed, because engine 0.9.0 appends lines there after it has decided publishable: an unfinished citation ledger and a citation worker that ran another model family are both recorded as problems and neither withholds the review. They are published as what the run did not finish, beside the findings, and never folded into errors, which is the list of what went wrong.",
+          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the review was read from, who pooled it into issues, the counts of what it asked for, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose, and `cause` is not on it: the engine writes a cause only for a run that stopped, which it never calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it. `problems` is a different matter and is allowed, because engine 0.9.0 appends lines there after it has decided publishable: an unfinished citation ledger and a citation worker that ran another model family are both recorded as problems and neither withholds the review. They are published as what the run did not finish, beside the findings, and never folded into errors, which is the list of what went wrong.",
           "type": "object",
           "required": [
             "arm",
@@ -169,6 +169,11 @@
             "status",
             "publishable",
             "findings_source",
+            "issues",
+            "required",
+            "suggestions",
+            "issues_source",
+            "issues_schema_version",
             "reviewers",
             "completeness"
           ],
@@ -210,12 +215,12 @@
               "enum": ["complete", "complete-without-findings"]
             },
             "publishable": {
-              "$comment": "The engine's own answer, from read_run, to the only question the publish gate asks: the run finished, the findings came from a readable editor package rather than the ledger, a guard verdict was recorded, the guards did not empty the review, and every run file could be read in full. It is recorded rather than inferred so a reader of the bundle sees the same flag the gate saw, and it is a const because a record written from a run the engine refused has no business on the site.",
+              "$comment": "The engine's own answer, from read_run, to the only question the publish gate asks: the run finished, the review was read off a readable issues document rather than rebuilt from the ledger, an editor pooled the findings into it, a guard verdict was recorded, the guards did not empty the review, and every run file could be read in full. It is recorded rather than inferred so a reader of the bundle sees the same flag the gate saw, and it is a const because a record written from a run the engine refused has no business on the site. The engine's own list of reasons is what the publish path prints when it refuses, so a reader of a refusal gets the engine's words and not this repository's paraphrase of them.",
               "const": true
             },
             "findings_source": {
-              "$comment": "Where the published findings came from. The editor package is the editor agent's own placement of them. A pool rebuilt from findings.jsonl is the engine's fallback for a run whose editor package is missing or damaged, and it carries no editorial placement at all, so it is not published here.",
-              "const": "editor-package"
+              "$comment": "Where the published review came from. issues is the issues document the editor agent wrote, which is the review itself in engine 0.10: one entry per issue, each carrying the findings it was raised from. The engine also reports ledger, for a run whose issues document is missing or damaged or holds no issue over findings that are in the ledger, and none for a run that holds neither. Neither is published: a pile of findings nobody pooled is not a review, and the engine calls such a run unpublishable anyway.",
+              "const": "issues"
             },
             "review_guard_status": {
               "$comment": "The engine's verdict on its own findings, and it writes exactly two words. clean is a run the guards took nothing from, and quarantined is one they took something from, however much. Both publish: a review that raised nothing is clean with no findings, and one that lost a finding whose quote could not be anchored still endorses the rest, with quarantined_findings_count saying how many were held back. The one run neither word excuses is a review the guards emptied, and the engine refuses that on publishable, naming how many it held.",
@@ -238,8 +243,30 @@
                 "retried": { "type": "array", "items": { "type": "string" } }
               }
             },
-            "findings": { "type": "integer", "minimum": 0 },
-            "appendix_findings": { "type": "integer", "minimum": 0 },
+            "issues": {
+              "$comment": "What this review raised, counted off the issues the bundle published. It is not a count of findings: the editor agent pools findings into issues, so a review with six findings can raise four of them, and the ledger's own total is findings_delivered. The two fields this count replaces, findings and appendix_findings, described a letter body and an appendix that engine 0.10 does not write: nothing is placed out of sight any more, so there is no second list to count.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "required": {
+              "$comment": "The issues a revision has to answer: the major and moderate ones this round raised, in the engine's own severity vocabulary. Severity alone decides this, and the decision letter's requests are exactly these in rank order.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "suggestions": {
+              "$comment": "The minor issues this round raised. They are published in full beside the required ones and a revision is not held to them, which is the only difference between the two numbers.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "issues_source": {
+              "$comment": "Who pooled the findings into issues. editor is an editor agent that claimed the review and closed it. server is the engine minting one issue per finding because nobody did, which the engine itself calls unpublishable, so a published record carries editor and the const says so rather than leaving a reader to work out which of two words they are looking at.",
+              "const": "editor"
+            },
+            "issues_schema_version": {
+              "$comment": "The schema stamp on the issues document this bundle was read from, as the engine wrote it. Recorded because the ids in a published issues.json are what a later round matches against, and a round that cannot read the stamp refuses the file rather than guessing what its ids mean.",
+              "type": "string",
+              "minLength": 1
+            },
             "escalated_in_bundle": { "type": "integer", "minimum": 0 },
             "findings_delivered": { "type": "integer", "minimum": 0 },
             "findings_submitted": { "type": "integer", "minimum": 0 },
@@ -292,6 +319,87 @@
                 },
                 "workers": {
                   "$comment": "The cite-N slots the run gave the citation lane. They fetch and record lookups and they write no part of the review, so they are named here rather than counted among the reviewers, and the page keeps them out of every count of who read the manuscript.",
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 }
+                }
+              },
+              "additionalProperties": false
+            },
+            "code": {
+              "$comment": "Whether the code behind the paper was reviewed beside it, read from the engine's `code` block. It is written for every run, and `reviewed` false with nothing beside it is the ordinary case: a review of a paper with no code submitted, which the page states rather than leaving a reader to infer. Two of the engine's fields are deliberately never published. `snapshot` is the absolute path of the copy the engine took, on the machine that ran the review, and the bundle does not carry that folder, so the path names a stranger's computer and points at nothing. The snapshot's own manifest is not published either: it carries the origin as an absolute path and a digest per file, and what a reader of a finding needs out of it, the file and the lines and that file's digest, the finding carries in its own code_evidence. Nothing else from the copy is published anywhere in the bundle, because the right a review earns is to quote the lines it makes a claim about and not to redistribute somebody's repository.",
+              "type": "object",
+              "required": ["reviewed"],
+              "properties": {
+                "reviewed": { "type": "boolean" },
+                "kind": {
+                  "$comment": "How the engine got the code. git-clone is a repository it cloned itself, read-only and with nothing executed, which is the only way a submitted link is ever fetched. folder is a directory on the machine that ran the review, which is how a local run reviews code that was never published.",
+                  "enum": ["git-clone", "folder"]
+                },
+                "source": {
+                  "$comment": "The repository the engine cloned, published whole because it is the one fact that lets a reader fetch the same code and check the commit for themselves. A folder gets no source: its source in the engine's reading is a resolved path on one machine, so only its own name is published, under source_name.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source_name": {
+                  "$comment": "The name of the folder the code was read from, with no path above it, which is what the engine's own REVIEW.md prints for the same reason. It is weak provenance and it is honest about being weak: it says what the editor called the directory and nothing a reader can fetch.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "commit": {
+                  "$comment": "The revision that was read, so a reader knows exactly which code the findings are about. A folder that is not a checkout has none, and the page then says the run did not record a revision rather than implying one.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "branch": { "type": "string", "minLength": 1 },
+                "dirty": {
+                  "$comment": "Whether the checkout had uncommitted changes in it, which means the commit alone does not describe what was read. The engine answers None for a folder that is not a checkout, and that is published as the key being absent rather than as false, because a directory with no git in it is not a clean checkout.",
+                  "type": "boolean"
+                },
+                "truncated": {
+                  "$comment": "The engine's own words for why the copy it took is not the whole of the code, when it is not. A size cap reached is the usual reason.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "files_in_snapshot": { "type": "integer", "minimum": 0 },
+                "files_skipped": {
+                  "$comment": "How many paths were left out of the copy, which the engine skips by size, by kind and because they look like secrets. A skipped file is a file the code reader did not see, so the count is published beside the count it was taken from.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "opened": { "type": "integer", "minimum": 0 },
+                "searches": { "type": "integer", "minimum": 0 },
+                "source_cut": {
+                  "$comment": "How many program source files a size cap left out of the copy. It is the count that bounds what the code reader could possibly have read: above zero, the reader read part of the code and not all of it, and nothing from the lane can be taken as saying the code never does something.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_listed": {
+                  "$comment": "How many data files the snapshot listed. Engine 0.10 stopped copying data and lists it instead, so the copy holds the code and the names of the data beside it, and a data file reaches the reader only when the reader asks for that one.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_fetched": {
+                  "$comment": "How many of those listed data files the code reader actually asked for and received. Published beside data_listed because the difference is the point: a lane that listed forty files and read one made a claim about one.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_partial": {
+                  "$comment": "How many of the fetched data files came back as a head of the file rather than the whole of it, because the file was larger than the lane serves. A finding about such a file rests on the lines that were stored and on no part of the file past the cut, and the page says so rather than leaving a reader to assume a whole file was read.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_refused": {
+                  "$comment": "How many data fetches the engine refused outright, by kind or by size. A refused file was never opened by anything, which is a stronger statement than a partial read and is counted apart from one.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "data_bytes": {
+                  "$comment": "How many bytes of data the lane was served in total. It bounds the whole data side of the review in one number, and it is bytes served rather than bytes on disk, because what the reader read is what the review rests on.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "files_opened": {
+                  "$comment": "Which files the code lane opened, by their path inside the copy. The counts say how much there was and how much was read, and this says which, because a code reader that opened the one file the paper names and no other is a narrower claim than its count can make.",
                   "type": "array",
                   "items": { "type": "string", "minLength": 1 }
                 }
@@ -481,8 +589,142 @@
         "properties": { "schema_version": { "const": 4 } }
       },
       "then": {
-        "required": ["generator", "models", "assigned_models"],
+        "required": ["generator", "models", "assigned_models", "ingest"],
         "properties": {
+          "ingest": {
+            "$comment":"What the panel was handed, and how much of it a model wrote. Engine 0.10 reads a manuscript against its page images before any reviewer sees it: it rewrites an equation the converter mangled, writes a description under every figure, and transcribes a page the converter returned no text from. Those lines are quoted in the letter like any other, so a record that measured the text without saying which of it a model wrote would be describing a review of a document it never described. `base_schema_version` is the shape of the imported folder, `ai_read` is the import's own account of the stage, `pieces_per_source` counts the pieces by where their words came from, and `model_written` names the lines, which is what makes a quotation checkable rather than merely counted.",
+            "type": "object",
+            "required": [
+              "base_schema_version",
+              "ai_read",
+              "pieces_per_source",
+              "model_written"
+            ],
+            "properties": {
+              "base_schema_version": { "type": "string", "minLength": 1 },
+              "ai_read": {
+                "$comment":"The import's own account of the Read stage, closed to anything else. The publish path copies it field by field rather than wholesale, because the stage also records where its log sits on the machine that ran it, and a record carrying that would publish a path off that machine.",
+                "type": "object",
+                "required": ["read", "lost_pages"],
+                "properties": {
+                  "read": { "type": "boolean" },
+                  "reason": { "type": "string" },
+                  "reader_model": { "type": "string", "minLength": 1 },
+                  "reader_slot": { "type": "string", "minLength": 1 },
+                  "attempt": { "type": "integer", "minimum": 1 },
+                  "pages": { "type": "integer", "minimum": 0 },
+                  "pages_viewed": { "type": "integer", "minimum": 0 },
+                  "actions": {
+                    "$comment":"The pieces the sealed manuscript holds, counted by what the reader did to each. It is a count of the manuscript, so a piece the reader folded into another or took back out is in no document to be counted here and is in `gone` instead.",
+                    "type": "object",
+                    "additionalProperties": { "type": "integer", "minimum": 0 }
+                  },
+                  "gone": {
+                    "$comment":"The pieces that left the manuscript, counted as they went: `absorbed` a converter piece folded into the piece it was debris of, `merged` the other halves of an equation the converter split, `withdrawn` a piece the stage added and took out again. The engine leaves a key with no count out, and the publish path leaves out a count that is not a positive number, so a key here is a thing that happened at least once. These do not add up with `actions`: a fold moves a piece out of that count and into this one, and the piece holding the fold is counted there under what was done to it.",
+                    "type": "object",
+                    "additionalProperties": { "type": "integer", "minimum": 1 }
+                  },
+                  "tool_calls": { "type": "integer", "minimum": 0 },
+                  "ai_model": { "type": "string", "minLength": 1 },
+                  "ai_pieces": { "type": "integer", "minimum": 1 },
+                  "note": {
+                    "$comment":"The reader's own account of the document, in its words, as the manifest keeps it. It is published because what it holds is what no reviewer could work out from the text, and it is rendered as that model's account rather than the authors' prose or a finding of the review. The engine writes the key on every seal and leaves it empty when the reader filed none, so an empty note is not published: a published empty string would read as a model that had nothing to say rather than one that said nothing. The length is the cap the engine keeps.",
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2000
+                  },
+                  "lost_pages": {
+                    "$comment":"A page the converter returned nothing from, which reached the review only because a model read it off the image, with the lines of the manuscript its transcription became. The lines are what a reader checks a quotation against: a page number alone says which page of the authors' own PDF nothing was converted from and not which sentences of the review came off it.",
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["page"],
+                      "properties": {
+                        "page": { "type": "integer", "minimum": 1 },
+                        "words": { "type": "integer", "minimum": 0 },
+                        "pieces": { "type": "integer", "minimum": 0 },
+                        "added": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": ["document", "lines"],
+                            "properties": {
+                              "document": { "type": "string", "minLength": 1 },
+                              "lines": {
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": { "type": "integer", "minimum": 1 }
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "additionalProperties": false,
+                "allOf": [
+                  {
+                    "$comment":"A stage that ran has to name the model that ran it. An account saying a model read the paper without saying which model is the one shape of this field nobody can check.",
+                    "if": {
+                      "required": ["read"],
+                      "properties": { "read": { "const": true } }
+                    },
+                    "then": {
+                      "required": ["reader_model"],
+                      "properties": { "reader_model": {} }
+                    }
+                  }
+                ]
+              },
+              "pieces_per_source": {
+                "$comment":"How many pieces of the manuscript came from each source: the converter's own text layer, a model that read the page image, or a model's repair of a line the converter misread. The words are the engine's own, and `source_values` carries its description of each one.",
+                "type": "object",
+                "additionalProperties": { "type": "integer", "minimum": 0 }
+              },
+              "source_values": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              },
+              "model_written": {
+                "$comment":"One row per piece of the manuscript a model wrote rather than the converter, with the lines it occupies. Named rather than counted because the lines are what a reader of the review can check a quotation against.",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["document", "lines", "source"],
+                  "properties": {
+                    "document": { "type": "string", "minLength": 1 },
+                    "lines": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": { "type": "integer", "minimum": 1 }
+                    },
+                    "kind": { "type": "string" },
+                    "source": { "type": "string", "minLength": 1 },
+                    "page": { "type": "integer", "minimum": 1 },
+                    "part": { "type": "integer", "minimum": 1 },
+                    "of": { "type": "integer", "minimum": 2 },
+                    "absorbed": {
+                      "$comment":"How many pieces the converter emitted on their own were folded into this one as its debris. They are in the manuscript nowhere else, so the count is what tells an author comparing the archive source with the text the panel read that the edge of an equation or a chart's axis numbers went in here. The characters stay in the engine's own map: a bundle carries no text with no line to cite.",
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "additionalProperties": false,
+                  "$comment":"`part` and `of` say that this line is one of several the reader read a single piece of the converter's as, so neither is a fact without the other and a row carrying one of them is a row that lost the other.",
+                  "dependentRequired": { "part": ["of"], "of": ["part"] }
+                }
+              },
+              "manuscript_state": {
+                "$comment":"How the folder this review was published from came to be sealed, in the engine's own words, read off the run rather than worked out here. Present when the run's own manuscript folder is the one published, and left out when `--workspace` named another, since the engine's statement is about the folder it read. The two values are the only sealed states: a draft or a missing base is refused before anything is written, because a review cites lines of a manuscript nobody sealed.",
+                "enum": ["sealed-by-reader", "sealed-without-read"]
+              }
+            }
+          },
           "model": {
             "$comment":"Refused outright rather than merely left out of the required list. Every version 2 record carries a single model id, and a reader of this file should not have to infer that a plugin run must not: 0.9 gives each slot a model of its own, so one id at the top would describe a panel that did not sit. The engine's own protocol file writes a sentence there rather than an id for the same reason, and a sentence is not an id either. An empty not matches nothing, so a record carrying this key cannot validate.",
             "not": {}

@@ -24,7 +24,8 @@ The table carries one reference of each existence state it can hold:
   no evidence at all about the work
 * a reference whose lookups never answered, which says nothing whatever
 
-Four in-text uses come out of two prose blocks. Three are judged and one is left
+Four in-text uses come out of two passages of `paper.md`, each row naming the
+document and the line it was read on. Three are judged and one is left
 unjudged on purpose, so the fixture carries an unfinished stage: an unfinished
 ledger is reported beside the findings and never as a reason to withhold the
 review, and a fixture where every stage finished could not test that.
@@ -52,6 +53,11 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
+
+# The document every use in this fixture was read in. An import writes the paper
+# as `paper.md` and a supplement as `supplement-<name>.md`, and a use row names
+# the one it came from, so a one-document fixture still has to say which.
+MAIN_DOCUMENT = "paper.md"
 
 # Where a run keeps the lane, from `docs/INTEGRATIONS.md`.
 LEDGER_PATH = "citations/ledger.jsonl"
@@ -424,8 +430,8 @@ REFERENCES = (
 
 
 def _use(
-    row_id: str,
-    block_id: str,
+    line: int,
+    end_line: int,
     section: str,
     sentence_index: int,
     marker: str,
@@ -436,17 +442,26 @@ def _use(
     passage: str | None = None,
     source_kind: str | None = None,
     source_url: str | None = None,
+    document: str = MAIN_DOCUMENT,
 ) -> dict:
     """One in-text use, claimed by a worker slot and judged or left owed.
 
     A row with no verdict is the shape the lane leaves behind when a worker
     claimed a use and the stage ran out before it answered.
+
+    The row is placed the way the engine places one: the document and the
+    first line of the passage the sentence was read in, and the sentence's
+    position inside that passage. The `row_id` is built here from those four
+    fields rather than passed in, because the engine builds it from them and a
+    typed id could name a line the row does not carry.
     """
     row = {
         "kind": "use",
-        "row_id": row_id,
+        "row_id": f"use:{document}:{line}:{sentence_index}:{reference_id}",
         "reference_id": reference_id,
-        "block_id": block_id,
+        "document": document,
+        "line": line,
+        "end_line": end_line,
         "section": section,
         "sentence_index": sentence_index,
         "sentence": sentence,
@@ -475,10 +490,14 @@ def _use(
 
 
 def uses(slot: str = WORKER) -> tuple[dict, ...]:
-    """The four in-text uses, three judged and the fourth left unjudged."""
+    """The four in-text uses, three judged and the fourth left unjudged.
+
+    Two of them were read in the passage on line 5 of `paper.md` and two in the
+    passage on line 9, each the first and second citing sentence of its passage.
+    """
     return (
         _use(
-            "use:block-results-1:1:ref-1", "block-results-1", "Results", 1, "[1]", "ref-1",
+            5, 5, "Results", 1, "[1]", "ref-1",
             "Calcium entry through the uniporter saturates above two micromolar in "
             "isolated myocytes [1].",
             slot,
@@ -486,7 +505,7 @@ def uses(slot: str = WORKER) -> tuple[dict, ...]:
             source_kind="abstract", source_url=CROSSREF_DOI_URL,
         ),
         _use(
-            "use:block-results-1:2:ref-2", "block-results-1", "Results", 2, "[2]", "ref-2",
+            5, 5, "Results", 2, "[2]", "ref-2",
             "The nucleolus has been modelled as a phase separated compartment [2].",
             slot,
             # No source text was fetched for this reference, so cannot tell is
@@ -494,14 +513,14 @@ def uses(slot: str = WORKER) -> tuple[dict, ...]:
             verdict="cannot tell",
         ),
         _use(
-            "use:block-methods-1:1:ref-3", "block-methods-1", "Methods", 1, "[3]", "ref-3",
+            9, 9, "Methods", 1, "[3]", "ref-3",
             "Physiological constants were taken from the standard handbook [3].",
             slot,
             verdict="cannot tell",
         ),
         # The fourth use is claimed and unjudged: one stage short of done.
         _use(
-            "use:block-methods-1:2:ref-4", "block-methods-1", "Methods", 2, "[4]", "ref-4",
+            9, 9, "Methods", 2, "[4]", "ref-4",
             "Tomography of mitochondria is prone to freezing artefacts [4].",
             slot,
         ),

@@ -227,9 +227,8 @@ mcp==1.30.0 \
     --hash=sha256:445414625fce5c295faa505bb11bacece661ab6f4028d57c935db57820b7a3e4 \
     --hash=sha256:666edb5009503e1047c9d60346a756f94b261f05cc2625f23d41c728ffc484d0
     # via peerreviewagents
-peerreviewagents==0.9.1 \
-    --hash=sha256:4839ae0360a883d087e7e83ad40f6c925b21d191ae708ff431ad3f81047fd2be \
-    --hash=sha256:f19e2e59bd28feeb1c56fab3d5b8ef790a2e98b780dd1bd1d07c39a682c2b9cb
+peerreviewagents @ https://github.com/pgarrett-scripps/PeerReviewAgents/archive/9c362836e575e53a2ad5a83a8bbd2859119863eb.tar.gz \
+    --hash=sha256:7824e9fbf106a95fbe54974da9628f1b5ae897fdb524210c4b14691ef9174675
     # via -r requirements.in
 pillow==13.0.0 \
     --hash=sha256:02464da86f561f410e13b061ec37c3068a9cb557a095494157742d07b3c24a27 \

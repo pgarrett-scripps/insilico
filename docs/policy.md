@@ -135,6 +135,46 @@ A published review contains the panel output described under
 contains `manuscript_stats.md`, which records counts over the text the panel
 read so a reader can compare that text with the selected archive source.
 
+Some of that text is not the authors' own. Before any reviewer sees a paper, a
+model reads it against its page images: it repairs an equation or a table the
+converter mangled, writes a description under every figure, and transcribes a
+page the converter returned no text from at all. Those lines are quoted in the
+letter like any other, so `manuscript_stats.md` names them. It says which model
+read the pages, how many pieces came from the converter and how many from the
+model, which lines the model wrote, and which pages reached the review only
+because the model read them off the image, naming for each of those pages the
+lines of the manuscript its transcription became. It also names the lines that
+came out of a single piece the converter had labelled as the wrong kind, a table
+emitted as a paragraph of run-together cells or an equation left in the prose
+after it, which the model read as the pieces the page actually prints, and says
+where such a line took in what the converter had emitted beside it as a piece of
+its own. Where one of those parts is prose, the model wrote none of it: it named
+the spans to cut and the engine cut them, so the words are the authors' as the
+converter read them, and the page says so rather than listing the line as one a
+model wrote. A review of a paper no model read says that instead, and says why.
+Where a quoted line is one a model wrote, the letter says so under the quotation
+rather than leaving an author to find out from the record.
+
+Pieces also leave the manuscript, and the page counts those too. A piece the
+converter emitted beside a displayed equation and the model read as part of it
+is in no line of its own afterwards, the halves of an equation the converter
+split are one piece again once the model puts them back together, and a piece
+the stage added can be taken out again. The page counts the pieces of the sealed
+manuscript by what the model did to each, and counts these separately as they
+left it, saying why each one did. The two counts do not add up with one another
+and the page says so, because a reader adding them and finding a disagreement
+would have no way to tell which of the two was wrong. An author comparing the
+reviewed text against their own PDF would otherwise find a heading of theirs
+missing from it with no number anywhere saying it had gone.
+
+The model that reads the pages may also leave a note on the document, and we
+publish it. What a reading model learns from the page images is what no reviewer
+can work out from the text: that the converter dropped a table, that two more
+came out garbled, that a footnote letter on a sideways page is a best guess. The
+note is printed under a label saying it is that model's account of the document,
+not the authors' text and not a finding of the review, and it is published whole
+rather than summarised by us.
+
 Every review ships a `provenance.json`: the transport that ran it, one row per
 agent with the model that agent ran on, the arm and workflow the run was asked
 for, the PeerReviewAgents release with the hash of each plugin and workflow file
@@ -150,12 +190,13 @@ manuscript version and `r<M>` is an independent review attempt of that version.
 A same-version re-review creates a new attempt and does not inherit the earlier
 attempt's verdict or score.
 
-The newest eligible editorial attempt on the newest earlier manuscript version
-is the baseline for a [revision round](criteria.md#revision-rounds). That exact
-bundle is passed to PeerReviewAgents through its built-in revision comparison.
-Single-model experiments remain visible but do not set the paper's status and
-cannot become a revision baseline. Revision bundles include a `round.json`
-record of what was carried forward.
+No attempt is an input to any other. A
+[review of a revised draft](criteria.md#reviewing-a-revised-draft) reads that
+draft and nothing published about the paper before it, and every review of a
+paper is listed on the paper's page by date. Single-model experiments remain
+visible but do not set the paper's status. Every published review includes a
+`round.json` record of the items it required, named by the ids its own decision
+letter uses.
 
 ## Removing a review
 

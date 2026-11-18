@@ -23,6 +23,23 @@ body:
     validations:
       required: true
 
+  # Keep the words "link to the code" in the label: extract_code_link finds this
+  # answer by matching that string against the rendered issue body, and a reword
+  # makes a submitted repository silently go unread.
+  - type: input
+    id: code
+    attributes:
+      label: Link to the code behind the paper (optional)
+      description: >-
+        A public https:// repository. The review clones it read-only and
+        shallow, with no credentials, runs nothing in it, and skips files that
+        look like secrets. The link and the commit read are published with the
+        review. SSH links and local paths are not accepted. Leave it empty if
+        there is no code to read.
+      placeholder: https://github.com/owner/name
+    validations:
+      required: false
+
   # Keep the words "are you an author" in the label: extract_authorship finds
   # this answer by matching that string against the rendered issue body, and a
   # reword makes the published review silently say the relationship is

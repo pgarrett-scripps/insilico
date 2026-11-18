@@ -32,9 +32,9 @@ def check_command_parsing_is_strict() -> None:
         "a bare /review must name no provider of its own"
     assert parse_command("/review anthropic")["model"] is None
 
-    # There is one verb. Whether a run is a first look or a new round is read
-    # off which draft the archive serves, not declared by the editor, so
-    # /revise survives only as muscle memory and does nothing extra.
+    # There is one verb. Every review reads the draft the archive serves and no
+    # earlier review of the paper, so there is no second kind of run to ask for
+    # and /revise survives only as muscle memory, doing nothing extra.
     assert parse_command("/revise") == parse_command("/review")
 
     # A same-draft re-review must be requested explicitly. It creates a new

@@ -85,6 +85,42 @@ function citations(overrides = {}) {
   };
 }
 
+// The code lane, for a run given a repository to read. The clone is the
+// engine's own and read-only, and what the record carries about it is where the
+// code came from, which revision, how much of it was copied and how much of
+// that copy was opened. The copy itself is on the machine that ran the review
+// and is published nowhere, so no field here names it.
+function code(overrides = {}) {
+  return {
+    reviewed: true,
+    kind: "git-clone",
+    source: "https://github.com/fixture-lab/widget-pipeline",
+    commit: "d".repeat(40),
+    branch: "main",
+    dirty: false,
+    files_in_snapshot: 12,
+    files_skipped: 3,
+    opened: 4,
+    searches: 6,
+    // The copy held all of the program source, and the two data files the
+    // repository ships were both listed, one of them fetched, and that one was
+    // small enough to come back whole.
+    source_cut: 0,
+    data_listed: 2,
+    data_fetched: 1,
+    data_partial: 0,
+    data_refused: 0,
+    data_bytes: 4096,
+    files_opened: [
+      "analysis/pipeline.py",
+      "analysis/thresholds.py",
+      "README.md",
+      "tests/test_pipeline.py",
+    ],
+    ...overrides,
+  };
+}
+
 function localRecord(overrides = {}) {
   return {
     schema_version: 4,
@@ -195,7 +231,7 @@ function localRecord(overrides = {}) {
         claude_code_version: "2.1.322",
         status: "complete",
         publishable: true,
-        findings_source: "editor-package",
+        findings_source: "issues",
         review_guard_status: "clean",
         completeness: {
           required: ["reviewer-1", "reviewer-2", "reviewer-3", ...TRACKS, "editor"],
@@ -206,8 +242,15 @@ function localRecord(overrides = {}) {
           attempts: { "reviewer-1": 1, "audit-stats": 2 },
           retried: ["audit-stats"],
         },
-        findings: 8,
-        appendix_findings: 45,
+        // What the review asks for, counted off the issues the editor wrote.
+        // The ledger's own total stays in findings_delivered: 53 findings
+        // pooled into 11 issues, of which 7 are required changes and 4 are
+        // suggestions.
+        issues: 11,
+        required: 7,
+        suggestions: 4,
+        issues_source: "editor",
+        issues_schema_version: "review-issues-v4",
         escalated_in_bundle: 4,
         findings_delivered: 53,
         findings_submitted: 53,
@@ -221,6 +264,7 @@ function localRecord(overrides = {}) {
           "1 reference(s) could not be checked because the lookups did not answer, which says nothing about whether they exist",
         ],
         citations: citations(),
+        code: code(),
       },
       advisory_verdict: {
         significance: "moderate",
@@ -261,7 +305,87 @@ function localRecord(overrides = {}) {
     decision: "major",
     desk_rejected: false,
     round: 1,
-    ingest: { format: "markdown", tool: "peerreviewagents import_paper" },
+    // What the panel was handed, and how much of it a model wrote rather than
+    // the converter. A record that counted the text without naming the lines a
+    // model wrote would describe a review of a document it never described.
+    ingest: {
+      format: "markdown",
+      tool: "peerreviewagents import_paper",
+      base_schema_version: "paper-base-v2",
+      ai_read: {
+        read: true,
+        reader_model: "claude-opus-5-5",
+        reader_slot: "reader",
+        attempt: 1,
+        pages: 4,
+        pages_viewed: 4,
+        actions: { repaired: 1, confirmed: 18, merged: 0, described: 1, added: 2, reread: 2 },
+        // The pieces that are no longer in the manuscript, which the count
+        // above cannot hold: it walks the pieces the sealed documents have.
+        // One heading was folded into the equation it was the edge of, and one
+        // piece this stage added was taken back out. Nothing was merged, so
+        // there is no key for it.
+        gone: { absorbed: 1, withdrawn: 1 },
+        tool_calls: 11,
+        // The reader's own account of the document, which the record carries
+        // because what it holds is what nobody reading the text could work
+        // out. It is published as that model's account rather than as the
+        // authors' prose or a finding of the review.
+        note: "The equation on page 3 came through as one paragraph with the sentence after it. Page 4 converted to nothing and was read off the image.",
+        lost_pages: [
+          {
+            page: 4,
+            words: 0,
+            pieces: 2,
+            added: [
+              { document: "paper.md", lines: [21, 21] },
+              { document: "paper.md", lines: [23, 23] },
+            ],
+          },
+        ],
+      },
+      manuscript_state: "sealed-by-reader",
+      pieces_per_source: { text: 19, ai: 1, "ai-reconstructed": 2 },
+      source_values: {
+        text: "the converter's own text layer",
+        ai: "written by a model reading the page image",
+        "ai-reconstructed": "a model's repair of a line the converter misread",
+      },
+      model_written: [
+        {
+          document: "paper.md",
+          lines: [21, 21],
+          kind: "figure-description",
+          source: "ai",
+          page: 3,
+        },
+        // The two lines the reader read one piece of the converter's as, which
+        // it had labelled as a paragraph: the equation it prints and the
+        // sentence that follows it. The pair of numbers is the whole fact, and
+        // the count of absorbed pieces says that the edge of the equation,
+        // emitted beside it as a piece of its own, went in here and is in the
+        // manuscript nowhere else.
+        {
+          document: "paper.md",
+          lines: [23, 23],
+          kind: "equation",
+          source: "ai-reconstructed",
+          page: 3,
+          part: 1,
+          of: 2,
+          absorbed: 1,
+        },
+        {
+          document: "paper.md",
+          lines: [25, 25],
+          kind: "paragraph",
+          source: "ai-reconstructed",
+          page: 3,
+          part: 2,
+          of: 2,
+        },
+      ],
+    },
     panel: [],
     total_cost_usd: null,
     errors: [],
@@ -339,6 +463,156 @@ rejects(machineDecision, "only a human editor may be recorded as deciding");
 const noJudgement = localRecord();
 delete noJudgement.generator.advisory_verdict;
 rejects(noJudgement, "a record must carry the engine's advisory judgement");
+
+// A model reads the manuscript against its page images before any reviewer sees
+// it, and some of the lines the review quotes are lines that model wrote. The
+// record has to say so, in all four parts: the shape of the folder, the
+// stage's own account, the count by source and the lines themselves.
+for (const name of [
+  "base_schema_version",
+  "ai_read",
+  "pieces_per_source",
+  "model_written",
+]) {
+  const missing = localRecord();
+  delete missing.ingest[name];
+  rejects(missing, `a record must say ${name} about the text its panel read`);
+}
+
+const unnamedReader = localRecord();
+delete unnamedReader.ingest.ai_read.reader_model;
+rejects(unnamedReader, "a stage that ran must name the model that ran it");
+
+// An import nobody read is a publishable state and says so plainly, with no
+// model to name and no lines a model wrote.
+const unreadPaper = localRecord();
+unreadPaper.ingest.ai_read = {
+  read: false,
+  reason: "the caller asked for no read",
+  lost_pages: [],
+};
+unreadPaper.ingest.pieces_per_source = { text: 21 };
+unreadPaper.ingest.model_written = [];
+unreadPaper.ingest.manuscript_state = "sealed-without-read";
+accepts(unreadPaper, "an import no model read is publishable and says so");
+
+// A manuscript an application composed from its own source: nothing read a
+// page, and some of its lines are still a model's. The engine refuses to write
+// one of those without naming the model, so the record carries that name and
+// how many pieces it wrote beside the same read: false.
+const composedPaper = localRecord();
+composedPaper.ingest.ai_read = {
+  read: false,
+  reason: "written from an application's own source, which needs no reading",
+  ai_model: "claude-opus-5-5",
+  ai_pieces: 2,
+  lost_pages: [],
+};
+composedPaper.ingest.manuscript_state = "sealed-without-read";
+accepts(composedPaper, "a manuscript composed from an application's source is publishable");
+
+// What a lost page became. The page number says which page of the authors' own
+// PDF nothing was converted from; the lines say which sentences of the review
+// came off it, and are what a quotation can be checked against.
+const unlocatedLostPage = localRecord();
+delete unlocatedLostPage.ingest.ai_read.lost_pages[0].added[0].lines;
+rejects(unlocatedLostPage, "a transcribed page must say which lines it became");
+
+const draftPieceId = localRecord();
+draftPieceId.ingest.ai_read.lost_pages[0].added[0].piece = "p-21";
+rejects(draftPieceId, "a draft's own piece id is not a field a bundle carries");
+
+// The state is the engine's word for how the folder was sealed, and the two
+// sealed states are the only ones a published review can stand on: a draft or
+// a missing base is refused long before anything is written.
+const unsealedState = localRecord();
+unsealedState.ingest.manuscript_state = "draft";
+rejects(unsealedState, "a review cannot be published over an unsealed manuscript");
+
+const statelessIngest = localRecord();
+delete statelessIngest.ingest.manuscript_state;
+accepts(statelessIngest, "a record whose run named another workspace claims no state");
+
+// A line is named by where it reads, so a row with no lines or no source is a
+// count dressed as a citation.
+const unlocatedLine = localRecord();
+delete unlocatedLine.ingest.model_written[0].lines;
+rejects(unlocatedLine, "a model written row must say which lines it covers");
+
+const unsourcedLine = localRecord();
+delete unsourcedLine.ingest.model_written[0].source;
+rejects(unsourcedLine, "a model written row must say what wrote it");
+
+// Nothing of the reader's own working is published: the stage's log sits on the
+// machine that ran it and would carry a path off it.
+const leakedLog = localRecord();
+leakedLog.ingest.ai_read.reader_log = "/home/someone/run/reader.jsonl";
+rejects(leakedLog, "the reader's log is not a field a published record carries");
+
+const strayLine = localRecord();
+strayLine.ingest.model_written[0].fingerprint = "0f0f0f";
+rejects(strayLine, "a model written row carries no field beyond where it reads");
+
+// Which part of a piece a line is, and how many parts there were, are each half
+// of one fact. A row carrying one of them says nothing a reader can use and
+// looks like a row that was edited rather than written.
+const halfSplit = localRecord();
+delete halfSplit.ingest.model_written[1].of;
+rejects(halfSplit, "a part of a re-read piece must say how many parts there were");
+
+const countlessSplit = localRecord();
+delete countlessSplit.ingest.model_written[1].part;
+rejects(countlessSplit, "a row saying how many parts there were must say which it is");
+
+// A part on its own is not a part. The engine writes the pair only where it read
+// one piece as several, so a row claiming to be the only one of one is a row
+// that lost the fact it was carrying.
+const lonePart = localRecord();
+lonePart.ingest.model_written[1].of = 1;
+rejects(lonePart, "a piece read as one piece was not read as several");
+
+// And a fold of nothing. The count exists to tell an author that something of
+// the converter's went into this line and is in the manuscript nowhere else, so
+// a zero is a claim with nothing behind it.
+const emptyFold = localRecord();
+emptyFold.ingest.model_written[1].absorbed = 0;
+rejects(emptyFold, "a line that absorbed nothing carries no count of what it absorbed");
+
+// The reader's note is published where there is one, and an empty string is not
+// one: published as a field it would read as a model that had nothing to say
+// about the paper rather than one that was never asked for an account.
+const emptyNote = localRecord();
+emptyNote.ingest.ai_read.note = "";
+rejects(emptyNote, "an empty note is not an account of the document");
+
+// And the whole of it travels. The engine caps what a reader may file, and a
+// record carrying more than the engine would keep is a record somebody wrote by
+// hand.
+const overlongNote = localRecord();
+overlongNote.ingest.ai_read.note = "a".repeat(2001);
+rejects(overlongNote, "a note longer than the engine keeps is not one the engine wrote");
+
+const longestNote = localRecord();
+longestNote.ingest.ai_read.note = "a".repeat(2000);
+accepts(longestNote, "a note the length the engine caps at is publishable");
+
+// The pieces that left the manuscript are counted where something left it. The
+// engine leaves out a reason with no count and the publish path leaves out a
+// count that is not a positive number, so a zero here is a stage claiming it
+// folded something away and folded nothing.
+const emptyDeparture = localRecord();
+emptyDeparture.ingest.ai_read.gone.withdrawn = 0;
+rejects(emptyDeparture, "a reason no piece left the manuscript for carries no count");
+
+const countlessDeparture = localRecord();
+countlessDeparture.ingest.ai_read.gone.absorbed = "one";
+rejects(countlessDeparture, "a count of the pieces that left the manuscript is a number");
+
+// A manuscript nothing left is the ordinary case, and it says so by having no
+// counts at all rather than by a row of zeroes.
+const nothingGone = localRecord();
+nothingGone.ingest.ai_read.gone = {};
+accepts(nothingGone, "a reader that folded nothing away publishes no departures");
 
 const emptyJudgement = localRecord();
 emptyJudgement.generator.advisory_verdict = {};
@@ -489,17 +763,45 @@ const silentAboutPublishable = localRecord();
 delete silentAboutPublishable.generator.run.publishable;
 rejects(silentAboutPublishable, "a record must carry the engine's own publish flag");
 
-// Where the published findings came from. The engine rebuilds a pool from
-// findings.jsonl when the editor package is missing or damaged, and that pool
-// carries no editorial placement: no body, no appendix, no rulings. Publishing
-// it would present the raw submissions as the editor's letter.
+// Where the published review came from. The engine reads the raw ledger when
+// the issues document is missing or damaged, or when it holds no issue over
+// findings that are in the ledger, and what comes back then is a pile of
+// findings nobody pooled rather than a review. Publishing it would present the
+// raw submissions as the editor's letter.
 const rebuiltPool = localRecord();
-rebuiltPool.generator.run.findings_source = "findings-ledger";
-rejects(rebuiltPool, "findings rebuilt from the ledger are not the editor's review");
+rebuiltPool.generator.run.findings_source = "ledger";
+rejects(rebuiltPool, "findings read off the ledger are not the editor's review");
 
 const silentAboutSource = localRecord();
 delete silentAboutSource.generator.run.findings_source;
-rejects(silentAboutSource, "a record must say where its findings came from");
+rejects(silentAboutSource, "a record must say where its review came from");
+
+// Who pooled the findings into issues. `server` is the engine minting one issue
+// per finding because no editor claimed the review, which it calls
+// unpublishable itself, and a record carrying that word describes a run the
+// gate did not let through.
+const unpooled = localRecord();
+unpooled.generator.run.issues_source = "server";
+rejects(unpooled, "a review nobody pooled into issues is not an editor's review");
+
+const silentAboutPooling = localRecord();
+delete silentAboutPooling.generator.run.issues_source;
+rejects(silentAboutPooling, "a record must say who pooled its findings into issues");
+
+// What the review asks for. A record without the counts cannot say how much was
+// required of the authors, and the page prints them.
+for (const name of ["issues", "required", "suggestions"]) {
+  const missing = localRecord();
+  delete missing.generator.run[name];
+  rejects(missing, `a record must carry its ${name} count`);
+}
+
+// A later review of the same paper carries its position in the paper's page and
+// nothing else about the reviews before it: it read the draft in front of it and
+// no earlier review, so there is no earlier bundle for the record to name.
+const secondReview = localRecord();
+secondReview.round = 2;
+accepts(secondReview, "a later review of the same paper is a record of its own");
 
 // A review written before a rate limit stopped the session is complete and
 // publishable, and the note is the only thing that says the session did not end
@@ -617,6 +919,81 @@ const laneBlankWorker = localRecord();
 laneBlankWorker.generator.run.citations.workers = [""];
 rejects(laneBlankWorker, "a worker slot with no name is not a slot");
 
+// The code lane. A review that read the code says where the code came from and
+// which revision, because a reader who cannot tell which revision was read
+// cannot check anything the review says about it. A review that read none says
+// so, in the one field that is required of every record that has the block at
+// all.
+const noCodeBlock = localRecord();
+delete noCodeBlock.generator.run.code;
+accepts(noCodeBlock, "a run read by a release that did not answer the question still reads");
+
+const noCodeReviewed = localRecord();
+noCodeReviewed.generator.run.code = { reviewed: false };
+accepts(noCodeReviewed, "a paper submitted with no code says so and carries nothing else");
+
+const silentAboutCode = localRecord();
+delete silentAboutCode.generator.run.code.reviewed;
+rejects(silentAboutCode, "a code block that does not say whether code was reviewed says nothing");
+
+const codeFromAFolder = localRecord();
+codeFromAFolder.generator.run.code = code({
+  kind: "folder",
+  source_name: "widget-pipeline",
+  commit: "e".repeat(40),
+});
+delete codeFromAFolder.generator.run.code.source;
+accepts(codeFromAFolder, "code read from a folder is published by the folder's own name");
+
+// The copy the engine took sits on the machine that ran the review, under an
+// absolute path, and the bundle does not carry it. A record naming it would
+// describe a stranger's computer and point at nothing a reader has.
+const codeNamesItsSnapshot = localRecord();
+codeNamesItsSnapshot.generator.run.code.snapshot =
+  "/home/someone/runs/local/fixture-paper/review/code";
+rejects(codeNamesItsSnapshot, "the copy the engine took is not part of a published record");
+
+// And its manifest is not published either. It carries the origin as an
+// absolute path and a digest per file, and what a reader of a finding needs out
+// of it travels on the finding instead.
+const codeCarriesItsManifest = localRecord();
+codeCarriesItsManifest.generator.run.code.manifest = {
+  origin: { source: "/home/someone/widget-pipeline" },
+  files: [{ path: "analysis/pipeline.py", sha256: HASH }],
+};
+rejects(codeCarriesItsManifest, "the copy's own manifest is not part of a published record");
+
+const codeFromNowhere = localRecord();
+codeFromNowhere.generator.run.code.kind = "tarball";
+rejects(codeFromNowhere, "the engine gets code two ways and a record may claim no third");
+
+const codeWithABlankSource = localRecord();
+codeWithABlankSource.generator.run.code.source = "";
+rejects(codeWithABlankSource, "a repository with no address is not where code came from");
+
+const codeOpenedAnUnnamedFile = localRecord();
+codeOpenedAnUnnamedFile.generator.run.code.files_opened = [""];
+rejects(codeOpenedAnUnnamedFile, "a file with no path is not a file the lane opened");
+
+const codeCountedAString = localRecord();
+codeCountedAString.generator.run.code.opened = "4";
+rejects(codeCountedAString, "a count written as text is not a number the page can state");
+
+const codeCountedBelowZero = localRecord();
+codeCountedBelowZero.generator.run.code.files_skipped = -1;
+rejects(codeCountedBelowZero, "no copy can leave out fewer than none of the files");
+
+// A directory that is not a checkout has no clean or dirty state, and the
+// engine answers that with nothing rather than with false. False would tell a
+// reader the code had been committed when nothing had.
+const codeFromAPlainFolder = localRecord();
+codeFromAPlainFolder.generator.run.code = code({ kind: "folder", source_name: "pipeline" });
+delete codeFromAPlainFolder.generator.run.code.source;
+delete codeFromAPlainFolder.generator.run.code.commit;
+delete codeFromAPlainFolder.generator.run.code.branch;
+delete codeFromAPlainFolder.generator.run.code.dirty;
+accepts(codeFromAPlainFolder, "a folder with no git in it is published without a revision");
+
 // The two tables that say who read the manuscript leave the workers out, and
 // the agent rows keep them. That split is the whole point: a reader counting
 // the panel from the model table must not find two more readers who read
@@ -681,7 +1058,9 @@ assertValidProvenance(noneFound, "a track that reported nothing to report answer
 const foundNothing = localRecord();
 foundNothing.generator.run.status = "complete-without-findings";
 foundNothing.generator.run.review_guard_status = "clean";
-foundNothing.generator.run.findings = 0;
+foundNothing.generator.run.issues = 0;
+foundNothing.generator.run.required = 0;
+foundNothing.generator.run.suggestions = 0;
 foundNothing.generator.run.findings_delivered = 0;
 foundNothing.generator.run.quarantined_findings_count = 0;
 assertValidProvenance(foundNothing, "fixture");

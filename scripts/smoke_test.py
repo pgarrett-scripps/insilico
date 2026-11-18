@@ -14,29 +14,40 @@ from smoke_checks.bundles import (
 from smoke_checks.commands import check_command_parsing_is_strict
 from smoke_checks.environment import check_environment_is_portable_and_secret_free
 from smoke_checks.local import (
+    check_a_credential_or_an_installed_path_is_a_fact_and_never_prose,
     check_a_destination_outside_its_tree_is_refused,
-    check_a_minor_finding_is_never_a_required_revision,
+    check_a_finding_the_code_check_threw_out_is_never_an_ask,
+    check_a_home_or_temporary_path_is_refused_on_anybodys_machine,
+    check_a_minor_issue_is_never_a_required_revision,
     check_a_missing_engine_fails_the_skill_check_in_ci,
+    check_a_row_that_rules_on_another_review_is_refused,
+    check_a_severity_this_release_cannot_sort_is_refused,
+    check_a_withheld_run_with_no_reason_is_reported_as_having_none,
     check_a_path_shaped_key_is_refused_rather_than_published_without_it,
     check_a_schema_pattern_means_what_the_repositorys_own_gate_means,
     check_a_rehearsal_claims_no_reading,
+    check_a_review_that_read_the_code_publishes_the_code_and_not_the_copy,
     check_a_version_is_only_recorded_when_it_looks_like_one,
     check_a_rehearsal_is_never_written_into_the_published_tree,
-    check_a_run_of_one_paper_cannot_be_published_as_another,
     check_an_attestation_needs_a_named_editor,
     check_an_unclaimed_review_is_labelled_an_experiment,
     check_every_documented_command_runs_against_a_real_parser,
     check_every_published_file_is_hashed,
     check_every_spelling_of_a_machine_fact_is_the_same_fact,
+    check_the_fixtures_counts_are_the_ones_the_reader_computes,
+    check_no_editorial_page_names_the_machine_it_was_written_on,
+    check_no_published_document_overstates_what_the_editor_agent_did,
     check_nothing_reaches_into_the_engines_internals,
     check_only_this_machines_own_names_are_refused_as_this_machine,
     check_ordinary_review_text_publishes_and_a_local_path_does_not,
-    check_severity_is_read_from_the_engine_not_guessed,
     check_the_advisory_verdict_is_labelled_advisory,
     check_the_attestation_says_what_it_has_to_say,
     check_the_citation_section_prints_no_charge_nobody_made,
     check_the_decision_is_attributed_to_a_person,
-    check_the_locked_engine_release_is_the_one_declared,
+    check_the_engines_pdf_converter_is_named_before_a_run_and_installed_in_ci,
+    check_the_issues_are_split_by_severity_and_ordered_by_rank,
+    check_the_letter_marks_a_quote_in_the_line_it_reads_on,
+    check_the_locked_engine_commit_is_the_one_declared,
     check_the_method_paragraph_describes_the_run_that_happened,
     check_the_page_keeps_the_model_asked_apart_from_the_model_that_ran,
     check_the_run_fixture_is_a_run_the_engine_could_have_written,
@@ -44,7 +55,7 @@ from smoke_checks.local import (
     run_engine_backed_checks,
 )
 from smoke_checks.planning import (
-    check_latest_editorial_attempt_is_the_revision_baseline,
+    check_a_new_draft_is_planned_as_its_own_review,
     check_rerun_refuses_a_moved_draft,
     check_restamping_is_not_staleness,
     check_round_is_not_version,
@@ -54,6 +65,7 @@ from smoke_checks.planning import (
 )
 from smoke_checks.sources import (
     check_a_rate_limit_is_waited_out_in_minutes,
+    check_a_submitted_code_link_is_only_ever_an_https_one,
     check_bare_doi_picks_the_right_server,
     check_download_is_bounded,
     check_full_text_source_hierarchy,
@@ -97,8 +109,8 @@ def main() -> int:
     print("ok  a re-stamped bioRxiv PDF is not reported as stale")
     check_round_is_not_version()
     print("ok  bundle version and review round stay distinct")
-    check_latest_editorial_attempt_is_the_revision_baseline()
-    print("ok  a revision follows the latest eligible editorial review")
+    check_a_new_draft_is_planned_as_its_own_review()
+    print("ok  a review of a new draft is planned as a review of that draft alone")
     check_solicitation_is_labelled()
     print("ok  the solicitation claim is recorded, all three ways")
     check_metadata_is_sanitised_at_ingestion()
@@ -116,7 +128,9 @@ def main() -> int:
     check_bare_doi_picks_the_right_server()
     print("ok  a bare DOI resolves to the server that actually holds it")
     check_submission_preview()
-    print("ok  submission issues get one safe editor command preview")
+    print("ok  submission issues get one safe preview of the review to run next")
+    check_a_submitted_code_link_is_only_ever_an_https_one()
+    print("ok  a submitted code link is accepted only as a public https address")
     check_full_text_source_hierarchy()
     print("ok  official full text is preferred and damaged PDF text falls back to OCR")
     check_metadata_fetch_retries_throttling()
@@ -130,12 +144,30 @@ def main() -> int:
     check_rerun_refuses_a_moved_draft()
     print("ok  a rerun refuses a draft that moved")
 
-    check_severity_is_read_from_the_engine_not_guessed()
-    print("ok  an unrecognised severity stays visible and out of the counts")
+    check_the_issues_are_split_by_severity_and_ordered_by_rank()
+    print("ok  the engine's issues are split by severity and kept in rank order")
     check_the_decision_is_attributed_to_a_person()
     print("ok  a local review attributes its decision to a human editor")
-    check_a_minor_finding_is_never_a_required_revision()
+    check_the_letter_marks_a_quote_in_the_line_it_reads_on()
+    print("ok  the letter marks a quote in the line of the manuscript it reads on")
+    check_a_minor_issue_is_never_a_required_revision()
     print("ok  severity alone decides what a revision round must fix")
+    check_a_severity_this_release_cannot_sort_is_refused()
+    print("ok  an issue carrying a severity this release cannot sort is refused")
+    check_a_row_that_rules_on_another_review_is_refused()
+    print("ok  an issue carrying a ruling on an earlier review is refused by name")
+    check_a_finding_the_code_check_threw_out_is_never_an_ask()
+    print("ok  an issue resting on a finding the code check threw out is refused")
+    check_a_withheld_run_with_no_reason_is_reported_as_having_none()
+    print("ok  a run the engine withheld without a reason is reported as having none")
+    check_a_credential_or_an_installed_path_is_a_fact_and_never_prose()
+    print("ok  a credential and a path inside an installed environment are refused")
+    check_no_published_document_overstates_what_the_editor_agent_did()
+    print("ok  no authored document claims more of the editor agent than it did")
+    check_no_editorial_page_names_the_machine_it_was_written_on()
+    print("ok  no editorial page names the machine it was written on")
+    check_the_fixtures_counts_are_the_ones_the_reader_computes()
+    print("ok  the fixture's own tallies are the ones the publish path counts")
     check_an_unclaimed_review_is_labelled_an_experiment()
     print("ok  an unclaimed local review is published as an experiment")
     check_every_published_file_is_hashed()
@@ -146,8 +178,6 @@ def main() -> int:
     print("ok  every engine command in the skill is one the engine's parser accepts")
     check_every_documented_command_runs_against_a_real_parser()
     print("ok  every command and flag the documents give is one a real parser accepts")
-    check_a_run_of_one_paper_cannot_be_published_as_another()
-    print("ok  a run is bound to the paper that was prepared")
     check_a_rehearsal_is_never_written_into_the_published_tree()
     print("ok  a run without --publish stays out of docs/reviews")
     check_the_method_paragraph_describes_the_run_that_happened()
@@ -156,6 +186,8 @@ def main() -> int:
     print("ok  the page shows each slot's model asked and model ran, from two fields")
     check_the_citation_section_prints_no_charge_nobody_made()
     print("ok  the citations section states each lookup state and sums none of them")
+    check_a_review_that_read_the_code_publishes_the_code_and_not_the_copy()
+    print("ok  a review that read the code publishes the code read and not the copy taken")
     check_an_attestation_needs_a_named_editor()
     print("ok  a true attestation needs a named editor and an actual reading")
     check_a_rehearsal_claims_no_reading()
@@ -164,6 +196,8 @@ def main() -> int:
     print("ok  a bundle is written only inside the tree it belongs to")
     check_a_missing_engine_fails_the_skill_check_in_ci()
     print("ok  the skill command check fails in CI rather than skipping itself")
+    check_the_engines_pdf_converter_is_named_before_a_run_and_installed_in_ci()
+    print("ok  the preflight names the engine's PDF converter and CI installs it")
     check_the_advisory_verdict_is_labelled_advisory()
     print("ok  the engine's verdict is published and labelled advisory")
     check_nothing_reaches_into_the_engines_internals()
@@ -172,6 +206,8 @@ def main() -> int:
     print("ok  ordinary review notation publishes and a local path is refused by name")
     check_only_this_machines_own_names_are_refused_as_this_machine()
     print("ok  this machine's own names are refused and ordinary prose is not")
+    check_a_home_or_temporary_path_is_refused_on_anybodys_machine()
+    print("ok  a home or temporary path is refused whoever's machine it is on")
     check_every_spelling_of_a_machine_fact_is_the_same_fact()
     print("ok  every encoding of a machine fact reduces to the same fact")
     check_a_path_shaped_key_is_refused_rather_than_published_without_it()
@@ -189,12 +225,10 @@ def main() -> int:
     assert slugify("!!!") == "", "punctuation-only title should yield an empty slug"
     print(f"\n{len(NASTY_TITLES)} fixture bundle(s) written cleanly")
 
-    # Last on purpose, after everything else has reported. This one asserts a
-    # fact about requirements.txt rather than about any code here, and it fails
-    # for as long as the engine release in use is installed from git instead of
-    # a lock that can name it. A failing assertion ends the run, so anywhere
-    # earlier this known mismatch would hide every check after it.
-    check_the_locked_engine_release_is_the_one_declared()
+    # Last, because it asserts a fact about requirements.in and requirements.txt
+    # rather than about any code here: the two files have to name the same
+    # engine commit, and the lock has to carry that archive's hash.
+    check_the_locked_engine_commit_is_the_one_declared()
     print("ok  the lock pins the engine release requirements.in declares")
     return 0
 

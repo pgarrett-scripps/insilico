@@ -82,8 +82,8 @@ def check_versioning() -> None:
         assert again.previous_attempt == paper / "v1" / "r1"
         assert again.dest == paper / "v1" / "r2",\
             "--replace must create a second immutable review attempt"
-        assert again.prior is None,\
-            "a same-draft re-review is round 1 and inherits no prior verdict"
+        assert again.kind == "same-draft re-review",\
+            "a second attempt on identical text is a re-review of that draft"
 
         v1 = provenance_of(paper / "v1" / "r1")
         v2 = provenance_of(paper / "v2" / "r1")
@@ -146,8 +146,14 @@ def check_round_is_not_version() -> None:
             "the previous round's asks must reach the record"
 
 
-def check_latest_editorial_attempt_is_the_revision_baseline() -> None:
-    """A new manuscript draft follows the latest eligible editorial review."""
+def check_a_new_draft_is_planned_as_its_own_review() -> None:
+    """A new manuscript draft is reviewed on its own, beside the earlier ones.
+
+    The earlier bundles decide where this one lands and nothing else about it.
+    A review of v2 reads v2 and no review of v1, so the plan carries no earlier
+    bundle for the run to be measured against and the folder is simply the next
+    one.
+    """
     with tempfile.TemporaryDirectory() as tmp:
         paper = Path(tmp) / "2026" / "a-paper"
 
@@ -164,15 +170,16 @@ def check_latest_editorial_attempt_is_the_revision_baseline() -> None:
             (bundle / "round.json").write_text(json.dumps({"round": 1}))
             return bundle
 
-        first = attempt(1, True)
-        latest_editorial = attempt(2, True)
-        experiment = attempt(3, False)
+        for number, eligible in ((1, True), (2, True), (3, False)):
+            attempt(number, eligible)
 
         plan = plan_review(paper, 2, replace=False)
-        assert plan.prior == latest_editorial
-        assert plan.prior != first
-        assert plan.prior != experiment
         assert plan.dest == paper / "v2" / "r1"
+        assert plan.previous_attempt is None,\
+            "a new draft is not a second attempt on the draft before it"
+        assert plan.kind == "review of this draft", f"unexpected plan kind: {plan.kind}"
+        assert not hasattr(plan, "prior"),\
+            "a plan must not name an earlier bundle for the run to rule against"
 
 
 def check_staleness_scan_finds_bundles() -> None:

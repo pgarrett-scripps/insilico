@@ -83,7 +83,17 @@ FILLED = "placeholder"
 # and a command that runs one is counted and reported rather than parsed. The
 # list is explicit so that a document naming some new tool fails here and is
 # either added on purpose or corrected.
-OUTSIDE_PROGRAMS = frozenset({"git", "uv", "pip", "cd", "export", "source", "date", "echo"})
+OUTSIDE_PROGRAMS = frozenset({
+    "git", "uv", "pip", "cd", "export", "source", "date", "echo",
+    # GitHub's own client. The skill reads the queue of submission issues and
+    # comments a pull request link back on one with it, and what it accepts is
+    # GitHub's business rather than this repository's.
+    "gh",
+    # Poppler's PDF to text converter, which the engine runs to read the
+    # manuscript. The skill's preflight has the editor prove it is installed,
+    # and its options are Poppler's business rather than this repository's.
+    "pdftotext",
+})
 
 # A flag the prose puts in backticks is a claim that it exists, and it has to be
 # a flag some parser accepts.

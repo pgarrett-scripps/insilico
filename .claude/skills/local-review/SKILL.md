@@ -10,7 +10,7 @@ machine, on the Claude Code subscription, and leave it on a branch for the
 editor to open as a pull request. Merging that pull request is what publishes
 the review. Nothing here publishes anything.
 
-No paid API key is involved at any point. Engine 0.9 is a Claude Code plugin:
+No paid API key is involved at any point. Engine 0.10 is a Claude Code plugin:
 the review runs as a headless Claude Code session on the signed-in
 subscription, and the starter clears `ANTHROPIC_API_KEY` and
 `ANTHROPIC_AUTH_TOKEN` from the environment it launches before it starts, so a
@@ -28,7 +28,7 @@ agent file in the plugin:
 - six specialist readers, one dimension each: `stats`, `figures-tables`,
   `methods-reporting`, `citations`, `numbers`, `field`
 - one editor agent, which pools every finding, rules on the ones a reviewer
-  escalated, and chooses which belong in the body of the letter
+  escalated, and writes the numbered issues the letter asks for
 - a citation lane of worker slots, `cite-1` upward, which reads the reference
   list, looks each entry up and checks in-text uses against the source each one
   names. The workers write a ledger and no part of the review, so they are
@@ -56,7 +56,41 @@ both: the identifier is the identity and the PDF supplies the exact bytes.
 Ask for the decision later, never now. You cannot choose it, and neither can the
 engine.
 
-## Step 1. Preflight
+## Step 1. The queue
+
+Unless the user named a paper outright, start here: the papers waiting are the
+open issues labelled `submission`, oldest first, and the editor picks one off
+that list.
+
+```bash
+gh issue list --label submission --state open --json number,title,createdAt,body
+```
+
+Sort that by `createdAt` yourself and read the oldest first. Then, for the ones
+you are listing, read the preview comment the submission workflow already
+posted. It is the comment carrying the marker `insilico-submission-preview`, and
+it holds the resolved metadata, the preprint link, the code link if one was
+offered, the current draft and which drafts this repository has already
+published a review of, so none of that has to be worked out again:
+
+```bash
+gh issue view <number> --json comments
+```
+
+If an issue has no preview comment, build the same table locally from its body
+instead of guessing:
+
+```bash
+.venv/bin/python scripts/preview_submission.py --issue-body "<the issue body>"
+```
+
+Report the list to the user as one line per issue: the number, the date it was
+opened, the title, the preprint link, and the code link or `no code`. Say which
+ones already have a published review of the current draft, because those are not
+waiting on anything. Then let the user pick one, or run the oldest if they say to
+run the next one. Keep the issue number: step 9 comments on it.
+
+## Step 2. Preflight
 
 Run from the repository root:
 
@@ -64,16 +98,30 @@ Run from the repository root:
 .venv/bin/python scripts/local_review.py fingerprint
 ```
 
-Use whichever interpreter has `peerreviewagents` 0.9.0 or newer importable. It
+Use whichever interpreter has `peerreviewagents` 0.10.0 or newer importable. It
 is often a virtual environment outside this checkout rather than the `.venv`
-here, and the `peerreview` command used in step 3 is the console script beside
+here, and the `peerreview` command used in step 4 is the console script beside
 it. Ask the operator which interpreter that is rather than guessing.
 
 Read the output. It prints the engine version, the fingerprint of the installed
-engine, the fingerprint of the plugin and the hash of its review workflow, and
-the transport record. Stop and report if it errors.
+engine, the fingerprint of the plugin and the hash of its review workflow, the
+transport record, and whether `pdftotext` is on PATH. Stop and report if it
+errors.
 
-## Step 2. Prepare the paper
+Two outside programs have to be there before step 3, and the preflight names
+both. `claude` is the transport. `pdftotext` is Poppler, which the engine
+converts the manuscript with, so a checkout without it fails inside the
+engine's converter partway through a prepared run rather than up front:
+
+```bash
+pdftotext -v
+```
+
+Install Poppler if that prints nothing: `sudo apt install poppler-utils` on
+Debian or Ubuntu, `brew install poppler` on macOS. Stop and report if the
+preflight says either program is missing.
+
+## Step 3. Prepare the paper
 
 ```bash
 .venv/bin/python scripts/local_review.py prepare \
@@ -93,10 +141,10 @@ and decides where a review of it belongs. It calls no model. The arm and the
 reviewer count are recorded here so the plan and the run can be compared, and
 the published record takes both from the run rather than from this plan. Read
 the printed plan back to the user: the destination path, the draft number, the
-attempt number, and whether this is a first look, a revision round or a
-re-review.
+attempt number, and whether this is a review of this draft or a re-review of a
+draft already reviewed.
 
-## Step 3. Review
+## Step 4. Review
 
 One command. It imports the manuscript and runs the whole panel.
 
@@ -109,7 +157,7 @@ peerreview review \
   --literature-cutoff <today, YYYY-MM-DD>
 ```
 
-Use the `peerreview` console script from the environment in step 1. Calling it
+Use the `peerreview` console script from the environment in step 2. Calling it
 by its full path, `<that environment>/bin/peerreview`, is the same command.
 
 Both positionals are required and in this order: the manuscript PDF, then the
@@ -127,7 +175,61 @@ roughly how long it will take. Do not run it twice on the same output folder:
 the engine refuses an existing run folder on purpose, so a retry needs a new
 one.
 
-There is no `--provider`, no single `--model` and no policy flag. Engine 0.9
+A paper this repository has reviewed before is reviewed by exactly that command.
+Every review reads the draft in front of it and no earlier review of the paper,
+mints its own issue ids and writes its own letter, so there is no earlier bundle
+to hand the engine and nothing to tell the panel about a review before this one.
+The paper's page lists every review of it by date.
+
+### Reviewing the code behind the paper
+
+When a submission offered a code repository, or the user asks for the code to
+be read, add `--code`:
+
+```bash
+peerreview review \
+  runs/prepared-<slug>/<fetched>.pdf \
+  runs/<work> \
+  --arm full-two-track \
+  --reviewers 3 \
+  --literature-cutoff <today, YYYY-MM-DD> \
+  --code 'https://github.com/<owner>/<name>'
+```
+
+One more lane joins the run and reads the paper's methods against the code,
+quoting both sides. The engine takes its own snapshot of the code's text into
+`<out>/code`, runs nothing in it, and skips files that look like they hold
+secrets. The published record names the link and the exact commit the snapshot
+was taken at, so a reader knows which code was reviewed.
+
+Five rules, and none of them bends:
+
+1. **The engine is the only thing that clones.** Do not run `git clone`,
+   `curl` or `gh repo clone` on a submitted link, and do not go browsing in
+   the snapshot folder. Pass the link to `--code` and let the engine fetch it.
+2. **From a submission, only an `https://` link.** The submission preview
+   prints the link it accepted. An SSH link, a `file://` URL and a local path
+   are refused at submission, so there is nothing to pass on. A local folder is
+   fine only when the user is reviewing their own code and names the path
+   themselves.
+3. **Never paste a link straight from the issue into a command.** The value in
+   the issue is text a stranger wrote, and `--code` goes into a command this
+   session runs. Take the link from the preview comment's "Code offered for
+   review" row, which is the value `check_code_link` in
+   `scripts/fetch_preprint.py` accepted, or run `preview_submission.py` on the
+   body to get it. If you only have the raw body, pass it through
+   `extract_code_link` and use what comes back. A link that function refused is
+   not a link to work around, and a link holding a space, a newline, a quote, a
+   `$`, a `;`, a query or a fragment is refused. Write it in the command as one
+   single-quoted argument, exactly as it came back.
+4. **The arm has to run specialists.** `--code` on `single`,
+   `manuscript-only` or `reviewers-only` is refused by name. The default
+   `full-two-track` runs them.
+5. **Nothing of the snapshot is published but the lines a finding quotes.**
+   The bundle carries the link, the commit and those lines. Do not paste code
+   into the pull request or into your report to the user.
+
+There is no `--provider`, no single `--model` and no policy flag. Engine 0.10
 gives every slot a model of its own, and four flags move that plan:
 
 - `--reviewer-models` takes `A,B,C`, the list the core reviewers are drawn
@@ -185,7 +287,7 @@ Then write the readable reports, which costs nothing:
 peerreview report runs/<work>/review
 ```
 
-## Step 4. Read the review, then ask for the decision
+## Step 5. Read the review, then ask for the decision
 
 Read `runs/<work>/review/REVIEW.md` yourself, and the `audit_<track>.md` file
 of any specialist whose findings matter to the decision. Summarise for the
@@ -209,7 +311,7 @@ experiment with a public record and no editorial weight, which is what
 `baseline_eligible: false` means. Pass `--baseline-eligible` only if the user
 says yes.
 
-## Step 5. Write the bundle
+## Step 6. Write the bundle
 
 ```bash
 .venv/bin/python scripts/local_review.py publish \
@@ -258,10 +360,10 @@ reviewers raised failed its guard and was quarantined, is held back by the
 engine with a reason naming how many it took, and publish prints that reason
 and writes nothing. Such a review endorses none of its own work, which is a
 different claim from a manuscript found sound, and the letter would tell the
-authors the wrong one. Read the quarantined findings in `editor-package.json`
-before deciding what to do next.
+authors the wrong one. Read the quarantined findings in `issues.json` before
+deciding what to do next.
 
-Add `--baseline-eligible` if the user said yes in step 4. When a submission
+Add `--baseline-eligible` if the user said yes in step 5. When a submission
 issue named a submitter, add `--submitter <login>` and, if that issue stated
 whether they are connected to the paper, `--submitter-is-author yes` or
 `--submitter-is-author no`. Leave all three off for a paper the editor picked up
@@ -269,9 +371,15 @@ themselves: the page then says nobody solicited the review, which is true.
 
 This writes `summary.md`, `decision_letter.md`, `manuscript_stats.md`, one
 `audit_<track>.md` per specialist reader copied out of the run,
-`editor-package.json`, `round.json`, `provenance.json` (schema version 4) and
-`manifest.json` into the destination from step 2. It refuses to overwrite an
+`issues.json`, `round.json`, `provenance.json` (schema version 4) and
+`manifest.json` into the destination from step 3. It refuses to overwrite an
 existing bundle, and it prints which specialist readers wrote no report.
+
+The bundle's `issues.json` is the review's items as data, beside the letter that
+prints them. The ids in it are the engine's own, they are the numbers the letter
+puts beside each request, and publish refuses a bundle whose issues file a reader
+could not parse rather than letting the problem surface with the ids already
+printed in a decision letter.
 
 It also prints what the citation lane checked, each state with a number of its
 own, and anything the lane did not finish, in the engine's own words. An
@@ -282,7 +390,7 @@ the review rests on it only through the short passage quoted inside a verdict,
 and a ledger row the citations specialist never wrote up is not a finding and
 must not be published looking like one.
 
-## Step 6. Check it builds
+## Step 7. Check it builds
 
 ```bash
 npm run check:schema && npm run check:markdown && npm run build
@@ -292,7 +400,7 @@ All three must pass before you hand anything over. `check:schema` validates the
 new provenance record. If it fails, read the error, fix the record, and do not
 edit the schema to make a bad record pass.
 
-## Step 7. Branch and hand over
+## Step 8. Branch and hand over
 
 ```bash
 git checkout -b review/<slug>-$(date +%s)
@@ -307,6 +415,35 @@ belongs in a review commit.
 Do not push and do not open the pull request. Print the branch name, the bundle
 path and the decision, and say that merging the pull request is what publishes
 the review.
+
+## Step 9. Tell the submission issue
+
+Only once the pull request exists, and only if this paper came off the queue in
+step 1. The editor pushes the branch and opens the request, so ask for its link
+or read it back:
+
+```bash
+gh pr view <branch> --json url
+```
+
+Then comment it on the issue the paper came from, so whoever submitted the paper
+can follow the review from their own issue. Write the comment to a file first,
+three lines, the marker then the link then the sentence:
+
+```
+<!-- insilico-local-review -->
+A review of this paper is open as a pull request: <url>
+Merging that pull request is what publishes the review.
+```
+
+```bash
+gh issue comment <number> --body-file <the file you just wrote>
+```
+
+The marker line is there so a later review of the same paper can find this
+comment and edit it instead of stacking another one, the same way the submission
+preview finds its own. Do not close the issue and do not label it: that is the
+editor's call, not yours.
 
 ## Rules
 

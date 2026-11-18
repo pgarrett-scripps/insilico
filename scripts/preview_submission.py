@@ -13,7 +13,13 @@ import json
 from pathlib import Path
 from typing import Callable
 
-from fetch_preprint import Preprint, extract_url, resolve
+from fetch_preprint import (
+    CodeLinkRefused,
+    Preprint,
+    extract_code_link,
+    extract_url,
+    resolve,
+)
 
 REPO = Path(__file__).resolve().parent.parent
 REVIEWS = REPO / "docs" / "reviews"
@@ -82,35 +88,35 @@ def _reviewed_drafts(preprint: Preprint, reviews_root: Path) -> list[int]:
     return sorted(found)
 
 
-def _commands(current_draft: int, reviewed: list[int]) -> str:
+def _next_review(current_draft: int, reviewed: list[int]) -> str:
     if current_draft in reviewed:
         primary = (
-            f"Draft v{current_draft} already has a published review. Use "
-            "`/review replace` only if you intend to add a fresh, independent "
-            "review attempt for the same draft. The existing attempt stays on "
-            "the record. If the authors have a newer draft, wait for the archive "
-            "to serve it and use `/review`."
+            f"Draft v{current_draft} already has a published review. Review it "
+            "again only if a second independent read of the same draft is "
+            "wanted. The published review stays on the record and the new one is "
+            "published beside it as another attempt. If the authors have a newer "
+            "draft, wait for the archive to serve it."
         )
     elif reviewed:
         previous = ", ".join(f"v{number}" for number in reviewed)
         primary = (
-            f"Earlier draft {previous} has been reviewed. Use `/review` to open "
-            f"a revision round for v{current_draft}."
+            f"Earlier draft {previous} has been reviewed. Running the panel on "
+            f"v{current_draft} is an independent review of v{current_draft}, "
+            "which reads that draft and no earlier review of this paper."
         )
     else:
-        primary = "Use `/review` to run the configured referee panel."
+        primary = (
+            "No draft of this paper has been reviewed yet, so "
+            f"v{current_draft} is the one to run."
+        )
 
-    return f"""### Editor commands
+    return f"""### The next review
 
 {primary}
 
-| Command | Action |
-|---|---|
-| `/review` | Run the configured panel against the current archive draft. |
-| `/review anthropic` | Explicitly run the configured Anthropic panel. |
-| `/review openrouter vendor/model` | Run every role with one named OpenRouter model. |
-
-Only repository owners, members, and collaborators can start a run.
+A review runs on an editor's own machine, through the `local-review` skill in a
+checkout of this repository, and it is published by merging the pull request
+that skill leaves behind. Nothing typed on this issue starts one.
 """
 
 
@@ -140,6 +146,18 @@ def build_preview(
     except ValueError as exc:
         return _error_preview(str(exc))
 
+    # The code link is read apart from the preprint link, because a link this
+    # repository will not clone is a reason to say so and carry on, not a
+    # reason to lose the submission. It is printed as text rather than as a
+    # link: nobody reading the preview should be able to follow a submitted
+    # address by accident, and the engine is the only thing that fetches it.
+    code_link = ""
+    code_refusal = ""
+    try:
+        code_link = extract_code_link(issue_body)
+    except CodeLinkRefused as refused:
+        code_refusal = str(refused)
+
     current_draft = _draft(preprint)
     reviewed = _reviewed_drafts(preprint, reviews_root)
     history = ", ".join(f"v{number}" for number in reviewed) if reviewed else "None"
@@ -157,18 +175,34 @@ def build_preview(
         ("Posted", preprint.published or "Unavailable"),
         ("Current draft", f"v{current_draft}"),
         ("Published In Silico reviews", history),
+        ("Code offered for review", code_link or "None"),
     ]
     table = "\n".join(f"| {label} | {_cell(value)} |" for label, value in rows)
+
+    if code_refusal:
+        code_note = f"""
+> [!WARNING]
+> The code link was not accepted, and the review will read the manuscript
+> alone unless the issue is edited. {_cell(code_refusal)}
+"""
+    elif code_link:
+        code_note = """
+The code is cloned by the review itself, read-only and shallow, with no
+credentials and nothing run from it. The link and the exact commit read are
+published with the review.
+"""
+    else:
+        code_note = ""
 
     if not preprint.title:
         readiness = """
 > [!WARNING]
 > The archive returned no title or author metadata. Wait and edit the issue to retry before starting a review.
 """
-        commands = ""
+        next_review = ""
     else:
         readiness = ""
-        commands = "\n" + _commands(current_draft, reviewed)
+        next_review = "\n" + _next_review(current_draft, reviewed)
 
     return f"""{COMMENT_MARKER}
 ## Submission preview
@@ -176,15 +210,26 @@ def build_preview(
 | Field | Value |
 |---|---|
 {table}
-{readiness}{commands}
+{code_note}{readiness}{next_review}
 This preview uses public archive metadata and makes no model calls. Editing the issue refreshes it.
 """
 
 
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The arguments this script takes.
+
+    Named `build_parser` because that is where `scripts/check_skill_commands.py`
+    looks: a script that keeps its parser inside `main` reads to that check as a
+    script taking no arguments, and every documented call of it then fails for a
+    reason that says nothing about the document.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--issue-body", required=True)
-    args = parser.parse_args()
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
     print(build_preview(args.issue_body))
     return 0
 

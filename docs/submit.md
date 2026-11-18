@@ -13,6 +13,29 @@ Not a bare PDF link: a review has to name an exact, permanent version. A
 preprint server gives us a DOI, a version number and a file we can checksum. A
 bare link can go dead and leave a review pointing at nothing.
 
+## Offering the code behind the paper
+
+Optional, and one field on the form: a public `https://` link to the repository
+holding the analysis code. Give it and one more reviewer joins the panel, the
+one that reads your methods section against what the code actually does.
+
+What happens to the link:
+
+- **The review clones it, and nothing else does.** Read-only, shallow, no
+  credentials, hooks and submodules off, size-capped. Nothing in the
+  repository is ever run.
+- **Only its text is copied.** Data files, binaries and anything whose name
+  looks like it holds a secret are skipped, and the review records how many
+  files it left out.
+- **The link and the exact commit are published** with the review, so a reader
+  knows which code was read. The code itself is not republished: a finding
+  quotes the lines it is about, and the review carries those lines and no
+  others.
+
+SSH links, local-file URLs and paths on a machine are not accepted. If the code is not
+public, leave the field empty: a review published in public cannot rest on code
+nobody else can fetch.
+
 ## What we cannot read
 
 - Scanned or image-only PDFs that also fail the OCR fallback.
@@ -31,22 +54,25 @@ another run.
    [submission form](https://github.com/pgarrett-scripps/insilico/issues/new?template=submit.yml).
    One preprint per issue.
 2. **A bot checks the link** and posts the title, authors, archive date, current
-   draft, prior In Silico reviews, and the commands available to an editor. This
-   lookup is free and does not download the PDF or call a model. Editing the
-   issue refreshes the same preview comment.
-3. **An editor starts the panel** by commenting `/review`.
+   draft, prior In Silico reviews, and which review of the paper is the one to
+   run next. This lookup is free and does not download the PDF or call a model.
+   Editing the issue refreshes the same preview comment.
+3. **Your issue joins the queue.** Open submission issues are worked through
+   oldest first, and an editor runs the panel on their own machine when there is
+   time.
 4. **The submission passes [the desk](policy.md#the-desk).**
-5. **A bot opens a pull request** with the full review and posts a summary to
-   your issue.
+5. **A pull request opens** with the full review, and a comment on your issue
+   links to it.
 6. **The review goes to the editor.** The
    [editorial policy](policy.md#authority) governs publication.
 
 ## Submitting a revised draft
 
 Post the new version to the same preprint server, then say so on your original
-issue. An editor runs `/review` again, and the archive serves the new draft.
-See [Revision rounds](criteria.md#revision-rounds) for how the panel evaluates
-it.
+issue. An editor runs the review again when there is time, and the archive
+serves the new draft. See
+[Reviewing a revised draft](criteria.md#reviewing-a-revised-draft) for how the
+panel evaluates it.
 
 ## Reviewing your own work first
 

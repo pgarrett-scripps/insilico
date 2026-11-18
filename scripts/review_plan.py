@@ -9,7 +9,7 @@ from pathlib import Path
 
 from fetch_preprint import Preprint
 from review_commands import CommandError
-from review_paths import REPO, REVIEWS, ROUND_RECORD
+from review_paths import REPO, REVIEWS
 
 
 def slugify(text: str, limit: int = 60) -> str:
@@ -59,32 +59,6 @@ def _bundle_coordinates(bundle: Path) -> tuple[int, int]:
     if re.fullmatch(r"r\d+", bundle.name):
         return int(bundle.parent.name[1:]), int(bundle.name[1:])
     return int(bundle.name[1:]), 1
-
-
-def _read_provenance(bundle: Path) -> dict:
-    try:
-        return json.loads((bundle / "provenance.json").read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-
-def baseline_eligible(bundle: Path) -> bool:
-    """Whether a review may define status and anchor the next revision.
-
-    New records state this directly. Legacy records use the existing policy:
-    a configured role split is an editorial panel, while a single-model run is
-    an experiment. Withdrawn and superseded records never become baselines.
-    """
-    provenance = _read_provenance(bundle)
-    review = provenance.get("review") or {}
-    lifecycle = str(review.get("lifecycle") or "active")
-    if lifecycle in {"withdrawn", "superseded"}:
-        return False
-    explicit = review.get("baseline_eligible")
-    if isinstance(explicit, bool):
-        return explicit
-    models = provenance.get("models")
-    return isinstance(models, dict) and bool(models)
 
 
 def find_paper_dir(preprint: Preprint) -> Path | None:
@@ -143,7 +117,7 @@ def _rerun_provenance(bundle: str) -> dict | None:
 
 
 # The wrapper that fetched a manuscript, converted it through the old ingest
-# loader and compared it to the prior round lived here. Engine 0.8.0 deletes
+# loader and compared it to the earlier bundle lived here. Engine 0.8.0 deletes
 # `peerreviewagents.ingest`, and the local lane reads its own ingest record off
 # the engine run, so the comparison below is the whole surviving contract.
 def draft_matches(prior: dict, current: dict) -> tuple[bool, str]:
@@ -169,7 +143,7 @@ def draft_matches(prior: dict, current: dict) -> tuple[bool, str]:
         if want_chars == got_chars:
             return True, (
                 f"rerun     same draft, probably: {got_chars:,} characters, "
-                "matching the prior round. That bundle predates the text "
+                "matching the earlier bundle. That bundle predates the text "
                 "fingerprint, so this is a length match, not proof."
             )
         return False, (
@@ -227,17 +201,6 @@ def existing_bundles(paper_dir: Path) -> dict[int, list[Path]]:
     return out
 
 
-def latest_baseline(
-    published: dict[int, list[Path]], *, before_draft: int
-) -> Path | None:
-    """Newest eligible review of the newest earlier manuscript version."""
-    for draft in sorted((n for n in published if n < before_draft), reverse=True):
-        for bundle in reversed(published[draft]):
-            if (bundle / ROUND_RECORD).is_file() and baseline_eligible(bundle):
-                return bundle
-    return None
-
-
 @dataclass
 class Plan:
     """Where this review goes, and what kind of run it therefore is."""
@@ -245,9 +208,6 @@ class Plan:
     dest: Path
     draft: int
     attempt: int = 1
-    # The bundle this round rules against, or None for a first look. Set only
-    # when an earlier draft was reviewed AND left a round record.
-    prior: Path | None = None
     # The previous attempt when this is a fresh review of identical text.
     previous_attempt: Path | None = None
 
@@ -255,7 +215,7 @@ class Plan:
     def kind(self) -> str:
         if self.previous_attempt:
             return "same-draft re-review"
-        return "revision round" if self.prior else "first review"
+        return "review of this draft"
 
 
 def plan_review(
@@ -263,16 +223,19 @@ def plan_review(
 ) -> Plan:
     """Decide where a review of ``draft`` belongs, or refuse.
 
-    Three cases, and the caller declares none of them:
+    Two cases, and the caller declares neither:
 
-    - no review of this draft, none of any earlier draft  -> first look
-    - no review of this draft, an earlier one exists      -> revision round
-    - a review of this draft already exists              -> needs ``replace``
+    - no review of this draft yet             -> a review of this draft
+    - a review of this draft already exists   -> needs ``replace``
 
-    The last case creates another immutable attempt for the same manuscript
+    The second case creates another immutable attempt for the same manuscript
     version. Despite the legacy command name, it never replaces or edits the
-    prior attempt. If the authors have posted a new version, the draft number
-    differs and the run becomes a revision round instead.
+    earlier attempt. If the authors have posted a new version, the draft number
+    differs and the run lands in its own folder instead.
+
+    Either way the run is one independent review. A review of a new draft reads
+    that draft and no earlier review of the paper, so there is nothing here that
+    locates an earlier bundle to be measured against.
 
     ``publishing`` is false for a run that lands in ``runs/``, and then that
     refusal does not apply: there is no bundle at stake, because the run
@@ -315,9 +278,4 @@ def plan_review(
             previous_attempt=same_draft[-1],
         )
 
-    # A revision round rules against the newest earlier draft that left a
-    # round record. Reviews published before round records existed cannot be
-    # ruled against, there is nothing in them for a referee to check off, so
-    # those fall through to a fresh look rather than a broken second round.
-    prior = latest_baseline(published, before_draft=draft)
-    return Plan(dest=dest, draft=draft, attempt=attempt, prior=prior)
+    return Plan(dest=dest, draft=draft, attempt=attempt)

@@ -4,9 +4,9 @@ name: Check for revised preprints
 # preprints in place, so reviews go stale silently and nothing on the site
 # would show it. This walks the corpus monthly and files what moved.
 #
-# Deliberately opens an issue rather than re-running the panel: a re-review
-# costs real money and is an editorial decision, not something a cron job
-# should make. The issue is the prompt for a human to run `/review` again.
+# Deliberately opens an issue rather than running a review: a review is an
+# editorial decision and runs on the editor's own machine, not in CI. The issue
+# is the prompt for a person to run the local-review skill on the new draft.
 on:
   schedule:
     # 07:00 UTC on the 1st. Monthly because preprint revisions are not urgent
@@ -58,10 +58,10 @@ jobs:
                   print(f"  {r['detail']}")
               print(
                   "\nA **revision** means the published review describes an older "
-                  "version of the manuscript. Re-running the panel costs money and "
-                  "is an editorial call, so nothing has been re-reviewed "
-                  "automatically — comment `/revise` on the original submission "
-                  "issue to open a new round on the new draft."
+                  "version of the manuscript. A review is an editorial call and "
+                  "runs on the editor's own machine, so nothing has been reviewed "
+                  "again automatically. Run the local-review skill on the new "
+                  "draft to add a review of it to the paper's page."
               )
               print(
                   "\n**Bytes differ** means the file was replaced without the server "

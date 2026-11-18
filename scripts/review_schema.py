@@ -67,6 +67,7 @@ ASSERTIONS = frozenset(
         "items",
         "properties",
         "required",
+        "dependentRequired",
         "additionalProperties",
         "allOf",
         "anyOf",
@@ -225,6 +226,17 @@ def _problems(value: object, schema: object, path: str) -> list[str]:
         for name in schema.get("required", ()):
             if name not in value:
                 found.append(f"{here} is missing {name}")
+        # Fields that are only half a fact on their own. Which part of a piece a
+        # line is and how many parts there were say nothing apart, so a record
+        # carrying one of them is a record that lost the other, and that is a
+        # different failure from a missing field: the shape is wrong rather than
+        # incomplete.
+        for name, needed in schema.get("dependentRequired", {}).items():
+            if name not in value:
+                continue
+            for other in needed:
+                if other not in value:
+                    found.append(f"{here} has {name} and is missing {other}")
         properties = schema.get("properties", {})
         for name, child in value.items():
             if name in properties:
