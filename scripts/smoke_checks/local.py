@@ -411,13 +411,14 @@ LEDGER = [
 # The editor agent's own issues, the thing a review is rendered from in 0.10.
 # One of every kind the publish path has to tell apart: a major carrying one
 # finding and an escalation, a moderate pooling two findings from two tracks,
-# a plain minor, a minor whose finding was escalated and ruled on, a prior
-# issue this round ruled fixed and a prior issue it could not verify. The ranks
-# are deliberately not the order the rows are written in, because rank is what
+# a plain minor, and a minor whose finding was escalated and ruled on. Every
+# row is `new`, because a review reads the draft in front of it and no earlier
+# review, so there is no other standing for a row to carry. The ranks are
+# deliberately not the order the rows are written in, because rank is what
 # orders the letter and nothing may fall back to file order.
 ISSUES = [
     {
-        "id": "i08",
+        "id": "i02",
         "name": "The sample size is not stated",
         "severity": "moderate",
         "category": "methods-and-reporting",
@@ -465,16 +466,10 @@ ISSUES = [
         "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
-        "prior_id": None,
-        "prior_rank": None,
-        "status": "new",
-        "status_reason": None,
-        "text_unchanged_reason": None,
-        "surviving_quotes": [],
         "audits": ["audit_figures-tables.md"],
     },
     {
-        "id": "i07",
+        "id": "i01",
         "name": "The headline interval is not supported by the reported numbers",
         "severity": "major",
         "category": "statistics-and-inference",
@@ -504,16 +499,10 @@ ISSUES = [
         "rebuttal_document": None,
         "rebuttal_line": APPENDIX_LINE,
         "rebuttal_quote": "the interval is reported in the appendix",
-        "prior_id": None,
-        "prior_rank": None,
-        "status": "new",
-        "status_reason": None,
-        "text_unchanged_reason": None,
-        "surviving_quotes": [],
         "audits": ["audit_stats.md"],
     },
     {
-        "id": "i09",
+        "id": "i03",
         "name": "A reference is cited for the wrong claim",
         "severity": "minor",
         "category": "literature-and-citations",
@@ -541,16 +530,10 @@ ISSUES = [
         "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
-        "prior_id": None,
-        "prior_rank": None,
-        "status": "new",
-        "status_reason": None,
-        "text_unchanged_reason": None,
-        "surviving_quotes": [],
         "audits": [],
     },
     {
-        "id": "i10",
+        "id": "i04",
         "name": "Two totals for the same cohort",
         "severity": "minor",
         "category": "results-and-numbers",
@@ -576,90 +559,7 @@ ISSUES = [
         "rebuttal_document": None,
         "rebuttal_line": None,
         "rebuttal_quote": None,
-        "prior_id": None,
-        "prior_rank": None,
-        "status": "new",
-        "status_reason": None,
-        "text_unchanged_reason": None,
-        "surviving_quotes": [],
         "audits": ["audit_numbers.md"],
-    },
-    {
-        "id": "i05",
-        "name": "The earlier round asked for the assay to be named",
-        "severity": "moderate",
-        "category": "methods-and-reporting",
-        "rank": None,
-        "statement": "The previous round could not tell which assay the counts came from.",
-        "members": [],
-        "raised_by": 0,
-        "rebuttal_document": None,
-        "rebuttal_line": None,
-        "rebuttal_quote": None,
-        "prior_id": "i05",
-        "prior_rank": 2,
-        "status": "resolved",
-        "status_reason": "The methods now name the assay and its catalogue number.",
-        # Ruled fixed although one passage the earlier finding quoted is still
-        # in this draft word for word. The engine refuses that ruling unless the
-        # editor says why, and it publishes the passage beside the reason, so
-        # the letter has to print the quote itself rather than the row.
-        "text_unchanged_reason": (
-            "The sentence is unchanged, and the assay is named in the one after it."
-        ),
-        "surviving_quotes": [
-            {
-                "finding_uid": "f-021",
-                "line": ASSAY_LINE,
-                "document": MAIN_DOCUMENT,
-                "fingerprint": "5" * 64,
-                # Found by the words the earlier round quoted, which is the one
-                # of the two matches that lets the letter say the sentence still
-                # reads as it did.
-                "matched_by": "quote",
-                "quote": "the assay was run as described",
-            },
-        ],
-        "audits": [],
-    },
-    {
-        "id": "i06",
-        "name": "The earlier round asked for the raw counts",
-        "severity": "major",
-        "category": "reproducibility",
-        # A closed-out prior issue carries no rank. It is reported against the
-        # round that raised it rather than ordered among this round's asks, so a
-        # rank here would collide with the ranks of the issues that have one.
-        "rank": None,
-        "statement": "The previous round asked for the per-well counts behind figure 2.",
-        "members": [],
-        "raised_by": 0,
-        "rebuttal_document": None,
-        "rebuttal_line": None,
-        "rebuttal_quote": None,
-        "prior_id": "i06",
-        "prior_rank": 1,
-        "status": "unverified",
-        "status_reason": "Nothing in this draft says where the counts are, and no reader found them.",
-        "text_unchanged_reason": "The methods section is unchanged from the previous draft.",
-        # Rows, not strings. The engine writes each surviving passage as the
-        # finding that quoted it, the document and line it was found on in this
-        # draft, how it was matched and the quote itself, and a fixture of bare
-        # strings let a renderer publish the row as Python text without any
-        # check here seeing it. This one was matched by its fingerprint, so the
-        # passage is the same passage and the quoted words have moved inside it,
-        # which is a different sentence for the letter to write.
-        "surviving_quotes": [
-            {
-                "finding_uid": "f-022",
-                "line": COUNTS_LINE,
-                "document": MAIN_DOCUMENT,
-                "fingerprint": "6" * 64,
-                "matched_by": "fingerprint",
-                "quote": "counts are available on request",
-            },
-        ],
-        "audits": [],
     },
 ]
 
@@ -727,169 +627,6 @@ FINDINGS_BY_TRACK = {
     "field": 0,
 }
 
-# The previous round's own published issues.json, which is the file this run was
-# handed as its prior round. It is a real document on disk in the checks that
-# publish, because the publish path now compares what the engine read against
-# what the plan named and hashes the file against the bundle that published it:
-# a fixture that only claimed a prior round could not exercise either rule.
-#
-# The round before this one was itself a later round of the same line. It raised
-# `i05` and `i06` as new problems, ruled the four items it inherited fixed, and
-# so published the six ids its line had spent while carrying only two rows.
-PRIOR_ISSUES_DOCUMENT = {
-    "schema_version": ISSUES_SCHEMA,
-    "issues_source": "editor",
-    "issues_source_reason": None,
-    "summary": "The round before this one, as it was published.",
-    "issues": [
-        {
-            "id": "i06",
-            "name": "The earlier round asked for the raw counts",
-            "severity": "major",
-            "category": "reproducibility",
-            "rank": 1,
-            "statement": "The previous round asked for the per-well counts behind figure 2.",
-            "members": [
-                {
-                    "finding_uid": "f-022",
-                    "slot": "core-1",
-                    "track": "numbers",
-                    "severity": "major",
-                    "kind": "omission",
-                    "basis": "judgement",
-                    "escalate": False,
-                    "title": "The counts behind figure 2 are not available",
-                    "document": MAIN_DOCUMENT,
-                    **_cited(COUNTS_LINE, "counts are available on request"),
-                    "evidence_lines": [COUNTS_LINE],
-                    "fingerprint": "6" * 64,
-                },
-            ],
-            "raised_by": 1,
-            "rebuttal_document": None,
-            "rebuttal_line": None,
-            "rebuttal_quote": None,
-            "prior_id": None,
-            "prior_rank": None,
-            "status": "new",
-            "status_reason": None,
-            "text_unchanged_reason": None,
-            "surviving_quotes": [],
-            "audits": ["audit_numbers.md"],
-        },
-        {
-            "id": "i05",
-            "name": "The earlier round asked for the assay to be named",
-            "severity": "moderate",
-            "category": "methods-and-reporting",
-            "rank": 2,
-            "statement": "The previous round could not tell which assay the counts came from.",
-            "members": [
-                {
-                    "finding_uid": "f-021",
-                    "slot": "spec-methods-reporting",
-                    "track": "methods-reporting",
-                    "severity": "moderate",
-                    "kind": "omission",
-                    "basis": "judgement",
-                    "escalate": False,
-                    "title": "The assay is not named",
-                    "document": MAIN_DOCUMENT,
-                    **_cited(ASSAY_LINE, "the assay was run as described"),
-                    "evidence_lines": [ASSAY_LINE],
-                    "fingerprint": "5" * 64,
-                },
-            ],
-            "raised_by": 1,
-            "rebuttal_document": None,
-            "rebuttal_line": None,
-            "rebuttal_quote": None,
-            "prior_id": None,
-            "prior_rank": None,
-            "status": "new",
-            "status_reason": None,
-            "text_unchanged_reason": None,
-            "surviving_quotes": [],
-            "audits": ["audit_methods-reporting.md"],
-        },
-    ],
-    "counts": {
-        "issues": 2,
-        "required": 2,
-        "suggestions": 0,
-        "resolved": 0,
-        "unverified": 0,
-        "issue_members": 2,
-        "by_severity": {"major": 1, "moderate": 1, "minor": 0},
-        "by_category": {"reproducibility": 1, "methods-and-reporting": 1},
-        "by_status": {
-            "new": 2,
-            "persisting": 0,
-            "regressed": 0,
-            "resolved": 0,
-            "unverified": 0,
-        },
-    },
-    "prior_round": {
-        "file": "issues.json",
-        "digest": "d" * 16,
-        "issues": 4,
-        "tally": {
-            "new": 2,
-            "persisting": 0,
-            "regressed": 0,
-            "resolved": 4,
-            "unverified": 0,
-        },
-    },
-    "issue_ids_used": ["i01", "i02", "i03", "i04", "i05", "i06"],
-    "audits": ["audit_numbers.md", "audit_methods-reporting.md"],
-    "limitations": ["Did not re-run the analysis."],
-}
-
-# The bytes of that file, written the way the publish path writes every JSON
-# file of a bundle, because the two digests below are over these bytes and the
-# helper that puts the file on disk writes exactly this text.
-PRIOR_ISSUES_TEXT = json.dumps(PRIOR_ISSUES_DOCUMENT, indent=2, ensure_ascii=False) + "\n"
-PRIOR_ISSUES_SHA256 = local_review.digest(PRIOR_ISSUES_TEXT.encode())
-
-# What the prior round left this one, as the engine publishes it: the file's
-# own name and a digest of its content, never the path it was read from, the
-# number of open items it handed over, and this round's tally of rulings over
-# them. Two items came in, one was ruled fixed and one could not be verified.
-# The digest is the engine's own rule, `sha256` of the file's text cut to
-# sixteen characters, computed here over the file the checks write rather than
-# typed in, so the publish path's comparison of the two is a real comparison.
-PRIOR_ROUND = {
-    "file": "issues.json",
-    "digest": PRIOR_ISSUES_SHA256[:16],
-    "issues": 2,
-    "tally": {
-        "new": 4,
-        "persisting": 0,
-        "regressed": 0,
-        "resolved": 1,
-        "unverified": 1,
-    },
-}
-
-# The same prior round as protocol.json carries it, which is written at ingest,
-# before any ruling exists: the file, its digest and how many items came over,
-# and no tally.
-PRIOR_ROUND_PROTOCOL = {key: value for key, value in PRIOR_ROUND.items() if key != "tally"}
-
-# Every id this line of rounds has spent, this round's included, which is what
-# the engine publishes: the ids its own prior file listed, plus the ids of the
-# rows in this round. The four this round minted start above every id the line
-# had already used, because the engine mints from `i01` upwards and skips what
-# is taken: the earlier rounds of this line spent `i01` to `i06`, so a new
-# problem here is `i07`. The retired ids stay in the list because a resolved
-# issue is reported once and then dropped from the carry: without them the next
-# round would hand `i05` to a different problem.
-ISSUE_IDS_USED = [
-    "i01", "i02", "i03", "i04", "i05", "i06", "i07", "i08", "i09", "i10",
-]
-
 PACKAGE = {
     "schema_version": ISSUES_SCHEMA,
     # `editor` because an editor agent pooled and ranked these findings itself.
@@ -900,8 +637,6 @@ PACKAGE = {
     "issues_source_reason": None,
     "summary": "One careful reading of the manuscript.",
     "issues": ISSUES,
-    "prior_round": PRIOR_ROUND,
-    "issue_ids_used": list(ISSUE_IDS_USED),
     # The specialist audits on disk, by name. Each issue names the ones it
     # rests on and this is the whole set in one place.
     "audits": [f"audit_{track}.md" for track in TRACKS],
@@ -923,13 +658,10 @@ PACKAGE = {
     # rather than derived: a check compares them against the reader's own, and
     # a fixture that quietly derived them could not disagree with it.
     "counts": {
-        # Four live issues: the resolved one and the unverified one are reported
-        # against the round that raised them and are not this round's asks.
+        # Four issues, every one of them raised against this draft.
         "issues": 4,
         "required": 2,
         "suggestions": 2,
-        "resolved": 1,
-        "unverified": 1,
         "issue_members": 5,
         "by_severity": {"major": 1, "moderate": 1, "minor": 2},
         "by_category": {
@@ -937,13 +669,6 @@ PACKAGE = {
             "statistics-and-inference": 1,
             "literature-and-citations": 1,
             "results-and-numbers": 1,
-        },
-        "by_status": {
-            "new": 4,
-            "persisting": 0,
-            "regressed": 0,
-            "resolved": 1,
-            "unverified": 1,
         },
     },
     "findings_by_track": FINDINGS_BY_TRACK,
@@ -1379,7 +1104,6 @@ def _protocol(**overrides) -> dict:
         # schema and how many issues one submission may carry instead.
         "issues_schema_version": ISSUES_SCHEMA,
         "issue_batch_limit": 12,
-        "prior_round_issues": dict(PRIOR_ROUND_PROTOCOL),
         "agents": _protocol_agents(TRACKS),
         "plan": _plan(TRACKS),
     }
@@ -1806,40 +1530,13 @@ def _workspace(
     return workspace
 
 
-def _prior_bundle(root: Path) -> Path:
-    """The previous round's bundle, as far as this round reads it.
-
-    Two files: the items that round published, and the manifest that bundle
-    hashed its own files into. Both are needed, because the publish path checks
-    the file it was handed against the digest the engine recorded and against
-    the digest the bundle published, and the second of those lives here.
-    """
-    bundle = Path(root)
-    bundle.mkdir(parents=True, exist_ok=True)
-    (bundle / local_review.REVIEW_ISSUES).write_text(PRIOR_ISSUES_TEXT, encoding="utf-8")
-    (bundle / "manifest.json").write_text(
-        json.dumps(
-            {
-                "bundle": "r1",
-                "files": {local_review.REVIEW_ISSUES: PRIOR_ISSUES_SHA256},
-            },
-            indent=2,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
-    return bundle
-
-
 def _prepared(root: Path, destination: Path, **overrides) -> Path:
     """What prepare writes, as publish reads it.
 
-    A revision round by default, because the fixture run is one: its package
-    rules on two items of an earlier round. The plan therefore names that
-    round's published items, and the file is written beside the plan so the
-    publish path can hash it. A check of a first round passes `round=1` and
-    `prior_issues=""`, which is what prepare writes when there is no round
-    before this one.
+    The third review of this paper by default, which is a review of the third
+    draft and nothing more: it reads that draft and no earlier review, so the
+    round is a count of the reviews on the paper's page and the record names no
+    earlier items. A check of a first review passes `round=1`.
     """
     prepared = Path(root)
     prepared.mkdir(parents=True, exist_ok=True)
@@ -1847,9 +1544,8 @@ def _prepared(root: Path, destination: Path, **overrides) -> Path:
         "publishable": True,
         "draft": 3,
         "attempt": 1,
-        "plan_kind": "revision round",
+        "plan_kind": "review of this draft",
         "round": 3,
-        "prior_issues": str(_prior_bundle(prepared / "prior-round") / local_review.REVIEW_ISSUES),
         "destination": str(destination),
         "input": {
             "kind": "doi",
@@ -1945,18 +1641,16 @@ def _run_record(**overrides) -> dict:
         # ledger's own total is `findings_delivered` above, and what the review
         # asks for is counted in issues below.
         # The issue counts a record carries, counted off the fixture's own
-        # issues so the expectation cannot drift from them. `issues` is the live
-        # set: the prior issue ruled fixed and the one left unverified are
-        # counted under their own names and are not this round's asks.
-        "issues": len(local_review.live_issues(PACKAGE)),
+        # issues so the expectation cannot drift from them. Every one of them is
+        # an ask against this draft, because a review reads this draft and no
+        # earlier review.
+        "issues": len(local_review.ranked_issues(PACKAGE)),
         "required": len(local_review.required_issues(PACKAGE)),
         "suggestions": len(local_review.suggestion_issues(PACKAGE)),
-        "resolved": len(local_review.resolved_issues(PACKAGE)),
-        "unverified": len(local_review.unverified_issues(PACKAGE)),
         "issues_source": "editor",
         "issues_schema_version": ISSUES_SCHEMA,
-        # Two of the live issues rest on a finding a reader escalated: the major
-        # one and one of the suggestions.
+        # Two of the issues rest on a finding a reader escalated: the major one
+        # and one of the suggestions.
         "escalated_in_bundle": 2,
         "errors": [],
         # The citation lane, as the engine reports it. It is beside `errors`
@@ -1976,11 +1670,10 @@ def provenance_fixture() -> dict:
         "provider": "claude-code",
         "models": _expected_models(),
         "assigned_models": _expected_assigned(),
-        # The second round of this manuscript, against the file the first round
-        # published. The prior block is the engine's own: the file's name, a
-        # digest of it and how many items came over, and no path.
+        # The second review of this manuscript published here. It read the
+        # draft in front of it and no earlier review, so the number counts the
+        # reviews on the paper's page and says nothing about what was handed in.
         "round": 2,
-        "prior_round": dict(PRIOR_ROUND),
         "ingest": {
             "format": "markdown",
             "tool": "peerreviewagents import_paper",
@@ -2062,7 +1755,7 @@ def _build_arguments(**overrides) -> dict:
                 "bytes": 2048,
                 "local_file": False,
             },
-            "plan_kind": "first review",
+            "plan_kind": "review of this draft",
         },
         package=PACKAGE,
         run=_run_record(),
@@ -2177,16 +1870,15 @@ def check_the_issues_are_split_by_severity_and_ordered_by_rank() -> None:
     Two rules, and neither of them may fall back to the order the rows happen
     to sit in. Major and moderate issues are the required changes, minor ones
     are the suggestions, and the editor agent's own rank decides what comes
-    first. A prior issue this round closed out is in neither list: it is
-    reported against the round that raised it.
+    first.
     """
     required = local_review.required_issues(PACKAGE)
     suggestions = local_review.suggestion_issues(PACKAGE)
-    assert [i["id"] for i in required] == ["i07", "i08"], (
+    assert [i["id"] for i in required] == ["i01", "i02"], (
         f"the required changes are not the major and moderate issues in rank order: "
         f"{[i['id'] for i in required]}"
     )
-    assert [i["id"] for i in suggestions] == ["i09", "i10"], (
+    assert [i["id"] for i in suggestions] == ["i03", "i04"], (
         f"the suggestions are not the minor issues in rank order: "
         f"{[i['id'] for i in suggestions]}"
     )
@@ -2197,23 +1889,17 @@ def check_the_issues_are_split_by_severity_and_ordered_by_rank() -> None:
     counts = local_review.severity_counts(required)
     assert counts == {"major": 1, "moderate": 1, "minor": 0}, f"severity miscounted: {counts}"
 
-    # The closed-out items are counted and reported under their own names, and
-    # an unverified item is not a resolved one.
-    assert [i["id"] for i in local_review.resolved_issues(PACKAGE)] == ["i05"], (
-        "the issue the editor agent ruled fixed was not found"
-    )
-    assert [i["id"] for i in local_review.unverified_issues(PACKAGE)] == ["i06"], (
-        "the issue left unverified was not found"
-    )
-    assert [i["id"] for i in local_review.live_issues(PACKAGE)] == ["i07", "i08", "i09", "i10"], (
-        "a closed-out prior issue was counted among this round's own issues"
-    )
+    # Every row the package carries is an ask against this draft, so the two
+    # lists together are the whole of it.
+    assert [i["id"] for i in local_review.ranked_issues(PACKAGE)] == [
+        "i01", "i02", "i03", "i04",
+    ], "the ranked issues are not the rows the package carries"
 
     # An escalation is a property of the findings an issue was raised from, so
     # it survives pooling: the major one and one of the suggestions rest on a
     # finding a reader escalated, and the other two do not.
-    escalated = local_review.escalated_issues(local_review.live_issues(PACKAGE))
-    assert [i["id"] for i in escalated] == ["i07", "i10"], (
+    escalated = local_review.escalated_issues(local_review.ranked_issues(PACKAGE))
+    assert [i["id"] for i in escalated] == ["i01", "i04"], (
         f"the escalated issues were not found: {[i['id'] for i in escalated]}"
     )
 
@@ -2271,10 +1957,10 @@ def check_the_decision_is_attributed_to_a_person() -> None:
         "a minor issue must not be a required change"
     )
 
-    # The id is published as the engine minted it, because that is the id a
-    # later round rules against.
-    assert "[`i07`]" in required, f"the engine's own issue id was not published: {required}"
-    assert "`i09`" in letter.split("## Suggestions", 1)[1], (
+    # The id is published as the engine minted it, because that is what the
+    # authors and the bundle's own files call the item.
+    assert "[`i01`]" in required, f"the engine's own issue id was not published: {required}"
+    assert "`i03`" in letter.split("## Suggestions", 1)[1], (
         "a suggestion was published without its id"
     )
 
@@ -2404,27 +2090,24 @@ def check_a_minor_issue_is_never_a_required_revision() -> None:
 
     assert record["decision"] == "major", f"decision lost: {record.get('decision')!r}"
     assert record["round"] == 2, f"the round number was dropped: {record.get('round')!r}"
-    assert [item["id"] for item in record["required_revisions"]] == ["i07", "i08"], (
+    assert [item["id"] for item in record["required_revisions"]] == ["i01", "i02"], (
         f"expected the major and the moderate in rank order: {record['required_revisions']}"
     )
-    assert [item["id"] for item in record["minor_suggestions"]] == ["i09", "i10"], (
+    assert [item["id"] for item in record["minor_suggestions"]] == ["i03", "i04"], (
         f"minor issues mangled: {record['minor_suggestions']}"
     )
     assert record["desk_rejected"] is False, "a local run has no desk screen to fail"
     assert record["manuscript_file_sha256"] == "b" * 64, "the reviewed bytes were not recorded"
 
     # Every item is named by the id the engine minted, and that id is what the
-    # next round rules against, so no entry may be nameless and no two may
-    # share a name.
+    # letter and the bundle's own files call it, so no entry may be nameless
+    # and no two may share a name.
     ids = [item["id"] for item in record["required_revisions"]]
     ids += [item["id"] for item in record["minor_suggestions"]]
     assert all(ids) and len(set(ids)) == len(ids), f"the issue ids are not unique: {ids}"
-    assert record["issue_ids_used"] == ISSUE_IDS_USED, (
-        f"the spent ids were not carried: {record['issue_ids_used']}"
-    )
 
-    # A revision round has to say which findings an item was raised from, and
-    # the engine's own uids are what travel with it, along with the slots that
+    # The record has to say which findings an item was raised from, and the
+    # engine's own uids are what travel with it, along with the slots that
     # raised it and whether a reader escalated it.
     first = record["required_revisions"][0]
     assert first["rank"] == 1, f"the editor agent's rank was dropped: {first}"
@@ -2439,54 +2122,18 @@ def check_a_minor_issue_is_never_a_required_revision() -> None:
         f"a required revision rests on no finding: {record['required_revisions']}"
     )
 
-    # What this round said about the round before it, in two lists that are
-    # never added together, and a carry that counts an unverified item as open.
-    closed = record["closed_issues"]
-    assert [item["id"] for item in closed["resolved"]] == ["i05"], f"resolved lost: {closed}"
-    assert [item["id"] for item in closed["unverified"]] == ["i06"], f"unverified lost: {closed}"
-    assert closed["resolved"][0]["prior_rank"] == 2, "the prior rank was dropped"
-    assert "name the assay" in closed["resolved"][0]["status_reason"], (
-        "the editor agent's reason for ruling an item fixed was dropped"
-    )
-    # The quotes the engine still found in this draft, as it writes them: a row
-    # per passage, naming the finding that quoted it, the document and line it
-    # was found on in this draft and how it was matched. The record used to
-    # carry them for the unverified list alone, so a reader of round.json could
-    # not see what a ruling of `resolved` was made against, and the reason the
-    # editor gave for ruling it fixed anyway was nowhere in the record at all.
-    assert closed["unverified"][0]["surviving_quotes"] == [
-        {
-            "finding_uid": "f-022",
-            "document": MAIN_DOCUMENT,
-            "line": COUNTS_LINE,
-            "fingerprint": "6" * 64,
-            "matched_by": "fingerprint",
-            "quote": "counts are available on request",
-        },
-    ], f"the quotes still standing in the manuscript were dropped: {closed['unverified'][0]}"
-    assert "unchanged from the previous draft" in (
-        closed["unverified"][0]["text_unchanged_reason"] or ""
-    ), f"the reason the text is unchanged was dropped: {closed['unverified'][0]}"
-    resolved_row = closed["resolved"][0]
-    assert resolved_row["surviving_quotes"] == [
-        {
-            "finding_uid": "f-021",
-            "document": MAIN_DOCUMENT,
-            "line": ASSAY_LINE,
-            "fingerprint": "5" * 64,
-            "matched_by": "quote",
-            "quote": "the assay was run as described",
-        },
-    ], f"a resolved item's surviving quotes were dropped: {resolved_row}"
-    assert "named in the one after it" in (resolved_row["text_unchanged_reason"] or ""), (
-        f"the editor's reason for ruling it fixed anyway was dropped: {resolved_row}"
-    )
-    assert record["carried_forward"] == ["i08", "i07", "i09", "i10", "i06"], (
-        f"the carry is not this round's items plus what was left open: {record['carried_forward']}"
-    )
-    assert "i05" not in record["carried_forward"], (
-        "an item the editor agent ruled fixed was carried into the next round"
-    )
+    # Nothing in the record reaches outside this review. A field naming an
+    # earlier review's items, or a list of items handed to the next one, would
+    # be a claim this review never made: it read the draft in front of it and
+    # no earlier review of the paper.
+    for retired in ("closed_issues", "carried_forward", "prior_round"):
+        assert retired not in record, (
+            f"the record claims something about another review: {retired}"
+        )
+    for item in [*record["required_revisions"], *record["minor_suggestions"]]:
+        assert "prior_id" not in item and "prior_rank" not in item, (
+            f"an item of this review points at an earlier review's item: {item['id']}"
+        )
 
 
 def check_a_severity_this_release_cannot_sort_is_refused() -> None:
@@ -2498,10 +2145,6 @@ def check_a_severity_this_release_cannot_sort_is_refused() -> None:
     for would appear in neither list, which is an issue the editor agent raised
     and the authors never see. So it is refused and the word is named, which is
     a bug report rather than a quietly shorter letter.
-
-    A closed-out issue is the deliberate exception. It is reported against the
-    round that raised it rather than sorted into either list, so a severity on
-    one of those rows is nothing this release has to sort.
     """
     strange = dict(
         ISSUES[1],
@@ -2509,7 +2152,7 @@ def check_a_severity_this_release_cannot_sort_is_refused() -> None:
         severity="blocking",
         rank=5,
     )
-    package = dict(PACKAGE, issues=[*ISSUES, strange], issue_ids_used=[*ISSUE_IDS_USED, "i11"])
+    package = dict(PACKAGE, issues=[*ISSUES, strange])
     try:
         local_review.assert_publishable_issues(package)
     except local_review.CommandError as refusal:
@@ -2523,326 +2166,40 @@ def check_a_severity_this_release_cannot_sort_is_refused() -> None:
     else:
         raise AssertionError("an issue this release cannot sort was accepted for publication")
 
-    # The same word on a closed-out row is not a problem, because that row is
-    # reported against the round that raised it and sorted into neither list.
-    closed = dict(ISSUES[5], severity="blocking")
-    local_review.assert_publishable_issues(
-        dict(PACKAGE, issues=[*ISSUES[:5], closed])
-    )
-
     # And the fixture itself has to pass, or the refusal above proves nothing.
     local_review.assert_publishable_issues(PACKAGE)
 
 
-def check_a_surviving_quote_is_printed_as_the_authors_own_words() -> None:
-    """A passage that still reads the same is printed, never the row holding it.
+def check_a_row_that_rules_on_another_review_is_refused() -> None:
+    """A field that rules on an earlier review is refused by name.
 
-    The engine records a surviving passage as a row: the finding it came from,
-    the document and the line it was found on in this draft, how it was matched
-    and the quoted words. The letter printed the row itself, so the authors were
-    shown a line of Python where their own sentence belonged. Nothing caught it
-    because the fixture carried bare strings, which the old renderer printed
-    unchanged, so the check restated the fixture rather than testing the
-    renderer.
-
-    Both closed lists carry such a row now, a ruled-fixed item and an unverified
-    one, because the two are rendered by the same entry and a fixture that
-    exercised one proved nothing about the other. The two are matched
-    differently as well: one was found by the words the earlier round quoted and
-    one by the digest of the passage they were read in, and the letter has to
-    say which, because "the wording has moved inside the passage" is not "the
-    sentence is unchanged".
+    A review reads the manuscript in front of it and no earlier review of the
+    paper, so no row can say an item persists, was fixed or went unverified.
+    The engine this release installs writes no such field, so a row carrying
+    one came from somewhere else, and it is refused at the publish gate with
+    the field named rather than rendered into a letter that would claim the
+    panel had read an earlier review.
     """
-    letter = local_review.render_decision_letter(PAPER, READING, provenance_fixture())
-    assert "## The previous round's items" in letter, (
-        f"the round's rulings are not in the letter: {letter}"
-    )
-    prior = letter.split("## The previous round's items", 1)[1]
-
-    for quote in ("the assay was run as described", "counts are available on request"):
-        assert f"> {quote}" in prior, (
-            f"a surviving passage was not printed as the authors' words: {prior}"
-        )
-    # The row's own field names, which is what the letter printed when it
-    # printed the row. One of these in a published letter is the bug.
-    for leaked in (
-        "finding_uid", "matched_by", "fingerprint", "'quote'", "{'", "f-021", "f-022",
-    ):
-        assert leaked not in prior, (
-            f"the letter printed the record of a passage rather than the passage: {prior}"
-        )
-    assert "This draft, where the earlier finding's passage still stands" in prior, (
-        f"an unlabelled block quote reads as part of the editor agent's reason: {prior}"
-    )
-    # The two matches, told apart in the authors' own terms. The line is named
-    # too, because a passage found in this draft is at a line of this draft.
-    assert f"line {ASSAY_LINE} of this draft" in prior and "still reads word for word" in prior, (
-        f"a passage found by its quoted words is not reported as unchanged: {prior}"
-    )
-    assert f"line {COUNTS_LINE} of this draft" in prior and "wording has moved" in prior, (
-        f"a passage found by its digest is reported as though the words were unchanged: {prior}"
+    assert local_review.RULED_ON_ANOTHER_REVIEW, (
+        "the publish path names no field that would rule on an earlier review"
     )
 
-    # A row with no quote in it is a row with nothing to show the authors, and
-    # printing the heading over nothing would say the text survived and then
-    # show no text.
-    empty = dict(
-        ISSUES[5],
-        surviving_quotes=[
-            {
-                "finding_uid": "f-099",
-                "document": MAIN_DOCUMENT,
-                "line": PANEL_LINE,
-                "matched_by": "quote",
-                "quote": "",
-            }
-        ],
-    )
-    assert local_review.surviving_passages(empty) == [], (
-        "a row carrying no quoted words is not a surviving passage"
-    )
-
-
-def check_a_later_round_cannot_publish_without_the_round_before_it() -> None:
-    """The plan names the previous round's items and the run has to have read them.
-
-    Nothing joined the two up. A run made without `--prior-issues` published as
-    round three with no prior round recorded, every item `new`, and the first
-    ids minted again for problems that had nothing to do with the ones the
-    authors were sent under those numbers. Four pairs are refused here, and the
-    pair that agrees publishes.
-    """
-    with tempfile.TemporaryDirectory() as tmp:
-        root = Path(tmp)
-        bundle = _prior_bundle(root / "r2")
-        named = str(bundle / local_review.REVIEW_ISSUES)
-        plan = {"round": 3, "prior_issues": named}
-
-        # The pair that agrees: the plan names the file, the engine read a file,
-        # and the digest the engine recorded is of the file on disk.
-        local_review.assert_the_round_ruled_against_its_prior(plan, PACKAGE)
-
-        # The plan named the previous round and the run never read it.
+    for field in local_review.RULED_ON_ANOTHER_REVIEW:
+        strange = dict(ISSUES[1])
+        strange[field] = "persisting"
         try:
-            local_review.assert_the_round_ruled_against_its_prior(
-                plan, dict(PACKAGE, prior_round={})
+            local_review.assert_publishable_issues(
+                dict(PACKAGE, issues=[*ISSUES[:1], strange, *ISSUES[2:]])
             )
         except local_review.CommandError as refusal:
             message = str(refusal)
-            assert "round 3" in message and "--prior-issues" in message, (
-                f"the refusal has to name the round and the flag to re-run with: {message}"
+            assert field in message and strange["id"] in message, (
+                f"the refusal has to name the field and the issue carrying it: {message}"
             )
         else:
-            raise AssertionError("a later round published without the items it rules against")
+            raise AssertionError(f"a row ruling on an earlier review was accepted: {field}")
 
-        # The reverse surprise: the run ruled against some file the plan knows
-        # nothing about, so nothing can say which round the letter is about.
-        try:
-            local_review.assert_the_round_ruled_against_its_prior(
-                {"round": 3, "prior_issues": ""}, PACKAGE
-            )
-        except local_review.CommandError as refusal:
-            assert "does not name" in str(refusal), (
-                f"the refusal has to say the plan does not name the file: {refusal}"
-            )
-        else:
-            raise AssertionError("a run ruled against a round the plan never named")
-
-        # The file the plan named is gone, so what was ruled against cannot be
-        # checked at all.
-        try:
-            local_review.assert_the_round_ruled_against_its_prior(
-                {"round": 3, "prior_issues": str(root / "gone" / local_review.REVIEW_ISSUES)},
-                PACKAGE,
-            )
-        except local_review.CommandError as refusal:
-            assert "no longer at" in str(refusal), (
-                f"a missing prior file has to be reported as missing: {refusal}"
-            )
-        else:
-            raise AssertionError("a prior file that is not there was read anyway")
-
-        # A different file, hashed into its own bundle so the manifest agrees
-        # with it: what fails is the engine's digest, which is of the file the
-        # run actually read.
-        other = root / "r2-other"
-        other.mkdir()
-        text = PRIOR_ISSUES_TEXT.replace("the per-well counts", "the per-plate counts")
-        (other / local_review.REVIEW_ISSUES).write_text(text, encoding="utf-8")
-        (other / "manifest.json").write_text(
-            json.dumps(
-                {"files": {local_review.REVIEW_ISSUES: local_review.digest(text.encode())}},
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-        try:
-            local_review.assert_the_round_ruled_against_its_prior(
-                {
-                    "round": 3,
-                    "prior_issues": str(other / local_review.REVIEW_ISSUES),
-                },
-                PACKAGE,
-            )
-        except local_review.CommandError as refusal:
-            message = str(refusal)
-            assert PRIOR_ROUND["digest"] in message, (
-                f"the refusal has to print the digest the engine recorded: {message}"
-            )
-            assert "never sent" in message, (
-                f"the refusal has to say what the letter would be about: {message}"
-            )
-        else:
-            raise AssertionError("a round published against a file the previous round never wrote")
-
-        # A first round names no prior file and the engine read none, which is
-        # the ordinary case and not an error.
-        local_review.assert_the_round_ruled_against_its_prior(
-            {"round": 1, "prior_issues": ""}, dict(PACKAGE, prior_round={})
-        )
-
-
-def check_a_hand_edited_prior_file_is_not_the_one_that_round_published() -> None:
-    """The previous round's items are read only as the bytes that bundle published.
-
-    The file sits in a published bundle in a public repository, and the next
-    round rules against it: an id, a statement or a severity in it becomes the
-    standing of a request the authors already answered. A row deleted or a
-    statement rewritten by hand was read as the previous round's own words, and
-    the only sign of it was in the file's history. Every bundle hashes its own
-    files into `manifest.json`, so there is a published digest, and it is
-    checked where the file is named as an input.
-    """
-    with tempfile.TemporaryDirectory() as tmp:
-        root = Path(tmp)
-
-        # The published bundle, untouched, is accepted and is the file a later
-        # round is handed.
-        clean = _prior_bundle(root / "v1" / "r2")
-        assert local_review.prior_issues_file(clean) == clean / local_review.REVIEW_ISSUES, (
-            "the previous round's own file was not read back"
-        )
-
-        # The same bundle with one statement rewritten by hand, and the
-        # manifest left as it was published.
-        edited = _prior_bundle(root / "v1" / "r2-edited")
-        (edited / local_review.REVIEW_ISSUES).write_text(
-            PRIOR_ISSUES_TEXT.replace("major", "minor"), encoding="utf-8"
-        )
-        try:
-            local_review.prior_issues_file(edited)
-        except local_review.CommandError as refusal:
-            message = str(refusal)
-            assert "not the file that bundle published" in message, (
-                f"an edited prior file has to be refused as edited: {message}"
-            )
-            assert PRIOR_ISSUES_SHA256[:16] in message, (
-                f"the refusal has to print the digest the bundle recorded: {message}"
-            )
-        else:
-            raise AssertionError("a hand-edited prior file was accepted as the published one")
-
-        # A bundle whose manifest does not account for the file reads the same
-        # way from here: there is no published digest to check against.
-        unaccounted = root / "v1" / "r2-unaccounted"
-        unaccounted.mkdir(parents=True)
-        (unaccounted / local_review.REVIEW_ISSUES).write_text(
-            PRIOR_ISSUES_TEXT, encoding="utf-8"
-        )
-        (unaccounted / "manifest.json").write_text(
-            json.dumps({"files": {"summary.md": "a" * 64}}, indent=2) + "\n", encoding="utf-8"
-        )
-        try:
-            local_review.prior_issues_file(unaccounted)
-        except local_review.CommandError as refusal:
-            assert "does not account for" in str(refusal), (
-                f"an unaccounted prior file has to be refused as unaccounted: {refusal}"
-            )
-        else:
-            raise AssertionError("a prior file no manifest accounts for was read anyway")
-
-
-def check_a_first_round_claims_no_standing_against_a_round_that_never_ran() -> None:
-    """With no round before it, there is no previous round to be new against.
-
-    Every item of a first round printed `Against the previous round: new`, which
-    says there was a previous round and that this item is not in it. The word is
-    the engine's and it is right in the record, where `new` is one of five
-    standings. What was wrong was printing it in a letter to authors who have
-    had no earlier letter.
-    """
-    # A first round as the engine writes one: no prior round, and so no row
-    # ruling on an item of a round that does not exist.
-    first = dict(PACKAGE, prior_round={}, issues=list(local_review.live_issues(PACKAGE)))
-    assert not local_review.has_prior_round(first), (
-        "a package the engine gave no prior round is a first round"
-    )
-    letter = local_review.render_decision_letter(
-        PAPER,
-        dict(first, findings=LEDGER),
-        dict(provenance_fixture(), round=1, prior_round={}),
-    )
-    assert "Against the previous round" not in letter, (
-        f"a first round told the authors where an item stands against nothing: {letter}"
-    )
-    assert "The previous round's items" not in letter, (
-        f"a first round reported on a round that never ran: {letter}"
-    )
-
-    # And the standing is printed when there is a round for it to be about.
-    later = local_review.render_decision_letter(PAPER, READING, provenance_fixture())
-    assert "**Against the previous round:** new" in later, (
-        f"a later round owes the authors each item's standing: {later}"
-    )
-
-
-def check_a_standing_this_release_never_publishes_is_refused() -> None:
-    """Five words are published as a standing, and a sixth is refused by name.
-
-    The five are the engine's own vocabulary. A word outside them would print in
-    the letter as the item's standing against the previous round, meaning
-    whatever the reader took it to mean, and a shape outside the three fields of
-    a surviving passage would print as a line of Python. Both are refused at the
-    publish gate rather than rendered.
-    """
-    assert local_review.ISSUE_STATUSES == (
-        "new",
-        "persisting",
-        "regressed",
-        local_review.RESOLVED_STATUS,
-        local_review.UNVERIFIED_STATUS,
-    ), f"the published standings are not the five the engine mints: {local_review.ISSUE_STATUSES}"
-
-    strange = dict(ISSUES[1], status="fixed")
-    try:
-        local_review.assert_publishable_issues(
-            dict(PACKAGE, issues=[*ISSUES[:1], strange, *ISSUES[2:]])
-        )
-    except local_review.CommandError as refusal:
-        message = str(refusal)
-        assert "fixed" in message and strange["id"] in message, (
-            f"the refusal has to name the word and the issue carrying it: {message}"
-        )
-        assert "persisting" in message, (
-            f"the refusal has to say which words this release does publish: {message}"
-        )
-    else:
-        raise AssertionError("a standing no publish ever mints was accepted")
-
-    shapeless = dict(ISSUES[5], surviving_quotes=["counts are available on request"])
-    try:
-        local_review.assert_publishable_issues(
-            dict(PACKAGE, issues=[*ISSUES[:5], shapeless])
-        )
-    except local_review.CommandError as refusal:
-        assert shapeless["id"] in str(refusal), (
-            f"the refusal has to name the issue carrying the row: {refusal}"
-        )
-    else:
-        raise AssertionError("a surviving passage that is not a row of the engine's was accepted")
-
-    # The fixture itself passes both, or the refusals above prove nothing.
+    # The fixture itself passes, or the refusals above prove nothing.
     local_review.assert_publishable_issues(PACKAGE)
 
 
@@ -3020,10 +2377,9 @@ def check_no_published_document_overstates_what_the_editor_agent_did() -> None:
     The method paragraph said the editor agent chose which findings belong in
     the body of the letter, which was a sentence about a limit that no longer
     exists: every issue it raises is in the letter, split by severity. And the
-    provenance page called an unverified item one the editor agent could not
-    verify, where the word means no reviewer raised it again and nothing showed
-    it fixed. Both are checked here because both are prose in this repository,
-    not output from the engine.
+    provenance page reported on the items of an earlier review, which no review
+    on this path reads. Both are checked here because both are prose in this
+    repository, not output from the engine.
     """
     paragraph = local_review.method_paragraph(
         {"arm": "full-two-track", "reviewers": 3, "specialist_tracks": list(TRACKS)},
@@ -3052,15 +2408,16 @@ def check_no_published_document_overstates_what_the_editor_agent_did() -> None:
     # The page is JSX, so its sentences are wrapped over several lines. What is
     # checked is the sentence, with the wrapping taken out.
     page = " ".join(_provenance_component_fields().split())
-    assert "raised again by no reviewer and shown fixed by nothing" in page, (
-        "the page has to say what unverified means"
-    )
-    assert "Neither word is a test that ran" in page, (
-        "the page has to say that neither ruling is a check that ran"
-    )
-    for retired in ("could not be verified", "could not verify", "unverified by the editor"):
+    for retired in (
+        "could not be verified",
+        "could not verify",
+        "unverified by the editor",
+        "read as resolved",
+        "Ruled against",
+        "previous round's issues",
+    ):
         assert retired not in page, (
-            f"the page still reads as though a verification was attempted: {retired}"
+            f"the page still rules on a review this one never read: {retired}"
         )
 
 
@@ -3138,25 +2495,23 @@ def check_the_fixtures_counts_are_the_ones_the_reader_computes() -> None:
     """
     counts = PACKAGE["counts"]
     computed = {
-        "issues": len(local_review.live_issues(PACKAGE)),
+        "issues": len(local_review.ranked_issues(PACKAGE)),
         "required": len(local_review.required_issues(PACKAGE)),
         "suggestions": len(local_review.suggestion_issues(PACKAGE)),
-        "resolved": len(local_review.resolved_issues(PACKAGE)),
-        "unverified": len(local_review.unverified_issues(PACKAGE)),
     }
     for name, value in computed.items():
         assert counts[name] == value, (
             f"the fixture says {name} is {counts[name]} and the publish path counts {value}"
         )
 
-    # The required changes and the suggestions are the whole of this round's
+    # The required changes and the suggestions are the whole of this review's
     # issues, with nothing in both and nothing in neither.
     required = {issue["id"] for issue in local_review.required_issues(PACKAGE)}
     suggested = {issue["id"] for issue in local_review.suggestion_issues(PACKAGE)}
-    live = {issue["id"] for issue in local_review.live_issues(PACKAGE)}
+    raised = {issue["id"] for issue in local_review.ranked_issues(PACKAGE)}
     assert not (required & suggested), f"an issue is both required and suggested: {required & suggested}"
-    assert required | suggested == live, (
-        f"an issue of this round is in neither list: {live - (required | suggested)}"
+    assert required | suggested == raised, (
+        f"an issue of this review is in neither list: {raised - (required | suggested)}"
     )
 
     # The members are the findings the issues were pooled from, counted once
@@ -3172,18 +2527,13 @@ def check_the_fixtures_counts_are_the_ones_the_reader_computes() -> None:
     ledger = {str(row.get("finding_uid")) for row in LEDGER}
     assert members <= ledger, f"an issue rests on a finding the ledger does not hold: {members - ledger}"
 
-    # Every status the engine writes is in the tally, with all five keys, and
-    # the two closed ones are counted apart from each other. The five are named
-    # here rather than read off the engine because this check runs on a bare
-    # interpreter too, and the engine's own vocabulary is checked against this
-    # pipeline's words by `assert_issue_vocabulary` at publish time.
-    assert set(counts["by_status"]) == {
-        "new", "persisting", "regressed", "resolved", "unverified",
-    }, f"the status tally does not carry every status the engine writes: {counts['by_status']}"
-    assert counts["by_status"]["resolved"] == counts["resolved"], "two tallies of resolved disagree"
-    assert counts["by_status"]["unverified"] == counts["unverified"], (
-        "two tallies of unverified disagree"
-    )
+    # No tally in the fixture rules on another review. The engine stopped
+    # writing those keys, and a fixture carrying one would be a fixture of a
+    # run this release cannot produce.
+    for retired in ("resolved", "unverified", "by_status"):
+        assert retired not in counts, (
+            f"the fixture tally claims a ruling on another review: {retired}"
+        )
 
 
 def check_an_unclaimed_review_is_labelled_an_experiment() -> None:
@@ -3193,21 +2543,18 @@ def check_an_unclaimed_review_is_labelled_an_experiment() -> None:
     it, and because "editorial" on an unclaimed run would overstate what
     produced the review.
     """
-    for plan_kind in ("first review", "same-draft re-review", "unpublishable local run"):
+    for plan_kind in ("review of this draft", "same-draft re-review", "unpublishable local run"):
         label = local_review.review_kind(plan_kind, False)
         assert label == "experiment", f"{plan_kind!r} unclaimed should be an experiment, got {label!r}"
 
-    assert local_review.review_kind("first review", True) == "initial"
+    assert local_review.review_kind("review of this draft", True) == "initial"
     assert local_review.review_kind("same-draft re-review", True) == "editorial_rereview"
 
-    # A revision round is named for what it is measured against, either way.
-    assert local_review.review_kind("revision round", False) == "revision"
-    assert local_review.review_kind("revision round", True) == "revision"
-
     # Every label has to be one the hosted panel already wrote, because the
-    # site's notices switch on these exact strings.
+    # site's notices switch on these exact strings, and the pages the hosted
+    # panel published carry `revision` on runs this path no longer plans.
     known = {"initial", "editorial_rereview", "revision", "experiment"}
-    for plan_kind in ("first review", "same-draft re-review", "revision round", "", "nonsense"):
+    for plan_kind in ("review of this draft", "same-draft re-review", "", "nonsense"):
         for claimed in (True, False):
             label = local_review.review_kind(plan_kind, claimed)
             assert label in known, f"unknown review kind {label!r} for {plan_kind!r}"
@@ -4165,24 +3512,13 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
     sound_package = dict(
         PACKAGE,
         issues=[],
-        issue_ids_used=[],
-        prior_round=None,
         counts={
             "issues": 0,
             "required": 0,
             "suggestions": 0,
-            "resolved": 0,
-            "unverified": 0,
             "issue_members": 0,
             "by_severity": {"major": 0, "moderate": 0, "minor": 0},
             "by_category": {},
-            "by_status": {
-                "new": 0,
-                "persisting": 0,
-                "regressed": 0,
-                "resolved": 0,
-                "unverified": 0,
-            },
         },
         escalation_rulings=[],
         escalated_count=0,
@@ -4243,13 +3579,11 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 code = _publish(
-                    # A first round: the run was given nothing to rule against,
-                    # so the plan names no prior items either. The two have to
-                    # agree, and the publish path refuses the pair where the
-                    # plan names a file the run never read.
+                    # The first review of this paper, which reads the first
+                    # draft and nothing else, as every review on this path does.
                     _prepared(
-                        Path(tmp) / "prepared", destination, round=1, prior_issues="",
-                        draft=1, plan_kind="first review",
+                        Path(tmp) / "prepared", destination, round=1,
+                        draft=1, plan_kind="review of this draft",
                     ),
                     empty,
                     _workspace(Path(tmp) / "workspace"),
@@ -4289,17 +3623,15 @@ def check_a_finished_run_that_endorses_nothing_is_a_review() -> None:
             assert run_record["required"] == 0 and run_record["suggestions"] == 0, (
                 f"an empty review asks for nothing: {run_record}"
             )
-            assert run_record["resolved"] == 0 and run_record["unverified"] == 0, (
-                f"a first round rules on no prior issue: {run_record}"
-            )
             assert run_record["issues_source"] == "editor", (
                 f"the published record has to say who pooled the issues: {run_record}"
             )
-            # A first round was given nothing to rule against, and the record
-            # says so with an empty object rather than by leaving the field out.
-            assert published["prior_round"] == {}, (
-                f"a first round has no prior round: {published['prior_round']}"
-            )
+            # No review on this path rules on another, so the record carries no
+            # field that would say it did.
+            for retired in ("resolved", "unverified", "prior_round", "carried_forward"):
+                assert retired not in run_record and retired not in published, (
+                    f"the published record claims a ruling on another review: {retired}"
+                )
             assert run_record["review_guard_status"] == "clean", (
                 f"the published record has to carry the guard verdict: {run_record}"
             )
@@ -6388,41 +5720,48 @@ def check_a_read_the_engine_sealed_publishes_as_the_engine_wrote_it() -> None:
         review_schema.assert_valid_provenance(record, source="engine-sealed")
 
 
-def check_the_locked_engine_release_is_the_one_declared() -> None:
-    """The lock has to name the engine release requirements.in asks for.
+def check_the_locked_engine_commit_is_the_one_declared() -> None:
+    """The lock has to pin the engine commit requirements.in asks for.
 
-    It used to assert a version floor, on the grounds that an older release
-    ships no engine package and every engine check in CI was installing a wheel
-    it could not use. A floor passes a lock one release behind the declared pin,
-    which is the same defect at a different version: the checks run against an
-    engine whose commands, flags and modules are not the ones this repo is
-    written for.
+    The engine is not published to an index, so the pin is the GitHub archive of
+    one commit and the lock carries that archive's hash. Two things can go wrong
+    and both install an engine this repository is not written for: the lock
+    naming a different archive from the one declared, and a lock line with no
+    hash on it, which `pip install --require-hashes` would refuse in CI but only
+    after the branch was pushed.
 
     This reads both files rather than the installed tree, so it fails on a
-    laptop with a newer engine checked out and on CI alike.
+    laptop with a different engine checked out and on CI alike. Whether the
+    installed engine is the one the lock pins is `check_runtime.py`, which runs
+    where the install happened and reads the URL pip recorded for it.
     """
     root = Path(local_review.__file__).resolve().parents[1]
+    pattern = re.compile(r"^peerreviewagents @ (\S+)", re.MULTILINE)
 
     def pinned(name: str) -> str:
-        pins = [
-            line.split("==", 1)[1].split(" ", 1)[0].strip()
-            for line in (root / name).read_text(encoding="utf-8").splitlines()
-            if line.startswith("peerreviewagents==")
-        ]
-        assert len(pins) == 1, f"expected one peerreviewagents pin in {name}, found {pins}"
-        return pins[0]
+        found = pattern.findall((root / name).read_text(encoding="utf-8"))
+        assert len(found) == 1, f"expected one peerreviewagents archive in {name}, found {found}"
+        return found[0]
 
     declared, locked = pinned("requirements.in"), pinned("requirements.txt")
     assert declared == locked, (
-        f"requirements.in asks for peerreviewagents {declared} and requirements.txt "
-        f"locks {locked}, so CI installs an engine this repository is not written for. "
+        f"requirements.in asks for the engine at {declared} and requirements.txt locks "
+        f"{locked}, so CI installs an engine this repository is not written for. "
         "Recompile the lock."
     )
-    version = tuple(int(part) for part in locked.split(".")[:2])
-    assert version >= (0, 10), (
-        f"the lock pins peerreviewagents {locked}. The plugin, the commands and the "
-        "run folder this repository reads are the 0.10 ones, and an issues document "
-        "is not a file an earlier release writes"
+    commit = locked.rsplit("/", 1)[-1].removesuffix(".tar.gz")
+    assert re.fullmatch(r"[0-9a-f]{40}", commit), (
+        f"the engine pin names {commit!r}, which is not a full commit sha. A branch or "
+        "a tag names whatever it points at today, and the archive of it changes under "
+        "the lock, so the pin has to be the commit itself."
+    )
+    lines = (root / "requirements.txt").read_text(encoding="utf-8").splitlines()
+    entry = next(number for number, line in enumerate(lines) if line.startswith("peerreviewagents @"))
+    hashes = [line for line in lines[entry:entry + 2] if "--hash=sha256:" in line]
+    assert hashes, (
+        "the engine's line in requirements.txt carries no --hash, so the archive it "
+        "names would be installed unchecked. CI installs with --require-hashes and "
+        "refuses the whole file for one line without one."
     )
 
 
@@ -8771,22 +8110,14 @@ def check_a_citation_worker_on_another_model_is_not_an_error() -> None:
         )
 
 
-def check_the_published_issues_file_is_a_later_rounds_prior_input() -> None:
-    """Publish a bundle, then read its issues file the way the next round does.
+def check_the_published_issues_file_is_one_a_reader_can_parse() -> None:
+    """Publish a bundle, then read its issues file back off disk.
 
-    This is the other half of a persistent id. Publishing the engine's ids is no
-    use if the file they are published in is one the next round refuses, and
-    that refusal would arrive a round later, in front of the authors, with the
-    ids already printed in a decision letter. So the file is read back off disk
-    and put through the rules the engine's own prior-round loader applies: a
-    known schema stamp, every row an object with a string id of the engine's
-    form, no id twice across open and closed rows alike, every `members` and
-    `surviving_quotes` a list, and `issue_ids_used` present and accounting for
-    every id in the file.
-
-    `prior_issues_file` is the function `prepare` uses to find this file for the
-    next round, so it is asked for the same answer here rather than the path
-    being rebuilt by hand.
+    The ids in that file are the numbers the decision letter prints beside each
+    request, and the file is published beside the letter for anyone who wants
+    the items as data. So it is read back off disk and put through the rules a
+    reader of it depends on: a known schema stamp, every row an object with a
+    string id of the engine's own form, no id twice, and every `members` a list.
     """
     with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
         with _published_tree(Path(tmp) / "reviews") as reviews:
@@ -8801,12 +8132,8 @@ def check_the_published_issues_file_is_a_later_rounds_prior_input() -> None:
                 )
             assert code == 0, f"this bundle should publish, got exit {code}: {out.getvalue()}"
 
-            # The next round finds the file through this function, not by a path
-            # built here, and a bundle with nothing open in it answers None.
-            found = local_review.prior_issues_file(destination)
-            assert found == destination / local_review.REVIEW_ISSUES, (
-                f"the next round would not find this round's issues: {found}"
-            )
+            found = destination / local_review.REVIEW_ISSUES
+            assert found.is_file(), f"the bundle published no issues file: {found}"
             document = json.loads(found.read_text())
 
     assert document["schema_version"] == ISSUES_SCHEMA, (
@@ -8814,7 +8141,7 @@ def check_the_published_issues_file_is_a_later_rounds_prior_input() -> None:
     )
     rows = document["issues"]
     assert rows and all(isinstance(row, dict) for row in rows), (
-        "every row of a prior-round file has to be an object"
+        "every row of the published issues file has to be an object"
     )
     identifiers = [row.get("id") for row in rows]
     assert all(isinstance(name, str) and name for name in identifiers), (
@@ -8824,25 +8151,14 @@ def check_the_published_issues_file_is_a_later_rounds_prior_input() -> None:
         f"an id is not of the engine's own form: {identifiers}"
     )
     assert len(set(identifiers)) == len(identifiers), (
-        f"an id appears twice across the open and closed rows: {identifiers}"
+        f"an id appears twice in the published rows: {identifiers}"
     )
     for row in rows:
         assert isinstance(row.get("members"), list), f"members is not a list: {row['id']}"
-        assert isinstance(row.get("surviving_quotes"), list), (
-            f"surviving_quotes is not a list: {row['id']}"
-        )
-    spent = document["issue_ids_used"]
-    assert isinstance(spent, list) and spent, "the spent ids were not carried into the bundle"
-    assert all(local_review.ISSUE_ID_PATTERN.match(str(name)) for name in spent), (
-        f"a spent id is not of the engine's own form: {spent}"
-    )
-    assert not set(identifiers) - set(spent), (
-        f"an id in the file is missing from issue_ids_used: {set(identifiers) - set(spent)}"
-    )
-    # The prior round's own ids are in that list although this round carries
-    # only one of them as a row, which is what stops a later round handing a
-    # retired id to a different problem.
-    assert "i05" in spent, f"a resolved id was dropped from the spent list: {spent}"
+        for retired in local_review.RULED_ON_ANOTHER_REVIEW:
+            assert retired not in row, (
+                f"the published row claims a ruling on another review: {row['id']} ({retired})"
+            )
 
 
 def check_the_run_manifests_manuscript_path_never_reaches_a_bundle() -> None:
@@ -8981,19 +8297,17 @@ def check_a_published_bundle_carries_no_ledger_and_no_fetched_text() -> None:
             )
 
 
-def _engine_round(out: Path, number: int, prior: str) -> dict:
+def _engine_round(out: Path, number: int) -> dict:
     """Drive one round of the fixture generator and return what it wrote.
 
     `scripts/fixtures/make_engine_rounds.py` runs the engine's own plugin over a
     PDF it builds, with no model and no network, and prints a JSON line
     describing the run folder. One round per call, because the engine serves one
-    paper per process and because a later round has to be given the file the
-    round before it published.
+    paper per process.
     """
     generator = Path(local_review.__file__).resolve().parent / "fixtures" / "make_engine_rounds.py"
     done = subprocess.run(
-        [sys.executable, str(generator), "--out", str(out), "--round", str(number),
-         "--prior", prior],
+        [sys.executable, str(generator), "--out", str(out), "--round", str(number)],
         capture_output=True,
         text=True,
         check=False,
@@ -9101,16 +8415,15 @@ def _publish_refusal(prepared: Path, run: Path, workspace: Path) -> str:
 
 
 def check_two_rounds_the_engine_itself_wrote_publish() -> None:
-    """Publish a run folder the engine wrote, and a second round that reads it back.
+    """Publish two run folders the engine wrote, as two reviews of one paper.
 
     Every other check here publishes a fixture: a run folder typed out in this
     file from the engine's documents. That is a copy of what this repository
     believes the engine writes, and a field the engine starts writing
     differently stays as it was typed until somebody notices. This check
     publishes what the engine produces. `scripts/fixtures/make_engine_rounds.py`
-    drives the plugin over a PDF it builds, filing the findings, pooling them
-    into issues and ruling on the round before, and the publish path then reads
-    that folder.
+    drives the plugin over a PDF it builds, filing the findings and pooling them
+    into issues, and the publish path then reads that folder.
 
     Two of the files a published bundle rests on cannot come from that
     generator, and the check proves it before it supplies them. The plugin tree
@@ -9123,14 +8436,12 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
     probe, and what publishes is a bundle whose every review document is the
     engine's.
 
-    Then the round the two blockers were about. The second round is given the
-    file the first round published, which is what `prepare` hands the engine, so
-    the digest the run records of its prior input is a digest of the published
-    bytes. It carries one prior item forward as persisting, rules one resolved
-    with a sentence that still reads the same in the revision, and leaves one
-    unverified. The letter has to print those surviving sentences as the
-    authors' words and the record has to carry the reasons, both of which were
-    wrong against a hand written fixture until this round.
+    Then a second review of the same paper, which is the other thing a reader
+    of the site can reach: a paper page lists every review of it by date, and
+    the second bundle is published at `r2`. It reads nothing of the first one.
+    It is a review of the draft in front of it, with its own ids, its own
+    issues and its own letter, and the check publishes it to prove the second
+    bundle under a paper is as independent as the first.
 
     The field names are checked in both directions too, because that is the
     drift this generator exists to catch: nothing the hand written package
@@ -9140,7 +8451,7 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
     """
     with _stub_engine(), tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / "rounds"
-        first = _engine_round(out, 1, "")
+        first = _engine_round(out, 1)
         run = Path(first["run"])
         assert first["publishable"], f"the engine called its own run unpublishable: {first}"
 
@@ -9246,8 +8557,8 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
                 run,
                 out / "manuscript.pdf",
                 round=1,
-                prior_issues="",
-                plan_kind="first round",
+                draft=1,
+                plan_kind="review of this draft",
             )
 
             # The folder as the generator leaves it, refused for the plugin tree
@@ -9283,23 +8594,16 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
                 "the bundle does not say how the manuscript it reviews was "
                 f"sealed: {provenance['ingest']}"
             )
-            published = local_review.prior_issues_file(destination)
-            assert published == destination / local_review.REVIEW_ISSUES, (
-                f"the next round would not find this round's issues: {published}"
+            published = destination / local_review.REVIEW_ISSUES
+            assert published.is_file(), (
+                f"the first review published no issues file a reader can open: {published}"
             )
 
-            # The second round reads the file the first round published, which is
-            # the file `prepare` hands the engine, and records a digest of those
-            # bytes.
-            second = _engine_round(out, 2, str(published))
+            # The second review of the same paper, which reads the revised
+            # draft and nothing of the review above it.
+            second = _engine_round(out, 2)
             later = Path(second["run"])
             reading = json.loads((later / "review" / "issues.json").read_text(encoding="utf-8"))
-            recorded = (reading.get("prior_round") or {}).get("digest")
-            expected = local_review.digest(published.read_bytes())[:16]
-            assert recorded == expected, (
-                "the engine's record of its prior input is not a digest of the published "
-                f"bytes: {recorded} against {expected}"
-            )
 
             _plugin_tree(later)
             _session_evidence(later)
@@ -9314,7 +8618,6 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
                         out / "revision.pdf",
                         round=2,
                         draft=2,
-                        prior_issues=str(published),
                     ),
                     later,
                     later / "manuscript",
@@ -9326,36 +8629,21 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
             record = json.loads((next_destination / "round.json").read_text(encoding="utf-8"))
             letter = (next_destination / "decision_letter.md").read_text(encoding="utf-8")
 
-    closed = record["closed_issues"]
-    resolved = closed["resolved"]
-    unverified = closed["unverified"]
-    assert len(resolved) == 1 and len(unverified) == 1, (
-        f"the second round ruled on something other than one of each: {closed}"
-    )
-    for row in resolved + unverified:
-        assert row["status_reason"].strip(), f"a ruling carries no reason: {row['id']}"
-        quotes = row["surviving_quotes"]
-        assert quotes and all(isinstance(quote, dict) for quote in quotes), (
-            f"the engine's surviving quotes did not reach the record: {row['id']}"
+    # The second review rules on nothing of the first. Its record names its own
+    # items and no others, and its letter says nothing about an earlier review.
+    for retired in ("closed_issues", "carried_forward", "prior_round", "resolved", "unverified"):
+        assert retired not in record, (
+            f"the second review's record claims a ruling on the first: {retired}"
         )
-        for quote in quotes:
-            assert {"finding_uid", "document", "line", "quote"} <= set(quote), (
-                f"a surviving quote is missing a field the engine writes: {quote}"
-            )
-            # And the field set the fixture's own surviving quotes carry, so a
-            # row the engine starts writing differently fails here rather than
-            # being rendered from a fixture nobody wrote.
-            drifted = sorted(set(quote) ^ set(ISSUES[4]["surviving_quotes"][0]))
-            assert not drifted, (
-                f"a surviving quote has drifted from the fixture's: {drifted}"
-            )
-            # The authors read their own sentence, not a mapping of it.
-            assert f"> {quote['quote']}" in letter, (
-                f"the letter does not print the surviving sentence as a quotation: {quote}"
-            )
-    assert resolved[0]["text_unchanged_reason"].strip(), (
-        "a resolved item whose quoted sentence still reads the same has to say why"
-    )
+    assert record["required_revisions"], "the second review published no required changes"
+    for item in [*record["required_revisions"], *record["minor_suggestions"]]:
+        assert "prior_id" not in item and "status" not in item, (
+            f"an item of the second review points at the first: {item['id']}"
+        )
+    for sentence in ("previous round", "earlier review", "persisting", "could not be verified"):
+        assert sentence not in letter, (
+            f"the second review's letter rules on a review it never read: {sentence}"
+        )
     assert "finding_uid" not in letter and "'quote'" not in letter, (
         "the letter prints a mapping where the authors should read a sentence"
     )
@@ -9383,13 +8671,6 @@ def check_two_rounds_the_engine_itself_wrote_publish() -> None:
     )
     stray = sorted(set(marked) - anchored)
     assert not stray, f"the letter marks characters no member anchored: {stray}"
-    standing = {row["id"]: row["status"] for row in record["required_revisions"]}
-    assert standing.get("i01") == "persisting", (
-        f"the item both rounds raised is not marked persisting: {standing}"
-    )
-    assert unverified[0]["id"] in record["carried_forward"], (
-        "an item nobody verified has to be carried into the next round"
-    )
 
 
 def _code_round(out: Path) -> dict:
@@ -9501,8 +8782,8 @@ def check_a_review_of_the_code_behind_the_paper_publishes_what_was_checked() -> 
                         run,
                         Path(wrote["pdf"]),
                         round=1,
-                        prior_issues="",
-                        plan_kind="first round",
+                        draft=1,
+                        plan_kind="review of this draft",
                     ),
                     run,
                     run / "manuscript",
@@ -9799,8 +9080,8 @@ ENGINE_BACKED = (
         "a published bundle carries no ledger row and no fetched publisher text",
     ),
     (
-        check_the_published_issues_file_is_a_later_rounds_prior_input,
-        "the published issues file is one the next round accepts as its prior input",
+        check_the_published_issues_file_is_one_a_reader_can_parse,
+        "the published issues file is one a reader can parse off disk",
     ),
     (
         check_the_run_manifests_manuscript_path_never_reaches_a_bundle,
@@ -9808,7 +9089,7 @@ ENGINE_BACKED = (
     ),
     (
         check_two_rounds_the_engine_itself_wrote_publish,
-        "two rounds the engine itself wrote publish, the second reading the first",
+        "two reviews the engine itself wrote publish, neither ruling on the other",
     ),
     (
         check_a_run_of_one_paper_cannot_be_published_as_another,

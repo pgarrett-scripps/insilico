@@ -101,13 +101,13 @@ desk screen, five named specialists and a recorded argument between an advocate
 and a skeptic. A published bundle is never edited, so those reviews still carry
 those documents and their pages name them as they are.
 
-## Revision rounds
+## Reviewing a revised draft
 
-**The referees are blind to the round.** Round 3 asks every reviewer and
-specialist exactly what round 1 asked: read this manuscript. None of them is
-told that a previous round exists, sees its own earlier report, or is shown what
-changed.
-They still never see each other's reports either. Rounds are capped at three.
+**Every review is independent.** A review of a revised draft asks exactly what
+the first review asked: read this manuscript. No reviewer, no specialist and
+not the editor either is told that an earlier review of the paper exists, shown
+its own earlier report, or shown what changed. Within a review they still never
+see each other's reports.
 
 That is a correction, not an economy. Referees used to be handed their prior
 critique and asked to rule on a revision, and a panel told it is judging a
@@ -117,49 +117,34 @@ byte-identical to the draft before it, one referee raised its score from 3 to 5
 an expanded methods section that was not in the paper, and the editor rejected
 the manuscript for disregarding a review process nobody had gone through.
 
-Continuity lives on the editor's numbered issues instead, which is the actual
-contract with the authors. Only the editor is given the previous round's issues,
-which is what keeps the referees blind while the asks still carry over.
+The editor used to carry the asks over instead, ruling on every issue of the
+earlier review as persisting, resolved or unverified. That has gone the same
+way, for the same reason. A ruling that an item was fixed, or that nobody could
+tell, is a judgement about a review the panel making it never read, and the one
+direction the engine could check it in covered a single case: the quoted text
+still being there word for word.
 
-An issue keeps the id it was born with. The id is the engine's own, of the form
-`i03`, and this site publishes it unchanged rather than renumbering it for the
-page: `i03` is one problem for the life of the manuscript, called `i03` in every
-round that mentions it, and an id is never handed to a second problem even after
-the first is closed. Each published bundle's `issues.json` is the file the next
-round is given, so the ids a reader sees in a decision letter are the ids the
-next round rules against.
+So the paper's page lists every review of the paper by date, and the comparison
+is the reader's to make from two decision letters published in full. That is
+also what a reader should make of a concern raised twice. Each review is an
+independent read of the paper as it stands, so a referee restating a concern is
+not evidence the authors ignored it, and score movement between reviews
+includes the resampling noise of a fresh panel.
 
-The editor rules on every issue of the previous round, and the ruling is one of
-five words. `persisting` and `regressed` mean this round's referees raised it
-again, still wrong or worse. `resolved` means the editor read the revision and
-judged it fixed. `unverified` means nobody raised it again and nothing in the
-manuscript shows it was fixed. `new` is an issue this round is the first to
-raise.
+An issue id belongs to the review that minted it. The id is the engine's own,
+of the form `i03`, and this site publishes it unchanged rather than renumbering
+it for the page, so the `i03` of a decision letter is the `i03` of the issue
+list beside it. A second review of the same paper mints its own ids and matches
+none of them to anything earlier.
 
-Two of those words need reading carefully, and the page says so where it prints
-them. **`resolved` is the editor's reading of the revision, not a test that
-ran.** The engine checks it in one direction only: where the text a prior
-finding quoted still appears word for word in the new manuscript, a `resolved`
-ruling has to say why it is fixed anyway, and the passages the engine found are
-published beside the ruling so a reader can see what the ruling was made
-against. Without that reason the ruling becomes `unverified`. Nothing else about
-a `resolved` issue is verified, and this site never presents one as proof that
-the authors complied. **`unverified` is a statement about the evidence, not a
-verdict against the authors.** It means the manuscript did not settle the
-question either way, it is carried into the next round like any other open
-issue, and it is never counted as a fix.
-
-Two more things follow for a reader. The referee and specialist reports in a
-later round are an independent read of the paper as it stands, so a referee
-restating a concern is not evidence the authors ignored it, and score movement
-between rounds includes the resampling noise of a fresh panel. The account of
-what happened to the asks is the issue list and the decision letter.
-
-An unchanged resubmission is caught by comparing the manuscript file's SHA-256
-against the one the previous round recorded. There is no re-reading or converter
-that could disagree with itself. The editor is told plainly that this is a fact
-about a file rather than defiance: this pipeline reviews whatever draft an
-archive serves it, and the authors have usually never seen the decision letter.
+Nothing is inferred about whether a draft changed. The archive's version number
+decides which folder a review lands in, a second review of a version this site
+has already reviewed has to be asked for outright and becomes another attempt
+rather than an edit of the first, and the monthly scan compares each published
+review's recorded manuscript SHA-256 against the file the archive serves now,
+so a draft replaced in place is reported rather than missed. This pipeline
+reviews whatever draft an archive serves it, and the authors have usually never
+seen the decision letter.
 
 ### Why the panel does not receive response letters
 

@@ -515,8 +515,8 @@ def _resolve_arxiv(url: str, arxiv_id: str) -> Preprint:
     way: resolve to current, and record which version that was.
 
     That also makes revisions work. Without a version on the record, nothing
-    can tell that a manuscript has moved on — the update check has nothing to
-    compare and a revision round would re-review the draft it already read.
+    can tell that a manuscript has moved on: the update check has nothing to
+    compare, and a review of the new draft would read the one already reviewed.
     """
     bare = arxiv_id.split("v")[0] if re.match(r"^\d{4}\.", arxiv_id) else arxiv_id
     pp = Preprint(

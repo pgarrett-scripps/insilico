@@ -245,12 +245,10 @@ function localRecord(overrides = {}) {
         // What the review asks for, counted off the issues the editor wrote.
         // The ledger's own total stays in findings_delivered: 53 findings
         // pooled into 11 issues, of which 7 are required changes and 4 are
-        // suggestions, with one prior issue ruled fixed and one left unchecked.
+        // suggestions.
         issues: 11,
         required: 7,
         suggestions: 4,
-        resolved: 1,
-        unverified: 1,
         issues_source: "editor",
         issues_schema_version: "review-issues-v4",
         escalated_in_bundle: 4,
@@ -307,10 +305,6 @@ function localRecord(overrides = {}) {
     decision: "major",
     desk_rejected: false,
     round: 1,
-    // A first round was given nothing to rule against, and it says so rather
-    // than leaving the field out: an absent prior round and a round nobody
-    // recorded read the same way, and only one of them is honest.
-    prior_round: {},
     // What the panel was handed, and how much of it a model wrote rather than
     // the converter. A record that counted the text without naming the lines a
     // model wrote would describe a review of a document it never described.
@@ -796,32 +790,18 @@ rejects(silentAboutPooling, "a record must say who pooled its findings into issu
 
 // What the review asks for. A record without the counts cannot say how much was
 // required of the authors, and the page prints them.
-for (const name of ["issues", "required", "suggestions", "resolved", "unverified"]) {
+for (const name of ["issues", "required", "suggestions"]) {
   const missing = localRecord();
   delete missing.generator.run[name];
   rejects(missing, `a record must carry its ${name} count`);
 }
 
-// What the round was given to rule against. The engine publishes the prior
-// file's name, a digest and the tally, and never the path it was read from: a
-// path says whose machine ran the earlier round.
-const secondRound = localRecord();
-secondRound.round = 2;
-secondRound.prior_round = {
-  file: "issues.json",
-  digest: "0123456789abcdef",
-  issues: 9,
-  tally: { new: 3, persisting: 5, regressed: 1, resolved: 2, unverified: 1 },
-};
-accepts(secondRound, "a second round records the file it ruled against");
-
-const pathyPrior = localRecord();
-pathyPrior.prior_round = { file: "issues.json", path: "/home/someone/runs/issues.json" };
-rejects(pathyPrior, "a prior round must not name the machine it was read from");
-
-const silentAboutPrior = localRecord();
-delete silentAboutPrior.prior_round;
-rejects(silentAboutPrior, "a record must say what it was given to rule against");
+// A later review of the same paper carries its position in the paper's page and
+// nothing else about the reviews before it: it read the draft in front of it and
+// no earlier review, so there is no earlier bundle for the record to name.
+const secondReview = localRecord();
+secondReview.round = 2;
+accepts(secondReview, "a later review of the same paper is a record of its own");
 
 // A review written before a rate limit stopped the session is complete and
 // publishable, and the note is the only thing that says the session did not end

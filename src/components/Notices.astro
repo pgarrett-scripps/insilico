@@ -4,7 +4,7 @@
  *
  * Each of these exists because two situations that look identical on the page
  * are not the same evidence, and only saying so distinguishes them: a desk
- * rejection versus a considered one, a later round of a revised paper versus a
+ * rejection versus a considered one, a review of a revised paper versus a
  * second read of the same draft, a review the authors asked for versus one
  * attached to their paper by a stranger.
  */
@@ -25,15 +25,6 @@ const round = Number(provenance.round || 1);
 const claim = provenance.submitter_is_author || "";
 const panelSize = Array.isArray(provenance.panel) ? provenance.panel.length : 0;
 const reportCount = panelSize ? `${panelSize} reports` : "specialist reports";
-
-// Whether the panel that wrote the reports below was told it was reading a
-// revision. Those rounds carry `revision.baseline`: the status of the
-// previously reviewed PDF, re-fetched so each referee could be handed a diff
-// alongside its own prior report. The reports under them rule on prior points
-// by id and open "Revision Review", so telling a reader they were written cold
-// would misdescribe the record. A published bundle is never edited, so the
-// bundle decides which account of itself it gets.
-const sawPriorRound = Boolean(revision.baseline);
 
 const notices: {tone: string, title: string, body: string[]}[] = [];
 
@@ -77,36 +68,16 @@ if (review.kind === "experiment" || review.baseline_eligible === false) {
 }
 
 if (round > 1) {
-  const body = sawPriorRound
-    ? [
-        "The authors revised the paper. Each referee below was shown its own report from the previous round and ruled on every point it had raised, and an auditor checked the previous letter's required revisions against the new draft.",
-      ]
-    : [
-        `The authors revised the paper. Every referee below read this draft cold: none was told that a previous round exists, so the ${reportCount} are an independent read of the paper as it stands rather than a verdict on the revisions. A referee restating a concern is not evidence the authors ignored it, and score movement between rounds carries the noise of a fresh panel.`,
-        "What crosses rounds is the editor's numbered required revisions. An auditor rules on each one against the new draft and cannot call an item addressed without quoting manuscript text that is checked to be there, so the compliance report and the decision letter are the account of what happened to the asks.",
-      ];
+  const body = [
+    `The authors revised the paper, and this is a review of the new draft, not a verdict on the revisions. Every referee below read this draft cold: nothing from the earlier review reached this one, so the ${reportCount} are an independent read of the paper as it stands. A referee restating a concern is not evidence the authors ignored it, and nothing here says whether an earlier ask was met.`,
+    "Nothing crosses from one review to the next. Each review of this paper is listed on the paper's page with its own date, letter and numbered items, and reading them against each other is the reader's own work.",
+  ];
   if (revision.prior_decision) {
     body.push(
-      `The previous round recommended ${VERDICT[revision.prior_decision] || revision.prior_decision}.`,
+      `The earlier review recommended ${VERDICT[revision.prior_decision] || revision.prior_decision}.`,
     );
   }
-  notices.push({ tone: "info", title: `Revision round ${round}`, body });
-
-  // This round predates the blind panel, and the difference changes what the
-  // progress claims below are worth. Telling a referee it is judging a
-  // revision gives it a reason to find progress: on a byte-identical
-  // resubmission that arrangement produced a raised score "because the
-  // revision successfully addresses the concerns" and an audit describing an
-  // expanded methods section that was not in the paper.
-  if (sawPriorRound) {
-    notices.push({
-      tone: "warning",
-      title: "The panel knew it was reading a revision",
-      body: [
-        "Later rounds are reviewed blind, for a reason that applies to this page: a referee that has been handed its own earlier complaints is being asked whether they were met, not whether the paper is sound. Read what the reports below call resolved against the manuscript, not against the previous round.",
-      ],
-    });
-  }
+  notices.push({ tone: "info", title: `Review ${round} of this paper`, body });
 }
 
 if (claim === "no") {

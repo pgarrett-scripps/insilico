@@ -201,17 +201,6 @@ const quarantined = typeof runRecord.quarantined_findings_count === "number"
 const findingsDelivered = typeof runRecord.findings_delivered === "number"
   ? runRecord.findings_delivered
   : 0;
-// Whether this round ruled on anything earlier at all. A first round rules on
-// nothing, and "0 resolved, 0 unverified" on a first round would read as a
-// revision that fixed nothing.
-const ruledOnPrior = (typeof runRecord.resolved === "number" ? runRecord.resolved : 0)
-  + (typeof runRecord.unverified === "number" ? runRecord.unverified : 0);
-// The prior round this one ruled against, as the engine reported it. It is an
-// empty object on a first round, which is published rather than left out, so an
-// absent row here means a first round and never a record that forgot to say.
-const priorRound = provenance.prior_round && typeof provenance.prior_round === "object"
-  ? provenance.prior_round
-  : {};
 const specialists = Array.isArray(runRecord.specialist_tracks) ? runRecord.specialist_tracks : [];
 const advisoryRows = [
   ["Significance", advisory.significance],
@@ -443,22 +432,6 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
             : ""}
           {runRecord.literature_cutoff ? `, literature to ${runRecord.literature_cutoff}` : ""}
         </p>
-        {/* What this round made of the last round's issues, and the one word
-            that has to stay honest. "Resolved" is the editor's reading of the
-            revision and not a test that passed. "Unverified" was said too
-            broadly here, as text that could not be checked, which describes a
-            check that was attempted. The engine means something narrower: no
-            reviewer raised the issue again this round and nothing in the round
-            showed it fixed, so it stands open. Both are printed as the engine
-            reported them and neither is summed into a score. */}
-        {ruledOnPrior > 0 && (
-          <p class="prov__hash">
-            Of the previous round's issues, {runRecord.resolved} read as
-            resolved by the editor and {runRecord.unverified} were raised again
-            by no reviewer and shown fixed by nothing, so they stand open.
-            Neither word is a test that ran.
-          </p>
-        )}
         {/* A finding the evidence guards threw out never reaches the letter, and
             a reader weighing the review should see how many were thrown out
             rather than only how many survived. The row itself is in the
@@ -500,34 +473,6 @@ const insilicoSha = insilico.sha ? String(insilico.sha).slice(0, 8) : ""
         </p>
       )}
     </div>
-
-    {/* What the round was handed. A revision round rules against the previous
-        round's own issues file, and the record names that file and a digest of
-        it rather than where it sat on disk. The second sentence is the part a
-        reader cannot see from the letter: the referees were given the
-        manuscript and no knowledge of the round, so only the editor read the
-        earlier issues, and what the letter calls resolved is the editor's
-        reading rather than a referee's re-examination. */}
-    {generator && priorRound.file && (
-      <div class="prov__cell">
-        <p class="label">Ruled against</p>
-        <p class="prov__value mono">
-          {priorRound.file}
-          {typeof priorRound.issues === "number"
-            ? ` · ${priorRound.issues} issue${priorRound.issues === 1 ? "" : "s"}`
-            : ""}
-        </p>
-        {priorRound.digest && (
-          <p class="prov__hash mono" title={String(priorRound.digest)}>
-            digest {String(priorRound.digest)}
-          </p>
-        )}
-        <p class="prov__hash">
-          The referees read the manuscript without being told which round this
-          is. Only the editor was given the earlier issues.
-        </p>
-      </div>
-    )}
 
     {/* A local run records no debate round count. Showing "N/A" for a number
         the hosted panel measured and this path never had would read as a

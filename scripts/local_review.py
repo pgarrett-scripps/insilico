@@ -120,27 +120,20 @@ UNREAD_STATEMENT = (
 SEVERITY_ORDER = {"major": 0, "moderate": 1, "minor": 2}
 REQUIRED_SEVERITIES = ("major", "moderate")
 SUGGESTION_SEVERITY = "minor"
-# The two statuses that close a prior round's issue out. Such an issue is
-# reported against the round that raised it, carries no rank, and is not one of
-# the changes the authors have to answer now, so it is neither a required
-# change nor a suggestion here.
-#
-# `resolved` is the editor agent's own ruling that a prior issue was fixed, and
-# `unverified` is a prior issue nobody raised again and nobody ruled fixed,
-# which is still open. The two are never printed as one number and `unverified`
-# is never printed as a fix: a finding can disappear from text nobody touched,
-# so nothing being filed this round is not evidence of anything.
-RESOLVED_STATUS = "resolved"
-UNVERIFIED_STATUS = "unverified"
-CLOSED_STATUSES = (RESOLVED_STATUS, UNVERIFIED_STATUS)
-# Every standing an issue may hold against the previous round, which is the
-# engine's own `ISSUE_STATUSES`. `assert_issue_vocabulary` checks this tuple
-# against the installed engine's, so the words are here for the sake of the
-# publish path on a machine where the engine is not importable rather than as a
-# second opinion about what the engine writes. A status outside the five is
-# refused rather than printed: a letter telling the authors an item was `fixed`
-# is a word the engine never wrote and a ruling nobody made.
-ISSUE_STATUSES = ("new", "persisting", "regressed", RESOLVED_STATUS, UNVERIFIED_STATUS)
+# The fields a run would carry if it had been handed an earlier review to rule
+# against. The engine stopped writing them in 0.10, and this pipeline hands it
+# no earlier review, so a run carrying one was not written by the engine this
+# release publishes. They are refused at the publish gate rather than printed,
+# because a letter telling the authors an item persists from a review this one
+# never read is a standing nobody ruled on.
+RULED_ON_ANOTHER_REVIEW = (
+    "status",
+    "status_reason",
+    "prior_id",
+    "prior_rank",
+    "text_unchanged_reason",
+    "surviving_quotes",
+)
 # What an issue id looks like, so a published record can be checked against the
 # engine's own minting rule rather than trusted. The engine mints `i01`, `i02`
 # and so on, and a published request id is that id unchanged.
@@ -997,14 +990,11 @@ def startup_stamp(reading: dict) -> str | None:
 
 
 def issues_document(reading: dict) -> dict:
-    """The two facts about `issues.json` that belong to the file, not the review.
+    """The facts about `issues.json` that belong to the file, not the review.
 
     `read_run` answers everything about the review itself, and a bundle needs
     two things that are properties of the document instead: the schema it was
-    stamped with, and every issue id this manuscript has spent. The ids matter
-    because the next round is handed this bundle's own `issues.json` as its
-    prior round, and a prior file that cannot account for the ids already used
-    lets round two mint an id round one had already given out.
+    stamped with, and the code check written beside the issues.
 
     The file is located through `reading['reports']`, the engine's own map of
     what is on disk, the same way `startup_stamp` locates `startup.json`.
@@ -1032,7 +1022,6 @@ def issues_document(reading: dict) -> dict:
         )
     return {
         "schema_version": stamp,
-        "issue_ids_used": [str(i) for i in _list(document.get("issue_ids_used"))],
         # The code check lives in this document and nowhere else a reader of the
         # run can reach: `read_run` answers the review, and the rows that say
         # which findings the code threw out are written here beside the issues.
@@ -1129,10 +1118,9 @@ def assert_issue_vocabulary() -> None:
     reaching into internals that are free to move between releases.
 
     What that costs is the risk of the words drifting apart, so the words are
-    checked instead of trusted. A release that renamed a severity or a status
-    would otherwise file every issue as a suggestion, or publish a prior issue
-    nobody ruled on as one of this round's required changes, and both would be
-    silent. This refuses instead, naming the word that moved.
+    checked instead of trusted. A release that renamed a severity would
+    otherwise file every issue as a suggestion, silently. This refuses instead,
+    naming the word that moved.
     """
     why = "the issue vocabularies cannot be checked"
     # The engine publishes these as tuples, and `_list` is for values read out
@@ -1146,21 +1134,13 @@ def assert_issue_vocabulary() -> None:
         return []
 
     severities = words("ISSUE_SEVERITIES")
-    statuses = words("ISSUE_STATUSES")
     missing = [w for w in (*REQUIRED_SEVERITIES, SUGGESTION_SEVERITY) if w not in severities]
-    missing += [w for w in ISSUE_STATUSES if w not in statuses]
-    # And the other direction, for the statuses alone. A release that added a
-    # sixth standing would have every row carrying it refused by
-    # `assert_publishable_issues`, with a message about a word the engine does
-    # write, so the gap is reported here instead and names the new word.
-    missing += [w for w in statuses if w not in ISSUE_STATUSES]
     if missing:
         raise CommandError(
             "This pipeline and engine "
             f"{ENGINE_PACKAGE} do not agree on the issue words: "
             f"{', '.join(sorted(set(missing)))}. The engine's severities are "
-            f"{', '.join(severities) or 'unreadable'} and its statuses are "
-            f"{', '.join(statuses) or 'unreadable'}. Update the publish path "
+            f"{', '.join(severities) or 'unreadable'}. Update the publish path "
             "before publishing a run from this release."
         )
 
@@ -1172,25 +1152,22 @@ def review_package(reading: dict) -> dict:
     issues the editor raised, each carrying the findings it was raised from.
     Nothing is placed out of sight any more, so there are no two lists to
     gather. The major and moderate issues in `rank` order are the required
-    changes, the minor ones are the suggestions, and a prior issue this round
-    closed out is reported against the round that raised it.
+    changes and the minor ones are the suggestions.
 
     The findings ledger is carried beside the issues because an issue member
     holds the evidence fields and not the reviewer's own words: `comment`,
     `basis_reason` and `counterevidence` are on the finding, and the letter
     joins them back on by `finding_uid`.
 
-    `schema_version` and `issue_ids_used` come from the document rather than the
-    reading, and they are published because this record is what the next round
-    is handed as its prior round.
+    `schema_version` comes from the document rather than the reading. It is
+    published because it is what the engine stamped the document with, and a
+    reader checking an id in the letter against the file reads it.
     """
     document = issues_document(reading)
     return {
         "schema_version": document.get("schema_version"),
         "issues_source": reading.get("issues_source"),
-        "issue_ids_used": [str(i) for i in _list(document.get("issue_ids_used"))],
         "issues": [_dict(issue) for issue in _list(reading.get("issues"))],
-        "prior_round": _dict(reading.get("prior_round")),
         # The ledger, de-duplicated by the engine, in full. Every issue member
         # names a row in it.
         "findings": [_dict(finding) for finding in _list(reading.get("findings"))],
@@ -1204,7 +1181,7 @@ def review_package(reading: dict) -> dict:
         # What the code check did, or `None` on a run that was given no code.
         # It is carried in the package rather than derived at render time
         # because a thrown-out finding appears nowhere else: it is in no issue,
-        # and the next round is handed this bundle.
+        # and the letter is the only place a reader meets it.
         "code_check": document.get("code_check"),
     }
 
@@ -1528,17 +1505,11 @@ def bind_run_to_input(prepared: dict, workspace: Path, run: dict) -> dict:
 def issue_rank(issue: dict) -> int:
     """One issue's place in the editor's order, or last for a row without one.
 
-    The engine ranks the issues a round raised from 1, and leaves `rank` null on
-    a prior issue it closed out, which is ranked against the round it came from
-    and carries `prior_rank` instead.
+    The engine ranks the issues a review raised from 1. A row with no rank is
+    sorted last rather than dropped, because an unranked item is still an ask
+    the authors are owed.
     """
     rank = _dict(issue).get("rank")
-    return rank if isinstance(rank, int) else 10 ** 6
-
-
-def prior_rank(issue: dict) -> int:
-    """Where a closed-out issue sat in the round that raised it."""
-    rank = _dict(issue).get("prior_rank")
     return rank if isinstance(rank, int) else 10 ** 6
 
 
@@ -1547,15 +1518,9 @@ def all_issues(package: dict) -> list[dict]:
     return [i for i in _list(package.get("issues")) if isinstance(i, dict)]
 
 
-def live_issues(package: dict) -> list[dict]:
-    """Every issue this round raised, in the editor's rank order.
-
-    A prior issue this round closed out is not one of them: it is reported
-    against the round that raised it and the authors have nothing to answer for
-    it now.
-    """
-    live = [i for i in all_issues(package) if str(i.get("status")) not in CLOSED_STATUSES]
-    return sorted(live, key=issue_rank)
+def ranked_issues(package: dict) -> list[dict]:
+    """Every issue this review raised, in the editor's rank order."""
+    return sorted(all_issues(package), key=issue_rank)
 
 
 def required_issues(package: dict) -> list[dict]:
@@ -1564,79 +1529,19 @@ def required_issues(package: dict) -> list[dict]:
     This is the whole list. Nothing is capped and nothing is held back, which is
     why there is no appendix any more.
     """
-    return [i for i in live_issues(package)
+    return [i for i in ranked_issues(package)
             if str(i.get("severity")) in REQUIRED_SEVERITIES]
 
 
 def suggestion_issues(package: dict) -> list[dict]:
     """The suggestions: the minor issues, in rank order."""
-    return [i for i in live_issues(package)
+    return [i for i in ranked_issues(package)
             if str(i.get("severity")) == SUGGESTION_SEVERITY]
-
-
-def resolved_issues(package: dict) -> list[dict]:
-    """The prior issues the editor agent ruled fixed, in their prior order."""
-    return sorted((i for i in all_issues(package)
-                   if str(i.get("status")) == RESOLVED_STATUS), key=prior_rank)
-
-
-def unverified_issues(package: dict) -> list[dict]:
-    """The prior issues nobody raised again and nobody ruled fixed.
-
-    Still open. The status exists precisely because it is not a fix.
-    """
-    return sorted((i for i in all_issues(package)
-                   if str(i.get("status")) == UNVERIFIED_STATUS), key=prior_rank)
-
-
-def closed_issues(package: dict) -> list[dict]:
-    """Every prior issue closed out this round, the ruled ones first."""
-    return resolved_issues(package) + unverified_issues(package)
 
 
 def issue_members(issue: dict) -> list[dict]:
     """The findings one issue is raised from, as the issue keeps them."""
     return [m for m in _list(_dict(issue).get("members")) if isinstance(m, dict)]
-
-
-def surviving_passages(issue: dict) -> list[dict]:
-    """The prior issue's quoted passages the engine still found in this draft.
-
-    The engine writes one object per passage, `{finding_uid, quote, document,
-    line, fingerprint, matched_by}`, so the quote is a field of the row and not
-    the row itself. Taking the row for the quote printed a Python dict into a
-    real decision letter, under a heading telling the authors that was the text
-    still standing in their manuscript. A row carrying no quote is dropped
-    rather than printed empty.
-
-    What the engine means by one of these is narrow, and `matched_by` says which
-    of two narrow things. `quote` is the earlier finding's words found in this
-    draft word for word. `fingerprint` is the passage they were quoted from,
-    found by the digest of its own text, so the passage is unchanged while the
-    quoted words were not matched: the wording of the quote moved inside it. The
-    `line` is where this draft holds it and has nothing to do with the line the
-    earlier round cited, because the file is rewritten at every import.
-
-    Either way it is evidence about the text and not a ruling, and where it sits
-    under `resolved` the editor agent had to say why the issue is fixed anyway.
-    """
-    passages = []
-    for row in _list(_dict(issue).get("surviving_quotes")):
-        if not isinstance(row, dict):
-            continue
-        quote = str(row.get("quote") or "").strip()
-        if not quote:
-            continue
-        line = row.get("line")
-        passages.append({
-            "finding_uid": str(row.get("finding_uid") or ""),
-            "document": str(row.get("document") or ""),
-            "line": line if isinstance(line, int) else None,
-            "fingerprint": str(row.get("fingerprint") or ""),
-            "matched_by": str(row.get("matched_by") or ""),
-            "quote": quote,
-        })
-    return passages
 
 
 def finding_index(package: dict) -> dict[str, dict]:
@@ -2102,26 +2007,14 @@ def no_findings_note(run: dict) -> str:
     )
 
 
-def has_prior_round(package: dict) -> bool:
-    """Whether this run was given an earlier round's issues at all.
-
-    The engine records the prior round as the file it read and a digest of it,
-    and records nothing on a first round. Every status word is a standing
-    against that round, so on a first round there is no round for an issue to
-    stand against and the word is left off rather than printed: a first letter
-    announcing every item as `new` against a previous round that does not exist
-    told the authors a second round had happened.
-    """
-    return bool(str(_dict(package.get("prior_round")).get("file") or "").strip())
-
-
 def _issue_tags(issue: dict, package: dict) -> str:
     """How a reader should weigh one issue, in the engine's own vocabulary.
 
-    The id first, because it is the id the authors answer and the id this issue
-    keeps in every later round. Then the severity, the category the editor filed
-    it under, how many reviewer slots raised it, and, where there was a previous
-    round, its standing against it.
+    The id first, because it is the id the authors answer and the id the
+    document in this bundle holds it under. Then the severity, the category the
+    editor filed it under, and how many reviewer slots raised it. No standing,
+    because this review read the manuscript in front of it and no earlier
+    review, so every item in it is one this review raises for itself.
     """
     parts = [f"`{str(issue.get('id') or 'no id')}`",
              str(issue.get("severity") or "unstated")]
@@ -2131,9 +2024,6 @@ def _issue_tags(issue: dict, package: dict) -> str:
     raised = issue.get("raised_by")
     if isinstance(raised, int) and raised:
         parts.append(f"raised by {raised} reader{'' if raised == 1 else 's'}")
-    status = str(issue.get("status") or "")
-    if status and has_prior_round(package):
-        parts.append(status)
     if issue_is_escalated(issue):
         parts.append("escalated")
     return ", ".join(parts)
@@ -2146,7 +2036,6 @@ def render_summary(preprint: Preprint, package: dict, provenance: dict) -> str:
     suggestions = suggestion_issues(package)
     counts = severity_counts(required)
     escalations = escalated_issues([*required, *suggestions])
-    closed = closed_issues(package)
     lines = [
         f"# Review Summary: {preprint.title or 'Untitled submission'}",
         "",
@@ -2193,16 +2082,6 @@ def render_summary(preprint: Preprint, package: dict, provenance: dict) -> str:
             name = str(issue.get("name") or "Unnamed issue").strip()
             lines.append(f"{number}. **{name}** ({_issue_tags(issue, package)})")
         lines.append("")
-    if closed:
-        lines += [
-            "## Carried over from the previous round",
-            "",
-            f"{len(resolved_issues(package))} ruled fixed and "
-            f"{len(unverified_issues(package))} left unverified, which is still "
-            "open. The decision letter says what each one was and what the "
-            "editor agent said about it.",
-            "",
-        ]
     limitations = [str(v).strip() for v in _list(package.get("limitations")) if str(v).strip()]
     if limitations:
         lines += ["## Stated limitations of this review", ""]
@@ -2375,9 +2254,9 @@ def render_decision_letter(
             "## Required changes",
             "",
             "Numbered in the editor agent's own order of priority. The id in "
-            "brackets is this item's name for the life of the manuscript: it is "
-            "the id the engine minted for it, and a later round reporting on "
-            "this item uses the same one.",
+            "brackets is the id the engine minted for this item, and it is what "
+            "names it in the machine-readable record published beside this "
+            "letter.",
             "",
         ]
         for number, issue in enumerate(required, 1):
@@ -2398,7 +2277,6 @@ def render_decision_letter(
             no_findings_note(provenance["generator"]["run"]),
             "",
         ]
-    lines += _prior_round_section(package)
     lines += _code_check_section(package)
     rulings = [r for r in _list(package.get("escalation_rulings")) if isinstance(r, dict)]
     if rulings:
@@ -2529,132 +2407,6 @@ def _code_check_entry(row: dict) -> list[str]:
     return lines
 
 
-def _prior_round_section(package: dict) -> list[str]:
-    """What this round says about the round before it, and no more than that.
-
-    Two lists, never added together and never printed as one number. The
-    editor agent ruled the first fixed and said why, which is one model's
-    reading of this draft against the item, not an audit and not a rerun of
-    anything. The second it did not rule on at all: nobody raised the item
-    again and nobody ruled it fixed, so it is still open, and the quotes the
-    engine found still standing in the manuscript are printed with it.
-    """
-    resolved = resolved_issues(package)
-    unverified = unverified_issues(package)
-    if not resolved and not unverified:
-        return []
-    prior = _dict(package.get("prior_round"))
-    lines = ["## The previous round's items", ""]
-    carried = prior.get("issues")
-    if isinstance(carried, int) and carried:
-        lines += [
-            f"This round was given the previous round's {carried} open item"
-            f"{'' if carried == 1 else 's'} and ruled on each one as follows.",
-            "",
-        ]
-    if resolved:
-        lines += [
-            "### Ruled fixed",
-            "",
-            "The editor agent read this draft against each item and ruled it "
-            "addressed, for the reason given. That is one editor agent's "
-            "reading of the text in front of it. Nothing was re-run, no "
-            "analysis was reproduced, and this is not an independent audit of "
-            "compliance.",
-            "",
-        ]
-        for issue in resolved:
-            lines += _closed_entry(issue)
-    if unverified:
-        lines += [
-            "### Left unverified, and still open",
-            "",
-            "No reviewer raised these again and the editor agent did not rule "
-            "them fixed. That is not a fix and it is not evidence of one: a "
-            "finding can disappear from text nobody touched. They stand as "
-            "open items and are carried into the next round.",
-            "",
-        ]
-        for issue in unverified:
-            lines += _closed_entry(issue)
-    return lines
-
-
-def _closed_entry(issue: dict) -> list[str]:
-    """One prior-round item, with the engine's own words for where it stands."""
-    name = str(issue.get("name") or "Unnamed issue").strip()
-    identifier = str(issue.get("id") or "")
-    lines = [f"### {identifier or 'no id'}. {name}" if identifier else f"### {name}", ""]
-    rank = issue.get("prior_rank")
-    standing = [str(issue.get("status") or "unstated")]
-    if isinstance(rank, int):
-        standing.append(f"item {rank} of the previous round")
-    severity = str(issue.get("severity") or "")
-    if severity:
-        standing.append(severity)
-    lines += [f"**Standing:** {', '.join(standing)}", ""]
-    statement = str(issue.get("statement") or "").strip()
-    if statement:
-        lines += [statement, ""]
-    reason = str(issue.get("status_reason") or "").strip()
-    if reason:
-        lines += [f"**The editor agent's reason:** {reason}", ""]
-    unchanged = str(issue.get("text_unchanged_reason") or "").strip()
-    if unchanged:
-        lines += [f"**On the manuscript text:** {unchanged}", ""]
-    surviving = surviving_passages(issue)
-    if surviving:
-        # Labelled, because an unlabelled block quote under the editor agent's
-        # reason reads as part of that reason, and the authors could not tell
-        # whether they were being shown their own revision or the complaint the
-        # issue was raised with. This is the revision as it now reads.
-        lines += [
-            "**This draft, where the earlier finding's passage still stands:**",
-            "",
-        ]
-        for passage in surviving:
-            lines += [f"> {passage['quote']}", ""]
-            where = _passage_standing(passage)
-            if where:
-                lines += [where, ""]
-    return lines
-
-
-def _passage_standing(passage: dict) -> str:
-    """How this draft still holds one passage, in the engine's own terms.
-
-    `matched_by` is the whole of the claim. `quote` is the earlier words found
-    again word for word. `fingerprint` is the passage found by the digest of its
-    text while those words were not matched, which is a weaker thing to tell
-    authors and was published as though it were the stronger one. The line is
-    this draft's own, so it is named as such: the earlier round's numbering is
-    gone, and an author told `line 11` of a file they do not have would look for
-    it in the one they do.
-    """
-    matched = str(passage.get("matched_by") or "")
-    line = passage.get("line")
-    document = str(passage.get("document") or "")
-    where = ""
-    if isinstance(line, int) and line > 0:
-        where = f"line {line} of this draft as the engine converted it"
-        if document and document != MAIN_DOCUMENT:
-            where = f"line {line} of {document}, as the engine converted it"
-    if matched == "quote":
-        reads = "still reads word for word"
-    elif matched == "fingerprint":
-        reads = (
-            "is the same passage by the digest of its text, so the quoted "
-            "wording has moved inside it rather than out of the paper"
-        )
-    else:
-        reads = ""
-    if not reads:
-        return f"Found at {where}." if where else ""
-    if not where:
-        return f"It {reads}."
-    return f"At {where}, it {reads}."
-
-
 def _issue_entry(
     label: str, issue: dict, package: dict, citations: dict | None = None
 ) -> list[str]:
@@ -2681,13 +2433,6 @@ def _issue_entry(
         + (", ".join(slots) if slots else "an unrecorded slot")
         + "  "
     )
-    status = str(issue.get("status") or "")
-    if status and has_prior_round(package):
-        prior = str(issue.get("prior_id") or "")
-        standing.append(
-            f"**Against the previous round:** {status}"
-            + (f", as item `{prior}`" if prior else "")
-        )
     lines += standing + [""]
     if issue_is_escalated(issue):
         lines += [
@@ -3416,12 +3161,8 @@ def review_kind(plan_kind: str, baseline_eligible: bool) -> str:
     `review.kind` is printed on the provenance panel and read by Notices.astro,
     so this reuses the hosted panel's words rather than inventing one. The rule
     there is that an ungraded run is an experiment whatever else it is, and a
-    run on this path is ungraded unless the editor claims it. A revision round
-    keeps its own name, because what it is measured against matters more than
-    how it was produced.
+    run on this path is ungraded unless the editor claims it.
     """
-    if plan_kind == "revision round":
-        return "revision"
     if not baseline_eligible:
         return "experiment"
     if plan_kind == "same-draft re-review":
@@ -3464,7 +3205,7 @@ def build_provenance(
     advisory judgement, and the attestation that a person read the run before it
     was merged.
     """
-    live = live_issues(package)
+    raised = ranked_issues(package)
     # Recorded only when somebody actually submitted the paper. A review an
     # editor started themselves was solicited by nobody, and writing an empty
     # claim for it would be read as a claim we failed to collect.
@@ -3487,16 +3228,10 @@ def build_provenance(
     # with six findings can publish four items, and the old `findings` count
     # described neither the letter nor the ledger once pooling existed. The
     # ledger's own total stays in `findings_delivered`, which the engine sets.
-    #
-    # `issues` counts the issues this round raised, which is the engine's own
-    # meaning of the word: a prior issue ruled fixed or left unverified is
-    # counted under its own name below and is not one of this round's asks.
-    run_record["issues"] = len(live)
+    run_record["issues"] = len(raised)
     run_record["required"] = len(required_issues(package))
     run_record["suggestions"] = len(suggestion_issues(package))
-    run_record["resolved"] = len(resolved_issues(package))
-    run_record["unverified"] = len(unverified_issues(package))
-    run_record["escalated_in_bundle"] = len(escalated_issues(live))
+    run_record["escalated_in_bundle"] = len(escalated_issues(raised))
     run_record["issues_source"] = str(package.get("issues_source") or "")
     run_record["issues_schema_version"] = str(package.get("schema_version") or "")
     # The provider is the run's too. It used to be a constant at the top level
@@ -3594,17 +3329,12 @@ def build_provenance(
         "assigned_models": assigned,
         "decision": decision,
         "desk_rejected": False,
-        # Which round of review this is, counted by the prepare step from the
-        # drafts of this paper already reviewed here. It used to be the literal
-        # 1 in every record, including the second round published against the
-        # same paper, which is the kind of field a reader checks a claim
-        # against. Nothing in the ids depends on it now: an item is named by the
-        # engine's issue id, which does not carry a round in it.
+        # How many reviews of this paper have been published here, this one
+        # counted, taken by the prepare step from the drafts already reviewed.
+        # It is a position in the paper's page and nothing more: every review
+        # reads the manuscript in front of it and no earlier review, so nothing
+        # in this bundle is measured against an earlier one.
         "round": int(prepared.get("round") or 1),
-        # What this round was given to rule against: the file, its digest and
-        # how many items were in it, as the engine reports them. No path, and
-        # nothing from this machine.
-        "prior_round": _dict(package.get("prior_round")),
         "ingest": ingest,
         "panel": [],
         # A subscription has no per-review price. Null says there is no figure,
@@ -3634,46 +3364,17 @@ def write_manifest(dest: Path) -> None:
     write_json(dest / "manifest.json", {"schema_version": 1, "files": files})
 
 
-def _closed_row(issue: dict) -> dict:
-    """One prior-round item as the round record carries it, ruling and evidence.
-
-    `text_unchanged_reason` and the surviving passages belong on a `resolved`
-    row as much as on an `unverified` one. The engine asks for that reason
-    exactly where the text a prior finding quoted still reads the same, so a
-    record that dropped it kept the ruling and threw away what the ruling had
-    to answer for.
-    """
-    return {
-        "id": str(issue.get("id") or ""),
-        "prior_id": str(issue.get("prior_id") or ""),
-        "prior_rank": prior_rank(issue),
-        "name": str(issue.get("name") or "").strip(),
-        "status_reason": str(issue.get("status_reason") or "").strip(),
-        "text_unchanged_reason": str(issue.get("text_unchanged_reason") or "").strip(),
-        "surviving_quotes": surviving_passages(issue),
-    }
-
-
 def write_round_record(
     dest: Path, preprint: Preprint, provenance: dict, package: dict
 ) -> None:
-    """The machine-readable round record a later revision round is measured against.
+    """The machine-readable record of what this review required, item by item.
 
     Every item is named by the engine's own issue id, and that is the whole
-    point of the file. `R1-01` was minted here, counted from the top of this
-    round's own list, so the two rounds published against the same paper both
-    opened with an `R1-01` and they were different asks. An id that is spent
-    the moment the list is reordered cannot be checked off in a later round,
-    which is exactly what a round record is for. The engine's id is minted once,
-    carried through every round the issue survives, and never reused, so an
-    `i03` here is the `i03` the next round rules on.
-
-    `closed_issues` is what this round said about the round before it, and the
-    two lists in it are kept apart on purpose. `resolved` is the editor agent's
-    own ruling, with its reason. `unverified` is an item nobody raised again and
-    nobody ruled on, which is still open, and `carried_forward` counts it as
-    open. Adding the two together would publish a compliance figure that the
-    run does not support.
+    point of the file. `R1-01` was minted here, counted from the top of the
+    list, so the file renamed every item the moment the list was reordered and
+    an id in it matched nothing in the letter beside it. The engine's id is
+    minted once and printed in the letter under the same name, so an `i03` here
+    is the `i03` the authors were asked about.
     """
     rows = [
         {
@@ -3690,8 +3391,6 @@ def write_round_record(
             ],
             "raised_by": issue_slots(issue),
             "escalated": issue_is_escalated(issue),
-            "status": str(issue.get("status") or ""),
-            "prior_id": str(issue.get("prior_id") or ""),
             "blocking": False,
         }
         for issue in required_issues(package)
@@ -3713,27 +3412,6 @@ def write_round_record(
                 }
                 for issue in suggestion_issues(package)
             ],
-            # Both closed lists carry the same fields. A `resolved` row used to
-            # drop `text_unchanged_reason` and the surviving passages, which are
-            # the two things that say what the ruling was made against: the
-            # engine demands that reason precisely where the text a finding
-            # quoted still reads the same, so dropping it left the strongest
-            # ruling in the round as the one with no evidence recorded under it.
-            "closed_issues": {
-                name: [_closed_row(issue) for issue in rulings]
-                for name, rulings in (
-                    ("resolved", resolved_issues(package)),
-                    ("unverified", unverified_issues(package)),
-                )
-            },
-            # Every item a later round still has to answer: this round's own
-            # list plus the previous round's items nobody ruled fixed.
-            "carried_forward": [
-                str(issue.get("id") or "")
-                for issue in all_issues(package)
-                if str(issue.get("status") or "") != RESOLVED_STATUS
-            ],
-            "issue_ids_used": [str(i) for i in _list(package.get("issue_ids_used"))],
             "manuscript_text_sha256": provenance["ingest"].get("text_sha256", ""),
             "manuscript_file_sha256": provenance["generator"]["input"]["sha256"],
             "desk_rejected": False,
@@ -3809,92 +3487,22 @@ def review_round(paper_dir: Path, draft: int) -> int:
     """Which round of review this is for the manuscript, counting from one.
 
     A round is a review of a draft, so the number is one more than the number of
-    earlier drafts of this paper that have been reviewed here. A revision round
+    earlier drafts of this paper that have been reviewed here. A new draft
     increments it and a second attempt on the same draft does not: a re-review
     of identical text is this round read again, and numbering it as a new one
     would tell the authors they had been through a round they were never sent.
 
-    The ids do not depend on this. They are the engine's, minted once per issue
-    and stable across rounds, which is what lets a later round rule on an item
-    by name. The number is published because a reader asks which round they are
-    looking at, and the record used to answer 1 whatever the answer was.
+    Nothing in the review depends on this. Every review reads the manuscript in
+    front of it and no earlier review, and every item is named by the engine's
+    own id. The number is published because a reader asks which review of the
+    paper they are looking at, and the record used to answer 1 whatever the
+    answer was.
     """
     try:
         published = existing_bundles(Path(paper_dir))
     except OSError:
         return 1
     return 1 + len([number for number in published if number < int(draft)])
-
-
-def prior_issues_file(prior: Path | None) -> Path | None:
-    """The previous round's published items, which this round rules against.
-
-    The engine's `--prior-issues` takes a document in its own issues schema, and
-    the bundle's copy is one: the ids, the ranks, the statements and the ids
-    already spent, as the engine wrote them. Handing it back is what makes the
-    second round a second round rather than a fresh look, and what stops it
-    minting an id the first round already used.
-
-    A bundle published before this file existed has none, and the answer is None
-    rather than a refusal. The round still runs, with no prior input, which is
-    the same thing the engine does on a first look.
-
-    A round that ended with every item ruled fixed is the same answer for a
-    different reason. The engine refuses a prior file with nothing open in it,
-    and rightly: there is nothing in it to match. Naming it anyway would stop
-    the run with an error over a round that went well.
-    """
-    if prior is None:
-        return None
-    path = Path(prior) / REVIEW_ISSUES
-    if not path.is_file():
-        return None
-    assert_prior_items_are_the_published_bytes(path)
-    open_items = [
-        row
-        for row in _list(maybe_json(path).get("issues"))
-        if isinstance(row, dict)
-        and str(row.get("id") or "")
-        and str(row.get("status") or "") != RESOLVED_STATUS
-    ]
-    return path if open_items else None
-
-
-def assert_prior_items_are_the_published_bytes(path: Path) -> None:
-    """The prior round's items have to be the bytes that round published.
-
-    The file sits in a published bundle, in a public repository, and the next
-    round rules against it: an id, a statement and a severity in it become the
-    standing of a request the authors already answered. A row deleted or a
-    statement rewritten by hand would be read as the previous round's own words,
-    and the only sign of it would be in this file's history.
-
-    Every bundle hashes its own files into `manifest.json` when it is published,
-    so there is a recorded digest to check against, and it is checked here,
-    where the file is named as an input, rather than trusted because of where it
-    sits. A bundle whose manifest does not account for the file is refused the
-    same way: an unaccounted file and an edited one read identically from here.
-    """
-    path = Path(path)
-    recorded = _dict(maybe_json(path.parent / "manifest.json").get("files"))
-    stated = recorded.get(path.name)
-    if not isinstance(stated, str) or not stated:
-        raise CommandError(
-            f"The previous round at {path.parent.name} does not account for its "
-            f"own {path.name} in manifest.json, so there is no published digest "
-            "to check the items against. A later round rules against that file, "
-            "so it is not read until the bundle that published it says what it "
-            "held."
-        )
-    actual = digest(path.read_bytes())
-    if actual != stated:
-        raise CommandError(
-            f"The {path.name} of the previous round at {path.parent.name} is not "
-            f"the file that bundle published: it hashes to {actual[:16]} and the "
-            f"bundle's manifest records {stated[:16]}. The items in it are what "
-            "the authors were asked for and what this round would rule against, "
-            "so an edited copy is refused. Restore the published file from git."
-        )
 
 
 def cmd_prepare(args: argparse.Namespace) -> int:
@@ -3959,36 +3567,24 @@ def cmd_prepare(args: argparse.Namespace) -> int:
         record["attempt"] = plan.attempt
         record["plan_kind"] = plan.kind
         record["round"] = review_round(paper_dir, plan.draft)
-        prior_issues = prior_issues_file(plan.prior)
-        record["prior_issues"] = str(prior_issues) if prior_issues else ""
     else:
         record["destination"] = str(RUNS / f"local-{digest(data)[:12]}")
         record["draft"] = 1
         record["attempt"] = 1
         record["plan_kind"] = "unpublishable local run"
         record["round"] = 1
-        record["prior_issues"] = ""
 
     write_json(out / "prepared.json", record)
     print(json.dumps(record, indent=2))
-    if record.get("prior_issues"):
-        # Printed because it is the one part of the plan the operator has to act
-        # on: the engine does not find the previous round by itself, and a
-        # revision round run without it reads the manuscript as a first look and
-        # mints a fresh set of ids for items the authors were already given.
+    if record.get("publishable") and int(record.get("round") or 1) > 1:
+        # Said out loud because the number in the record is the only thing that
+        # changes between a first review and a later one. Every review reads the
+        # manuscript in front of it and nothing else, so there is nothing for
+        # the operator to pass in and no earlier round to rule against.
         print(
-            "\nThis is round "
-            f"{record['round']}. Pass the previous round's items to the engine "
-            f"with --prior-issues {shlex.quote(str(record['prior_issues']))}, "
-            "or the run cannot rule on any of them.",
-            file=sys.stderr,
-        )
-    elif record.get("publishable") and int(record.get("round") or 1) > 1:
-        print(
-            "\nThis is round "
-            f"{record['round']} and the previous round published no "
-            f"{REVIEW_ISSUES}, so there is nothing for this run to rule "
-            "against. It will read the manuscript as a first look.",
+            "\nThis is review "
+            f"{record['round']} of this paper. It is a fresh read of the draft "
+            "in front of it, with no knowledge of any earlier review.",
             file=sys.stderr,
         )
     if not publishable:
@@ -5124,27 +4720,22 @@ def without_local_paths(
 
 
 def assert_publishable_issues(package: dict) -> None:
-    """The published items have to be an input the next round can rule against.
+    """The published items have to name each ask once, in the engine's own form.
 
-    This is the other half of a stable id. Publishing the engine's ids is no
-    use if the file they are published in is one the next round refuses, and the
-    refusal would arrive a round later, in front of the authors, with the ids
-    already printed in a decision letter.
+    The letter and the machine-readable record beside it name every item by its
+    id, and that is the whole use of the file: an author reads `i03` in one and
+    looks it up in the other. A file that cannot carry that is refused before it
+    exists rather than published and found later, with the ids already printed
+    in a decision letter.
 
-    So the rules the engine's own prior-round loader applies are applied here,
-    to the file about to be written, and a bundle that would not survive them is
-    refused before it exists. They are few and they are not guesses: the
-    document carries the schema stamp this pipeline publishes, every row is an
-    object with an id in the engine's own form, no id appears twice, and
-    `issue_ids_used` accounts for every id in the file. That last one is what
-    stops a resolved issue's id being minted again for a different problem two
-    rounds later.
+    The rules are few and none of them is a guess: the document carries the
+    schema stamp this pipeline publishes, every row is an object with an id in
+    the engine's own form, and no id appears twice.
 
-    Two more rules are about what the letter would say rather than what the next
-    round would read, and they are here because this is the one place every
-    published run passes through: a standing has to be one of the engine's five,
-    and a surviving passage has to be an object carrying the manuscript text it
-    quotes.
+    One more rule is about what the letter would say rather than what the file
+    holds, and it is here because this is the one place every published run
+    passes through: no row may carry a field that rules on an earlier review,
+    because no review here reads one.
     """
     stamp = str(package.get("schema_version") or "")
     if not stamp:
@@ -5160,7 +4751,7 @@ def assert_publishable_issues(package: dict) -> None:
         raise CommandError(
             f"{len(strange)} issue row(s) in this run are not objects "
             f"({', '.join(sorted(set(strange)))}), so the published "
-            f"{REVIEW_ISSUES} would not be a file a later round can read."
+            f"{REVIEW_ISSUES} would not be a file anything can read."
         )
     identifiers = [str(_dict(row).get("id") or "") for row in rows]
     malformed = sorted({name or "(absent)" for name in identifiers
@@ -5169,15 +4760,15 @@ def assert_publishable_issues(package: dict) -> None:
         raise CommandError(
             f"{len(malformed)} issue(s) in this run carry an id that is not an "
             f"id of this engine ({', '.join(malformed[:5])}). An id is text of "
-            "the form i01 upwards, and it is what a later round rules against, "
-            "so a bundle cannot publish one it cannot match."
+            "the form i01 upwards, and it is what names the item in the letter, "
+            "so a bundle cannot publish one that names nothing."
         )
     repeated = sorted({name for name in identifiers if identifiers.count(name) > 1})
     if repeated:
         raise CommandError(
             f"The issue id(s) {', '.join(repeated)} appear more than once in "
-            "this run. One id is one problem across every round, so a file "
-            "holding the same id twice is one a later round refuses."
+            "this run. One id is one item of this review, so a file holding the "
+            "same id twice cannot say which item the letter means."
         )
     # A severity this release does not sort is an issue that would appear in
     # neither list: not a required change, not a suggestion, and so not in the
@@ -5187,7 +4778,7 @@ def assert_publishable_issues(package: dict) -> None:
     known = (*REQUIRED_SEVERITIES, SUGGESTION_SEVERITY)
     unsorted_rows = [
         f"{row.get('id')} ({row.get('severity') or 'no severity'})"
-        for row in live_issues(package)
+        for row in ranked_issues(package)
         if str(_dict(row).get("severity")) not in known
     ]
     if unsorted_rows:
@@ -5199,52 +4790,23 @@ def assert_publishable_issues(package: dict) -> None:
             "in the letter at all. Update the publish path before publishing a "
             "run from this release."
         )
-    # A standing outside the engine's five. The word is published in the letter
-    # and in the round record, and a reader takes it for the engine's own, so a
-    # run carrying `fixed` or `addressed` is refused and the word is named. The
-    # five are the engine's `ISSUE_STATUSES`, checked against the installed
-    # engine by `assert_issue_vocabulary`.
-    strange_status = sorted({
-        f"{_dict(row).get('id')} ({_dict(row).get('status') or 'no status'})"
+    # A row claiming a ruling on an earlier review. The engine this release
+    # publishes writes no such field, and nothing here hands it an earlier
+    # review to rule against, so a row carrying one came from somewhere else and
+    # would print in the letter as a standing nobody ruled on.
+    ruled = sorted({
+        f"{_dict(row).get('id')} ({field})"
         for row in rows
-        if str(_dict(row).get("status") or "") not in ISSUE_STATUSES
+        for field in RULED_ON_ANOTHER_REVIEW
+        if field in _dict(row)
     })
-    if strange_status:
+    if ruled:
         raise CommandError(
-            f"{len(strange_status)} issue(s) in this run carry a standing this "
-            f"engine does not write: {', '.join(strange_status[:5])}. The five "
-            f"are {', '.join(ISSUE_STATUSES)}, each of them a statement about "
-            "the previous round, and a word outside them would be published in "
-            "the letter as though the engine had ruled it."
-        )
-    # The surviving passages are objects, `{finding_uid, quote, document, line,
-    # fingerprint, matched_by}`, and the letter prints the quote out of each
-    # one. A row that is not an object, or that carries no quote, is refused
-    # rather than published: a row read as a string printed a Python dict into
-    # a letter under a heading telling the authors that was their own text.
-    shapeless = sorted({
-        f"{_dict(row).get('id')} ({type(passage).__name__})"
-        for row in rows
-        for passage in _list(_dict(row).get("surviving_quotes"))
-        if not isinstance(passage, dict) or not str(passage.get("quote") or "").strip()
-    })
-    if shapeless:
-        raise CommandError(
-            f"{len(shapeless)} issue(s) in this run carry a surviving passage "
-            f"that holds no quote: {', '.join(shapeless[:5])}. The engine writes "
-            "one object per passage with the manuscript text in `quote`, the "
-            "letter prints that text, and a row without it would be published "
-            "as an empty quotation of the authors' own manuscript."
-        )
-    used = {str(name) for name in _list(package.get("issue_ids_used"))}
-    unlisted = sorted(set(identifiers) - used)
-    if unlisted:
-        raise CommandError(
-            f"{len(unlisted)} issue id(s) in this run are missing from "
-            f"issue_ids_used ({', '.join(unlisted[:5])}). That list is every id "
-            "the round and its own prior rounds spent, and a later round mints "
-            "above it, so an id left out of it would be handed to a different "
-            "problem once this one is resolved."
+            f"{len(ruled)} issue(s) in this run claim a ruling on an earlier "
+            f"review: {', '.join(ruled[:5])}. Every review here reads the draft "
+            "in front of it and no earlier review of the paper, so a field that "
+            "rules on one is a field the engine this release publishes does not "
+            "write."
         )
     # A finding the code check threw out may not be published as an ask. The
     # engine refuses the editor that groups one, so a bundle holding one is a
@@ -5274,83 +4836,6 @@ def assert_publishable_issues(package: dict) -> None:
                 "to make. Re-run the review on an engine that refuses the "
                 "grouping rather than publishing this bundle."
             )
-
-
-def assert_the_round_ruled_against_its_prior(prepared: dict, package: dict) -> None:
-    """Did this run read the round it is about to be published after?
-
-    `prepare` works out the round number from the bundles already published and
-    names the previous round's items as the engine's `--prior-issues`. The
-    engine takes that file or it does not, and nothing joined the two up: a run
-    made without the flag published as round 3 with no prior round recorded,
-    every item `new`, and `i01` `i02` `i03` minted again for problems that had
-    nothing to do with the ones the authors were sent under those numbers. The
-    page promises the opposite, that an id is one problem for the life of the
-    manuscript, and that promise is what breaks first and most quietly.
-
-    So the two are compared here, at the one gate every published bundle passes.
-    The engine records the prior round as the file it read and a digest of it,
-    `sha256` of the file's text cut to sixteen characters, which was checked
-    against the engine's own code rather than assumed. A round above the first
-    whose plan names a prior file publishes only if the engine read a file and
-    the digest is of that file.
-
-    A round above the first whose plan names no prior file is a different case
-    and not an error: the previous bundle published no items, or ruled every one
-    of them fixed, and the engine refuses a prior file with nothing open in it.
-    What is refused there is the reverse surprise, a run that ruled against some
-    file the plan knows nothing about, because then nobody can say which round
-    the rulings in the letter are about.
-    """
-    round_number = int(prepared.get("round") or 1)
-    named = str(prepared.get("prior_issues") or "").strip()
-    prior = _dict(package.get("prior_round"))
-    read_file = str(prior.get("file") or "").strip()
-    read_digest = str(prior.get("digest") or "").strip()
-
-    if named and not read_file:
-        raise CommandError(
-            f"This is round {round_number} and the run was made without the "
-            "previous round's items: the engine records no prior round, so "
-            "every issue in it is new and its ids start again from the "
-            "beginning. The authors were already sent items under those "
-            "numbers. Re-run the review with --prior-issues "
-            f"{shlex.quote(named)}, which is the file prepare named."
-        )
-    if not named and read_file:
-        raise CommandError(
-            f"This run ruled against a prior round ({read_file}) that the plan "
-            f"for round {round_number} does not name. Either the previous round "
-            "published no open items, in which case there is nothing to rule "
-            "against, or some other file was passed, in which case nothing here "
-            "can say which round the rulings in this letter are about. Re-run "
-            "prepare, and pass the file it names or no file at all."
-        )
-    if not named:
-        return
-
-    source = Path(named)
-    if not source.is_file():
-        raise CommandError(
-            f"The previous round's items are no longer at {source.name}, so "
-            "what this run ruled against cannot be checked. The file is "
-            "published in a bundle in this repository. Restore it from git."
-        )
-    assert_prior_items_are_the_published_bytes(source)
-    # The engine's own digest of the prior file: `sha256` of the text it read,
-    # cut to sixteen characters. Read off the engine's source rather than
-    # guessed at, and it covers the whole file, so a row deleted or a statement
-    # rewritten moves it.
-    actual = digest(source.read_bytes())
-    if actual[: len(read_digest)] != read_digest:
-        raise CommandError(
-            f"This is round {round_number} and the file the run ruled against "
-            "is not the one the previous round published: the engine recorded "
-            f"{read_file} at {read_digest} and the published {source.name} "
-            f"hashes to {actual[:len(read_digest)]}. The rulings in the letter "
-            "would be about items the authors were never sent. Re-run the "
-            f"review with --prior-issues {shlex.quote(named)}."
-        )
 
 
 def projection_report(
@@ -5732,7 +5217,6 @@ def cmd_publish(args: argparse.Namespace) -> int:
     if args.publish:
         require_complete_run(run_dir, run, reading)
         assert_publishable_issues(package)
-        assert_the_round_ruled_against_its_prior(prepared, package)
     workspace = resolve_workspace(run_dir, args.workspace)
     preprint_data = prepared.get("preprint")
     if preprint_data is None:
@@ -5948,12 +5432,6 @@ def cmd_publish(args: argparse.Namespace) -> int:
         f"{counts.get('suggestions', 0)} suggestion(s), pooled by the editor "
         f"agent from {counts.get('findings_delivered', 0)} finding(s)"
     )
-    if counts.get("resolved") or counts.get("unverified"):
-        print(
-            f"prior    {counts.get('resolved', 0)} item(s) the editor agent "
-            f"ruled fixed, {counts.get('unverified', 0)} left unverified and "
-            "still open"
-        )
     print(f"reports  {len(reports)} specialist track report(s) copied in")
     print(
         f"baseline {'eligible' if provenance['review']['baseline_eligible'] else 'experimental only'}"

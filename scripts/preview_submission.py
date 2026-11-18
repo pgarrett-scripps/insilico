@@ -88,35 +88,35 @@ def _reviewed_drafts(preprint: Preprint, reviews_root: Path) -> list[int]:
     return sorted(found)
 
 
-def _commands(current_draft: int, reviewed: list[int]) -> str:
+def _next_review(current_draft: int, reviewed: list[int]) -> str:
     if current_draft in reviewed:
         primary = (
-            f"Draft v{current_draft} already has a published review. Use "
-            "`/review replace` only if you intend to add a fresh, independent "
-            "review attempt for the same draft. The existing attempt stays on "
-            "the record. If the authors have a newer draft, wait for the archive "
-            "to serve it and use `/review`."
+            f"Draft v{current_draft} already has a published review. Review it "
+            "again only if a second independent read of the same draft is "
+            "wanted. The published review stays on the record and the new one is "
+            "published beside it as another attempt. If the authors have a newer "
+            "draft, wait for the archive to serve it."
         )
     elif reviewed:
         previous = ", ".join(f"v{number}" for number in reviewed)
         primary = (
-            f"Earlier draft {previous} has been reviewed. Use `/review` to open "
-            f"a revision round for v{current_draft}."
+            f"Earlier draft {previous} has been reviewed. Running the panel on "
+            f"v{current_draft} is an independent review of v{current_draft}, "
+            "which reads that draft and no earlier review of this paper."
         )
     else:
-        primary = "Use `/review` to run the configured referee panel."
+        primary = (
+            "No draft of this paper has been reviewed yet, so "
+            f"v{current_draft} is the one to run."
+        )
 
-    return f"""### Editor commands
+    return f"""### The next review
 
 {primary}
 
-| Command | Action |
-|---|---|
-| `/review` | Run the configured panel against the current archive draft. |
-| `/review anthropic` | Explicitly run the configured Anthropic panel. |
-| `/review openrouter vendor/model` | Run every role with one named OpenRouter model. |
-
-Only repository owners, members, and collaborators can start a run.
+A review runs on an editor's own machine, through the `local-review` skill in a
+checkout of this repository, and it is published by merging the pull request
+that skill leaves behind. Nothing typed on this issue starts one.
 """
 
 
@@ -199,10 +199,10 @@ published with the review.
 > [!WARNING]
 > The archive returned no title or author metadata. Wait and edit the issue to retry before starting a review.
 """
-        commands = ""
+        next_review = ""
     else:
         readiness = ""
-        commands = "\n" + _commands(current_draft, reviewed)
+        next_review = "\n" + _next_review(current_draft, reviewed)
 
     return f"""{COMMENT_MARKER}
 ## Submission preview
@@ -210,15 +210,26 @@ published with the review.
 | Field | Value |
 |---|---|
 {table}
-{code_note}{readiness}{commands}
+{code_note}{readiness}{next_review}
 This preview uses public archive metadata and makes no model calls. Editing the issue refreshes it.
 """
 
 
-def main() -> int:
+def build_parser() -> argparse.ArgumentParser:
+    """The arguments this script takes.
+
+    Named `build_parser` because that is where `scripts/check_skill_commands.py`
+    looks: a script that keeps its parser inside `main` reads to that check as a
+    script taking no arguments, and every documented call of it then fails for a
+    reason that says nothing about the document.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("--issue-body", required=True)
-    args = parser.parse_args()
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
     print(build_preview(args.issue_body))
     return 0
 

@@ -10,18 +10,18 @@ server process per round, the plugin's own calls in the order a session makes
 them, and `issues.json`, `findings.jsonl`, `progress.json`, `manifest.json`,
 `REVIEW.md` and the rest written by the engine's own writers.
 
-Two rounds, because the questions the publish path gets wrong are about the
-round before: a prior issue this round raised again, a prior issue ruled
-resolved whose quoted sentence still reads the same in the revision, a prior
-issue nobody raised again, and a second round whose `prior_round` record names
-the first round's file and digest.
+Two rounds, because a paper can be reviewed twice and the second bundle is
+published at `r2` on the paper's page. Each round is a review of the draft in
+front of it and nothing else: the second reads the revised manuscript, raises
+what it finds there, and is given no part of the first round, because no review
+on this path reads an earlier one.
 
 No model and no network. The reader, the reviewers, the editor and the recorder
 here are all this script: it drives the Read stage through the engine's public
 `scripted_read`, views every page and seals the manuscript, then claims each
 slot with the claim code the run minted, reads the whole paper, files findings
-quoted verbatim out of it, groups them into issues, rules on the round before
-and asks the recorder to write the review. The
+quoted verbatim out of it, groups them into issues and asks the recorder to
+write the review. The
 manuscript is a PDF built here out of the sentences below, so there is no paper
 to fetch and nothing to look up. The `reviewers-only` arm is the smallest arm
 whose issues an editor writes, which is what `publishable` asks about.
@@ -35,7 +35,7 @@ Running it:
     python3 scripts/fixtures/make_engine_rounds.py --out /tmp/engine-rounds
 
 writes `round-1/` and `round-2/` run folders under `--out` with the two
-manuscripts beside them, and prints what each round holds. The interpreter has
+manuscripts beside them, and prints what each review holds. The interpreter has
 to be one the engine is installed in.
 
 Nothing here is pinned and nothing pretends to be. A run folder carries the time
@@ -88,11 +88,9 @@ RESULTS = (
 
 PAGES = (("Abstract", ABSTRACT), ("Methods", METHODS), ("Results", RESULTS))
 
-# The revision. One sentence is rewritten, so the second round has something to
-# rule resolved, and everything else is left as it was, so the resolved ruling
-# lands on an issue one of whose quoted sentences still reads the same. That is
-# the case the engine asks for a `text_unchanged_reason` in, and the case the
-# letter has to print the surviving sentence for.
+# The revision. One sentence is rewritten and everything else is left as it was,
+# so the second draft is a draft the panel can raise fewer items against without
+# the two manuscripts being the same bytes.
 REWRITTEN = {
     METHODS[1]: (
         "The comparison against the earlier method was rerun on this corpus "
@@ -113,12 +111,11 @@ PRINT_THE_COUNTS = "Per class counts belong in the paper"
 ROUNDS_DIFFER = "The table and the text do not agree on the headline figure"
 
 # Each round: the manuscript it reads, what each reviewer files, how the editor
-# groups it, what the editor rules about the round before, and the verdict it
-# closes on. `sentence` is the quote, and the engine places it: it finds the
-# words in `paper.md` and records the line, so a sentence that moves to another
-# page needs no change here. `members` names findings by their title and
-# `prior_name` names a prior issue by its name, because a uid and an issue id
-# are both minted by the engine and neither can be written down in advance.
+# groups it, and the verdict it closes on. `sentence` is the quote, and the
+# engine places it: it finds the words in `paper.md` and records the line, so a
+# sentence that moves to another page needs no change here. `members` names
+# findings by their title, because a finding uid is minted by the engine and
+# cannot be written down in advance.
 ROUNDS = (
     {
         "revision": False,
@@ -209,7 +206,6 @@ ROUNDS = (
                 "members": (COUNTS,),
             },
         ),
-        "rulings": (),
         "summary": "The work is clearly written and the question is worth asking. What this "
                    "review turns on is that the number the paper is built on was measured "
                    "once and is reported everywhere as though it had been measured "
@@ -233,8 +229,8 @@ ROUNDS = (
                     "sentence": ABSTRACT[0],
                     "severity": "major",
                     "kind": "question",
-                    "comment": "The sentence is unchanged in the revision and so is the "
-                               "design: one split, reported throughout as the result.",
+                    "comment": "The design this draft reports is one split, and the number "
+                               "measured on it is repeated throughout as the result.",
                     "escalate": True,
                 },
                 {
@@ -242,7 +238,7 @@ ROUNDS = (
                     "sentence": ABSTRACT[1],
                     "severity": "moderate",
                     "kind": "question",
-                    "comment": "The seed is still not recorded, so the interval is still "
+                    "comment": "No seed is recorded for the resampling, so the interval is "
                                "quoted more precisely than it can be checked at.",
                     "escalate": False,
                 },
@@ -266,12 +262,11 @@ ROUNDS = (
                 "severity": "major",
                 "category": "statistics-and-inference",
                 "rank": 1,
-                "statement": "The improvement is still one measurement on one held out split, "
-                             "and the interval around it still has no seed. This is the item "
-                             "the first round led on and the revision does not answer it.",
+                "statement": "The improvement this draft is built on was measured once, on one "
+                             "held out split, and the interval around it carries no seed. "
+                             "Report it over repeated splits, or report it as a single "
+                             "measurement.",
                 "members": (HEADLINE, INTERVAL),
-                "prior_name": ONE_MEASUREMENT,
-                "status": "persisting",
             },
             {
                 "name": ROUNDS_DIFFER,
@@ -284,35 +279,16 @@ ROUNDS = (
                 "members": (ROUNDING,),
             },
         ),
-        "rulings": (
-            {
-                "prior_name": CANNOT_RERUN,
-                "status": "resolved",
-                "reason": "The revision reruns the earlier method on this corpus and prints "
-                          "both numbers, and the appendix now names the scaler and when it "
-                          "was fitted.",
-                "text_unchanged_reason": "The sentence describing the normalisation still "
-                                         "reads as it did, because what changed is the "
-                                         "appendix table it now points at.",
-            },
-            {
-                "prior_name": PRINT_THE_COUNTS,
-                "status": "unverified",
-                "reason": "No reviewer raised it again this round and nothing in the revision "
-                          "shows the counts printed, so it stands open.",
-            },
-        ),
-        "summary": "The revision answers the method items and leaves the one the first round "
-                   "led on where it was: the headline improvement is still a single "
-                   "measurement reported as the result. One new item is a rounding "
-                   "disagreement between the table and the text.",
-        "significance": "The same as the first round, and for the same reason: the result "
-                        "would matter if it held over repeated splits, and it has still only "
-                        "been measured once.",
-        "evidence": "One measurement and no seed, against a method section that can now be "
-                    "rerun.",
-        "reasoning": "The method items are answered. The first item is not, and it is the one "
-                     "the paper's claim rests on.",
+        "summary": "What this review turns on is that the headline improvement is a single "
+                   "measurement reported as the result. The table and the text also round "
+                   "that figure differently, which is a second thing the reader cannot settle "
+                   "from the paper.",
+        "significance": "The result would matter if it held over repeated splits, and this "
+                        "draft shows one measurement.",
+        "evidence": "One measurement and no seed, against a method section that can be rerun "
+                    "as written.",
+        "reasoning": "Both items are answerable with what the authors already have: rerun the "
+                     "split, and round the figure once.",
         "limitations": ("No reviewer here ran the authors' code, so nothing in this review is "
                         "a replication of their result.",),
     },
@@ -438,32 +414,15 @@ def refused(answer: dict, what: str) -> None:
         raise SystemExit(f"{what} was refused: {json.dumps(answer, indent=2)[:2000]}")
 
 
-def prior_ids(prior_issues: list) -> dict:
-    """The prior round's issue ids by name, which is how this plan names them.
+def issue_batch(plan: dict, uids: dict) -> list:
+    """The issues this round's editor submits, with its findings named by uid.
 
-    An issue id is minted by the engine, so the plan cannot hold one. It holds
-    the name the first round gave the issue, and the second round reads the id
-    back from the prior issues the editor is shown.
+    The plan names a member by the finding's title, because a uid is minted by
+    the engine and cannot be written down in advance, so the uids the slots were
+    given back are read in here.
     """
-    ids = {}
-    for issue in prior_issues:
-        ids[issue["name"]] = issue["id"]
-    return ids
-
-
-def ruled_batch(plan: dict, prior_issues: list, uids: dict) -> tuple[list, list, list]:
-    """The issue batch, the prior rulings and the ids this round carried forward.
-
-    Every prior issue needs one of the two: an issue of this round carrying its
-    `prior_id`, or a ruling saying resolved or unverified with a reason. The
-    engine refuses the close while one has neither, so a plan that forgets one
-    fails here with the name rather than at the close with the id.
-    """
-    ids = prior_ids(prior_issues)
-    batch = []
-    carried = []
-    for issue in plan["issues"]:
-        row = {
+    return [
+        {
             "name": issue["name"],
             "severity": issue["severity"],
             "category": issue["category"],
@@ -471,23 +430,11 @@ def ruled_batch(plan: dict, prior_issues: list, uids: dict) -> tuple[list, list,
             "statement": issue["statement"],
             "members": [uids[title] for title in issue["members"]],
         }
-        if issue.get("prior_name"):
-            row["prior_id"] = ids[issue["prior_name"]]
-            row["status"] = issue["status"]
-            carried.append(row["prior_id"])
-        batch.append(row)
-    rulings = []
-    for ruling in plan["rulings"]:
-        row = {key: value for key, value in ruling.items() if key != "prior_name"}
-        row["prior_id"] = ids[ruling["prior_name"]]
-        rulings.append(row)
-    unanswered = set(ids.values()) - set(carried) - {row["prior_id"] for row in rulings}
-    if unanswered:
-        raise SystemExit(f"the plan rules on neither of {sorted(unanswered)}")
-    return batch, rulings, carried
+        for issue in plan["issues"]
+    ]
 
 
-def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
+def one_round(out: Path, run_dir: Path, plan: dict) -> dict:
     """Drive one whole round in this process and return what it wrote.
 
     Called as a subprocess by :func:`main`, once per round, because a server
@@ -512,7 +459,7 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
     # was attached before, and the slots below claim against the codes this
     # import minted, so the round goes on in the run the read opened.
     read = engine.scripted_read(pdf, run_dir, title=TITLE, reviewers=REVIEWERS,
-                                arm=ARM, prior_issues=prior)
+                                arm=ARM)
     # The pages of this fixture are the ones it wrote the PDF from, and a seal
     # is refused while any page is unopened, because a piece the converter
     # dropped is only visible on its page.
@@ -555,13 +502,12 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
     refused(editor, "claim editor")
     token = editor["agent_token"]
     whole_paper(server, token, "editor")
-    batch, rulings, carried = ruled_batch(plan, editor.get("prior_issues") or [], uids)
-    submitted = server.submit_issues(token, issues=batch)
+    submitted = server.submit_issues(token, issues=issue_batch(plan, uids))
     refused(submitted, "submit_issues")
     closed = server.submit_editor(
         token, summary=plan["summary"], significance=plan["significance"],
         strength_of_evidence=plan["evidence"], verdict_reasoning=plan["reasoning"],
-        limitations=list(plan["limitations"]), prior_rulings=rulings,
+        limitations=list(plan["limitations"]),
         escalation_rulings=[
             {"finding_uid": uid,
              "ruling": "Upheld. The number is reported as though it had been measured "
@@ -573,7 +519,7 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
     refused(closed, "submit_editor")
     report = server.submit_report(
         token,
-        summary="The editor pooled the findings into issues and ruled on the round before.",
+        summary="The editor pooled the findings of this review into issues.",
         limitations=["The verdict is a judgement in words and not a score."],
     )
     refused(report, "submit_report editor")
@@ -597,8 +543,6 @@ def one_round(out: Path, run_dir: Path, plan: dict, prior: str) -> dict:
         "issues": closed["issues"],
         "required": closed["required_changes"],
         "suggestions": closed["suggestions"],
-        "carried": carried,
-        "ruled": [row["prior_id"] for row in rulings],
     }
 
 
@@ -607,13 +551,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", required=True, help="where to write the rounds")
     parser.add_argument("--round", type=int, choices=range(1, len(ROUNDS) + 1), default=None,
                         help="internal: drive this one round in this process")
-    parser.add_argument("--prior", default="", help="internal: the prior round's issues.json")
     args = parser.parse_args(argv)
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=True)
 
     if args.round:
-        wrote = one_round(out, out / f"round-{args.round}", ROUNDS[args.round - 1], args.prior)
+        wrote = one_round(out, out / f"round-{args.round}", ROUNDS[args.round - 1])
         print(json.dumps(wrote))
         return 0
 
@@ -621,26 +564,21 @@ def main(argv: list[str] | None = None) -> int:
     # paper, so the rounds are subprocesses of this script rather than two
     # ingests in one interpreter.
     rounds = []
-    prior = ""
     for number in range(1, len(ROUNDS) + 1):
         done = subprocess.run(
             [sys.executable, str(Path(__file__).resolve()), "--out", str(out),
-             "--round", str(number), "--prior", prior],
+             "--round", str(number)],
             capture_output=True, text=True, check=False,
         )
         if done.returncode != 0:
             sys.stderr.write(done.stdout + done.stderr)
             return done.returncode
-        wrote = json.loads(done.stdout.strip().splitlines()[-1])
-        rounds.append(wrote)
-        prior = wrote["issues_path"]
+        rounds.append(json.loads(done.stdout.strip().splitlines()[-1]))
     for wrote in rounds:
         print(f"{wrote['run']}: {wrote['status']}, "
               f"{'publishable' if wrote['publishable'] else '; '.join(wrote['reasons'])}, "
               f"{wrote['issues']} issue(s), {wrote['required']} required, "
-              f"{wrote['suggestions']} suggestion(s), carried forward "
-              f"{', '.join(wrote['carried']) or 'nothing'}, ruled on "
-              f"{', '.join(wrote['ruled']) or 'nothing'}")
+              f"{wrote['suggestions']} suggestion(s)")
     return 0
 
 

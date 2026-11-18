@@ -22,8 +22,12 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+      # Every dependency is a wheel except the engine, which is pinned to a
+      # GitHub archive of one commit and so arrives as a source tree. Its hash
+      # is in the lock, so the archive is still checked before it is built.
       - run: |
-          pip install --require-hashes --only-binary=:all: -r requirements.txt
+          pip install --require-hashes --only-binary=:all: \
+            --no-binary=peerreviewagents -r requirements.txt
       - run: pip check
       - run: python scripts/check_runtime.py
 

@@ -160,7 +160,7 @@
           }
         },
         "run": {
-          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the review was read from, who pooled it into issues, the counts of what it asked and what it ruled on the prior round, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose, and `cause` is not on it: the engine writes a cause only for a run that stopped, which it never calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it. `problems` is a different matter and is allowed, because engine 0.9.0 appends lines there after it has decided publishable: an unfinished citation ledger and a citation worker that ran another model family are both recorded as problems and neither withholds the review. They are published as what the run did not finish, beside the findings, and never folded into errors, which is the list of what went wrong.",
+          "$comment":"Read through the engine's own reader, never from the prepare step's intentions or the publish flags. What is required here is what a reader needs in order to know how the review was produced and whether it is whole: the arm, the transport, the workflow, the finished state, the engine's publish flag, where the review was read from, who pooled it into issues, the counts of what it asked for, the reviewer count and the stage ledger. Everything else is recorded when the run recorded it and left out otherwise, because a value the run never measured must not appear as a default that looks measured. The property list is closed on purpose, and `cause` is not on it: the engine writes a cause only for a run that stopped, which it never calls publishable, so a bundle carrying one fails here rather than publishing with the explanation of its own failure buried in it. `problems` is a different matter and is allowed, because engine 0.9.0 appends lines there after it has decided publishable: an unfinished citation ledger and a citation worker that ran another model family are both recorded as problems and neither withholds the review. They are published as what the run did not finish, beside the findings, and never folded into errors, which is the list of what went wrong.",
           "type": "object",
           "required": [
             "arm",
@@ -172,8 +172,6 @@
             "issues",
             "required",
             "suggestions",
-            "resolved",
-            "unverified",
             "issues_source",
             "issues_schema_version",
             "reviewers",
@@ -246,7 +244,7 @@
               }
             },
             "issues": {
-              "$comment": "What this round raised, counted off the issues the bundle published. It is not a count of findings: the editor agent pools findings into issues, so a round with six findings can raise four of them, and the ledger's own total is findings_delivered. A prior issue this round ruled fixed or left unverified is not one of this round's asks and is counted under its own name below. The two fields this count replaces, findings and appendix_findings, described a letter body and an appendix that engine 0.10 does not write: nothing is placed out of sight any more, so there is no second list to count.",
+              "$comment": "What this review raised, counted off the issues the bundle published. It is not a count of findings: the editor agent pools findings into issues, so a review with six findings can raise four of them, and the ledger's own total is findings_delivered. The two fields this count replaces, findings and appendix_findings, described a letter body and an appendix that engine 0.10 does not write: nothing is placed out of sight any more, so there is no second list to count.",
               "type": "integer",
               "minimum": 0
             },
@@ -257,16 +255,6 @@
             },
             "suggestions": {
               "$comment": "The minor issues this round raised. They are published in full beside the required ones and a revision is not held to them, which is the only difference between the two numbers.",
-              "type": "integer",
-              "minimum": 0
-            },
-            "resolved": {
-              "$comment": "Prior-round issues this round's editor ruled fixed, by name and with a reason. It is the editor's ruling on a revised manuscript and never a claim that this repository verified anything, and it is zero on a first round, which has no prior issues to rule on.",
-              "type": "integer",
-              "minimum": 0
-            },
-            "unverified": {
-              "$comment": "Prior-round issues this round neither raised again nor ruled fixed. The word is the engine's and it is published as exactly what it says: nobody checked, so the issue stands unchecked. It is not a fix and the page never prints it as one.",
               "type": "integer",
               "minimum": 0
             },
@@ -507,21 +495,6 @@
     "decision": { "enum": ["accept", "minor", "major", "reject"] },
     "desk_rejected": { "type": "boolean" },
     "round": { "type": "integer", "minimum": 1 },
-    "prior_round": {
-      "$comment": "What this round was given to rule against, as the engine reports it: the prior file's name, a short digest of its contents, how many of its issues were carried in, and this round's tally by status. It carries no path, because where the earlier round sat on disk is a fact about the machine and not about the review. An empty object is a first round, which was given nothing, and that is published rather than left out so a reader can tell a first round from a record that forgot to say.",
-      "type": "object",
-      "properties": {
-        "file": { "type": "string", "minLength": 1 },
-        "digest": { "type": "string", "pattern": "^[a-f0-9]+$" },
-        "issues": { "type": "integer", "minimum": 0 },
-        "tally": {
-          "$comment": "One count per status the engine names, over this round's issues: how many of the prior round's asks are still standing, how many were ruled fixed and how many nobody checked.",
-          "type": "object",
-          "additionalProperties": { "type": "integer", "minimum": 0 }
-        }
-      },
-      "additionalProperties": false
-    },
     "revision": { "type": "object" },
     "submitter": { "type": "string" },
     "submitter_is_author": { "enum": ["", "yes", "no"] },
@@ -616,7 +589,7 @@
         "properties": { "schema_version": { "const": 4 } }
       },
       "then": {
-        "required": ["generator", "models", "assigned_models", "prior_round", "ingest"],
+        "required": ["generator", "models", "assigned_models", "ingest"],
         "properties": {
           "ingest": {
             "$comment":"What the panel was handed, and how much of it a model wrote. Engine 0.10 reads a manuscript against its page images before any reviewer sees it: it rewrites an equation the converter mangled, writes a description under every figure, and transcribes a page the converter returned no text from. Those lines are quoted in the letter like any other, so a record that measured the text without saying which of it a model wrote would be describing a review of a document it never described. `base_schema_version` is the shape of the imported folder, `ai_read` is the import's own account of the stage, `pieces_per_source` counts the pieces by where their words came from, and `model_written` names the lines, which is what makes a quotation checkable rather than merely counted.",
@@ -751,10 +724,6 @@
                 "enum": ["sealed-by-reader", "sealed-without-read"]
               }
             }
-          },
-          "prior_round": {
-            "$comment": "Required on a version 4 record and empty on a first round. The constraints are in the top-level properties block; this is here because a required name has to appear in its own subschema's properties under Ajv strict mode.",
-            "type": "object"
           },
           "model": {
             "$comment":"Refused outright rather than merely left out of the required list. Every version 2 record carries a single model id, and a reader of this file should not have to infer that a plugin run must not: 0.9 gives each slot a model of its own, so one id at the top would describe a panel that did not sit. The engine's own protocol file writes a sentence there rather than an id for the same reason, and a sentence is not an id either. An empty not matches nothing, so a record carrying this key cannot validate.",

@@ -425,8 +425,11 @@ Yes
         assert "@\u200breviewer" in preview
         assert "Ada Lovelace, Alan Turing" in preview
         assert "| Current draft | v2 |" in preview
-        assert "Use `/review` to run the configured referee panel" in preview
-        assert "`/review replace`" not in preview
+        assert "v2 is the one to run" in preview
+        # The hosted lane that acted on a comment is gone, so the preview never
+        # tells an editor to type a command that nothing would answer.
+        assert "/review" not in preview
+        assert "local-review" in preview
 
         bundle = reviews / "2026" / "paper" / "v2"
         bundle.mkdir(parents=True)
@@ -435,12 +438,13 @@ Yes
         )
         preview = build_preview(body, resolver=fake_resolve, reviews_root=reviews)
         assert "| Published In Silico reviews | v2 |" in preview
-        assert "Use `/review replace` only" in preview
+        assert "Draft v2 already has a published review" in preview
 
         preprint.version = "3"
         preview = build_preview(body, resolver=fake_resolve, reviews_root=reviews)
         assert "Earlier draft v2 has been reviewed" in preview
-        assert "revision round for v3" in preview
+        assert "an independent review of v3" in preview
+        assert "no earlier review of this paper" in preview
 
     bad = build_preview("No link here", resolver=fake_resolve)
     assert "metadata could not be resolved" in bad
@@ -609,7 +613,7 @@ No
         )
         assert "The code link was not accepted" in turned_down
         assert "SSH link" in turned_down
-        assert "Use `/review`" in turned_down, (
+        assert "### The next review" in turned_down, (
             "a refused code link must not cost the submission its review"
         )
         assert "| Title | A paper with code |" in turned_down

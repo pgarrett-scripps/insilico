@@ -54,22 +54,25 @@ another run.
    [submission form](https://github.com/pgarrett-scripps/insilico/issues/new?template=submit.yml).
    One preprint per issue.
 2. **A bot checks the link** and posts the title, authors, archive date, current
-   draft, prior In Silico reviews, and the commands available to an editor. This
-   lookup is free and does not download the PDF or call a model. Editing the
-   issue refreshes the same preview comment.
-3. **An editor starts the panel** by commenting `/review`.
+   draft, prior In Silico reviews, and which review of the paper is the one to
+   run next. This lookup is free and does not download the PDF or call a model.
+   Editing the issue refreshes the same preview comment.
+3. **Your issue joins the queue.** Open submission issues are worked through
+   oldest first, and an editor runs the panel on their own machine when there is
+   time.
 4. **The submission passes [the desk](policy.md#the-desk).**
-5. **A bot opens a pull request** with the full review and posts a summary to
-   your issue.
+5. **A pull request opens** with the full review, and a comment on your issue
+   links to it.
 6. **The review goes to the editor.** The
    [editorial policy](policy.md#authority) governs publication.
 
 ## Submitting a revised draft
 
 Post the new version to the same preprint server, then say so on your original
-issue. An editor runs `/review` again, and the archive serves the new draft.
-See [Revision rounds](criteria.md#revision-rounds) for how the panel evaluates
-it.
+issue. An editor runs the review again when there is time, and the archive
+serves the new draft. See
+[Reviewing a revised draft](criteria.md#reviewing-a-revised-draft) for how the
+panel evaluates it.
 
 ## Reviewing your own work first
 

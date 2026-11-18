@@ -190,12 +190,13 @@ manuscript version and `r<M>` is an independent review attempt of that version.
 A same-version re-review creates a new attempt and does not inherit the earlier
 attempt's verdict or score.
 
-The newest eligible editorial attempt on the newest earlier manuscript version
-is the baseline for a [revision round](criteria.md#revision-rounds). That exact
-bundle is passed to PeerReviewAgents through its built-in revision comparison.
-Single-model experiments remain visible but do not set the paper's status and
-cannot become a revision baseline. Revision bundles include a `round.json`
-record of what was carried forward.
+No attempt is an input to any other. A
+[review of a revised draft](criteria.md#reviewing-a-revised-draft) reads that
+draft and nothing published about the paper before it, and every review of a
+paper is listed on the paper's page by date. Single-model experiments remain
+visible but do not set the paper's status. Every published review includes a
+`round.json` record of the items it required, named by the ids its own decision
+letter uses.
 
 ## Removing a review
 

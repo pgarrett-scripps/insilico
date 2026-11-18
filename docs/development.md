@@ -16,7 +16,7 @@ docs/                     # the record, written by the pipeline
 └── reviews/<year>/<slug>/v<N>/r<M>/ # manuscript draft, then review attempt
     ├── provenance.json   # decision, models, code and configuration fingerprints
     ├── manifest.json     # SHA-256 for every published artifact
-    ├── round.json        # machine-readable record a later round rules on
+    ├── round.json        # machine-readable record of what this review required
     ├── summary.md  decision_letter.md  manuscript_stats.md
     ├── review_*.md       # one per core reviewer
     ├── audit_*.md        # one per specialist track
@@ -32,7 +32,7 @@ src/                      # the site
 
 scripts/
 ├── fetch_preprint.py     # URL to PDF and metadata
-├── preview_submission.py # issue metadata and editor command preview
+├── preview_submission.py # issue metadata and next-review preview
 ├── local_review.py       # the current route: prepare, then publish a local run
 ├── review_plan.py        # where a review of a given draft belongs
 ├── review_bundle.py      # writes a bundle the site can render
@@ -44,7 +44,6 @@ scripts/
 
 .github/workflows/
 ├── submission-preview.yml # metadata preview on new or edited submissions
-├── review.yml            # retired stub, points at the local-review skill
 ├── ci.yml                # checks the data contract and that the site builds
 ├── publish.yml           # builds and deploys on merge
 └── check-updates.yml     # monthly sweep for stale reviews
@@ -89,9 +88,9 @@ name its own decision, and `provenance.generator.decision_source` is pinned to
 
 Reviews published before this route ran on a GitHub runner against a paid API
 key, as a desk screen, a five-reviewer panel, two audits and a debate. That path
-is retired. `.github/workflows/review.yml` is now a manual-only stub that fails
-with a pointer here, and the `ANTHROPIC_API_KEY` and `OPENROUTER_API_KEY`
-repository secrets are no longer read by anything. `.env.example` is gone with
+is retired. The workflow that dispatched it is gone, nothing under
+`.github/workflows/` can start a review at all, and the `ANTHROPIC_API_KEY` and
+`OPENROUTER_API_KEY` repository secrets are no longer read by anything. `.env.example` is gone with
 them. It told a contributor to paste an Anthropic key into `.env`, which no
 code here reads any more and which the local route forbids outright.
 
@@ -115,9 +114,9 @@ Opening or editing an issue with the `submission` label runs
 `submission-preview.yml`. The workflow resolves public archive metadata without
 downloading the PDF or calling a model. It then creates or updates one bot
 comment. The comment reports the title, authors, posting date, current draft,
-and any published In Silico drafts. It also recommends `/review`, `/review
-replace`, or a revision round based on the archive version and the bundles
-already in `docs/reviews/`.
+and any published In Silico drafts. It also says which review of the paper is
+the one to run next, based on the archive version and the bundles already in
+`docs/reviews/`.
 
 The comment carries a hidden marker, so an edit refreshes the existing comment
 instead of adding another. The issue body is untrusted input. It reaches Python
@@ -138,17 +137,20 @@ there to design against. No fixtures or seeding are needed. `npm run build` writ
 Everything visual is a token in `src/styles/global.css`, redefined for light and
 dark. Change a token and it moves everywhere it is used.
 
-## Editor commands
+## Picking the next review
 
-An editor no longer triggers a review from the submission issue. The command
-preview still appears on new submissions, because it records which draft is
-current and whether this repository has reviewed it, but acting on it means
-running the `local-review` skill in a checkout.
+An editor no longer triggers a review from the submission issue, and nothing
+reads a command typed on one. The preview still appears on new submissions,
+because it records which draft is current, whether this repository has reviewed
+it and which review is the one to run next, and acting on it means running the
+`local-review` skill in a checkout. That skill's own first step lists the open
+`submission` issues oldest first and reads these previews, so the queue is the
+issue list rather than a second record kept somewhere else.
 
-Whether a run is a first look or a revision round is still not something an
-editor declares. The archive version selects `v<N>`. A same-draft re-review
-requires `--replace` and creates the next `r<M>`. No published attempt is ever
-replaced or edited.
+Where a run lands is still not something an editor declares. The archive version
+selects `v<N>`. A same-draft re-review requires `--replace` and creates the next
+`r<M>`. No published attempt is ever replaced or edited, and no run is given an
+earlier review of the paper to rule against.
 
 ## Running a review
 
@@ -385,14 +387,13 @@ folder rather than from a list in this repository, so the next engine release
 changes the line instead of making it wrong.
 
 The bundle keeps the engine's name for that file on purpose. It is the same
-document narrowed, and the next round is handed this copy as its prior input, so
-the issue ids in it are the ids the engine minted and a later round can rule
-against them. Before writing it, `publish` applies the engine's own prior-round
-rules to the file it is about to write: the document carries a schema stamp,
-every row is an object, every id is of the engine's form, no id appears twice,
-and `issue_ids_used` accounts for every id in the file. A bundle that would not
-survive those rules is refused now rather than a round later, in front of the
-authors, with the ids already printed in a decision letter.
+document narrowed, and the issue ids in it are the ids the engine minted, so a
+reader who sees `i03` in the letter can look it up in the file. Before writing
+it, `publish` checks the file it is about to write: the document carries a
+schema stamp, every row is an object, every id is of the engine's form, no id
+appears twice, and no row carries a field that rules on an earlier review. A
+bundle that would not survive those rules is refused now rather than found
+later, with the ids already printed in a decision letter.
 
 A path used as a JSON *field name* is refused outright, inside this checkout or
 outside it. Engine 0.10 writes no mapping keyed by a path, so a rewrite there
