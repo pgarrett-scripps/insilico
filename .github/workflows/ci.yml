@@ -31,6 +31,16 @@ jobs:
       - run: pip check
       - run: python scripts/check_runtime.py
 
+      # The engine reads a PDF with Poppler's pdftotext, so a runner without it
+      # cannot import a manuscript and the engine-backed checks fail inside the
+      # engine's own converter. It is an operating system package rather than a
+      # wheel, so the lock cannot carry it and the job installs it by name.
+      - name: Poppler, which the engine reads a PDF with
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+          pdftotext -v
+
       # This job installs the locked engine, so the checks that read a run
       # folder through it have to run here rather than report themselves
       # skipped. Requiring it turns a broken install into a failure.

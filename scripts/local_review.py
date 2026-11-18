@@ -3455,6 +3455,19 @@ def claude_version() -> str | None:
     return reported if VERSION_SHAPE.match(reported) else None
 
 
+# Poppler's pdftotext, which the engine's converter runs to read a PDF. It is
+# an operating system package rather than a dependency the lock can pin, so the
+# preflight reports it: a missing one surfaces as the engine raising
+# PopplerMissing in the middle of a prepared run, which is the wrong moment for
+# an editor to learn they need to install something.
+PDF_TEXT_PROGRAM = "pdftotext"
+
+
+def pdf_text_program_installed() -> bool:
+    """Whether the program the engine converts a PDF with is on PATH."""
+    return shutil.which(PDF_TEXT_PROGRAM) is not None
+
+
 def cmd_fingerprint(args: argparse.Namespace) -> int:
     """Preflight. Prints what is installed, and calls no model."""
     manifest = installed_code_manifest()
@@ -3465,6 +3478,11 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
             manifest, "installed_engine", prefix=PLUGIN_PREFIX
         ),
         "workflow_sha256": manifest.get(WORKFLOW_FILE),
+        "pdf_text": {
+            "program": PDF_TEXT_PROGRAM,
+            "required": True,
+            "installed": pdf_text_program_installed(),
+        },
         "transport": {
             "provider": TRANSPORT_PROVIDER,
             "executable": "claude",
@@ -3478,6 +3496,14 @@ def cmd_fingerprint(args: argparse.Namespace) -> int:
         print(
             "\nThe Claude CLI did not report a version. A review needs it on "
             "PATH and signed in to the subscription account.",
+            file=sys.stderr,
+        )
+    if not record["pdf_text"]["installed"]:
+        print(
+            f"\n{PDF_TEXT_PROGRAM} is not on PATH. The engine converts the "
+            "manuscript with it, so install Poppler before preparing a paper: "
+            "sudo apt install poppler-utils on Debian or Ubuntu, brew install "
+            "poppler on macOS.",
             file=sys.stderr,
         )
     return 0

@@ -89,6 +89,10 @@ OUTSIDE_PROGRAMS = frozenset({
     # comments a pull request link back on one with it, and what it accepts is
     # GitHub's business rather than this repository's.
     "gh",
+    # Poppler's PDF to text converter, which the engine runs to read the
+    # manuscript. The skill's preflight has the editor prove it is installed,
+    # and its options are Poppler's business rather than this repository's.
+    "pdftotext",
 })
 
 # A flag the prose puts in backticks is a claim that it exists, and it has to be

@@ -44,6 +44,7 @@ from smoke_checks.local import (
     check_the_attestation_says_what_it_has_to_say,
     check_the_citation_section_prints_no_charge_nobody_made,
     check_the_decision_is_attributed_to_a_person,
+    check_the_engines_pdf_converter_is_named_before_a_run_and_installed_in_ci,
     check_the_issues_are_split_by_severity_and_ordered_by_rank,
     check_the_letter_marks_a_quote_in_the_line_it_reads_on,
     check_the_locked_engine_commit_is_the_one_declared,
@@ -195,6 +196,8 @@ def main() -> int:
     print("ok  a bundle is written only inside the tree it belongs to")
     check_a_missing_engine_fails_the_skill_check_in_ci()
     print("ok  the skill command check fails in CI rather than skipping itself")
+    check_the_engines_pdf_converter_is_named_before_a_run_and_installed_in_ci()
+    print("ok  the preflight names the engine's PDF converter and CI installs it")
     check_the_advisory_verdict_is_labelled_advisory()
     print("ok  the engine's verdict is published and labelled advisory")
     check_nothing_reaches_into_the_engines_internals()

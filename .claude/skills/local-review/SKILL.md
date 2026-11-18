@@ -104,8 +104,22 @@ here, and the `peerreview` command used in step 4 is the console script beside
 it. Ask the operator which interpreter that is rather than guessing.
 
 Read the output. It prints the engine version, the fingerprint of the installed
-engine, the fingerprint of the plugin and the hash of its review workflow, and
-the transport record. Stop and report if it errors.
+engine, the fingerprint of the plugin and the hash of its review workflow, the
+transport record, and whether `pdftotext` is on PATH. Stop and report if it
+errors.
+
+Two outside programs have to be there before step 3, and the preflight names
+both. `claude` is the transport. `pdftotext` is Poppler, which the engine
+converts the manuscript with, so a checkout without it fails inside the
+engine's converter partway through a prepared run rather than up front:
+
+```bash
+pdftotext -v
+```
+
+Install Poppler if that prints nothing: `sudo apt install poppler-utils` on
+Debian or Ubuntu, `brew install poppler` on macOS. Stop and report if the
+preflight says either program is missing.
 
 ## Step 3. Prepare the paper
 

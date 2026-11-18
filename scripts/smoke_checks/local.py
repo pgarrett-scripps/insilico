@@ -32,6 +32,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -4759,6 +4760,60 @@ def _skill_check_without_an_engine(**environment: str) -> int:
         check=False,
     )
     return finished.returncode
+
+
+def check_the_engines_pdf_converter_is_named_before_a_run_and_installed_in_ci() -> None:
+    """A missing pdftotext is an installation, so say so before the run starts.
+
+    The engine converts the manuscript by running Poppler's `pdftotext`. It is
+    an operating system package, so the lock cannot pin it and nothing in the
+    Python environment reveals whether it is there. CI ran the engine-backed
+    suite on a runner without it and failed inside the engine's own converter,
+    with `PopplerMissing` raised from the fixture that writes a code round:
+    a true failure, but one that reads as the fixture's fault and arrives after
+    everything up to the conversion has already been paid for. An editor hit
+    the same thing a step later, partway through a prepared paper.
+
+    So two things are asserted here. The preflight the skill tells an editor to
+    read names the program and says whether it is installed, and the CI job
+    that requires the engine installs it before running the suite.
+    """
+    record = local_review.cmd_fingerprint
+    assert callable(record), "the preflight command is gone"
+    assert local_review.PDF_TEXT_PROGRAM == "pdftotext", (
+        f"the engine's converter is pdftotext, not {local_review.PDF_TEXT_PROGRAM}"
+    )
+    # On this machine the program either is or is not installed, and the
+    # preflight has to answer with the same thing `shutil.which` sees either
+    # way rather than guessing.
+    assert local_review.pdf_text_program_installed() == (
+        shutil.which("pdftotext") is not None
+    ), "the preflight disagrees with PATH about the engine's PDF converter"
+
+    skill = (
+        Path(local_review.__file__).resolve().parents[1]
+        / ".claude" / "skills" / "local-review" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "pdftotext" in skill, (
+        "the skill never names the program the engine reads a PDF with"
+    )
+
+    workflow = (
+        Path(local_review.__file__).resolve().parents[1]
+        / ".github" / "workflows" / "ci.yml"
+    ).read_text(encoding="utf-8")
+    jobs = workflow.split("\n  runtime:\n")
+    assert len(jobs) == 2, "the job that installs the locked engine is gone"
+    runtime = jobs[1].split("\n  pipeline:\n")[0]
+    assert 'INSILICO_REQUIRE_ENGINE: "1"' in runtime, (
+        "the engine-backed suite no longer runs in the runtime job"
+    )
+    installs = runtime.find("poppler-utils")
+    runs_suite = runtime.find("scripts/smoke_test.py")
+    assert installs >= 0, "the runtime job does not install Poppler"
+    assert installs < runs_suite, (
+        "Poppler is installed after the suite that needs it has already run"
+    )
 
 
 def check_a_missing_engine_fails_the_skill_check_in_ci() -> None:
